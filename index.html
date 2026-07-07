@@ -122,9 +122,12 @@
 
         // Session Authentication Gate
         document.getElementById('login-btn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            isAdmin = document.querySelector('input[name="login-role"]:checked').value === 'admin';
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    // Check if user is Admin based on email
+    isAdmin = email.toLowerCase() === "grahammakutu@gmail.com";
+
             
             signInWithEmailAndPassword(auth, email, password)
                 .then(() => {
