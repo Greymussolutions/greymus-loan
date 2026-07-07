@@ -1,307 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greymus Loan Financial Hub</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; box-sizing: border-box; }
-        .container { background-color: #1e1e1e; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 650px; margin: auto; }
-        h2, h3 { text-align: center; color: #007bff; margin-top: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #333; background-color: #2a2a2a; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 12px; background-color: #007bff; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        .hidden { display: none !important; }
+// ==========================================
+// 1. FIREBASE INITIALIZATION & CONFIGURATION
+// ==========================================
+// DO NOT CHANGE THESE VALUES - Keep your exact original keys below!
+const firebaseConfig = {
+    apiKey: "AIzaSy...", // Your real Firebase key remains here
+    authDomain: "greymus-loan.firebaseapp.com",
+    projectId: "greymus-loan",
+    storageBucket: "greymus-loan.appspot.com",
+    messagingSenderId: "...",
+    appId: "..."
+};
+
+// Start connection bridges safely
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+// ==========================================
+// 2. CORE OPERATIONAL LOAN LOGIC
+// ==========================================
+let registeredClients = [];
+
+// Listen to data from your 'clients' collection in Firestore
+function listenToRegisteredClients() {
+    firebase.firestore().collection('clients').orderBy('name')
+    .onSnapshot((snapshot) => {
+        const selectDropdown = document.getElementById('loan-client-select');
+        if(!selectDropdown) return; // Fail-safe
         
-        /* Stats Display */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: #252525; padding: 12px; border-radius: 6px; text-align: center; border-bottom: 3px solid #007bff; }
-        .stat-card.danger { border-bottom-color: #dc3545; }
-        .stat-card.success { border-bottom-color: #28a745; }
-        .stat-num { font-size: 17px; font-weight: bold; margin-top: 5px; }
-
-        /* Ledger Cards */
-        .data-card { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 5px solid #007bff; font-size: 14px; line-height: 1.5; position: relative; }
-        .data-card.Pending { border-left-color: #ffc107; }
-        .data-card.Approved { border-left-color: #28a745; }
-        .data-card.Rejected { border-left-color: #dc3545; }
-        .data-card.Arrears { border-left-color: #e83e8c; background: #341e24; }
+        registeredClients = [];
+        selectDropdown.innerHTML = '<option value="">-- Choose a profile --</option>';
         
-        .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .btn-approve { background-color: #28a745; width: auto; flex: 1; padding: 8px; margin: 0; }
-        .btn-reject { background-color: #ffc107; color: #000; width: auto; flex: 1; padding: 8px; margin: 0; }
-        .btn-delete { background-color: #dc3545; padding: 8px; margin: 0; font-size: 13px; }
-        .tab-btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { background-color: #333; margin: 0; }
-        .tab-btn.active { background-color: #007bff; }
-        .badge { display: inline-block; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #444; margin-left: 5px; }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <div id="login-section">
-            <h2>Greymus Financial Portal</h2>
-            <div style="text-align: center; margin-bottom: 15px;">
-                <label><input type="radio" name="login-role" value="officer" checked> Field Officer</label>
-                <label style="margin-left: 15px;"><input type="radio" name="login-role" value="admin"> Admin (Boss)</label>
-            </div>
-            <input type="email" id="email" placeholder="Corporate Email Address" required>
-            <input type="password" id="password" placeholder="Access Password" required>
-            <button id="login-btn">Secure Connection</button>
-        </div>
-
-        <div id="dashboard-section" class="hidden">
-            <h2 id="dashboard-title">Operational Workspace</h2>
+        snapshot.forEach((doc) => {
+            const client = doc.data();
+            client.id = doc.id;
+            registeredClients.push(client);
             
-            <div class="stats-grid">
-                <div class="stat-card"><div class="label">Total Outstandings</div><div class="stat-num" id="stat-portfolio">KES 0</div></div>
-                <div class="stat-card success"><div class="label">Total Revenue Income</div><div class="stat-num" id="stat-income">KES 0</div></div>
-                <div class="stat-card danger"><div class="label">Arrears/Overdues</div><div class="stat-num" id="stat-arrears">0 Files</div></div>
-                <div class="stat-card"><div class="label">Operator Account</div><div class="stat-num" id="stat-user" style="font-size:11px; word-break: break-all;">...</div></div>
-            </div>
+            const opt = document.createElement('option');
+            opt.value = client.id;
+            opt.textContent = `${client.name} (${client.phone})`;
+            selectDropdown.appendChild(opt);
+        });
+    });
+}
 
-            <div class="tab-btn-group">
-                <button class="tab-btn active" id="tab-loans-btn" onclick="switchTab('loans')">Loans Pipeline</button>
-                <button class="tab-btn" id="tab-clients-btn" onclick="switchTab('clients')">Clients Registry</button>
-            </div>
+// Onboard / Pre-Register Client
+document.getElementById('btn-register-client')?.addEventListener('click', async () => {
+    const name = document.getElementById('reg-client-name').value.trim();
+    const phone = document.getElementById('reg-client-phone').value.trim();
 
-            <div id="workspace-loans">
-                <h3>Submit New Loan File</h3>
-                <input type="text" id="loan-client-name" placeholder="Client Full Name">
-                <input type="number" id="loan-amount" placeholder="Principal Amount (KES)">
-                <input type="number" id="loan-fee" placeholder="Upfront Processing Fee Paid (KES)">
-                <input type="number" id="loan-interest" placeholder="Standard Monthly Interest %">
-                <input type="number" id="loan-duration" placeholder="Duration (Months)">
-                <input type="date" id="loan-duedate" placeholder="Maturity Due Date">
-                <button id="submit-loan-btn">Dispatch Loan Application</button>
+    if (!name || !phone) return alert("Please fill in both Name and Phone number.");
 
-                <h3>Active Loan Ledger</h3>
-                <div id="loans-pipeline-list">Sourcing database ledger records...</div>
-            </div>
+    try {
+        await firebase.firestore().collection('clients').add({
+            name: name,
+            phone: phone,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Client profile saved successfully!");
+        document.getElementById('reg-client-name').value = '';
+        document.getElementById('reg-client-phone').value = '';
+    } catch (err) {
+        alert("Error saving client: " + err.message);
+    }
+});
 
-            <div id="workspace-clients" class="hidden">
-                <h3>Register New Client Profile</h3>
-                <input type="text" id="client-name" placeholder="Client Full Name">
-                <input type="tel" id="client-phone" placeholder="Mobile Phone Number">
-                <input type="text" id="client-idnum" placeholder="National ID / Passport">
-                <input type="text" id="client-occupation" placeholder="Current Occupation/Business">
-                <input type="text" id="client-guarantor" placeholder="Guarantor Full Name">
-                <input type="tel" id="client-guarantor-phone" placeholder="Guarantor Phone Number">
-                <textarea id="client-security" placeholder="Collateral / Loan Security Description" rows="2"></textarea>
-                <button id="submit-client-btn" style="background-color: #28a745;">Complete Profile Registration</button>
+// Dynamic Real-Time Calculator Math Engine
+function calculateLoanBreakdown() {
+    const principalInput = document.getElementById('loan-principal');
+    const weeksInput = document.getElementById('loan-weeks');
+    
+    if(!principalInput || !weeksInput) return;
 
-                <h3>Client Registry Database</h3>
-                <div id="clients-registry-list">Sourcing registry records...</div>
-            </div>
+    const principal = parseFloat(principalInput.value) || 0;
+    const weeks = parseInt(weeksInput.value) || 0;
 
-            <button id="logout-btn" style="background-color: #444; margin-top: 25px;">Safely Terminate Session</button>
-        </div>
-    </div>
+    if (principal > 0 && weeks > 0) {
+        // Equation logic: (5% * Principal) * Number of weeks
+        const totalInterest = (principal * 0.05) * weeks;
+        const totalRepayable = principal + totalInterest;
+        const weeklyPayment = totalRepayable / weeks;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        document.getElementById('calc-interest').textContent = `KES ${totalInterest.toLocaleString()}`;
+        document.getElementById('calc-total').textContent = `KES ${totalRepayable.toLocaleString()}`;
+        document.getElementById('calc-weekly').textContent = `KES ${weeklyPayment.toLocaleString()} / week`;
+    } else {
+        document.getElementById('calc-interest').textContent = "KES 0.00";
+        document.getElementById('calc-total').textContent = "KES 0.00";
+        document.getElementById('calc-weekly').textContent = "KES 0.00 / week";
+    }
+}
 
-        // CONFIGURE YOUR FIREBASE APP INSTANCE HERE:
-        const firebaseConfig = {
-  apiKey: "AIzaSyDt9iW5woMIRP1E-eMTHdYpgceQZxK8wrE",
-  authDomain: "greymus-loan.firebaseapp.com",
-  projectId: "greymus-loan",
-  storageBucket: "greymus-loan.firebasestorage.app",
-  messagingSenderId: "689969179781",
-  appId: "1:689969179781:web:aca0247196d31dcd68cdec"};
+// Bind live listening input calculations
+document.getElementById('loan-principal')?.addEventListener('input', calculateLoanBreakdown);
+document.getElementById('loan-weeks')?.addEventListener('input', calculateLoanBreakdown);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+// Disburse Loan to Selected Client
+document.getElementById('btn-issue-loan')?.addEventListener('click', async () => {
+    const clientId = document.getElementById('loan-client-select').value;
+    const principal = parseFloat(document.getElementById('loan-principal').value) || 0;
+    const weeks = parseInt(document.getElementById('loan-weeks').value) || 0;
 
-        let isAdmin = false;
+    if (!clientId) return alert("Error: You must choose a registered client from the dropdown list first.");
+    if (principal <= 0 || weeks <= 0) return alert("Please enter valid principal values and duration weeks.");
 
-        // Session Authentication Gate
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            isAdmin = document.querySelector('input[name="login-role"]:checked').value === 'admin';
-            
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('dashboard-section').classList.remove('hidden');
-                    document.getElementById('dashboard-title').innerText = isAdmin ? "Executive Admin Control" : "Field Officer Panel";
-                    document.getElementById('stat-user').innerText = email;
-                    loadDataPipeline();
-                })
-                .catch((err) => alert("Access Refused: " + err.message));
+    const matchedClient = registeredClients.find(c => c.id === clientId);
+    
+    const totalInterest = (principal * 0.05) * weeks;
+    const totalRepayable = principal + totalInterest;
+    const weeklyPayment = totalRepayable / weeks;
+
+    try {
+        await firebase.firestore().collection('loans').add({
+            clientId: matchedClient.id,
+            clientName: matchedClient.name,
+            clientPhone: matchedClient.phone,
+            principalAmount: principal,
+            loanWeeksDuration: weeks,
+            calculatedInterest: totalInterest,
+            totalRepayableAmount: totalRepayable,
+            weeklyInstallmentAmount: weeklyPayment,
+            status: "active",
+            issued_at: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Interface Toggle Router
-        window.switchTab = function(target) {
-            if(target === 'loans') {
-                document.getElementById('workspace-loans').classList.remove('hidden');
-                document.getElementById('workspace-clients').classList.add('hidden');
-                document.getElementById('tab-loans-btn').classList.add('active');
-                document.getElementById('tab-clients-btn').classList.remove('active');
-            } else {
-                document.getElementById('workspace-loans').classList.add('hidden');
-                document.getElementById('workspace-clients').classList.remove('hidden');
-                document.getElementById('tab-loans-btn').classList.remove('active');
-                document.getElementById('tab-clients-btn').classList.add('active');
-            }
-        }
+        alert(`Success! Loan approved for ${matchedClient.name}. Weekly collection target: KES ${weeklyPayment.toFixed(2)}`);
+        
+        document.getElementById('loan-client-select').value = "";
+        document.getElementById('loan-principal').value = "";
+        document.getElementById('loan-weeks').value = "";
+        calculateLoanBreakdown();
 
-        // Processing Dispatch Engine
-        document.getElementById('submit-loan-btn').addEventListener('click', async () => {
-            const name = document.getElementById('loan-client-name').value;
-            const amount = parseFloat(document.getElementById('loan-amount').value);
-            const fee = parseFloat(document.getElementById('loan-fee').value || 0);
-            const interest = parseFloat(document.getElementById('loan-interest').value || 0);
-            const duration = parseFloat(document.getElementById('loan-duration').value || 1);
-            const due = document.getElementById('loan-duedate').value;
+    } catch (err) {
+        alert("Transaction failed: " + err.message);
+    }
+});
 
-            if(!name || !amount || !due) return alert("Validation Failed: Missing critical parameters.");
+// Run dropdown stream listener on app start
+listenToRegisteredClients();
 
-            try {
-                await addDoc(collection(db, "loans"), {
-                    clientName: name, amount, processingFee: fee, interestRate: interest, duration, dueDate: due,
-                    status: "Pending", submittedBy: auth.currentUser.email, timestamp: new Date().toISOString()
-                });
-                alert("Loan application uploaded to master pipeline!");
-                ['loan-client-name','loan-amount','loan-fee','loan-interest','loan-duration','loan-duedate'].forEach(id => document.getElementById(id).value = '');
-                loadDataPipeline();
-            } catch(e) { alert("Write Error: " + e.message); }
-        });
-
-        // Client Registry Dispatch Engine
-        document.getElementById('submit-client-btn').addEventListener('click', async () => {
-            const name = document.getElementById('client-name').value;
-            const phone = document.getElementById('client-phone').value;
-            const idNum = document.getElementById('client-idnum').value;
-            const occupation = document.getElementById('client-occupation').value;
-            const guarantor = document.getElementById('client-guarantor').value;
-            const gPhone = document.getElementById('client-guarantor-phone').value;
-            const security = document.getElementById('client-security').value;
-
-            if(!name || !phone || !idNum) return alert("Validation Failed: Check basic mandatory fields.");
-
-            try {
-                await addDoc(collection(db, "clients"), {
-                    name, phone, idNum, occupation, guarantor, guarantorPhone: gPhone, security,
-                    registeredBy: auth.currentUser.email, timestamp: new Date().toISOString()
-                });
-                alert("Client profile captured securely.");
-                ['client-name','client-phone','client-idnum','client-occupation','client-guarantor','client-guarantor-phone','client-security'].forEach(id => document.getElementById(id).value = '');
-                loadDataPipeline();
-            } catch(e) { alert("Write Error: " + e.message); }
-        });
-
-        // Core Synchronous Ledger Loader & Mathematical Computation Engine
-        async function loadDataPipeline() {
-            const loansContainer = document.getElementById('loans-pipeline-list');
-            const clientsContainer = document.getElementById('clients-registry-list');
-            loansContainer.innerHTML = ""; clientsContainer.innerHTML = "";
-            
-            let totalPortfolio = 0; let totalIncome = 0; let totalArrearsCount = 0;
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            try {
-                // 1. EVALUATE FINANCIAL LOAN REGISTRY
-                const loanSnapshot = await getDocs(collection(db, "loans"));
-                loanSnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const isOwner = data.submittedBy === auth.currentUser.email;
-                    
-                    let computedStatus = data.status;
-                    if(data.status === "Approved" && data.dueDate && data.dueDate < todayStr) computedStatus = "Arrears";
-
-                    // DYNAMIC MATH CALCULATIONS
-                    const baseInterest = data.amount * (data.interestRate / 100) * data.duration;
-                    const finalWeekSurcharge = data.amount * 0.05; // 5% flat fee for final week sprint
-                    const totalInterestCharged = baseInterest + finalWeekSurcharge;
-                    
-                    const clientRepaymentTarget = data.amount + totalInterestCharged; // Excludes processing fee paid upfront
-                    const totalSystemRevenue = (data.processingFee || 0) + totalInterestCharged;
-
-                    if(isAdmin || isOwner) {
-                        if(data.status === "Approved" || computedStatus === "Arrears") {
-                            totalPortfolio += data.amount;
-                            totalIncome += totalSystemRevenue;
-                        }
-                        if(computedStatus === "Arrears") totalArrearsCount++;
-
-                        const card = document.createElement('div');
-                        card.className = `data-card ${computedStatus}`;
-                        card.innerHTML = `
-                            <strong>Client Target:</strong> ${data.clientName}<br>
-                            <strong>Principal:</strong> KES ${data.amount.toLocaleString()}<br>
-                            <strong>Upfront Processing Fee:</strong> KES ${(data.processingFee || 0).toLocaleString()} <span class="badge">Paid Upfront</span><br>
-                            <strong>Total Client Repayment:</strong> <span style="color: #28a745; font-weight:bold;">KES ${clientRepaymentTarget.toLocaleString()}</span><br>
-                            <small style="color: #bbb;">(Includes structural monthly + final week 5% surge interest)</small><br>
-                            <strong>Maturity Date:</strong> ${data.dueDate}<br>
-                            <strong>File State:</strong> <b style="text-transform:uppercase;">${computedStatus}</b>
-                        `;
-
-                        const actions = document.createElement('div');
-                        actions.className = "actions";
-
-                        if(isAdmin && data.status === "Pending") {
-                            const appBtn = document.createElement('button'); appBtn.className = "btn-approve"; appBtn.innerText = "Approve";
-                            appBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Approved"}); loadDataPipeline(); };
-                            const rejBtn = document.createElement('button'); rejBtn.className = "btn-reject"; rejBtn.innerText = "Reject";
-                            rejBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Rejected"}); loadDataPipeline(); };
-                            actions.appendChild(appBtn); actions.appendChild(rejBtn);
-                        }
-
-                        if(isAdmin) {
-                            const delBtn = document.createElement('button'); delBtn.className = "btn-delete"; delBtn.innerText = "Delete Record";
-                            delBtn.onclick = async () => { if(confirm("Permanently remove this loan from system memory?")) { await deleteDoc(doc(db, "loans", docSnap.id)); loadDataPipeline(); } };
-                            actions.appendChild(delBtn);
-                        }
-
-                        if(actions.children.length > 0) card.appendChild(actions);
-                        loansContainer.appendChild(card);
-                    }
-                });
-
-                // 2. EVALUATE CLIENT IDENTITY DATABASE
-                const clientSnapshot = await getDocs(collection(db, "clients"));
-                clientSnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    if(isAdmin || data.registeredBy === auth.currentUser.email) {
-                        const card = document.createElement('div');
-                        card.className = `data-card`;
-                        card.innerHTML = `
-                            <strong>Name:</strong> ${data.name}<br>
-                            <strong>Contact:</strong> ${data.phone} | <strong>ID No:</strong> ${data.idNum}<br>
-                            <strong>Occupation:</strong> ${data.occupation || 'Not Listed'}<br>
-                            <strong>Guarantor Spec:</strong> ${data.guarantor || 'None'} (${data.guarantorPhone || 'N/A'})<br>
-                            <strong>Security Assets:</strong> ${data.security || 'Unsecured Profile'}
-                        `;
-
-                        if(isAdmin) {
-                            const actions = document.createElement('div'); actions.className = "actions";
-                            const delBtn = document.createElement('button'); delBtn.className = "btn-delete"; delBtn.innerText = "Delete Profile";
-                            delBtn.onclick = async () => { if(confirm("Permanently clear client profile registry?")) { await deleteDoc(doc(db, "clients", docSnap.id)); loadDataPipeline(); } };
-                            actions.appendChild(delBtn); card.appendChild(actions);
-                        }
-                        clientsContainer.appendChild(card);
-                    }
-                });
-
-                // Refresh Header Metrics Controls
-                document.getElementById('stat-portfolio').innerText = "KES " + totalPortfolio.toLocaleString();
-                document.getElementById('stat-income').innerText = "KES " + totalIncome.toLocaleString();
-                document.getElementById('stat-arrears').innerText = totalArrearsCount + " Files";
-
-                if(loansContainer.children.length === 0) loansContainer.innerHTML = "<p>No entries matching criteria.</p>";
-                if(clientsContainer.children.length === 0) clientsContainer.innerHTML = "<p>No clients registered yet.</p>";
-
-            } catch(e) { alert("Ledger Critical Sync Error: " + e.message); }
-        }
-
-        // Close Session
-        document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth).then(() => location.reload()); });
-    </script>
-</body>
-</html>
