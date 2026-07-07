@@ -1,141 +1,54 @@
-// ==========================================
-// 1. FIREBASE INITIALIZATION & CONFIGURATION
-// ==========================================
-// DO NOT CHANGE THESE VALUES - Keep your exact original keys below!
-const firebaseConfig = {
-    apiKey: "AIzaSy...", // Your real Firebase key remains here
-    authDomain: "greymus-loan.firebaseapp.com",
-    projectId: "greymus-loan",
-    storageBucket: "greymus-loan.appspot.com",
-    messagingSenderId: "...",
-    appId: "..."
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greymus Ventures Loans</title>
+    <style>
+        :root { --primary-blue: #0A3254; --slate-gray: #4A5560; --light-bg: #F8F9FA; }
+        body { font-family: sans-serif; background: var(--light-bg); margin: 0; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 500px; margin: 20px auto; }
+        .logo-box { text-align: center; margin-bottom: 20px; }
+        .logo-box img { max-width: 160px; height: auto; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #D1D5DB; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; background: var(--primary-blue); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .breakdown-box { background: #F0F4F8; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .breakdown-row { display: flex; justify-content: space-between; margin: 6px 0; }
+    </style>
+</head>
+<body>
 
-// Start connection bridges safely
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+    <div id="dashboard-container" style="max-width: 550px; margin: 0 auto;">
+        <div class="card" style="text-align: center;">
+            <img src="logo.jpg" alt="Logo" style="height: 50px;">
+        </div>
 
-// ==========================================
-// 2. CORE OPERATIONAL LOAN LOGIC
-// ==========================================
-let registeredClients = [];
+        <div class="card">
+            <h3>1. Pre-Register Client</h3>
+            <input type="text" id="reg-client-name" placeholder="Client Full Name">
+            <input type="tel" id="reg-client-phone" placeholder="Phone Number">
+            <button id="btn-register-client">Save Client Profile</button>
+        </div>
 
-// Listen to data from your 'clients' collection in Firestore
-function listenToRegisteredClients() {
-    firebase.firestore().collection('clients').orderBy('name')
-    .onSnapshot((snapshot) => {
-        const selectDropdown = document.getElementById('loan-client-select');
-        if(!selectDropdown) return; // Fail-safe
-        
-        registeredClients = [];
-        selectDropdown.innerHTML = '<option value="">-- Choose a profile --</option>';
-        
-        snapshot.forEach((doc) => {
-            const client = doc.data();
-            client.id = doc.id;
-            registeredClients.push(client);
-            
-            const opt = document.createElement('option');
-            opt.value = client.id;
-            opt.textContent = `${client.name} (${client.phone})`;
-            selectDropdown.appendChild(opt);
-        });
-    });
-}
+        <div class="card">
+            <h3>2. Issue Loan</h3>
+            <select id="loan-client-select">
+                <option value="">-- Choose a Registered Client --</option>
+            </select>
+            <input type="number" id="loan-principal" placeholder="Principal Amount (KES)">
+            <input type="number" id="loan-weeks" placeholder="Duration in Weeks" min="1">
 
-// Onboard / Pre-Register Client
-document.getElementById('btn-register-client')?.addEventListener('click', async () => {
-    const name = document.getElementById('reg-client-name').value.trim();
-    const phone = document.getElementById('reg-client-phone').value.trim();
+            <div class="breakdown-box">
+                <div class="breakdown-row">Interest: <span id="calc-interest">KES 0.00</span></div>
+                <div class="breakdown-row">Total: <span id="calc-total">KES 0.00</span></div>
+                <div class="breakdown-row"><strong>Weekly:</strong> <span id="calc-weekly">KES 0.00 / week</span></div>
+            </div>
+            <button id="btn-issue-loan">Approve & Disburse</button>
+        </div>
+    </div>
 
-    if (!name || !phone) return alert("Please fill in both Name and Phone number.");
-
-    try {
-        await firebase.firestore().collection('clients').add({
-            name: name,
-            phone: phone,
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert("Client profile saved successfully!");
-        document.getElementById('reg-client-name').value = '';
-        document.getElementById('reg-client-phone').value = '';
-    } catch (err) {
-        alert("Error saving client: " + err.message);
-    }
-});
-
-// Dynamic Real-Time Calculator Math Engine
-function calculateLoanBreakdown() {
-    const principalInput = document.getElementById('loan-principal');
-    const weeksInput = document.getElementById('loan-weeks');
-    
-    if(!principalInput || !weeksInput) return;
-
-    const principal = parseFloat(principalInput.value) || 0;
-    const weeks = parseInt(weeksInput.value) || 0;
-
-    if (principal > 0 && weeks > 0) {
-        // Equation logic: (5% * Principal) * Number of weeks
-        const totalInterest = (principal * 0.05) * weeks;
-        const totalRepayable = principal + totalInterest;
-        const weeklyPayment = totalRepayable / weeks;
-
-        document.getElementById('calc-interest').textContent = `KES ${totalInterest.toLocaleString()}`;
-        document.getElementById('calc-total').textContent = `KES ${totalRepayable.toLocaleString()}`;
-        document.getElementById('calc-weekly').textContent = `KES ${weeklyPayment.toLocaleString()} / week`;
-    } else {
-        document.getElementById('calc-interest').textContent = "KES 0.00";
-        document.getElementById('calc-total').textContent = "KES 0.00";
-        document.getElementById('calc-weekly').textContent = "KES 0.00 / week";
-    }
-}
-
-// Bind live listening input calculations
-document.getElementById('loan-principal')?.addEventListener('input', calculateLoanBreakdown);
-document.getElementById('loan-weeks')?.addEventListener('input', calculateLoanBreakdown);
-
-// Disburse Loan to Selected Client
-document.getElementById('btn-issue-loan')?.addEventListener('click', async () => {
-    const clientId = document.getElementById('loan-client-select').value;
-    const principal = parseFloat(document.getElementById('loan-principal').value) || 0;
-    const weeks = parseInt(document.getElementById('loan-weeks').value) || 0;
-
-    if (!clientId) return alert("Error: You must choose a registered client from the dropdown list first.");
-    if (principal <= 0 || weeks <= 0) return alert("Please enter valid principal values and duration weeks.");
-
-    const matchedClient = registeredClients.find(c => c.id === clientId);
-    
-    const totalInterest = (principal * 0.05) * weeks;
-    const totalRepayable = principal + totalInterest;
-    const weeklyPayment = totalRepayable / weeks;
-
-    try {
-        await firebase.firestore().collection('loans').add({
-            clientId: matchedClient.id,
-            clientName: matchedClient.name,
-            clientPhone: matchedClient.phone,
-            principalAmount: principal,
-            loanWeeksDuration: weeks,
-            calculatedInterest: totalInterest,
-            totalRepayableAmount: totalRepayable,
-            weeklyInstallmentAmount: weeklyPayment,
-            status: "active",
-            issued_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        alert(`Success! Loan approved for ${matchedClient.name}. Weekly collection target: KES ${weeklyPayment.toFixed(2)}`);
-        
-        document.getElementById('loan-client-select').value = "";
-        document.getElementById('loan-principal').value = "";
-        document.getElementById('loan-weeks').value = "";
-        calculateLoanBreakdown();
-
-    } catch (err) {
-        alert("Transaction failed: " + err.message);
-    }
-});
-
-// Run dropdown stream listener on app start
-listenToRegisteredClients();
-
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
