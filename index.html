@@ -3,142 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greymus Loan Internal Management System</title>
+    <title>Greymus Loan Financial Hub</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        .container {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 600px;
-            margin: auto;
-        }
-        h2, h3 { text-align: center; color: #007bff; margin-top: 0; }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #333;
-            background-color: #2a2a2a;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 15px; box-sizing: border-box; }
+        .container { background-color: #1e1e1e; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 650px; margin: auto; }
+        h2, h3 { text-align: center; color: #007bff; margin-top: 15px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #333; background-color: #2a2a2a; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #007bff; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         button:hover { background-color: #0056b3; }
         .hidden { display: none !important; }
         
-        /* Stats Grid Dashboard */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #252525;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            border-bottom: 3px solid #007bff;
-        }
+        /* Stats Display */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: #252525; padding: 12px; border-radius: 6px; text-align: center; border-bottom: 3px solid #007bff; }
         .stat-card.danger { border-bottom-color: #dc3545; }
         .stat-card.success { border-bottom-color: #28a745; }
-        .stat-num { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .stat-num { font-size: 17px; font-weight: bold; margin-top: 5px; }
 
-        .loan-card {
-            background: #2a2a2a;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border-left: 5px solid #ffc107;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .loan-card.Approved { border-left-color: #28a745; }
-        .loan-card.Rejected { border-left-color: #dc3545; }
-        .loan-card.Arrears { border-left-color: #e83e8c; background: #341e24; }
+        /* Ledger Cards */
+        .data-card { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 5px solid #007bff; font-size: 14px; line-height: 1.5; position: relative; }
+        .data-card.Pending { border-left-color: #ffc107; }
+        .data-card.Approved { border-left-color: #28a745; }
+        .data-card.Rejected { border-left-color: #dc3545; }
+        .data-card.Arrears { border-left-color: #e83e8c; background: #341e24; }
         
-        .actions { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-approve { background-color: #28a745; }
-        .btn-reject { background-color: #dc3545; }
-        .role-selector { margin-bottom: 15px; text-align: center; }
-        .badge { display: inline-block; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #444; }
+        .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-approve { background-color: #28a745; width: auto; flex: 1; padding: 8px; margin: 0; }
+        .btn-reject { background-color: #ffc107; color: #000; width: auto; flex: 1; padding: 8px; margin: 0; }
+        .btn-delete { background-color: #dc3545; padding: 8px; margin: 0; font-size: 13px; }
+        .tab-btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { background-color: #333; margin: 0; }
+        .tab-btn.active { background-color: #007bff; }
+        .badge { display: inline-block; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #444; margin-left: 5px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- 1. SECURE LOGIN SCREEN -->
         <div id="login-section">
-            <h2>Greymus Systems Portal</h2>
-            <div class="role-selector">
-                <label><input type="radio" name="login-role" value="officer" checked> Loan Officer</label>
-                <label style="margin-left: 15px;"><input type="radio" name="login-role" value="admin"> Administrator</label>
+            <h2>Greymus Financial Portal</h2>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <label><input type="radio" name="login-role" value="officer" checked> Field Officer</label>
+                <label style="margin-left: 15px;"><input type="radio" name="login-role" value="admin"> Admin (Boss)</label>
             </div>
             <input type="email" id="email" placeholder="Corporate Email Address" required>
             <input type="password" id="password" placeholder="Access Password" required>
             <button id="login-btn">Secure Connection</button>
         </div>
 
-        <!-- 2. OFFICER BOARD -->
-        <div id="officer-section" class="hidden">
-            <h2>Officer Performance Board</h2>
+        <div id="dashboard-section" class="hidden">
+            <h2 id="dashboard-title">Operational Workspace</h2>
             
-            <!-- Metrics Metrics Section -->
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Active Portfolio</div><div class="stat-num" id="off-portfolio">KES 0</div></div>
-                <div class="stat-card success"><div class="label">Earned Income</div><div class="stat-num" id="off-income">KES 0</div></div>
-                <div class="stat-card danger"><div class="label">Arrears / Overdue</div><div class="stat-num" id="off-arrears">0 Files</div></div>
-                <div class="stat-card"><div class="label">Your Profile</div><div class="stat-num" id="off-name" style="font-size:12px; word-break: break-all;">...</div></div>
+                <div class="stat-card"><div class="label">Total Outstandings</div><div class="stat-num" id="stat-portfolio">KES 0</div></div>
+                <div class="stat-card success"><div class="label">Total Revenue Income</div><div class="stat-num" id="stat-income">KES 0</div></div>
+                <div class="stat-card danger"><div class="label">Arrears/Overdues</div><div class="stat-num" id="stat-arrears">0 Files</div></div>
+                <div class="stat-card"><div class="label">Operator Account</div><div class="stat-num" id="stat-user" style="font-size:11px; word-break: break-all;">...</div></div>
             </div>
 
-            <h3>Submit New Loan File</h3>
-            <input type="text" id="client-name" placeholder="Client Full Name">
-            <input type="tel" id="client-phone" placeholder="Client Mobile Number (e.g. 07...)">
-            <input type="number" id="loan-amount" placeholder="Principal Amount (KES)">
-            <input type="number" id="loan-interest" placeholder="Interest Rate % (e.g. 10)">
-            <input type="number" id="loan-duration" placeholder="Duration (Months)">
-            <input type="number" id="client-credit" placeholder="CRB Credit Score (e.g. 300 - 850)">
-            <input type="date" id="loan-duedate" placeholder="First Due Date">
-            
-            <button id="submit-loan-btn">Dispatch File for Review</button>
-            <button id="officer-logout" style="background-color: #555; margin-top: 15px;">Logout</button>
-        </div>
+            <div class="tab-btn-group">
+                <button class="tab-btn active" id="tab-loans-btn" onclick="switchTab('loans')">Loans Pipeline</button>
+                <button class="tab-btn" id="tab-clients-btn" onclick="switchTab('clients')">Clients Registry</button>
+            </div>
 
-        <!-- 3. ADMIN MASTER BOARD -->
-        <div id="admin-section" class="hidden">
-            <h2>Admin Master Panel</h2>
-            <h3>Global Pipeline Review</h3>
-            <div id="all-loans-list">Processing secure pipeline records...</div>
-            <button id="admin-logout" style="background-color: #555; margin-top: 20px;">Logout</button>
+            <div id="workspace-loans">
+                <h3>Submit New Loan File</h3>
+                <input type="text" id="loan-client-name" placeholder="Client Full Name">
+                <input type="number" id="loan-amount" placeholder="Principal Amount (KES)">
+                <input type="number" id="loan-fee" placeholder="Upfront Processing Fee Paid (KES)">
+                <input type="number" id="loan-interest" placeholder="Standard Monthly Interest %">
+                <input type="number" id="loan-duration" placeholder="Duration (Months)">
+                <input type="date" id="loan-duedate" placeholder="Maturity Due Date">
+                <button id="submit-loan-btn">Dispatch Loan Application</button>
+
+                <h3>Active Loan Ledger</h3>
+                <div id="loans-pipeline-list">Sourcing database ledger records...</div>
+            </div>
+
+            <div id="workspace-clients" class="hidden">
+                <h3>Register New Client Profile</h3>
+                <input type="text" id="client-name" placeholder="Client Full Name">
+                <input type="tel" id="client-phone" placeholder="Mobile Phone Number">
+                <input type="text" id="client-idnum" placeholder="National ID / Passport">
+                <input type="text" id="client-occupation" placeholder="Current Occupation/Business">
+                <input type="text" id="client-guarantor" placeholder="Guarantor Full Name">
+                <input type="tel" id="client-guarantor-phone" placeholder="Guarantor Phone Number">
+                <textarea id="client-security" placeholder="Collateral / Loan Security Description" rows="2"></textarea>
+                <button id="submit-client-btn" style="background-color: #28a745;">Complete Profile Registration</button>
+
+                <h3>Client Registry Database</h3>
+                <div id="clients-registry-list">Sourcing registry records...</div>
+            </div>
+
+            <button id="logout-btn" style="background-color: #444; margin-top: 25px;">Safely Terminate Session</button>
         </div>
     </div>
 
-    <!-- FIREBASE PLATFORM INJECTIONS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONFIGURE YOUR FIREBASE APP INSTANCE HERE:
         const firebaseConfig = {
@@ -153,144 +117,191 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentRole = 'officer';
+        let isAdmin = false;
 
-        // Gateway Authentication Engine
+        // Session Authentication Gate
         document.getElementById('login-btn').addEventListener('click', () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            currentRole = document.querySelector('input[name="login-role"]:checked').value;
+            isAdmin = document.querySelector('input[name="login-role"]:checked').value === 'admin';
             
             signInWithEmailAndPassword(auth, email, password)
                 .then(() => {
                     document.getElementById('login-section').classList.add('hidden');
-                    if(currentRole === 'admin') {
-                        document.getElementById('admin-section').classList.remove('hidden');
-                        loadSystemData(true);
-                    } else {
-                        document.getElementById('officer-section').classList.remove('hidden');
-                        document.getElementById('off-name').innerText = email;
-                        loadSystemData(false);
-                    }
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('dashboard-title').innerText = isAdmin ? "Executive Admin Control" : "Field Officer Panel";
+                    document.getElementById('stat-user').innerText = email;
+                    loadDataPipeline();
                 })
-                .catch((err) => alert("Authentication Refused: " + err.message));
+                .catch((err) => alert("Access Refused: " + err.message));
         });
 
-        // Pipeline Dispatch Handling
+        // Interface Toggle Router
+        window.switchTab = function(target) {
+            if(target === 'loans') {
+                document.getElementById('workspace-loans').classList.remove('hidden');
+                document.getElementById('workspace-clients').classList.add('hidden');
+                document.getElementById('tab-loans-btn').classList.add('active');
+                document.getElementById('tab-clients-btn').classList.remove('active');
+            } else {
+                document.getElementById('workspace-loans').classList.add('hidden');
+                document.getElementById('workspace-clients').classList.remove('hidden');
+                document.getElementById('tab-loans-btn').classList.remove('active');
+                document.getElementById('tab-clients-btn').classList.add('active');
+            }
+        }
+
+        // Processing Dispatch Engine
         document.getElementById('submit-loan-btn').addEventListener('click', async () => {
-            const name = document.getElementById('client-name').value;
-            const phone = document.getElementById('client-phone').value;
+            const name = document.getElementById('loan-client-name').value;
             const amount = parseFloat(document.getElementById('loan-amount').value);
+            const fee = parseFloat(document.getElementById('loan-fee').value || 0);
             const interest = parseFloat(document.getElementById('loan-interest').value || 0);
-            const duration = document.getElementById('loan-duration').value;
-            const credit = document.getElementById('client-credit').value || "N/A";
+            const duration = parseFloat(document.getElementById('loan-duration').value || 1);
             const due = document.getElementById('loan-duedate').value;
 
-            if(!name || !amount || !due) return alert("Validation Failed: Check Name, Amount, and Due Date.");
+            if(!name || !amount || !due) return alert("Validation Failed: Missing critical parameters.");
 
             try {
                 await addDoc(collection(db, "loans"), {
-                    clientName: name,
-                    clientPhone: phone,
-                    amount: amount,
-                    interestRate: interest,
-                    duration: duration,
-                    creditScore: credit,
-                    dueDate: due,
-                    status: "Pending",
-                    submittedBy: auth.currentUser.email,
-                    timestamp: new Date().toISOString()
+                    clientName: name, amount, processingFee: fee, interestRate: interest, duration, dueDate: due,
+                    status: "Pending", submittedBy: auth.currentUser.email, timestamp: new Date().toISOString()
                 });
-                alert("File written into database ledger successfully!");
-                
-                // Reset inputs
-                ['client-name','client-phone','loan-amount','loan-interest','loan-duration','client-credit','loan-duedate'].forEach(id => {
-                    document.getElementById(id).value = '';
-                });
-                loadSystemData(false);
+                alert("Loan application uploaded to master pipeline!");
+                ['loan-client-name','loan-amount','loan-fee','loan-interest','loan-duration','loan-duedate'].forEach(id => document.getElementById(id).value = '');
+                loadDataPipeline();
             } catch(e) { alert("Write Error: " + e.message); }
         });
 
-        // Combined Live Operational Data Aggregator
-        async function loadSystemData(isAdminView) {
-            const adminContainer = document.getElementById('all-loans-list');
-            if(isAdminView) adminContainer.innerHTML = "";
+        // Client Registry Dispatch Engine
+        document.getElementById('submit-client-btn').addEventListener('click', async () => {
+            const name = document.getElementById('client-name').value;
+            const phone = document.getElementById('client-phone').value;
+            const idNum = document.getElementById('client-idnum').value;
+            const occupation = document.getElementById('client-occupation').value;
+            const guarantor = document.getElementById('client-guarantor').value;
+            const gPhone = document.getElementById('client-guarantor-phone').value;
+            const security = document.getElementById('client-security').value;
+
+            if(!name || !phone || !idNum) return alert("Validation Failed: Check basic mandatory fields.");
+
+            try {
+                await addDoc(collection(db, "clients"), {
+                    name, phone, idNum, occupation, guarantor, guarantorPhone: gPhone, security,
+                    registeredBy: auth.currentUser.email, timestamp: new Date().toISOString()
+                });
+                alert("Client profile captured securely.");
+                ['client-name','client-phone','client-idnum','client-occupation','client-guarantor','client-guarantor-phone','client-security'].forEach(id => document.getElementById(id).value = '');
+                loadDataPipeline();
+            } catch(e) { alert("Write Error: " + e.message); }
+        });
+
+        // Core Synchronous Ledger Loader & Mathematical Computation Engine
+        async function loadDataPipeline() {
+            const loansContainer = document.getElementById('loans-pipeline-list');
+            const clientsContainer = document.getElementById('clients-registry-list');
+            loansContainer.innerHTML = ""; clientsContainer.innerHTML = "";
             
-            let totalPortfolio = 0;
-            let totalIncome = 0;
-            let totalArrearsCount = 0;
+            let totalPortfolio = 0; let totalIncome = 0; let totalArrearsCount = 0;
             const todayStr = new Date().toISOString().split('T')[0];
 
             try {
-                const querySnapshot = await getDocs(collection(db, "loans"));
-                
-                querySnapshot.forEach((docSnap) => {
+                // 1. EVALUATE FINANCIAL LOAN REGISTRY
+                const loanSnapshot = await getDocs(collection(db, "loans"));
+                loanSnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const isOwner = data.submittedBy === auth.currentUser.email;
                     
-                    // Determine Arrears Status
-                    let calculatedStatus = data.status;
-                    if(data.status === "Approved" && data.dueDate && data.dueDate < todayStr) {
-                        calculatedStatus = "Arrears";
-                    }
+                    let computedStatus = data.status;
+                    if(data.status === "Approved" && data.dueDate && data.dueDate < todayStr) computedStatus = "Arrears";
 
-                    // Calculate Running totals specifically for the logged-in officer
-                    if(!isAdminView && isOwner) {
-                        if(data.status === "Approved" || calculatedStatus === "Arrears") {
+                    // DYNAMIC MATH CALCULATIONS
+                    const baseInterest = data.amount * (data.interestRate / 100) * data.duration;
+                    const finalWeekSurcharge = data.amount * 0.05; // 5% flat fee for final week sprint
+                    const totalInterestCharged = baseInterest + finalWeekSurcharge;
+                    
+                    const clientRepaymentTarget = data.amount + totalInterestCharged; // Excludes processing fee paid upfront
+                    const totalSystemRevenue = (data.processingFee || 0) + totalInterestCharged;
+
+                    if(isAdmin || isOwner) {
+                        if(data.status === "Approved" || computedStatus === "Arrears") {
                             totalPortfolio += data.amount;
-                            totalIncome += (data.amount * (data.interestRate / 100));
+                            totalIncome += totalSystemRevenue;
                         }
-                        if(calculatedStatus === "Arrears") {
-                            totalArrearsCount++;
-                        }
-                    }
+                        if(computedStatus === "Arrears") totalArrearsCount++;
 
-                    // Render out the row data if Admin view is toggled
-                    if(isAdminView) {
                         const card = document.createElement('div');
-                        card.className = `loan-card ${calculatedStatus}`;
+                        card.className = `data-card ${computedStatus}`;
                         card.innerHTML = `
-                            <strong>Client:</strong> ${data.clientName} <span class="badge">Credit: ${data.creditScore}</span><br>
-                            <strong>Amount:</strong> KES ${data.amount} [${data.duration} Mo. @ ${data.interestRate}%]<br>
-                            <strong>Target Due Date:</strong> ${data.dueDate}<br>
-                            <strong>Officer Assigned:</strong> ${data.submittedBy}<br>
-                            <strong>Status Label:</strong> <b style="text-transform:uppercase;">${calculatedStatus}</b>
+                            <strong>Client Target:</strong> ${data.clientName}<br>
+                            <strong>Principal:</strong> KES ${data.amount.toLocaleString()}<br>
+                            <strong>Upfront Processing Fee:</strong> KES ${(data.processingFee || 0).toLocaleString()} <span class="badge">Paid Upfront</span><br>
+                            <strong>Total Client Repayment:</strong> <span style="color: #28a745; font-weight:bold;">KES ${clientRepaymentTarget.toLocaleString()}</span><br>
+                            <small style="color: #bbb;">(Includes structural monthly + final week 5% surge interest)</small><br>
+                            <strong>Maturity Date:</strong> ${data.dueDate}<br>
+                            <strong>File State:</strong> <b style="text-transform:uppercase;">${computedStatus}</b>
                         `;
 
-                        if(data.status === "Pending") {
-                            const actions = document.createElement('div');
-                            actions.className = "actions";
-                            
-                            const appBtn = document.createElement('button');
-                            appBtn.className = "btn-approve"; appBtn.innerText = "Approve";
-                            appBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Approved"}); loadSystemData(true); };
+                        const actions = document.createElement('div');
+                        actions.className = "actions";
 
-                            const rejBtn = document.createElement('button');
-                            rejBtn.className = "btn-reject"; rejBtn.innerText = "Reject";
-                            rejBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Rejected"}); loadSystemData(true); };
-
+                        if(isAdmin && data.status === "Pending") {
+                            const appBtn = document.createElement('button'); appBtn.className = "btn-approve"; appBtn.innerText = "Approve";
+                            appBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Approved"}); loadDataPipeline(); };
+                            const rejBtn = document.createElement('button'); rejBtn.className = "btn-reject"; rejBtn.innerText = "Reject";
+                            rejBtn.onclick = async () => { await updateDoc(doc(db, "loans", docSnap.id), {status: "Rejected"}); loadDataPipeline(); };
                             actions.appendChild(appBtn); actions.appendChild(rejBtn);
-                            card.appendChild(actions);
                         }
-                        adminContainer.appendChild(card);
+
+                        if(isAdmin) {
+                            const delBtn = document.createElement('button'); delBtn.className = "btn-delete"; delBtn.innerText = "Delete Record";
+                            delBtn.onclick = async () => { if(confirm("Permanently remove this loan from system memory?")) { await deleteDoc(doc(db, "loans", docSnap.id)); loadDataPipeline(); } };
+                            actions.appendChild(delBtn);
+                        }
+
+                        if(actions.children.length > 0) card.appendChild(actions);
+                        loansContainer.appendChild(card);
                     }
                 });
 
-                // Set up visual counters for individual Officer Performance metrics
-                if(!isAdminView) {
-                    document.getElementById('off-portfolio').innerText = "KES " + totalPortfolio.toLocaleString();
-                    document.getElementById('off-income').innerText = "KES " + totalIncome.toLocaleString();
-                    document.getElementById('off-arrears').innerText = totalArrearsCount + " Files";
-                } else if(querySnapshot.empty) {
-                    adminContainer.innerHTML = "<p>No files are logged in database yet.</p>";
-                }
-            } catch(e) { if(isAdminView) adminContainer.innerHTML = "Ledger Sync Error: " + e.message; }
+                // 2. EVALUATE CLIENT IDENTITY DATABASE
+                const clientSnapshot = await getDocs(collection(db, "clients"));
+                clientSnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if(isAdmin || data.registeredBy === auth.currentUser.email) {
+                        const card = document.createElement('div');
+                        card.className = `data-card`;
+                        card.innerHTML = `
+                            <strong>Name:</strong> ${data.name}<br>
+                            <strong>Contact:</strong> ${data.phone} | <strong>ID No:</strong> ${data.idNum}<br>
+                            <strong>Occupation:</strong> ${data.occupation || 'Not Listed'}<br>
+                            <strong>Guarantor Spec:</strong> ${data.guarantor || 'None'} (${data.guarantorPhone || 'N/A'})<br>
+                            <strong>Security Assets:</strong> ${data.security || 'Unsecured Profile'}
+                        `;
+
+                        if(isAdmin) {
+                            const actions = document.createElement('div'); actions.className = "actions";
+                            const delBtn = document.createElement('button'); delBtn.className = "btn-delete"; delBtn.innerText = "Delete Profile";
+                            delBtn.onclick = async () => { if(confirm("Permanently clear client profile registry?")) { await deleteDoc(doc(db, "clients", docSnap.id)); loadDataPipeline(); } };
+                            actions.appendChild(delBtn); card.appendChild(actions);
+                        }
+                        clientsContainer.appendChild(card);
+                    }
+                });
+
+                // Refresh Header Metrics Controls
+                document.getElementById('stat-portfolio').innerText = "KES " + totalPortfolio.toLocaleString();
+                document.getElementById('stat-income').innerText = "KES " + totalIncome.toLocaleString();
+                document.getElementById('stat-arrears').innerText = totalArrearsCount + " Files";
+
+                if(loansContainer.children.length === 0) loansContainer.innerHTML = "<p>No entries matching criteria.</p>";
+                if(clientsContainer.children.length === 0) clientsContainer.innerHTML = "<p>No clients registered yet.</p>";
+
+            } catch(e) { alert("Ledger Critical Sync Error: " + e.message); }
         }
 
-        // System Logouts
-        const terminateSession = () => { signOut(auth).then(() => location.reload()); };
-        document.getElementById('officer-logout').addEventListener('click', terminateSession);
-        document.getElementById('admin-logout').addEventListener('click', terminateSession);
+        // Close Session
+        document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth).then(() => location.reload()); });
     </script>
 </body>
-    </html>
+                    </html>
