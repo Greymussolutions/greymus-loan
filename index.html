@@ -116,24 +116,25 @@
         let isAdmin = false;
 
         // Session Authentication Gate
-        document.getElementById('login-btn').addEventListener('click', () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    // Check if user is Admin based on email
-    isAdmin = email.toLowerCase() === "grahammakutu@gmail.com";
+            document.getElementById('login-btn').addEventListener('click', () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        isAdmin = email.toLowerCase() === "grahammakutu@gmail.com";
 
-            
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('dashboard-section').classList.remove('hidden');
-                    document.getElementById('dashboard-title').innerText = isAdmin ? "Executive Admin Control" : "Field Officer Panel";
-                    document.getElementById('stat-user').innerText = email;
-                    loadDataPipeline();
-                })
-                .catch((err) => alert("Access Refused: " + err.message));
+        signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('dashboard-title').innerText = isAdmin ? 'Executive Admin Control' : 'Field Office Portal';
+            document.getElementById('stat-user').innerText = email;
+            loadDataPipeline();
+        })
+        .catch((err) => {
+            alert('Login Error: ' + err.message);
         });
+    });
+
 
         // Interface Toggle Router
         window.switchTab = function(target) {
