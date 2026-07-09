@@ -45,7 +45,8 @@ if (loginForm) {
 
         if (!email || !password) {
 
-            showToast("Enter email and password", "error");
+            showToast("Please enter your email and password.", "error");
+
             return;
 
         }
@@ -88,15 +89,21 @@ if (logoutBtn) {
 
         try {
 
+            showLoader();
+
             await signOut(auth);
 
-            showToast("Logged out");
+            showToast("Logged out successfully");
 
         } catch (error) {
 
             console.error(error);
 
             showToast(error.message, "error");
+
+        } finally {
+
+            hideLoader();
 
         }
 
@@ -105,58 +112,68 @@ if (logoutBtn) {
 }
 
 // ==========================================
-// Auth State
+// Authentication State
 // ==========================================
 
 onAuthStateChanged(auth, async (user) => {
 
-    if (user) {
+    try {
 
-        loginSection.classList.add("hidden");
-        dashboardSection.classList.remove("hidden");
+        if (user) {
 
-        if (loggedUser) {
+            loginSection.classList.add("hidden");
+            dashboardSection.classList.remove("hidden");
 
-            loggedUser.textContent =
-                user.displayName ||
-                user.email ||
-                "User";
+            if (loggedUser) {
+
+                loggedUser.textContent =
+                    user.displayName ||
+                    user.email ||
+                    "User";
+
+            }
+
+            // Initialize application
+            const appModule = await import("./app.js");
+
+            if (appModule.initializeApp) {
+
+                await appModule.initializeApp(user);
+
+            }
+
+        } else {
+
+            dashboardSection.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+
+            if (loginForm) {
+
+                loginForm.reset();
+
+            }
 
         }
 
-        // Start application
-        import("./app.js")
-            .then(module => {
+    } catch (error) {
 
-                if (module.initializeApp) {
+        console.error("Application Initialization Error:", error);
 
-                    module.initializeApp(user);
-
-                }
-
-            });
-
-    } else {
-
-        dashboardSection.classList.add("hidden");
-        loginSection.classList.remove("hidden");
-
-        if (loginForm) {
-
-            loginForm.reset();
-
-        }
+        showToast(
+            "Failed to initialize application.",
+            "error"
+        );
 
     }
 
 });
 
 // ==========================================
-// Export Current User
+// Current User
 // ==========================================
 
 export function getCurrentUser() {
 
     return auth.currentUser;
 
-}
+    }
