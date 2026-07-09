@@ -1,45 +1,162 @@
+// js/auth.js
+
 import { auth } from "./firebase.js";
 
 import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+    showLoader,
+    hideLoader,
+    showToast
+} from "./utils.js";
+
+// ==========================================
+// DOM Elements
+// ==========================================
+
+const loginSection = document.getElementById("login-section");
+const dashboardSection = document.getElementById("dashboard-section");
 
 const loginForm = document.getElementById("login-form");
+
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+
 const logoutBtn = document.getElementById("logout-btn");
 
-loginForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
+const loggedUser = document.getElementById("logged-user");
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+// ==========================================
+// Login
+// ==========================================
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (err) {
-    alert(err.message);
-  }
-});
+if (loginForm) {
 
-logoutBtn?.addEventListener("click", async () => {
-  await signOut(auth);
-});
+    loginForm.addEventListener("submit", async (e) => {
 
-onAuthStateChanged(auth, (user) => {
-  const loginSection = document.getElementById("login-section");
-  const dashboardSection = document.getElementById("dashboard-section");
-  const loggedUser = document.getElementById("logged-user");
+        e.preventDefault();
 
-  if (user) {
-    loginSection.classList.add("hidden");
-    dashboardSection.classList.remove("hidden");
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
 
-    if (loggedUser) {
-      loggedUser.textContent = user.email;
+        if (!email || !password) {
+
+            showToast("Enter email and password", "error");
+            return;
+
+        }
+
+        try {
+
+            showLoader();
+
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+            showToast("Login successful");
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(error.message, "error");
+
+        } finally {
+
+            hideLoader();
+
+        }
+
+    });
+
+}
+
+// ==========================================
+// Logout
+// ==========================================
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener("click", async () => {
+
+        try {
+
+            await signOut(auth);
+
+            showToast("Logged out");
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(error.message, "error");
+
+        }
+
+    });
+
+}
+
+// ==========================================
+// Auth State
+// ==========================================
+
+onAuthStateChanged(auth, async (user) => {
+
+    if (user) {
+
+        loginSection.classList.add("hidden");
+        dashboardSection.classList.remove("hidden");
+
+        if (loggedUser) {
+
+            loggedUser.textContent =
+                user.displayName ||
+                user.email ||
+                "User";
+
+        }
+
+        // Start application
+        import("./app.js")
+            .then(module => {
+
+                if (module.initializeApp) {
+
+                    module.initializeApp(user);
+
+                }
+
+            });
+
+    } else {
+
+        dashboardSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+
+        if (loginForm) {
+
+            loginForm.reset();
+
+        }
+
     }
-  } else {
-    loginSection.classList.remove("hidden");
-    dashboardSection.classList.add("hidden");
-  }
+
 });
+
+// ==========================================
+// Export Current User
+// ==========================================
+
+export function getCurrentUser() {
+
+    return auth.currentUser;
+
+}
