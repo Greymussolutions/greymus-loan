@@ -1,25 +1,88 @@
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Greymus Loan Financial Hub initialized.");
+// js/app.js
 
-    const clientsTab = document.getElementById("clients-tab");
-    const loansTab = document.getElementById("loans-tab");
+import { showToast } from "./utils.js";
 
-    if (clientsTab) clientsTab.classList.remove("hidden");
-    if (loansTab) loansTab.classList.add("hidden");
+let currentUser = null;
 
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn")
-                .forEach(b => b.classList.remove("active"));
+// ==========================================
+// Initialize Application
+// ==========================================
+export async function initializeApp(user) {
 
-            btn.classList.add("active");
+    currentUser = user;
 
-            const tab = btn.dataset.tab;
+    console.log("Greymus Loan Financial Hub");
 
-            clientsTab.classList.toggle("hidden", tab !== "clients");
-            loansTab.classList.toggle("hidden", tab !== "loans");
-        });
-    });
+    console.log("Logged in as:", user.email);
 
-    console.log("Application ready.");
-});
+    initializeDashboard();
+
+    initializeClientModule();
+
+    initializeLoanModule();
+
+}
+
+// ==========================================
+// Dashboard
+// ==========================================
+
+async function initializeDashboard() {
+
+    try {
+
+        const dashboard = await import("./dashboard.js");
+
+        if (dashboard.loadDashboard) {
+
+            await dashboard.loadDashboard();
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast("Dashboard failed to load", "error");
+
+    }
+
+}
+
+// ==========================================
+// Clients
+// ==========================================
+
+async function initializeClientModule() {
+
+    try {
+
+        const clients = await import("./clients.js");
+
+        if (clients.initializeClients) {
+
+            await clients.initializeClients();
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+// ==========================================
+// Loans
+// ==========================================
+
+async function initializeLoanModule() {
+
+    try {
+
+        const loans = await import("./loans.js");
+
+        if (loans.initializeLoans) {
+
+            await loans.initialize
