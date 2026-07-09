@@ -1,4 +1,4 @@
-// js/auth.js
+console.log("Auth.js loaded");// js/auth.js
 
 import {
     auth,
