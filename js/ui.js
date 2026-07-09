@@ -1,92 +1,188 @@
 // js/ui.js
 
-import {
-    openModal,
-    closeModal,
-    closeAllModals
-} from "./utils.js";
+// TAB NAVIGATION
 
-document.addEventListener("DOMContentLoaded", () => {
+const tabButtons =
+    document.querySelectorAll(".tab-btn");
 
-    initializeTabs();
-    initializeModals();
-    initializeNotifications();
-    initializeFab();
+const tabContents =
+    document.querySelectorAll(".tab-content");
 
-});
 
-// ======================================
-// Tabs
-// ======================================
+function showTab(tabName) {
 
-function initializeTabs() {
 
-    const buttons = document.querySelectorAll(".tab-btn");
+    tabContents.forEach(
+        tab => {
 
-    const clientsTab = document.getElementById("clients-tab");
-    const loansTab = document.getElementById("loans-tab");
+            tab.classList.add(
+                "hidden"
+            );
 
-    buttons.forEach(button => {
+        }
+    );
 
-        button.addEventListener("click", () => {
 
-            const tab = button.dataset.tab;
+    const activeTab =
+        document.getElementById(
+            `${tabName}-tab`
+        );
 
-            buttons.forEach(btn => btn.classList.remove("active"));
 
-            document
-                .querySelectorAll(`.tab-btn[data-tab="${tab}"]`)
-                .forEach(btn => btn.classList.add("active"));
+    if (activeTab) {
 
-            if (clientsTab) clientsTab.classList.add("hidden");
-            if (loansTab) loansTab.classList.add("hidden");
+        activeTab.classList.remove(
+            "hidden"
+        );
 
-            if (tab === "clients" && clientsTab) {
-                clientsTab.classList.remove("hidden");
+    }
+
+
+
+    tabButtons.forEach(
+        button => {
+
+
+            if (
+                button.dataset.tab === tabName
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+
+
+            } else {
+
+
+                button.classList.remove(
+                    "active"
+                );
+
+
             }
 
-            if (tab === "loans" && loansTab) {
-                loansTab.classList.remove("hidden");
-            }
 
-        });
+        }
+    );
 
-    });
 
 }
 
-// ======================================
-// Modals
-// ======================================
 
-function initializeModals() {
+// TAB CLICK EVENTS
 
-    const newClientBtn = document.getElementById("new-client-btn");
-    const newLoanBtn = document.getElementById("new-loan-btn");
-    const fab = document.getElementById("fab-new-loan");
+tabButtons.forEach(
+    button => {
 
-    if (newClientBtn) {
 
-        newClientBtn.addEventListener("click", () => {
-            openModal("client-modal");
-        });
+        button.addEventListener(
+            "click",
+            () => {
 
-    }
 
-    if (newLoanBtn) {
+                showTab(
+                    button.dataset.tab
+                );
 
-        newLoanBtn.addEventListener("click", () => {
-            openModal("loan-modal");
-        });
+
+            }
+        );
+
 
     }
+);
 
-    if (fab) {
 
-        fab.addEventListener("click", () => {
-            openModal("loan-modal");
-        });
+// MODAL CONTROL
+
+const modals =
+    document.querySelectorAll(".modal");
+
+
+function closeAllModals(){
+
+
+    modals.forEach(
+        modal => {
+
+
+            modal.classList.add(
+                "hidden"
+            );
+
+
+        }
+    );
+
+
+}
+
+
+// CLOSE BUTTONS
+
+document
+.querySelectorAll(".modal-close-btn")
+.forEach(
+    button => {
+
+
+        button.addEventListener(
+            "click",
+            closeAllModals
+        );
+
 
     }
+);
 
-    document.querySelectorAll(".close-modal").forEach(button => {
+
+document
+.querySelectorAll(".secondary-btn")
+.forEach(
+    button => {
+
+
+        button.addEventListener(
+            "click",
+            closeAllModals
+        );
+
+
+    }
+);
+
+
+// CLICK OUTSIDE MODAL CLOSE
+
+modals.forEach(
+    modal => {
+
+
+        modal.addEventListener(
+            "click",
+            (event)=>{
+
+
+                if(
+                    event.target === modal
+                ){
+
+                    closeAllModals();
+
+                }
+
+
+            }
+        );
+
+
+    }
+);
+
+
+// NOTIFICATION PANEL
+
+const notificationBtn =
+    document.getElementById(
+        "notification-btn"
