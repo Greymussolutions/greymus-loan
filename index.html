@@ -4,40 +4,67 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Greymus Loan Financial Hub</title>
 
     <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+
+    <link rel="stylesheet"
+          href="css/styles.css">
 
     <!-- Firebase -->
-    <script type="module" src="js/firebase.js"></script>
 
-    <!-- Application -->
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/clients.js"></script>
-    <script type="module" src="js/loans.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <script type="module"
+            src="js/firebase.js"></script>
+
+    <!-- Modules -->
+
+    <script type="module"
+            src="js/auth.js"></script>
+
+    <script type="module"
+            src="js/ui.js"></script>
+
+    <script type="module"
+            src="js/utils.js"></script>
+
+    <script type="module"
+            src="js/dashboard.js"></script>
+
+    <script type="module"
+            src="js/clients.js"></script>
+
+    <script type="module"
+            src="js/loans.js"></script>
+
+    <script type="module"
+            src="js/app.js"></script>
 
 </head>
 
 <body>
 
-<!-- =========================================================
-LOADING
-========================================================= -->
+<!-- =========================
+LOADER
+========================= -->
 
-<div id="loading-overlay" class="hidden">
+<div id="loading-overlay"
+     class="hidden">
 
     <div class="spinner"></div>
 
@@ -47,15 +74,16 @@ LOADING
 
 <div id="toast"></div>
 
-<!-- =========================================================
-LOGIN SCREEN
-========================================================= -->
+<!-- =========================
+LOGIN PAGE
+========================= -->
 
-<section id="login-section" class="center-page">
+<section id="login-section"
+         class="center-page">
 
     <div class="login-card">
 
-        <div class="logo-area">
+        <div class="login-logo">
 
             <div class="logo-circle">
 
@@ -65,19 +93,15 @@ LOGIN SCREEN
 
             <h1>Greymus Loan</h1>
 
-            <span>Financial Hub</span>
+            <p>Financial Hub</p>
 
         </div>
 
-        <h2>
+        <h2>Welcome Back</h2>
 
-            Welcome Back
+        <p class="login-text">
 
-        </h2>
-
-        <p>
-
-            Sign in to access your secure dashboard.
+            Secure Sign In
 
         </p>
 
@@ -85,12 +109,11 @@ LOGIN SCREEN
 
             <div class="form-group">
 
-                <label>Email Address</label>
+                <label>Email</label>
 
                 <input
-                    type="email"
                     id="email"
-                    placeholder="Enter email"
+                    type="email"
                     required>
 
             </div>
@@ -100,16 +123,14 @@ LOGIN SCREEN
                 <label>Password</label>
 
                 <input
-                    type="password"
                     id="password"
-                    placeholder="Enter password"
+                    type="password"
                     required>
 
             </div>
 
-            <button
-                id="login-btn"
-                type="submit">
+            <button id="login-btn"
+                    type="submit">
 
                 Login
 
@@ -121,23 +142,22 @@ LOGIN SCREEN
 
 </section>
 
-<!-- =========================================================
-DASHBOARD
-========================================================= -->
+<!-- =========================
+APPLICATION
+========================= -->
 
-<section id="dashboard-section" class="hidden">
+<section id="dashboard-section"
+         class="hidden">
 
-<div class="dashboard-container">
+<div class="dashboard-layout">
 
-<!-- ===========================
-SIDEBAR
-=========================== -->
+<!-- Sidebar -->
 
 <aside class="sidebar">
 
 <div class="brand">
 
-<div class="brand-logo">
+<div class="brand-icon">
 
 G
 
@@ -145,55 +165,40 @@ G
 
 <div>
 
-<h2>
+<h2>Greymus</h2>
 
-Greymus
-
-</h2>
-
-<p>
-
-Financial Hub
-
-</p>
+<p>Financial Hub</p>
 
 </div>
 
 </div>
 
-<nav class="sidebar-menu">
+<nav>
 
-<button
-class="tab-btn active"
-data-tab="clients">
+<button class="tab-btn active"
+        data-tab="dashboard">
 
-👥
-
-<span>
-
-Clients
-
-</span>
+🏠 Dashboard
 
 </button>
 
-<button
-class="tab-btn"
-data-tab="loans">
+<button class="tab-btn"
+        data-tab="clients">
 
-💰
+👥 Clients
 
-<span>
+</button>
 
-Loans
+<button class="tab-btn"
+        data-tab="loans">
 
-</span>
+💰 Loans
 
 </button>
 
 </nav>
 
-<div class="sidebar-bottom">
+<div class="sidebar-footer">
 
 <button id="logout-btn">
 
@@ -205,25 +210,17 @@ Logout
 
 </aside>
 
-<!-- ===========================
-CONTENT
-=========================== -->
+<!-- Main -->
 
 <main class="main-content">
 
-<header class="top-header">
+<header class="topbar">
 
 <div>
 
-<p class="welcome-text">
-
-Good Morning,
-
-</p>
-
 <h1>
 
-Greymus Loan Financial Hub
+Loan Management Dashboard
 
 </h1>
 
@@ -231,9 +228,9 @@ Greymus Loan Financial Hub
 
 </div>
 
-<div class="header-right">
+<div class="topbar-actions">
 
-<button class="notification-btn">
+<button id="notification-btn">
 
 🔔
 
@@ -241,942 +238,861 @@ Greymus Loan Financial Hub
 
 </div>
 
-    </header><!-- =========================================================
-OVERVIEW
-========================================================= -->
+</header>
 
-<section class="overview-section">
+<!-- Dashboard Tab -->
 
-    <div class="portfolio-card">
+<section id="dashboard-tab"
+         class="tab-content">
 
-        <div>
+<div class="hero-card">
 
-            <span class="card-label">
+<div>
 
-                Total Portfolio
+<p>Total Portfolio</p>
+
+<h2 id="stat-portfolio">
+
+KES 0
+
+</h2>
+
+</div>
+
+<div class="hero-icon">
+
+💼
+
+</div>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+
+<span>Clients</span>
+
+<h3 id="stat-clients">
+
+0
+
+</h3>
+
+</div>
+
+<div class="stat-card">
+
+<span>Revenue</span>
+
+<h3 id="stat-revenue">
+
+KES 0
+
+</h3>
+
+</div>
+
+<div class="stat-card">
+
+<span>Pending</span>
+
+<h3 id="stat-pending">
+
+0
+
+</h3>
+
+</div>
+
+<div class="stat-card">
+
+<span>Approved</span>
+
+<h3 id="stat-approved">
+
+0
+
+</h3>
+
+</div>
+
+<div class="stat-card">
+
+<span>Rejected</span>
+
+<h3 id="stat-rejected">
+
+0
+
+</h3>
+
+</div>
+
+<div class="stat-card danger">
+
+<span>Arrears</span>
+
+<h3 id="stat-arrears">
+
+0
+
+</h3>
+
+</div>
+
+    </div>                <!-- =========================
+                QUICK ACTIONS
+                ========================= -->
+
+                <section class="quick-actions">
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Quick Actions</h2>
+
+                            <p>Frequently used operations</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="quick-grid">
+
+                        <button id="new-client-btn" class="action-card">
+
+                            <div class="action-icon">
+
+                                👤
+
+                            </div>
+
+                            <div>
+
+                                <h3>New Client</h3>
+
+                                <p>Register a borrower</p>
+
+                            </div>
+
+                        </button>
+
+                        <button id="new-loan-btn" class="action-card">
+
+                            <div class="action-icon">
+
+                                💰
+
+                            </div>
+
+                            <div>
+
+                                <h3>New Loan</h3>
+
+                                <p>Create a loan application</p>
+
+                            </div>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+                <!-- =========================
+                CLIENTS
+                ========================= -->
+
+                <section id="clients-tab"
+                         class="tab-content hidden">
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Clients</h2>
+
+                            <p>Manage registered borrowers</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="toolbar">
+
+                        <input
+                            type="text"
+                            id="client-search"
+                            placeholder="Search clients...">
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table id="clients-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Name</th>
+
+                                    <th>Phone</th>
+
+                                    <th>ID Number</th>
+
+                                    <th>Occupation</th>
+
+                                    <th>Guarantor</th>
+
+                                    <th>Registered By</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <!-- =========================
+                LOANS
+                ========================= -->
+
+                <section id="loans-tab"
+                         class="tab-content hidden">
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Loans</h2>
+
+                            <p>Manage loans and repayments</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="toolbar toolbar-wrap">
+
+                        <input
+                            type="text"
+                            id="loan-search"
+                            placeholder="Search loans...">
+
+                        <select id="loan-filter">
+
+                            <option value="ALL">
+
+                                All Status
+
+                            </option>
+
+                            <option value="Pending">
+
+                                Pending
+
+                            </option>
+
+                            <option value="Approved">
+
+                                Approved
+
+                            </option>
+
+                            <option value="Rejected">
+
+                                Rejected
+
+                            </option>
+
+                            <option value="Arrears">
+
+                                Arrears
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table id="loans-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Loan No.</th>
+
+                                    <th>Client</th>
+
+                                    <th>Principal</th>
+
+                                    <th>Interest</th>
+
+                                    <th>Duration</th>
+
+                                    <th>Repayment</th>
+
+                                    <th>Due Date</th>
+
+                                    <th>Status</th>
+
+                                    <th>Officer</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+    </section>                <!-- =========================
+                CLIENT MODAL
+                ========================= -->
+
+                <div id="client-modal"
+                     class="modal hidden">
+
+                    <div class="modal-content modern-modal">
+
+                        <div class="modal-header">
+
+                            <div>
+
+                                <h2 id="client-modal-title">
+
+                                    New Client
+
+                                </h2>
+
+                                <p>Register a new borrower</p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="close-modal modal-close-btn">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                        <form id="client-form">
+
+                            <input
+                                type="hidden"
+                                id="client-id">
+
+                            <div class="form-grid">
+
+                                <div class="form-group">
+
+                                    <label>Full Name</label>
+
+                                    <input
+                                        type="text"
+                                        id="client-name"
+                                        required>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Phone Number</label>
+
+                                    <input
+                                        type="tel"
+                                        id="client-phone"
+                                        required>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>ID Number</label>
+
+                                    <input
+                                        type="text"
+                                        id="client-id-number"
+                                        required>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Occupation</label>
+
+                                    <input
+                                        type="text"
+                                        id="client-occupation">
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Guarantor</label>
+
+                                    <input
+                                        type="text"
+                                        id="client-guarantor">
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Guarantor Phone</label>
+
+                                    <input
+                                        type="tel"
+                                        id="client-guarantor-phone">
+
+                                </div>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>Collateral / Security</label>
+
+                                <textarea
+                                    id="client-security"
+                                    rows="4"></textarea>
+
+                            </div>
+
+                            <div class="modal-buttons">
+
+                                <button
+                                    type="submit"
+                                    class="primary-btn">
+
+                                    Save Client
+
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="secondary-btn close-modal">
+
+                                    Cancel
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                LOAN MODAL
+                ========================= -->
+
+                <div id="loan-modal"
+                     class="modal hidden">
+
+                    <div class="modal-content modern-modal">
+
+                        <div class="modal-header">
+
+                            <div>
+
+                                <h2 id="loan-modal-title">
+
+                                    New Loan
+
+                                </h2>
+
+                                <p>Create or edit a loan</p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="close-modal modal-close-btn">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                        <form id="loan-form">
+
+                            <input
+                                type="hidden"
+                                id="loan-id">
+
+                            <div class="form-grid">
+
+                                <div class="form-group">
+
+                                    <label>Client</label>
+
+                                    <select
+                                        id="loan-client"
+                                        required>
+
+                                        <option value="">
+
+                                            Select Client
+
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Loan Amount</label>
+
+                                    <input
+                                        type="number"
+                                        id="loan-amount"
+                                        required>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Processing Fee</label>
+
+                                    <input
+                                        type="number"
+                                        id="loan-processing-fee">
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Interest (%)</label>
+
+                                    <input
+                                        type="number"
+                                        id="loan-interest">
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Duration (Months)</label>
+
+                                    <input
+                                        type="number"
+                                        id="loan-duration">
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label>Due Date</label>
+
+                                    <input
+                                        type="date"
+                                        id="loan-due-date"
+                                        required>
+
+                                </div>
+
+                            </div>
+
+                            <div class="loan-summary-card">
+
+                                <h3>Loan Preview</h3>
+
+                                <div class="summary-row">
+
+                                    <span>Principal</span>
+
+                                    <strong id="preview-principal">
+
+                                        KES 0
+
+                                    </strong>
+
+                                </div>
+
+                                <div class="summary-row">
+
+                                    <span>Interest</span>
+
+                                    <strong id="preview-interest">
+
+                                        0%
+
+                                    </strong>
+
+                                </div>
+
+                                <div class="summary-row">
+
+                                    <span>Duration</span>
+
+                                    <strong id="preview-duration">
+
+                                        0 Months
+
+                                    </strong>
+
+                                </div>
+
+                                <div class="summary-row">
+
+                                    <span>Monthly Payment</span>
+
+                                    <strong id="preview-monthly">
+
+                                        KES 0
+
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            <div class="modal-buttons">
+
+                                <button
+                                    type="submit"
+                                    class="primary-btn">
+
+                                    Save Loan
+
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="secondary-btn close-modal">
+
+                                    Cancel
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                CONFIRMATION MODAL
+                ========================= -->
+
+                <div id="confirm-modal"
+                     class="modal hidden">
+
+                    <div class="modal-content confirmation-modal">
+
+                        <div class="confirm-icon">
+
+                            ⚠️
+
+                        </div>
+
+                        <h2>
+
+                            Confirmation
+
+                        </h2>
+
+                        <p id="confirm-message">
+
+                            Are you sure you want to continue?
+
+                        </p>
+
+                        <div class="modal-buttons">
+
+                            <button
+                                id="confirm-yes"
+                                class="primary-btn">
+
+                                Yes
+
+                            </button>
+
+                            <button
+                                id="confirm-no"
+                                class="secondary-btn">
+
+                                Cancel
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                                        </div>                <!-- =========================
+                NOTIFICATION PANEL
+                ========================= -->
+
+                <div id="notification-panel"
+                     class="notification-panel hidden">
+
+                    <div class="notification-header">
+
+                        <h3>
+
+                            Notifications
+
+                        </h3>
+
+                        <button id="close-notifications"
+                                type="button">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    <div id="notification-list"
+                         class="notification-list">
+
+                        <div class="empty-state">
+
+                            <div class="empty-icon">
+
+                                🔔
+
+                            </div>
+
+                            <h4>No Notifications</h4>
+
+                            <p>
+
+                                You're all caught up.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </section>
+
+    <!-- =========================
+    MOBILE NAVIGATION
+    ========================= -->
+
+    <nav class="mobile-nav">
+
+        <button
+            class="tab-btn active"
+            data-tab="dashboard">
+
+            <span>🏠</span>
+
+            <small>Home</small>
+
+        </button>
+
+        <button
+            class="tab-btn"
+            data-tab="clients">
+
+            <span>👥</span>
+
+            <small>Clients</small>
+
+        </button>
+
+        <button
+            class="tab-btn"
+            data-tab="loans">
+
+            <span>💰</span>
+
+            <small>Loans</small>
+
+        </button>
+
+    </nav>
+
+    <!-- =========================
+    FLOATING ACTION BUTTON
+    ========================= -->
+
+    <button
+        id="fab-new-loan"
+        class="fab"
+        title="Create New Loan">
+
+        +
+
+    </button>
+
+    <!-- =========================
+    FOOTER
+    ========================= -->
+
+    <footer class="app-footer">
+
+        <div class="footer-left">
+
+            <strong>
+
+                Greymus Loan Financial Hub
+
+            </strong>
+
+        </div>
+
+        <div class="footer-right">
+
+            <span>
+
+                © 2026 Greymus Solutions. All Rights Reserved.
 
             </span>
 
-            <h2 id="stat-portfolio">
-
-                KES 0
-
-            </h2>
-
-            <p>
-
-                Total value of all active loans
-
-            </p>
-
         </div>
 
-        <div class="portfolio-icon">
-
-            💼
-
-        </div>
-
-    </div>
-
-    <div class="stats-grid">
-
-        <div class="stat-card">
-
-            <span>Clients</span>
-
-            <h3 id="stat-clients">
-
-                0
-
-            </h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Revenue</span>
-
-            <h3 id="stat-revenue">
-
-                KES 0
-
-            </h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Pending</span>
-
-            <h3 id="stat-pending">
-
-                0
-
-            </h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Approved</span>
-
-            <h3 id="stat-approved">
-
-                0
-
-            </h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Rejected</span>
-
-            <h3 id="stat-rejected">
-
-                0
-
-            </h3>
-
-        </div>
-
-        <div class="stat-card danger">
-
-            <span>Arrears</span>
-
-            <h3 id="stat-arrears">
-
-                0
-
-            </h3>
-
-        </div>
-
-    </div>
-
-</section>
-
-<!-- =========================================================
-LOAN SUMMARY
-========================================================= -->
-
-<section class="summary-section">
-
-    <div class="section-title">
-
-        <h2>
-
-            Loan Summary
-
-        </h2>
-
-        <p>
-
-            Current application status
-
-        </p>
-
-    </div>
-
-    <div class="summary-grid">
-
-        <div class="summary-card pending">
-
-            <small>Pending</small>
-
-            <h2 id="summary-pending">
-
-                0
-
-            </h2>
-
-        </div>
-
-        <div class="summary-card approved">
-
-            <small>Approved</small>
-
-            <h2 id="summary-approved">
-
-                0
-
-            </h2>
-
-        </div>
-
-        <div class="summary-card rejected">
-
-            <small>Rejected</small>
-
-            <h2 id="summary-rejected">
-
-                0
-
-            </h2>
-
-        </div>
-
-        <div class="summary-card arrears">
-
-            <small>Arrears</small>
-
-            <h2 id="summary-arrears">
-
-                0
-
-            </h2>
-
-        </div>
-
-    </div>
-
-</section>
-
-<!-- =========================================================
-QUICK ACTIONS
-========================================================= -->
-
-<section class="quick-actions">
-
-    <div class="section-title">
-
-        <h2>
-
-            Quick Actions
-
-        </h2>
-
-    </div>
-
-    <div class="quick-grid">
-
-        <button
-            id="new-client-btn"
-            class="action-card">
-
-            <div class="action-icon">
-
-                👤
-
-            </div>
-
-            <div>
-
-                <h3>
-
-                    New Client
-
-                </h3>
-
-                <p>
-
-                    Register a borrower
-
-                </p>
-
-            </div>
-
-        </button>
-
-        <button
-            id="new-loan-btn"
-            class="action-card">
-
-            <div class="action-icon">
-
-                💰
-
-            </div>
-
-            <div>
-
-                <h3>
-
-                    New Loan
-
-                </h3>
-
-                <p>
-
-                    Create loan
-
-                </p>
-
-            </div>
-
-        </button>
-
-    </div>
-
-</section>
-
-<!-- =========================================================
-RECENT CLIENTS
-========================================================= -->
-
-<section class="content-section">
-
-<div class="section-title">
-
-<h2>
-
-Clients
-
-</h2>
-
-<p>
-
-Manage all registered borrowers
-
-</p>
-
-</div>
-
-<div class="toolbar">
-
-<input
-type="text"
-id="client-search"
-placeholder="Search clients...">
-
-</div>
-
-<div class="table-wrapper"><table id="clients-table">
-
-    <thead>
-
-        <tr>
-
-            <th>Name</th>
-            <th>Phone</th>
-            <th>ID Number</th>
-            <th>Occupation</th>
-            <th>Guarantor</th>
-            <th>Registered By</th>
-            <th>Actions</th>
-
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-    </tbody>
-
-</table>
-
-</div>
-
-</section>
-
-<!-- =========================================================
-LOANS
-========================================================= -->
-
-<section
-id="loans-tab"
-class="tab-content hidden">
-
-<div class="content-section">
-
-<div class="section-title">
-
-<h2>
-
-Loans
-
-</h2>
-
-<p>
-
-Manage loan applications and repayments
-
-</p>
-
-</div>
-
-<div class="toolbar toolbar-wrap">
-
-<input
-type="text"
-id="loan-search"
-placeholder="Search loans...">
-
-<select id="loan-filter">
-
-<option value="ALL">
-
-All Status
-
-</option>
-
-<option value="Pending">
-
-Pending
-
-</option>
-
-<option value="Approved">
-
-Approved
-
-</option>
-
-<option value="Rejected">
-
-Rejected
-
-</option>
-
-<option value="Arrears">
-
-Arrears
-
-</option>
-
-</select>
-
-</div>
-
-<div class="table-wrapper">
-
-<table id="loans-table">
-
-<thead>
-
-<tr>
-
-<th>Loan No.</th>
-<th>Client</th>
-<th>Principal</th>
-<th>Interest</th>
-<th>Duration</th>
-<th>Repayment</th>
-<th>Due Date</th>
-<th>Status</th>
-<th>Officer</th>
-<th>Actions</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</section>
-
-<!-- =========================================================
-MOBILE NAVIGATION
-========================================================= -->
-
-<nav class="mobile-nav">
-
-<button
-class="tab-btn active"
-data-tab="clients">
-
-<span>
-
-👥
-
-</span>
-
-Clients
-
-</button>
-
-<button
-class="tab-btn"
-data-tab="loans">
-
-<span>
-
-💰
-
-</span>
-
-Loans
-
-</button>
-
-</nav>
-
-</main>
-
-</div>
-
-                </section><!-- =========================================================
-CLIENT MODAL
-========================================================= -->
-
-<div id="client-modal" class="modal hidden">
-
-    <div class="modal-content modern-modal">
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2 id="client-modal-title">
-
-                    New Client
-
-                </h2>
-
-                <p>Register or update client information</p>
-
-            </div>
-
-            <button
-                type="button"
-                class="close-modal modal-close-btn">
-
-                ✕
-
-            </button>
-
-        </div>
-
-        <form id="client-form">
-
-            <input
-                type="hidden"
-                id="client-id">
-
-            <div class="form-grid">
-
-                <div class="form-group">
-
-                    <label>Full Name</label>
-
-                    <input
-                        type="text"
-                        id="client-name"
-                        placeholder="Enter client's full name"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Phone Number</label>
-
-                    <input
-                        type="tel"
-                        id="client-phone"
-                        placeholder="07XXXXXXXX"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>ID Number</label>
-
-                    <input
-                        type="text"
-                        id="client-id-number"
-                        placeholder="National ID"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Occupation</label>
-
-                    <input
-                        type="text"
-                        id="client-occupation"
-                        placeholder="Occupation">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Guarantor</label>
-
-                    <input
-                        type="text"
-                        id="client-guarantor"
-                        placeholder="Guarantor Name">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Guarantor Phone</label>
-
-                    <input
-                        type="tel"
-                        id="client-guarantor-phone"
-                        placeholder="07XXXXXXXX">
-
-                </div>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Collateral / Security</label>
-
-                <textarea
-                    id="client-security"
-                    rows="4"
-                    placeholder="Collateral or security offered"></textarea>
-
-            </div>
-
-            <div class="modal-buttons">
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Save Client
-
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn close-modal">
-
-                    Cancel
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<!-- =========================================================
-LOAN MODAL
-========================================================= -->
-
-<div id="loan-modal" class="modal hidden">
-
-    <div class="modal-content modern-modal">
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2 id="loan-modal-title">
-
-                    New Loan
-
-                </h2>
-
-                <p>Create or update a loan application</p>
-
-            </div>
-
-            <button
-                type="button"
-                class="close-modal modal-close-btn">
-
-                ✕
-
-            </button>
-
-        </div>
-
-        <form id="loan-form">
-
-            <input
-                type="hidden"
-                id="loan-id">
-
-            <div class="form-grid">
-
-                <div class="form-group">
-
-                    <label>Client</label>
-
-                    <select id="loan-client" required>
-
-                        <option value="">
-
-                            Select Client
-
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Loan Amount</label>
-
-                    <input
-                        type="number"
-                        id="loan-amount"
-                        placeholder="Loan Amount"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Processing Fee</label>
-
-                    <input
-                        type="number"
-                        id="loan-processing-fee"
-                        placeholder="Processing Fee">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Interest (%)</label>
-
-                    <input
-                        type="number"
-                        id="loan-interest"
-                        placeholder="Interest Percentage">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Duration (Months)</label>
-
-                    <input
-                        type="number"
-                        id="loan-duration"
-                        placeholder="Loan Duration">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Due Date</label>
-
-                    <input
-                        type="date"
-                        id="loan-due-date"
-                        required>
-
-                </div>
-
-            </div>
-
-            <div class="loan-summary-card">
-
-                <h3>Loan Preview</h3>
-
-                <div class="summary-row">
-
-                    <span>Principal</span>
-
-                    <strong id="preview-principal">
-
-                        KES 0
-
-                    </strong>
-
-                </div>
-
-                <div class="summary-row">
-
-                    <span>Interest</span>
-
-                    <strong id="preview-interest">
-
-                        0%
-
-                    </strong>
-
-                </div>
-
-                <div class="summary-row">
-
-                    <span>Duration</span>
-
-                    <strong id="preview-duration">
-
-                        0 Months
-
-                    </strong>
-
-                </div>
-
-            </div>
-
-            <div class="modal-buttons">
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Save Loan
-
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn close-modal">
-
-                    Cancel
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-    </div><!-- =========================================================
-CONFIRMATION MODAL
-========================================================= -->
-
-<div id="confirm-modal" class="modal hidden">
-
-    <div class="modal-content confirmation-modal">
-
-        <div class="confirm-icon">
-
-            ⚠️
-
-        </div>
-
-        <h2>
-
-            Confirmation
-
-        </h2>
-
-        <p id="confirm-message">
-
-            Are you sure you want to continue?
-
-        </p>
-
-        <div class="modal-buttons">
-
-            <button
-                id="confirm-yes"
-                class="primary-btn">
-
-                Yes
-
-            </button>
-
-            <button
-                id="confirm-no"
-                class="secondary-btn">
-
-                Cancel
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- =========================================================
-NOTIFICATION PANEL
-========================================================= -->
-
-<div
-id="notification-panel"
-class="notification-panel hidden">
-
-    <div class="notification-header">
-
-        <h3>
-
-            Notifications
-
-        </h3>
-
-        <button
-            type="button"
-            id="close-notifications">
-
-            ✕
-
-        </button>
-
-    </div>
-
-    <div
-        id="notification-list"
-        class="notification-list">
-
-        <div class="empty-state">
-
-            <p>
-
-                No notifications available.
-
-            </p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- =========================================================
-FLOATING ACTION BUTTON
-========================================================= -->
-
-<button
-id="fab-new-loan"
-class="fab"
-title="Create New Loan">
-
-    +
-
-</button>
-
-<!-- =========================================================
-FOOTER
-========================================================= -->
-
-<footer class="app-footer">
-
-    <div class="footer-left">
-
-        <strong>
-
-            Greymus Loan Financial Hub
-
-        </strong>
-
-    </div>
-
-    <div class="footer-right">
-
-        <span>
-
-            © 2026 Greymus Solutions. All Rights Reserved.
-
-        </span>
-
-    </div>
-
-</footer>
+    </footer>    <!-- =========================================================
+    GLOBAL OVERLAYS
+    ========================================================== -->
+
+    <div id="global-overlay" class="hidden"></div>
+
+    <!-- =========================================================
+    END OF APPLICATION
+    ========================================================== -->
 
 </body>
 
-                </html>
+</html>
