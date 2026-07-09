@@ -1,97 +1,340 @@
 // js/dashboard.js
 
-import { db } from "./firebase.js";
+import {
+    db
+} from "./firebase.js";
 
 import {
     collection,
-    getDocs
+    getDocs,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { formatCurrency } from "./utils.js";
 
-// ======================================
-// Dashboard Loader
-// ======================================
+// DASHBOARD ELEMENTS
 
-export async function loadDashboard() {
+const portfolioStat =
+    document.getElementById("stat-portfolio");
 
-    try {
+const clientsStat =
+    document.getElementById("stat-clients");
 
-        const clients = await getClients();
+const revenueStat =
+    document.getElementById("stat-revenue");
 
-        const loans = await getLoans();
+const pendingStat =
+    document.getElementById("stat-pending");
 
-        updateDashboard(clients, loans);
+const approvedStat =
+    document.getElementById("stat-approved");
 
-    } catch (error) {
+const rejectedStat =
+    document.getElementById("stat-rejected");
 
-        console.error("Dashboard Error:", error);
+const arrearsStat =
+    document.getElementById("stat-arrears");
+
+
+// FORMAT CURRENCY
+
+function formatCurrency(amount) {
+
+    return new Intl.NumberFormat(
+        "en-KE",
+        {
+            style: "currency",
+            currency: "KES",
+            maximumFractionDigits: 0
+        }
+    ).format(amount || 0);
+
+}
+
+
+// LOAD CLIENT STATISTICS
+
+function loadClientsCount() {
+
+    const clientsRef =
+        collection(
+            db,
+            "clients"
+        );
+
+
+    onSnapshot(
+        clientsRef,
+        (snapshot) => {
+
+            if (clientsStat) {
+
+                clientsStat.textContent =
+                    snapshot.size;
+
+            }
+
+        }
+    );
+
+}
+
+
+// LOAD LOAN STATISTICS
+
+function loadLoanStatistics() {
+
+    const loansRef =
+        collection(
+            db,
+            "loans"
+        );
+
+
+    onSnapshot(
+        loansRef,
+        (snapshot) => {
+
+
+            let portfolio = 0;
+            let revenue = 0;
+
+            let pending = 0;
+            let approved = 0;
+            let rejected = 0;
+            let arrears = 0;
+
+
+
+            snapshot.forEach(
+                (doc) => {
+
+                    const loan =
+                        doc.data();
+
+
+                    const amount =
+                        Number(
+                            loan.amount ||
+                            loan.loanAmount ||
+                            0
+                        );
+
+
+                    const interest =
+                        Number(
+                            loan.interest ||
+                            0
+                        );
+
+
+                    const status =
+                        loan.status ||
+                        "Pending";
+
+
+
+                    if (
+                        status === "Approved"
+                    ) {
+
+                        portfolio += amount;
+
+                        approved++;
+
+
+                    } else if (
+                        status === "Pending"
+                    ) {
+
+                        pending++;
+
+
+                    } else if (
+                        status === "Rejected"
+                    ) {
+
+                        rejected++;
+
+
+                    } else if (
+                        status === "Arrears"
+                    ) {
+
+                        arrears++;
+
+                    }
+
+
+
+                    revenue +=
+                        amount *
+                        (interest / 100);
+
+
+                }
+            );
+
+
+
+            if (portfolioStat) {
+
+                portfolioStat.textContent =
+                    formatCurrency(
+                        portfolio
+                    );
+
+            }
+
+
+            if (revenueStat) {
+
+                revenueStat.textContent =
+                    formatCurrency(
+                        revenue
+                    );
+
+            }
+
+
+            if (pendingStat) {
+
+                pendingStat.textContent =
+                    pending;
+
+            }
+
+
+            if (approvedStat) {
+
+                approvedStat.textContent =
+                    approved;
+
+            }
+
+
+            if (rejectedStat) {
+
+                rejectedStat.textContent =
+                    rejected;
+
+            }
+
+
+            if (arrearsStat) {
+
+                arrearsStat.textContent =
+                    arrears;
+
+            }
+
+
+        }
+    );
+
+}
+
+
+// QUICK ACTION BUTTONS
+
+const newClientBtn =
+    document.getElementById(
+        "new-client-btn"
+    );
+
+
+const newLoanBtn =
+    document.getElementById(
+        "new-loan-btn"
+    );
+
+
+const fabLoan =
+    document.getElementById(
+        "fab-new-loan"
+    );
+
+
+
+function openModal(id) {
+
+    const modal =
+        document.getElementById(id);
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            "hidden"
+        );
 
     }
 
 }
 
-// ======================================
-// Firestore Reads
-// ======================================
 
-async function getClients() {
 
-    try {
+if (newClientBtn) {
 
-        const snapshot = await getDocs(collection(db, "clients"));
+    newClientBtn.addEventListener(
+        "click",
+        () => {
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+            openModal(
+                "client-modal"
+            );
 
-    } catch (error) {
-
-        console.error(error);
-
-        return [];
-
-    }
+        }
+    );
 
 }
 
-async function getLoans() {
 
-    try {
 
-        const snapshot = await getDocs(collection(db, "loans"));
+if (newLoanBtn) {
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+    newLoanBtn.addEventListener(
+        "click",
+        () => {
 
-    } catch (error) {
+            openModal(
+                "loan-modal"
+            );
 
-        console.error(error);
-
-        return [];
-
-    }
+        }
+    );
 
 }
 
-// ======================================
-// Dashboard Calculations
-// ======================================
 
-function updateDashboard(clients, loans) {
 
-    const portfolio =
-        loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0);
+if (fabLoan) {
 
-    const revenue =
-        loans.reduce((sum, loan) => {
+    fabLoan.addEventListener(
+        "click",
+        () => {
 
-            return sum + Number(loan.processingFee || 0);
+            openModal(
+                "loan-modal"
+            );
 
-        }, 0);
+        }
+    );
 
-    const pending =
-        loans.filter(l => l.status === "Pending
+}
+
+
+
+// INITIALIZE DASHBOARD
+
+loadClientsCount();
+
+loadLoanStatistics();
+
+
+// EXPORT
+
+export {
+
+    formatCurrency
+
+};
