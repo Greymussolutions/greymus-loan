@@ -1,6 +1,8 @@
 // js/clients.js
 
-import { db } from "./firebase.js";
+import {
+    db
+} from "./firebase.js";
 
 import {
     collection,
@@ -8,126 +10,482 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    getDocs
+    onSnapshot,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-    showToast,
-    openModal,
-    closeModal,
-    confirmAction,
-    renderEmptyRow
-} from "./utils.js";
 
-const clientsCollection = collection(db, "clients");
+// ELEMENTS
+
+const clientsTableBody =
+    document.querySelector("#clients-table tbody");
+
+const clientForm =
+    document.getElementById("client-form");
+
+const clientModal =
+    document.getElementById("client-modal");
+
+const clientSearch =
+    document.getElementById("client-search");
+
+const clientId =
+    document.getElementById("client-id");
+
+
+// INPUTS
+
+const clientName =
+    document.getElementById("client-name");
+
+const clientPhone =
+    document.getElementById("client-phone");
+
+const clientIdNumber =
+    document.getElementById("client-id-number");
+
+const clientOccupation =
+    document.getElementById("client-occupation");
+
+const clientGuarantor =
+    document.getElementById("client-guarantor");
+
+const clientGuarantorPhone =
+    document.getElementById("client-guarantor-phone");
+
+const clientSecurity =
+    document.getElementById("client-security");
+
+
+// DATA CACHE
 
 let clients = [];
 
-// ======================================
-// Initialize
-// ======================================
 
-export async function initializeClients() {
+// CLOSE MODAL
 
-    bindEvents();
+function closeClientModal() {
 
-    await loadClients();
+    if (clientModal) {
 
-}
-
-// ======================================
-// Events
-// ======================================
-
-function bindEvents() {
-
-    const form = document.getElementById("client-form");
-
-    if (form && !form.dataset.bound) {
-
-        form.dataset.bound = "true";
-
-        form.addEventListener("submit", saveClient);
-
-    }
-
-    const search = document.getElementById("client-search");
-
-    if (search && !search.dataset.bound) {
-
-        search.dataset.bound = "true";
-
-        search.addEventListener("input", filterClients);
+        clientModal.classList.add("hidden");
 
     }
 
 }
 
-// ======================================
-// Load Clients
-// ======================================
 
-export async function loadClients() {
+// FORMAT TEXT
 
-    try {
+function safe(value) {
 
-        const snapshot = await getDocs(clientsCollection);
-
-        clients = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        renderClients(clients);
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast("Failed to load clients", "error");
-
-    }
+    return value || "-";
 
 }
 
-// ======================================
-// Render
-// ======================================
 
-function renderClients(data) {
+// DISPLAY CLIENTS
 
-    const tbody = document.querySelector("#clients-table tbody");
+function renderClients(list) {
 
-    if (!tbody) return;
+    if (!clientsTableBody) return;
 
-    tbody.innerHTML = "";
 
-    if (data.length === 0) {
+    clientsTableBody.innerHTML = "";
 
-        renderEmptyRow(
-            tbody,
-            "No clients found.",
-            7
-        );
 
-        return;
+    list.forEach((client) => {
 
-    }
 
-    data.forEach(client => {
+        const row =
+            document.createElement("tr");
 
-        const row = document.createElement("tr");
 
         row.innerHTML = `
 
-            <td>${client.name || ""}</td>
+            <td>${safe(client.name)}</td>
 
-            <td>${client.phone || ""}</td>
+            <td>${safe(client.phone)}</td>
 
-            <td>${client.idNumber || ""}</td>
+            <td>${safe(client.idNumber)}</td>
 
-            <td>${client.occupation || "-"}</td>
+            <td>${safe(client.occupation)}</td>
 
-            <td>${client.guarantor || "-"}</td>
+            <td>${safe(client.guarantor)}</td>
 
-            <td>${client.registeredBy || "-"}</td>
+            <td>${safe(client.createdBy)}</td>
+
+            <td>
+
+                <button class="edit-client"
+                    data-id="${client.id}">
+                    Edit
+                </button>
+
+
+                <button class="delete-client"
+                    data-id="${client.id}">
+                    Delete
+                </button>
+
+            </td>
+
+        `;
+
+
+        clientsTableBody.appendChild(row);
+
+
+    });
+
+
+    attachActions();
+
+}
+
+
+// LOAD CLIENTS
+
+function loadClients() {
+
+
+    const clientsRef =
+        collection(
+            db,
+            "clients"
+        );
+
+
+    onSnapshot(
+        clientsRef,
+        (snapshot) => {
+
+
+            clients = [];
+
+
+            snapshot.forEach(
+                (item) => {
+
+
+                    clients.push({
+
+                        id: item.id,
+
+                        ...item.data()
+
+                    });
+
+
+                }
+            );
+
+
+            renderClients(
+                clients
+            );
+
+
+        }
+    );
+
+}
+
+
+// SAVE CLIENT
+
+if (clientForm) {
+
+
+    clientForm.addEventListener(
+        "submit",
+        async (e) => {
+
+
+            e.preventDefault();
+
+
+            const data = {
+
+                name: clientName.value.trim(),
+
+                phone: clientPhone.value.trim(),
+
+                idNumber: clientIdNumber.value.trim(),
+
+                occupation: clientOccupation.value.trim(),
+
+                guarantor: clientGuarantor.value.trim(),
+
+                guarantorPhone:
+                    clientGuarantorPhone.value.trim(),
+
+                security:
+                    clientSecurity.value.trim(),
+
+                updatedAt:
+                    serverTimestamp()
+
+            };
+
+
+            try {
+
+
+                if (clientId.value) {
+
+
+                    await updateDoc(
+
+                        doc(
+                            db,
+                            "clients",
+                            clientId.value
+                        ),
+
+                        data
+
+                    );
+
+
+                } else {
+
+
+                    await addDoc(
+
+                        collection(
+                            db,
+                            "clients"
+                        ),
+
+                        {
+
+                            ...data,
+
+                            createdAt:
+                                serverTimestamp(),
+
+                            createdBy:
+                                localStorage.getItem(
+                                    "userRole"
+                                ) || "User"
+
+                        }
+
+                    );
+
+
+                }
+
+
+                clientForm.reset();
+
+                clientId.value = "";
+
+                closeClientModal();
+
+
+
+            } catch (error) {
+
+
+                console.error(
+                    "Client save error:",
+                    error
+                );
+
+
+            }
+
+
+        }
+    );
+
+
+}
+
+
+// SEARCH CLIENTS
+
+if (clientSearch) {
+
+
+    clientSearch.addEventListener(
+        "input",
+        () => {
+
+
+            const value =
+                clientSearch.value
+                    .toLowerCase();
+
+
+            const filtered =
+                clients.filter(
+                    (client) => {
+
+
+                        return (
+
+                            client.name
+                                ?.toLowerCase()
+                                .includes(value)
+
+                            ||
+
+                            client.phone
+                                ?.toLowerCase()
+                                .includes(value)
+
+                            ||
+
+                            client.idNumber
+                                ?.toLowerCase()
+                                .includes(value)
+
+                        );
+
+
+                    }
+                );
+
+
+            renderClients(
+                filtered
+            );
+
+
+        }
+    );
+
+
+}
+
+
+// TABLE ACTIONS
+
+function attachActions() {
+
+
+    document
+        .querySelectorAll(".edit-client")
+        .forEach(
+            (button) => {
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+
+                        const client =
+                            clients.find(
+                                c =>
+                                c.id ===
+                                button.dataset.id
+                            );
+
+
+                        if (!client) return;
+
+
+                        clientId.value =
+                            client.id;
+
+                        clientName.value =
+                            client.name || "";
+
+                        clientPhone.value =
+                            client.phone || "";
+
+                        clientIdNumber.value =
+                            client.idNumber || "";
+
+                        clientOccupation.value =
+                            client.occupation || "";
+
+                        clientGuarantor.value =
+                            client.guarantor || "";
+
+                        clientGuarantorPhone.value =
+                            client.guarantorPhone || "";
+
+                        clientSecurity.value =
+                            client.security || "";
+
+
+                        clientModal.classList.remove(
+                            "hidden"
+                        );
+
+
+                    }
+                );
+
+
+            }
+        );
+
+
+
+    document
+        .querySelectorAll(".delete-client")
+        .forEach(
+            (button) => {
+
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+
+
+                        await deleteDoc(
+
+                            doc(
+                                db,
+                                "clients",
+                                button.dataset.id
+                            )
+
+                        );
+
+
+                    }
+                );
+
+
+            }
+        );
+
+
+}
+
+
+// CLOSE BUTTONS
+
+document
+    .querySelectorAll(".close-modal")
+    .forEach(
+        (button) => {
+
+
+            button.addEventListener(
+                "click",
+                closeClientModal
+            );
+
+
+        }
+    );
+
+
+// START
+
+loadClients();
+
+
+// EXPORT
+
+export {
+    loadClients
+};
