@@ -2,59 +2,27 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import {
-    getAuth
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import {
-    getFirestore
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ==========================================
 // Firebase Configuration
-// Replace these values with your own project
-// ==========================================
-
 const firebaseConfig = {
-
-    apiKey: "YOUR_API_KEY",
-
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-
-    projectId: "YOUR_PROJECT_ID",
-
-    storageBucket: "YOUR_PROJECT.appspot.com",
-
-    messagingSenderId: "YOUR_SENDER_ID",
-
-    appId: "YOUR_APP_ID"
-
+    apiKey: "AIzaSyDt9iW5woMIRP1E-eMTHdYpgceQZxK8wrE",
+    authDomain: "greymus-loan.firebaseapp.com",
+    projectId: "greymus-loan",
+    storageBucket: "greymus-loan.firebasestorage.app",
+    messagingSenderId: "689969179781",
+    appId: "1:689969179781:web:aca0247196d31dcd68cdec"
 };
 
-// ==========================================
 // Initialize Firebase
-// ==========================================
-
 const app = initializeApp(firebaseConfig);
 
-// ==========================================
-// Firebase Services
-// ==========================================
-
+// Services
 const auth = getAuth(app);
 
 const db = getFirestore(app);
 
-// ==========================================
-// Exports
-// ==========================================
-
-export {
-
-    app,
-
-    auth,
-
-    db
-
-};
+// Export
+export { app, auth, db };
