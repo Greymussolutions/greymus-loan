@@ -1,11 +1,3 @@
-import "./firebase.js";
-import "./auth.js";
-import "./ui.js";
-import "./utils.js";
-import "./clients.js";
-import "./loans.js";
-import "./dashboard.js";
-
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Greymus Loan Financial Hub initialized.");
 
