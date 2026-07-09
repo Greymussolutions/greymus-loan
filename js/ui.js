@@ -1,29 +1,92 @@
-// ui.js
+// js/ui.js
 
-export function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
+import {
+    openModal,
+    closeModal,
+    closeAllModals
+} from "./utils.js";
 
-  toast.textContent = message;
-  toast.classList.add("show");
+document.addEventListener("DOMContentLoaded", () => {
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+    initializeTabs();
+    initializeModals();
+    initializeNotifications();
+    initializeFab();
+
+});
+
+// ======================================
+// Tabs
+// ======================================
+
+function initializeTabs() {
+
+    const buttons = document.querySelectorAll(".tab-btn");
+
+    const clientsTab = document.getElementById("clients-tab");
+    const loansTab = document.getElementById("loans-tab");
+
+    buttons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const tab = button.dataset.tab;
+
+            buttons.forEach(btn => btn.classList.remove("active"));
+
+            document
+                .querySelectorAll(`.tab-btn[data-tab="${tab}"]`)
+                .forEach(btn => btn.classList.add("active"));
+
+            if (clientsTab) clientsTab.classList.add("hidden");
+            if (loansTab) loansTab.classList.add("hidden");
+
+            if (tab === "clients" && clientsTab) {
+                clientsTab.classList.remove("hidden");
+            }
+
+            if (tab === "loans" && loansTab) {
+                loansTab.classList.remove("hidden");
+            }
+
+        });
+
+    });
+
 }
 
-export function showLoading() {
-  document.getElementById("loading-overlay")?.classList.remove("hidden");
-}
+// ======================================
+// Modals
+// ======================================
 
-export function hideLoading() {
-  document.getElementById("loading-overlay")?.classList.add("hidden");
-}
+function initializeModals() {
 
-export function openModal(id) {
-  document.getElementById(id)?.classList.remove("hidden");
-}
+    const newClientBtn = document.getElementById("new-client-btn");
+    const newLoanBtn = document.getElementById("new-loan-btn");
+    const fab = document.getElementById("fab-new-loan");
 
-export function closeModal(id) {
-  document.getElementById(id)?.classList.add("hidden");
-  }
+    if (newClientBtn) {
+
+        newClientBtn.addEventListener("click", () => {
+            openModal("client-modal");
+        });
+
+    }
+
+    if (newLoanBtn) {
+
+        newLoanBtn.addEventListener("click", () => {
+            openModal("loan-modal");
+        });
+
+    }
+
+    if (fab) {
+
+        fab.addEventListener("click", () => {
+            openModal("loan-modal");
+        });
+
+    }
+
+    document.querySelectorAll(".close-modal").forEach(button => {
