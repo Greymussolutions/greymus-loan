@@ -1569,3 +1569,42 @@ FINAL COMPATIBILITY FIXES
 /* ==========================================================
 END OF FILE
 ========================================================== */
+.settings-menu{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.settings-card{
+    width:90%;
+    max-width:320px;
+    background:#1f2d4f;
+    padding:20px;
+    border-radius:16px;
+}
+
+.settings-card h3{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.settings-card button{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border:none;
+    border-radius:10px;
+    color:#fff;
+}
+
+#mobile-logout-btn{
+    background:#ef4444;
+}
+
+#close-settings{
+    background:#334155;
+}
