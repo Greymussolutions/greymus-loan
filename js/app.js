@@ -120,7 +120,31 @@ if (logoutBtn) {
     });
 
 }
+// =========================
+// MOBILE SETTINGS
+// =========================
 
+const settingsBtn = document.getElementById("settings-btn");
+const settingsMenu = document.getElementById("settings-menu");
+const closeSettings = document.getElementById("close-settings");
+const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
+
+settingsBtn?.addEventListener("click", () => {
+    settingsMenu.classList.remove("hidden");
+});
+
+closeSettings?.addEventListener("click", () => {
+    settingsMenu.classList.add("hidden");
+});
+
+mobileLogoutBtn?.addEventListener("click", () => {
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+        logoutBtn.click();   // Uses your existing logout code
+    } else {
+        settingsMenu.classList.add("hidden");
+    }
+});
 // ======================================================
 // CLOSE MODALS
 // ======================================================
