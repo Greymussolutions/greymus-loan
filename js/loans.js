@@ -1,8 +1,10 @@
-// js/loans.js
+// ======================================================
+// GREYMUS LOAN FINANCIAL HUB
+// loans.js
+// PART 1
+// ======================================================
 
-import {
-    db
-} from "./firebase.js";
+import { db } from "./firebase.js";
 
 import {
     collection,
@@ -14,241 +16,182 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
+// ======================================================
 // ELEMENTS
+// ======================================================
 
-const loansTableBody =
-    document.querySelector("#loans-table tbody");
+const loansTableBody = document.querySelector("#loans-table tbody");
 
-const loanForm =
-    document.getElementById("loan-form");
+const loanForm = document.getElementById("loan-form");
+const loanModal = document.getElementById("loan-modal");
 
-const loanModal =
-    document.getElementById("loan-modal");
+const loanSearch = document.getElementById("loan-search");
+const loanFilter = document.getElementById("loan-filter");
 
-const loanSearch =
-    document.getElementById("loan-search");
+const loanClient = document.getElementById("loan-client");
+const loanId = document.getElementById("loan-id");
 
-const loanFilter =
-    document.getElementById("loan-filter");
+const loanAmount = document.getElementById("loan-amount");
+const loanProcessingFee = document.getElementById("loan-processing-fee");
+const loanInterest = document.getElementById("loan-interest");
+const loanDuration = document.getElementById("loan-duration");
+const loanDueDate = document.getElementById("loan-due-date");
 
-const loanClient =
-    document.getElementById("loan-client");
+// ======================================================
+// PREVIEW ELEMENTS
+// ======================================================
 
-const loanId =
-    document.getElementById("loan-id");
+const previewPrincipal = document.getElementById("preview-principal");
+const previewInterest = document.getElementById("preview-interest");
+const previewDuration = document.getElementById("preview-duration");
+const previewMonthly = document.getElementById("preview-monthly");
 
-
-// INPUTS
-
-const loanAmount =
-    document.getElementById("loan-amount");
-
-const loanProcessingFee =
-    document.getElementById("loan-processing-fee");
-
-const loanInterest =
-    document.getElementById("loan-interest");
-
-const loanDuration =
-    document.getElementById("loan-duration");
-
-const loanDueDate =
-    document.getElementById("loan-due-date");
-
-
-// PREVIEW
-
-const previewPrincipal =
-    document.getElementById("preview-principal");
-
-const previewInterest =
-    document.getElementById("preview-interest");
-
-const previewDuration =
-    document.getElementById("preview-duration");
-
-const previewMonthly =
-    document.getElementById("preview-monthly");
-
-
+// ======================================================
 // DATA
+// ======================================================
 
 let loans = [];
 
-
-// FORMAT MONEY
+// ======================================================
+// FORMAT CURRENCY
+// ======================================================
 
 function currency(value) {
 
-    return new Intl.NumberFormat(
-        "en-KE",
-        {
-            style: "currency",
-            currency: "KES",
-            maximumFractionDigits: 0
-        }
-    ).format(value || 0);
+    return new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+        maximumFractionDigits: 0
+    }).format(value || 0);
 
 }
 
-
-// LOAD CLIENT OPTIONS
+// ======================================================
+// LOAD CLIENTS
+// ======================================================
 
 function loadLoanClients() {
 
+    const clientsRef = collection(db, "clients");
 
-    const clientsRef =
-        collection(
-            db,
-            "clients"
-        );
+    onSnapshot(clientsRef, (snapshot) => {
 
+        if (!loanClient) return;
 
-    onSnapshot(
-        clientsRef,
-        (snapshot) => {
+        loanClient.innerHTML = `
+            <option value="">Select Client</option>
+        `;
 
+        snapshot.forEach((item) => {
 
-            if (!loanClient) return;
+            const client = item.data();
 
-
-            loanClient.innerHTML = `
-
-                <option value="">
-                    Select Client
+            loanClient.innerHTML += `
+                <option value="${item.id}">
+                    ${client.name}
                 </option>
-
             `;
 
+        });
 
-            snapshot.forEach(
-                (item) => {
-
-
-                    const client =
-                        item.data();
-
-
-                    loanClient.innerHTML += `
-
-                        <option value="${item.id}">
-                            ${client.name}
-                        </option>
-
-                    `;
-
-
-                }
-            );
-
-
-        }
-    );
-
+    });
 
 }
 
-
-// CALCULATE LOAN
+// ======================================================
+// WEEKLY LOAN CALCULATOR
+// ======================================================
 
 function calculateLoan() {
 
+    const amount = Number(loanAmount?.value || 0);
 
-    const amount =
-        Number(
-            loanAmount?.value || 0
-        );
+    const interest = Number(loanInterest?.value || 0);
 
+    const duration = Number(loanDuration?.value || 0);
 
-    const interest =
-        Number(
-            loanInterest?.value || 0
-        );
+    const totalRepayment =
+        amount + (amount * interest / 100);
 
-
-    const duration =
-        Number(
-            loanDuration?.value || 0
-        );
-
-
-    const total =
-        amount +
-        (amount * interest / 100);
-
-
-    const monthly =
+    const weeklyPayment =
         duration > 0
-            ? total / duration
+            ? totalRepayment / duration
             : 0;
 
+    if (previewPrincipal) {
+        previewPrincipal.textContent = currency(amount);
+    }
 
+    if (previewInterest) {
+        previewInterest.textContent = `${interest}%`;
+    }
 
-    if (previewPrincipal)
-        previewPrincipal.textContent =
-            currency(amount);
+    if (previewDuration) {
+        previewDuration.textContent = `${duration} Weeks`;
+    }
 
-
-    if (previewInterest)
-        previewInterest.textContent =
-            `${interest}%`;
-
-
-    if (previewDuration)
-        previewDuration.textContent =
-            `${duration} Months`;
-
-
-    if (previewMonthly)
-        previewMonthly.textContent =
-            currency(monthly);
-
+    if (previewMonthly) {
+        previewMonthly.textContent = currency(weeklyPayment);
+    }
 
 }
 
+// ======================================================
+// LIVE PREVIEW
+// ======================================================
 
 [
     loanAmount,
     loanInterest,
     loanDuration
+].forEach(input => {
 
-].forEach(
-    input => {
-
-        if (input) {
-
-            input.addEventListener(
-                "input",
-                calculateLoan
-            );
-
-        }
-
+    if (input) {
+        input.addEventListener("input", calculateLoan);
     }
-);
 
+});// ======================================================
+// LOAD LOANS FROM FIRESTORE
+// ======================================================
 
-// RENDER LOANS
+function loadLoans() {
+
+    const loansRef = collection(db, "loans");
+
+    onSnapshot(loansRef, (snapshot) => {
+
+        loans = [];
+
+        snapshot.forEach((item) => {
+
+            loans.push({
+                id: item.id,
+                ...item.data()
+            });
+
+        });
+
+        renderLoans(loans);
+
+    });
+
+}
+
+// ======================================================
+// RENDER LOANS TABLE
+// ======================================================
 
 function renderLoans(list) {
 
-
     if (!loansTableBody) return;
-
 
     loansTableBody.innerHTML = "";
 
+    list.forEach((loan) => {
 
-    list.forEach(
-        (loan) => {
+        const row = document.createElement("tr");
 
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
+        row.innerHTML = `
 
             <td>${loan.id.slice(0,8)}</td>
 
@@ -258,479 +201,318 @@ function renderLoans(list) {
 
             <td>${loan.interest || 0}%</td>
 
-            <td>${loan.duration || 0} Months</td>
+            <td>${loan.duration || 0} Weeks</td>
 
             <td>${currency(loan.repayment)}</td>
 
             <td>${loan.dueDate || "-"}</td>
 
-            <td><span class="status ${loan.status?.toLowerCase()}">${loan.status || "Pending"}</span></td>
+            <td>
+                <span class="status ${String(loan.status || "Pending").toLowerCase()}">
+                    ${loan.status || "Pending"}
+                </span>
+            </td>
 
             <td>${loan.officer || "-"}</td>
 
             <td>
 
-            <button class="btn-icon btn-edit edit-loan"
-            data-id="${loan.id}"
-            title="Edit">
-            ✏️
-            </button>
+                <button
+                    class="btn-icon btn-edit edit-loan"
+                    data-id="${loan.id}"
+                    title="Edit">
+                    ✏️
+                </button>
 
-            <button class="btn-icon btn-view approve-loan"
-            data-id="${loan.id}"
-            title="Approve">
-            ✓
-            </button>
+                <button
+                    class="btn-icon btn-view approve-loan"
+                    data-id="${loan.id}"
+                    title="Approve">
+                    ✓
+                </button>
 
-            <button class="btn-icon btn-delete delete-loan"
-            data-id="${loan.id}"
-            title="Delete">
-            🗑️
-            </button>
+                <button
+                    class="btn-icon btn-delete delete-loan"
+                    data-id="${loan.id}"
+                    title="Delete">
+                    🗑️
+                </button>
 
             </td>
 
-            `;
+        `;
 
+        loansTableBody.appendChild(row);
 
-            loansTableBody.appendChild(row);
-
-
-        }
-    );
-
+    });
 
     attachLoanActions();
 
-}
-
-
-// LOAD LOANS
-
-function loadLoans() {
-
-
-    const loansRef =
-        collection(
-            db,
-            "loans"
-        );
-
-
-    onSnapshot(
-        loansRef,
-        (snapshot) => {
-
-
-            loans = [];
-
-
-            snapshot.forEach(
-                (item) => {
-
-
-                    loans.push({
-
-                        id:item.id,
-
-                        ...item.data()
-
-                    });
-
-
-                }
-            );
-
-
-            renderLoans(
-                loans
-            );
-
-
-        }
-    );
-
-
-}
-
-
-// SAVE LOAN
+}// ======================================================
+// SAVE OR UPDATE LOAN
+// ======================================================
 
 if (loanForm) {
 
+    loanForm.addEventListener("submit", async (e) => {
 
-loanForm.addEventListener(
-"submit",
-async(e)=>{
+        e.preventDefault();
 
+        const amount = Number(loanAmount.value || 0);
+        const interest = Number(loanInterest.value || 0);
+        const duration = Number(loanDuration.value || 0);
 
-e.preventDefault();
+        const totalRepayment =
+            amount + (amount * interest / 100);
 
+        const weeklyPayment =
+            duration > 0
+                ? totalRepayment / duration
+                : 0;
 
-const amount =
-Number(loanAmount.value || 0);
+        const selectedClient =
+            loanClient.options[loanClient.selectedIndex]?.text || "";
 
+        const data = {
 
-const interest =
-Number(loanInterest.value || 0);
+            clientId: loanClient.value,
+            clientName: selectedClient,
 
+            amount: amount,
 
-const duration =
-Number(loanDuration.value || 0);
+            processingFee: Number(
+                loanProcessingFee.value || 0
+            ),
 
+            interest: interest,
 
-const repayment =
-(
-amount +
-(amount * interest /100)
-)
-/ duration;
+            duration: duration,
 
+            repayment: weeklyPayment,
 
+            totalRepayment: totalRepayment,
 
-const data = {
+            dueDate: loanDueDate.value,
 
+            status: "Pending",
 
-clientId:
-loanClient.value,
+            officer:
+                localStorage.getItem("userRole") || "User",
 
+            updatedAt: serverTimestamp()
 
-amount,
+        };
 
-processingFee:
-Number(
-loanProcessingFee?.value || 0
-),
+        try {
 
+            if (loanId.value) {
 
-interest,
+                await updateDoc(
+                    doc(db, "loans", loanId.value),
+                    data
+                );
 
-duration,
+            } else {
 
+                await addDoc(
+                    collection(db, "loans"),
+                    {
+                        ...data,
+                        createdAt: serverTimestamp()
+                    }
+                );
 
-repayment,
+            }
 
+            loanForm.reset();
 
-dueDate:
-loanDueDate.value,
+            loanId.value = "";
 
+            calculateLoan();
 
-status:
-"Pending",
+            loanModal.classList.add("hidden");
 
+        } catch (error) {
 
-officer:
-localStorage.getItem(
-"userRole"
-)
-|| "User",
+            console.error("Loan Error:", error);
 
+            alert(error.message);
 
-updatedAt:
-serverTimestamp()
+        }
 
+    });
 
-};
+}// ======================================================
+// SEARCH & FILTER
+// ======================================================
 
+function filterLoans() {
 
+    let result = [...loans];
 
-try{
+    const search =
+        loanSearch?.value.toLowerCase() || "";
 
+    const status =
+        loanFilter?.value || "ALL";
 
-if(loanId.value){
+    result = result.filter((loan) => {
 
+        const matchesSearch =
 
-await updateDoc(
+            (loan.clientName || "")
+                .toLowerCase()
+                .includes(search)
 
-doc(
-db,
-"loans",
-loanId.value
-),
+            ||
 
-data
+            loan.id
+                .toLowerCase()
+                .includes(search);
 
-);
+        const matchesStatus =
 
+            status === "ALL"
 
-}else{
+            ||
 
+            loan.status === status;
 
-await addDoc(
+        return matchesSearch && matchesStatus;
 
-collection(
-db,
-"loans"
-),
+    });
 
-{
-
-...data,
-
-createdAt:
-serverTimestamp()
+    renderLoans(result);
 
 }
 
-);
+loanSearch?.addEventListener("input", filterLoans);
+loanFilter?.addEventListener("change", filterLoans);
 
+// ======================================================
+// TABLE ACTIONS
+// ======================================================
 
-}
+function attachLoanActions() {
 
+    // DELETE
 
-loanForm.reset();
+    document.querySelectorAll(".delete-loan").forEach(button => {
 
-loanId.value="";
+        button.onclick = async () => {
 
+            if (!confirm("Delete this loan?")) return;
 
-loanModal.classList.add(
-"hidden"
-);
+            try {
 
+                await deleteDoc(
+                    doc(db, "loans", button.dataset.id)
+                );
 
-}catch(error){
+            } catch (error) {
 
-console.error(
-"Loan error:",
-error
-);
+                console.error(error);
 
-}
+            }
 
+        };
 
-});
+    });
 
-}
+    // APPROVE
 
+    document.querySelectorAll(".approve-loan").forEach(button => {
 
-// SEARCH AND FILTER
+        button.onclick = async () => {
 
-function filterLoans(){
+            try {
 
+                await updateDoc(
+                    doc(db, "loans", button.dataset.id),
+                    {
+                        status: "Approved",
+                        updatedAt: serverTimestamp()
+                    }
+                );
 
-let result =
-[...loans];
+            } catch (error) {
 
+                console.error(error);
 
-const search =
-loanSearch?.value
-.toLowerCase()
-|| "";
+            }
 
+        };
 
-const status =
-loanFilter?.value
-|| "ALL";
+    });
 
+    // EDIT
 
+    document.querySelectorAll(".edit-loan").forEach(button => {
 
-result =
-result.filter(
-loan => {
+        button.onclick = () => {
 
+            const loan =
+                loans.find(
+                    item => item.id === button.dataset.id
+                );
 
-const matchesSearch =
+            if (!loan) return;
 
-loan.clientName
-?.toLowerCase()
-.includes(search)
+            loanId.value = loan.id;
+            loanClient.value = loan.clientId;
+            loanAmount.value = loan.amount;
+            loanProcessingFee.value = loan.processingFee || 0;
+            loanInterest.value = loan.interest;
+            loanDuration.value = loan.duration;
+            loanDueDate.value = loan.dueDate;
 
-||
+            calculateLoan();
 
-loan.id
-.includes(search);
+            loanModal.classList.remove("hidden");
 
+        };
 
-
-const matchesStatus =
-
-status === "ALL"
-
-||
-
-loan.status === status;
-
-
-
-return matchesSearch &&
-matchesStatus;
-
-
-});
-
-
-renderLoans(
-result
-);
-
+    });
 
 }
 
-
-if(loanSearch)
-
-loanSearch.addEventListener(
-"input",
-filterLoans
-);
-
-
-if(loanFilter)
-
-loanFilter.addEventListener(
-"change",
-filterLoans
-);
-
-
-// ACTIONS
-
-function attachLoanActions(){
-
-
-document
-.querySelectorAll(".delete-loan")
-.forEach(
-button=>{
-
-
-button.addEventListener(
-"click",
-async()=>{
-
-if(confirm("Delete this loan?")){
-
-await deleteDoc(
-
-doc(
-db,
-"loans",
-button.dataset.id
-)
-
-);
-
-}
-
-});
-
-
-});
-
-
-document
-.querySelectorAll(".approve-loan")
-.forEach(
-button=>{
-
-
-button.addEventListener(
-"click",
-async()=>{
-
-try{
-
-await updateDoc(
-
-doc(
-db,
-"loans",
-button.dataset.id
-),
-
-{
-status: "Approved",
-updatedAt: serverTimestamp()
-}
-
-);
-
-}catch(error){
-
-console.error("Approve error:", error);
-
-}
-
-});
-
-
-});
-
-
-document
-.querySelectorAll(".edit-loan")
-.forEach(
-button=>{
-
-
-button.addEventListener(
-"click",
-async()=>{
-
-const loanData = loans.find(l => l.id === button.dataset.id);
-
-if(loanData){
-
-loanId.value = loanData.id;
-loanClient.value = loanData.clientId;
-loanAmount.value = loanData.amount;
-loanProcessingFee.value = loanData.processingFee || 0;
-loanInterest.value = loanData.interest;
-loanDuration.value = loanData.duration;
-loanDueDate.value = loanData.dueDate;
-
-calculateLoan();
-
-loanModal.classList.remove("hidden");
-
-}
-
-});
-
-
-});
-
-
-}
-
-
+// ======================================================
 // CLOSE MODAL
+// ======================================================
 
-document
-.querySelectorAll(".close-modal")
-.forEach(
-button=>{
+document.querySelectorAll(".close-modal").forEach(button => {
 
+    button.addEventListener("click", () => {
 
-button.addEventListener(
-"click",
-()=>{
+        loanForm.reset();
 
-loanModal.classList.add(
-"hidden"
-);
+        loanId.value = "";
 
-loanId.value = "";
+        calculateLoan();
 
-loanForm.reset();
+        loanModal.classList.add("hidden");
 
-}
-);
-
+    });
 
 });
 
-
-// START
+// ======================================================
+// START APP
+// ======================================================
 
 loadLoanClients();
-
 loadLoans();
+calculateLoan();
 
-
-// EXPORT
+// ======================================================
+// EXPORTS
+// ======================================================
 
 export {
     loadLoans,
     calculateLoan
 };
+
+// ======================================================
+// END OF FILE
+// ======================================================
