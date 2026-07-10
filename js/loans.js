@@ -264,21 +264,28 @@ function renderLoans(list) {
 
             <td>${loan.dueDate || "-"}</td>
 
-            <td>${loan.status || "Pending"}</td>
+            <td><span class="status ${loan.status?.toLowerCase()}">${loan.status || "Pending"}</span></td>
 
             <td>${loan.officer || "-"}</td>
 
             <td>
 
-            <button class="edit-loan"
-            data-id="${loan.id}">
-            Edit
+            <button class="btn-icon btn-edit edit-loan"
+            data-id="${loan.id}"
+            title="Edit">
+            ✏️
             </button>
 
+            <button class="btn-icon btn-view approve-loan"
+            data-id="${loan.id}"
+            title="Approve">
+            ✓
+            </button>
 
-            <button class="delete-loan"
-            data-id="${loan.id}">
-            Delete
+            <button class="btn-icon btn-delete delete-loan"
+            data-id="${loan.id}"
+            title="Delete">
+            🗑️
             </button>
 
             </td>
@@ -591,6 +598,7 @@ button.addEventListener(
 "click",
 async()=>{
 
+if(confirm("Delete this loan?")){
 
 await deleteDoc(
 
@@ -602,6 +610,80 @@ button.dataset.id
 
 );
 
+}
+
+});
+
+
+});
+
+
+document
+.querySelectorAll(".approve-loan")
+.forEach(
+button=>{
+
+
+button.addEventListener(
+"click",
+async()=>{
+
+try{
+
+await updateDoc(
+
+doc(
+db,
+"loans",
+button.dataset.id
+),
+
+{
+status: "Approved",
+updatedAt: serverTimestamp()
+}
+
+);
+
+}catch(error){
+
+console.error("Approve error:", error);
+
+}
+
+});
+
+
+});
+
+
+document
+.querySelectorAll(".edit-loan")
+.forEach(
+button=>{
+
+
+button.addEventListener(
+"click",
+async()=>{
+
+const loanData = loans.find(l => l.id === button.dataset.id);
+
+if(loanData){
+
+loanId.value = loanData.id;
+loanClient.value = loanData.clientId;
+loanAmount.value = loanData.amount;
+loanProcessingFee.value = loanData.processingFee || 0;
+loanInterest.value = loanData.interest;
+loanDuration.value = loanData.duration;
+loanDueDate.value = loanData.dueDate;
+
+calculateLoan();
+
+loanModal.classList.remove("hidden");
+
+}
 
 });
 
@@ -627,6 +709,10 @@ button.addEventListener(
 loanModal.classList.add(
 "hidden"
 );
+
+loanId.value = "";
+
+loanForm.reset();
 
 }
 );
