@@ -3,26 +3,27 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Greymus Loan Financial Hub</title>
+    <title>Greymus Loan Financial Hub</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css">
 
-<script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/utils.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/dashboard.js"></script>
-<script type="module" src="js/clients.js"></script>
-<script type="module" src="js/loans.js"></script>
-<script type="module" src="js/ui.js"></script>
-<script type="module" src="js/app.js"></script>
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/clients.js"></script>
+    <script type="module" src="js/loans.js"></script>
+    <script type="module" src="js/repayments.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/app.js"></script>
 
 </head>
 
@@ -34,6 +35,10 @@
 </div>
 
 <div id="toast"></div>
+
+<!-- =========================
+LOGIN
+========================= -->
 
 <section id="login-section" class="center-page">
 
@@ -73,6 +78,10 @@
 
 </section>
 
+<!-- =========================
+DASHBOARD
+========================= -->
+
 <section id="dashboard-section" class="hidden">
 
 <div class="dashboard-layout">
@@ -107,6 +116,16 @@
             <small>Loans</small>
         </button>
 
+        <button class="tab-btn" data-tab="repayments">
+            <span>💳</span>
+            <small>Repayments</small>
+        </button>
+
+        <button id="settings-btn" class="tab-btn" type="button">
+            <span>⚙️</span>
+            <small>Settings</small>
+        </button>
+
     </nav>
 
 </aside>
@@ -131,13 +150,22 @@
 
     </div>
 
-</header><section id="dashboard-tab" class="tab-content">
+</header>
+
+<!-- =========================
+DASHBOARD TAB
+========================= -->
+
+<section id="dashboard-tab" class="tab-content">
 
     <div class="hero-card">
 
         <div>
+
             <p>Total Portfolio</p>
+
             <h2 id="stat-portfolio">KES 0</h2>
+
         </div>
 
         <div class="hero-icon">
@@ -159,22 +187,22 @@
         </div>
 
         <div class="stat-card">
-            <span>Pending</span>
+            <span>Pending Loans</span>
             <h3 id="stat-pending">0</h3>
         </div>
 
         <div class="stat-card">
-            <span>Approved</span>
+            <span>Approved Loans</span>
             <h3 id="stat-approved">0</h3>
         </div>
 
         <div class="stat-card">
-            <span>Rejected</span>
+            <span>Rejected Loans</span>
             <h3 id="stat-rejected">0</h3>
         </div>
 
         <div class="stat-card danger">
-            <span>Arrears</span>
+            <span>Loans in Arrears</span>
             <h3 id="stat-arrears">0</h3>
         </div>
 
@@ -185,8 +213,11 @@
         <div class="section-header">
 
             <div>
+
                 <h2>Quick Actions</h2>
+
                 <p>Frequently used operations</p>
+
             </div>
 
         </div>
@@ -210,7 +241,7 @@
 
                 <div>
                     <h3>New Loan</h3>
-                    <p>Create a loan application</p>
+                    <p>Create a weekly loan</p>
                 </div>
 
             </button>
@@ -273,13 +304,56 @@ LOANS TAB
     <div class="section-header">
         <div>
             <h2>Loans</h2>
-            <p>Manage loans and repayments</p>
+            <p>Manage loans and weekly repayments</p>
         </div>
     </div>
 
     <div class="toolbar toolbar-wrap">
 
-        <<!-- =========================
+        <input
+            type="text"
+            id="loan-search"
+            placeholder="Search loans...">
+
+        <select id="loan-filter">
+            <option value="ALL">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Arrears">Arrears</option>
+        </select>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table id="loans-table">
+
+            <thead>
+
+                <tr>
+                    <th>Loan No.</th>
+                    <th>Client</th>
+                    <th>Principal</th>
+                    <th>Interest</th>
+                    <th>Duration (Weeks)</th>
+                    <th>Weekly Payment</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Officer</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="loans-table-body">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section><!-- =========================
 CLIENT MODAL
 ========================= -->
 
@@ -288,6 +362,7 @@ CLIENT MODAL
     <div class="modal-content">
 
         <div class="modal-header">
+
             <div>
                 <h2 id="client-modal-title">New Client</h2>
                 <p>Register a new borrower</p>
@@ -296,6 +371,7 @@ CLIENT MODAL
             <button type="button" class="modal-close-btn close-modal">
                 ✕
             </button>
+
         </div>
 
         <form id="client-form">
@@ -337,8 +413,11 @@ CLIENT MODAL
             </div>
 
             <div class="form-group">
+
                 <label>Collateral / Security</label>
+
                 <textarea id="client-security" rows="4"></textarea>
+
             </div>
 
             <div class="modal-buttons">
@@ -388,19 +467,18 @@ LOAN MODAL
 
                 <div class="form-group">
                     <label>Client</label>
-
                     <select id="loan-client" required>
                         <option value="">Select Client</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Loan Amount</label>
+                    <label>Loan Amount (KES)</label>
                     <input type="number" id="loan-amount" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Processing Fee</label>
+                    <label>Processing Fee (KES)</label>
                     <input type="number" id="loan-processing-fee">
                 </div>
 
@@ -410,8 +488,8 @@ LOAN MODAL
                 </div>
 
                 <div class="form-group">
-                    <label>Duration (Months)</label>
-                    <input type="number" id="loan-duration">
+                    <label>Duration (Weeks)</label>
+                    <input type="number" id="loan-duration" required>
                 </div>
 
                 <div class="form-group">
@@ -437,11 +515,11 @@ LOAN MODAL
 
                 <div class="summary-row">
                     <span>Duration</span>
-                    <strong id="preview-duration">0 Months</strong>
+                    <strong id="preview-duration">0 Weeks</strong>
                 </div>
 
                 <div class="summary-row">
-                    <span>Monthly Payment</span>
+                    <span>Weekly Payment</span>
                     <strong id="preview-monthly">KES 0</strong>
                 </div>
 
@@ -463,9 +541,7 @@ LOAN MODAL
 
     </div>
 
-</div>
-
-<!-- =========================
+</div><!-- =========================
 CONFIRMATION MODAL
 ========================= -->
 
@@ -525,7 +601,9 @@ NOTIFICATION PANEL
 
     </div>
 
-</div></main>
+</div>
+
+</main>
 
 </div>
 
@@ -552,7 +630,7 @@ MOBILE NAVIGATION
         <small>Loans</small>
     </button>
 
-    <button id="settings-btn" type="button" class="tab-btn">
+    <button id="settings-btn" class="tab-btn" type="button">
         <span>⚙️</span>
         <small>Settings</small>
     </button>
@@ -593,9 +671,7 @@ FLOATING ACTION BUTTON
 
     +
 
-</button>
-
-<!-- =========================
+</button><!-- =========================
 FOOTER
 ========================= -->
 
@@ -611,7 +687,13 @@ FOOTER
 
 </footer>
 
+<!-- Global Overlay -->
+
 <div id="global-overlay" class="hidden"></div>
+
+<!-- =========================
+END OF APPLICATION
+========================= -->
 
 </body>
 
