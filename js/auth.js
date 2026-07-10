@@ -1,9 +1,12 @@
-console.log("Auth.js loaded");// js/auth.js
+// ==========================================
+// Greymus Loan Financial Hub
+// auth.js
+// FINISHED
+// ==========================================
 
-import {
-    auth,
-    db
-} from "./firebase.js";
+console.log("auth.js loaded");
+
+import { auth, db } from "./firebase.js";
 
 import {
     signInWithEmailAndPassword,
@@ -16,8 +19,9 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
+// ==========================================
 // DOM ELEMENTS
+// ==========================================
 
 const loginSection = document.getElementById("login-section");
 const dashboardSection = document.getElementById("dashboard-section");
@@ -32,288 +36,229 @@ const loggedUser = document.getElementById("logged-user");
 
 const loadingOverlay = document.getElementById("loading-overlay");
 
-
-// SHOW / HIDE LOADER
+// ==========================================
+// LOADER
+// ==========================================
 
 function showLoader() {
-
     if (loadingOverlay) {
         loadingOverlay.classList.remove("hidden");
     }
-
 }
 
-
 function hideLoader() {
-
     if (loadingOverlay) {
         loadingOverlay.classList.add("hidden");
     }
-
 }
 
-
-// TOAST MESSAGE
+// ==========================================
+// TOAST
+// ==========================================
 
 function showToast(message) {
 
     const toast = document.getElementById("toast");
 
-    if (!toast) return;
+    if (!toast) {
+        alert(message);
+        return;
+    }
 
     toast.textContent = message;
-
     toast.classList.add("show");
 
-
     setTimeout(() => {
-
         toast.classList.remove("show");
-
     }, 3000);
-
 }
 
-
-// GET USER ROLE
+// ==========================================
+// USER ROLE
+// ==========================================
 
 async function getUserRole(uid) {
 
     try {
 
-        const userRef = doc(db, "users", uid);
+        const ref = doc(db, "users", uid);
 
-        const userSnap = await getDoc(userRef);
+        const snap = await getDoc(ref);
 
-
-        if (userSnap.exists()) {
-
-            return userSnap.data();
-
+        if (snap.exists()) {
+            return snap.data();
         }
 
-
         return {
-
             role: "Field Officer"
-
         };
-
 
     } catch (error) {
 
-        console.error(
-            "Role error:",
-            error
-        );
-
+        console.error(error);
 
         return {
-
             role: "Field Officer"
-
         };
-
     }
-
 }
 
-
+// ==========================================
 // LOGIN
+// ==========================================
 
 if (loginForm) {
 
-    loginForm.addEventListener(
-        "submit",
-        async (e) => {
+    loginForm.addEventListener("submit", async (e) => {
 
-            e.preventDefault();
+        e.preventDefault();
 
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
 
-            const email =
-                emailInput.value.trim();
-
-
-            const password =
-                passwordInput.value.trim();
-
-
-            try {
-
-                showLoader();
-
-
-                const result =
-                    await signInWithEmailAndPassword(
-                        auth,
-                        email,
-                        password
-                    );
-
-
-                const user =
-                    result.user;
-
-
-                const profile =
-                    await getUserRole(
-                        user.uid
-                    );
-
-
-                localStorage.setItem(
-                    "userRole",
-                    profile.role
-                );
-
-
-                showToast(
-                    "Login successful"
-                );
-
-
-                loginForm.reset();
-
-
-            } catch (error) {
-
-
-                console.error(
-                    error
-                );
-
-
-                showToast(
-                    "Login failed. Check email or password."
-                );
-
-
-            } finally {
-
-                hideLoader();
-
-            }
-
+        if (!email || !password) {
+            showToast("Enter email and password.");
+            return;
         }
-    );
 
-}
+        try {
 
+            showLoader();
 
-// AUTH STATE LISTENER
+            const credential =
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
 
-onAuthStateChanged(
-    auth,
-    async (user) => {
-
-
-        if (user) {
-
+            const user = credential.user;
 
             const profile =
-                await getUserRole(
-                    user.uid
-                );
-
+                await getUserRole(user.uid);
 
             localStorage.setItem(
                 "userRole",
                 profile.role
             );
 
+            showToast("Login successful");
 
-            if (loginSection) {
+            loginForm.reset();
 
-                loginSection.classList.add(
-                    "hidden"
-                );
+        } catch (error) {
 
+            console.error(error);
+
+            switch (error.code) {
+
+                case "auth/invalid-email":
+                    showToast("Invalid email.");
+                    break;
+
+                case "auth/user-not-found":
+                    showToast("User not found.");
+                    break;
+
+                case "auth/wrong-password":
+                case "auth/invalid-credential":
+                    showToast("Incorrect email or password.");
+                    break;
+
+                case "auth/network-request-failed":
+                    showToast("Network error.");
+                    break;
+
+                default:
+                    showToast(error.message);
             }
 
+        } finally {
 
-            if (dashboardSection) {
-
-                dashboardSection.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            if (loggedUser) {
-
-                loggedUser.textContent =
-                    `${user.email} (${profile.role})`;
-
-            }
-
-
-        } else {
-
-
-            if (loginSection) {
-
-                loginSection.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            if (dashboardSection) {
-
-                dashboardSection.classList.add(
-                    "hidden"
-                );
-
-            }
-
-
-            if (loggedUser) {
-
-                loggedUser.textContent = "";
-
-            }
-
+            hideLoader();
 
         }
 
+    });
+
+}
+
+// ==========================================
+// AUTH STATE
+// ==========================================
+
+onAuthStateChanged(auth, async (user) => {
+
+    if (user) {
+
+        const profile =
+            await getUserRole(user.uid);
+
+        localStorage.setItem(
+            "userRole",
+            profile.role
+        );
+
+        if (loginSection)
+            loginSection.classList.add("hidden");
+
+        if (dashboardSection)
+            dashboardSection.classList.remove("hidden");
+
+        if (loggedUser)
+            loggedUser.textContent =
+                `${user.email} (${profile.role})`;
+
+    } else {
+
+        if (loginSection)
+            loginSection.classList.remove("hidden");
+
+        if (dashboardSection)
+            dashboardSection.classList.add("hidden");
+
+        if (loggedUser)
+            loggedUser.textContent = "";
+
     }
-);
 
+});
 
+// ==========================================
 // LOGOUT
+// ==========================================
 
 if (logoutBtn) {
 
+    logoutBtn.addEventListener("click", async () => {
 
-    logoutBtn.addEventListener(
-        "click",
-        async () => {
+        try {
 
+            showLoader();
 
-            try {
+            await signOut(auth);
 
+            localStorage.removeItem("userRole");
 
-                showLoader();
+            showToast("Logged out successfully");
 
+        } catch (error) {
 
-                await signOut(
-                    auth
-                );
+            console.error(error);
 
+            showToast("Logout failed.");
 
-                localStorage.removeItem(
-                    "userRole"
-                );
+        } finally {
 
+            hideLoader();
 
-                showToast(
-                    "Logged out successfully"
-                );
+        }
 
+    });
 
-            } catch (error) {
+}
 
-
-               
+// ==========================================
+// END OF FILE
+// FINISHED
+// ==========================================
