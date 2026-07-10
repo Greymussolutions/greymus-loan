@@ -1,149 +1,83 @@
-// ================================
-// Greymus Loan Financial Hub
+// ======================================================
+// GREYMUS LOAN FINANCIAL HUB
 // app.js
 // FINISHED
-// ================================
+// ======================================================
 
 import { auth } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-console.log("Greymus Loan Financial Hub started");
+import {
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// -----------------------------
+// ======================================================
+// ELEMENTS
+// ======================================================
+
+const loginSection = document.getElementById("login-section");
+const dashboardSection = document.getElementById("dashboard-section");
+
+const logoutBtn = document.getElementById("logout-btn");
+const loggedUser = document.getElementById("logged-user");
+
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tabContents = document.querySelectorAll(".tab-content");
+
+// ======================================================
 // AUTH STATE
-// -----------------------------
+// ======================================================
 
-function watchAuth() {
-    onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user) => {
 
-        const loginSection = document.getElementById("login-section");
-        const dashboardSection = document.getElementById("dashboard-section");
-        const loggedUser = document.getElementById("logged-user");
+    if (user) {
 
-        if (user) {
-            console.log("Active user:", user.email);
+        loginSection.classList.add("hidden");
+        dashboardSection.classList.remove("hidden");
 
-            if (loginSection) {
-                loginSection.classList.add("hidden");
-            }
+        if (loggedUser) {
+            loggedUser.textContent = user.email;
+        }
 
-            if (dashboardSection) {
-                dashboardSection.classList.remove("hidden");
-            }
+    } else {
 
-            if (loggedUser) {
-                const role = localStorage.getItem("userRole") || "Field Officer";
-                loggedUser.textContent = `${user.email} (${role})`;
-            }
+        dashboardSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+
+    }
+
+});
+
+// ======================================================
+// TAB SWITCHING
+// ======================================================
+
+function openTab(tabName) {
+
+    tabContents.forEach(section => {
+
+        section.classList.add("hidden");
+
+    });
+
+    const activeSection =
+        document.getElementById(`${tabName}-tab`);
+
+    if (activeSection) {
+
+        activeSection.classList.remove("hidden");
+
+    }
+
+    tabButtons.forEach(btn => {
+
+        if (btn.dataset.tab === tabName) {
+
+            btn.classList.add("active");
 
         } else {
 
-            console.log("No active user");
-
-            if (dashboardSection) {
-                dashboardSection.classList.add("hidden");
-            }
-
-            if (loginSection) {
-                loginSection.classList.remove("hidden");
-            }
-
-            if (loggedUser) {
-                loggedUser.textContent = "";
-            }
-        }
-
-    });
-}
-
-// -----------------------------
-// TAB NAVIGATION
-// -----------------------------
-
-function initializeTabs() {
-
-    const buttons = document.querySelectorAll(".tab-btn");
-    const tabs = document.querySelectorAll(".tab-content");
-
-    buttons.forEach((button) => {
-
-        button.addEventListener("click", () => {
-
-            const tab = button.dataset.tab;
-
-            buttons.forEach((btn) =>
-                btn.classList.remove("active")
-            );
-
-            button.classList.add("active");
-
-            tabs.forEach((section) =>
-                section.classList.add("hidden")
-            );
-
-            const activeTab =
-                document.getElementById(`${tab}-tab`);
-
-            if (activeTab) {
-                activeTab.classList.remove("hidden");
-            }
-
-        });
-
-    });
-
-}
-
-// -----------------------------
-// MODAL CLOSE
-// -----------------------------
-
-function initializeModals() {
-
-    document.querySelectorAll(".close-modal").forEach((btn) => {
-
-        btn.addEventListener("click", () => {
-
-            btn.closest(".modal")?.classList.add("hidden");
-
-        });
-
-    });
-
-    document.querySelectorAll(".modal").forEach((modal) => {
-
-        modal.addEventListener("click", (e) => {
-
-            if (e.target === modal) {
-                modal.classList.add("hidden");
-            }
-
-        });
-
-    });
-
-}
-
-// -----------------------------
-// ESC KEY
-// -----------------------------
-
-function initializeEscapeKey() {
-
-    document.addEventListener("keydown", (e) => {
-
-        if (e.key === "Escape") {
-
-            document.querySelectorAll(".modal").forEach((modal) => {
-                modal.classList.add("hidden");
-            });
-
-            const notifications =
-                document.getElementById("notification-panel");
-
-            if (notifications) {
-                notifications.classList.add("hidden");
-            }
+            btn.classList.remove("active");
 
         }
 
@@ -151,88 +85,46 @@ function initializeEscapeKey() {
 
 }
 
-// -----------------------------
-// NOTIFICATIONS
-// -----------------------------
+tabButtons.forEach(btn => {
 
-function initializeNotifications() {
+    btn.addEventListener("click", () => {
 
-    const openBtn =
-        document.getElementById("notification-btn");
+        openTab(btn.dataset.tab);
 
-    const closeBtn =
-        document.getElementById("close-notifications");
+    });
 
-    const panel =
-        document.getElementById("notification-panel");
+});
 
-    if (openBtn && panel) {
+// Open dashboard by default
+openTab("dashboard");
 
-        openBtn.addEventListener("click", () => {
+// ======================================================
+// LOGOUT
+// ======================================================
 
-            panel.classList.toggle("hidden");
+if (logoutBtn) {
 
-        });
+    logoutBtn.addEventListener("click", async () => {
 
-    }
+        try {
 
-    if (closeBtn && panel) {
+            await signOut(auth);
 
-        closeBtn.addEventListener("click", () => {
+        } catch (error) {
 
-            panel.classList.add("hidden");
+            console.error(error);
+            alert(error.message);
 
-        });
-
-    }
-
-}
-
-// -----------------------------
-// PREVENT DOUBLE SUBMIT
-// -----------------------------
-
-function preventDoubleSubmit() {
-
-    document.querySelectorAll("form").forEach((form) => {
-
-        form.addEventListener("submit", () => {
-
-            const button =
-                form.querySelector("button[type='submit']");
-
-            if (!button) return;
-
-            button.disabled = true;
-
-            setTimeout(() => {
-                button.disabled = false;
-            }, 1500);
-
-        });
+        }
 
     });
 
 }
 
-// -----------------------------
-// START APPLICATION
-// -----------------------------
+// ======================================================
+// CLOSE MODALS
+// ======================================================
 
-function initializeApp() {
+document.querySelectorAll(".close-modal").forEach(button => {
 
-    watchAuth();
-
-    initializeTabs();
-
-    initializeModals();
-
-    initializeEscapeKey();
-
-    initializeNotifications();
-
-    preventDoubleSubmit();
-
-}
-
-document.addEventListener("DOMContentLoaded", initializeApp);
+    button
