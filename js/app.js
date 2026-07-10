@@ -1,7 +1,6 @@
 // ======================================================
 // GREYMUS LOAN FINANCIAL HUB
 // app.js
-// FINISHED
 // ======================================================
 
 import { auth } from "./firebase.js";
@@ -18,11 +17,16 @@ import {
 const loginSection = document.getElementById("login-section");
 const dashboardSection = document.getElementById("dashboard-section");
 
-const logoutBtn = document.getElementById("logout-btn");
 const loggedUser = document.getElementById("logged-user");
 
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabContents = document.querySelectorAll(".tab-content");
+
+// Settings
+const settingsBtn = document.getElementById("settings-btn");
+const settingsMenu = document.getElementById("settings-menu");
+const closeSettings = document.getElementById("close-settings");
+const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
 
 // ======================================================
 // AUTH STATE
@@ -39,6 +43,8 @@ onAuthStateChanged(auth, (user) => {
             loggedUser.textContent = user.email;
         }
 
+        openTab("dashboard");
+
     } else {
 
         dashboardSection.classList.add("hidden");
@@ -54,31 +60,22 @@ onAuthStateChanged(auth, (user) => {
 
 function openTab(tabName) {
 
-    tabContents.forEach(section => {
-
-        section.classList.add("hidden");
-
+    tabContents.forEach(tab => {
+        tab.classList.add("hidden");
     });
 
-    const activeSection =
-        document.getElementById(`${tabName}-tab`);
+    const active = document.getElementById(`${tabName}-tab`);
 
-    if (activeSection) {
-
-        activeSection.classList.remove("hidden");
-
+    if (active) {
+        active.classList.remove("hidden");
     }
 
     tabButtons.forEach(btn => {
 
         if (btn.dataset.tab === tabName) {
-
             btn.classList.add("active");
-
         } else {
-
             btn.classList.remove("active");
-
         }
 
     });
@@ -89,24 +86,51 @@ tabButtons.forEach(btn => {
 
     btn.addEventListener("click", () => {
 
-        openTab(btn.dataset.tab);
+        const tab = btn.dataset.tab;
+
+        if (tab) {
+            openTab(tab);
+        }
 
     });
 
 });
 
-// Open dashboard by default
-openTab("dashboard");
+// ======================================================
+// SETTINGS MENU
+// ======================================================
+
+if (settingsBtn && settingsMenu) {
+
+    settingsBtn.addEventListener("click", () => {
+
+        settingsMenu.classList.remove("hidden");
+
+    });
+
+}
+
+if (closeSettings && settingsMenu) {
+
+    closeSettings.addEventListener("click", () => {
+
+        settingsMenu.classList.add("hidden");
+
+    });
+
+}
 
 // ======================================================
 // LOGOUT
 // ======================================================
 
-if (logoutBtn) {
+if (mobileLogoutBtn) {
 
-    logoutBtn.addEventListener("click", async () => {
+    mobileLogoutBtn.addEventListener("click", async () => {
 
         try {
+
+            settingsMenu?.classList.add("hidden");
 
             await signOut(auth);
 
@@ -120,35 +144,63 @@ if (logoutBtn) {
     });
 
 }
-// =========================
-// MOBILE SETTINGS
-// =========================
 
-const settingsBtn = document.getElementById("settings-btn");
-const settingsMenu = document.getElementById("settings-menu");
-const closeSettings = document.getElementById("close-settings");
-const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
-
-settingsBtn?.addEventListener("click", () => {
-    settingsMenu.classList.remove("hidden");
-});
-
-closeSettings?.addEventListener("click", () => {
-    settingsMenu.classList.add("hidden");
-});
-
-mobileLogoutBtn?.addEventListener("click", () => {
-    const logoutBtn = document.getElementById("logout-btn");
-    if (logoutBtn) {
-        logoutBtn.click();   // Uses your existing logout code
-    } else {
-        settingsMenu.classList.add("hidden");
-    }
-});
 // ======================================================
 // CLOSE MODALS
 // ======================================================
 
 document.querySelectorAll(".close-modal").forEach(button => {
 
-    button
+    button.addEventListener("click", () => {
+
+        const modal = button.closest(".modal");
+
+        if (modal) {
+
+            modal.classList.add("hidden");
+
+        }
+
+    });
+
+});
+
+// ======================================================
+// CLOSE MODAL WHEN CLICKING OUTSIDE
+// ======================================================
+
+document.querySelectorAll(".modal").forEach(modal => {
+
+    modal.addEventListener("click", (e) => {
+
+        if (e.target === modal) {
+
+            modal.classList.add("hidden");
+
+        }
+
+    });
+
+});
+
+// ======================================================
+// ESC KEY CLOSES SETTINGS & MODALS
+// ======================================================
+
+document.addEventListener("keydown", (e) => {
+
+    if (e.key === "Escape") {
+
+        settingsMenu?.classList.add("hidden");
+
+        document.querySelectorAll(".modal").forEach(modal => {
+            modal.classList.add("hidden");
+        });
+
+    }
+
+});
+
+// ======================================================
+// END OF FILE
+// ======================================================
