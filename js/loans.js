@@ -125,7 +125,10 @@ function populateClientDropdown() {
 
     });
 
-}// ===============================
+}
+
+
+// ===============================
 // WEEKLY LOAN CALCULATOR
 // ===============================
 
@@ -135,7 +138,8 @@ function calculateLoan() {
     const interest = Number(loanInterest?.value || 0);
     const duration = Number(loanDuration?.value || 0);
 
-    const totalRepayment = amount + (amount * interest / 100);
+    const totalRepayment =
+        amount + (amount * interest / 100);
 
     const weeklyPayment =
         duration > 0
@@ -158,7 +162,7 @@ function calculateLoan() {
 
 
 // ===============================
-// UPDATE PREVIEW WHEN USER TYPES
+// UPDATE PREVIEW
 // ===============================
 
 [
@@ -183,18 +187,15 @@ function calculateLoan() {
 // RENDER LOANS TABLE
 // ===============================
 
-function renderLoans(list) {
-
-    if (!loansTableBody) return;
+function renderLoans(list) {    if (!loansTableBody) return;
 
     loansTableBody.innerHTML = "";
 
     list.forEach((loan) => {
 
-        const client =
-            clients.find(
-                c => c.id === loan.clientId
-            );
+        const client = clients.find(
+            c => c.id === loan.clientId
+        );
 
         const row = document.createElement("tr");
 
@@ -215,30 +216,40 @@ function renderLoans(list) {
             <td>${loan.dueDate || "-"}</td>
 
             <td>
-                <span class="status ${loan.status?.toLowerCase()}">
+                <span class="status ${String(loan.status || "Pending").toLowerCase()}">
                     ${loan.status || "Pending"}
                 </span>
             </td>
 
             <td>${loan.officer || "-"}</td>
 
-            <td>
+            <td class="loan-actions">
+
+                <button
+                    class="btn-icon btn-view view-loan"
+                    data-id="${loan.id}"
+                    title="View Loan">
+                    👁️
+                </button>
 
                 <button
                     class="btn-icon btn-edit edit-loan"
-                    data-id="${loan.id}">
+                    data-id="${loan.id}"
+                    title="Edit Loan">
                     ✏️
                 </button>
 
                 <button
-                    class="btn-icon btn-view approve-loan"
-                    data-id="${loan.id}">
-                    ✓
+                    class="btn-icon btn-success approve-loan"
+                    data-id="${loan.id}"
+                    title="Approve Loan">
+                    ✔
                 </button>
 
                 <button
                     class="btn-icon btn-delete delete-loan"
-                    data-id="${loan.id}">
+                    data-id="${loan.id}"
+                    title="Delete Loan">
                     🗑️
                 </button>
 
@@ -252,7 +263,10 @@ function renderLoans(list) {
 
     attachLoanActions();
 
-}// ===============================
+}
+
+
+// ===============================
 // LOAD LOANS
 // ===============================
 
@@ -282,9 +296,7 @@ function loadLoans() {
 
 // ===============================
 // SAVE / UPDATE LOAN
-// ===============================
-
-if (loanForm) {
+// ===============================if (loanForm) {
 
     loanForm.addEventListener("submit", async (e) => {
 
@@ -347,28 +359,18 @@ if (loanForm) {
             if (loanId.value) {
 
                 await updateDoc(
-
-                    doc(
-                        db,
-                        "loans",
-                        loanId.value
-                    ),
-
+                    doc(db, "loans", loanId.value),
                     data
-
                 );
 
             } else {
 
                 await addDoc(
-
                     collection(db, "loans"),
-
                     {
                         ...data,
                         createdAt: serverTimestamp()
                     }
-
                 );
 
             }
@@ -392,7 +394,10 @@ if (loanForm) {
 
     });
 
-}// ===============================
+}
+
+
+// ===============================
 // SEARCH & FILTER
 // ===============================
 
@@ -412,7 +417,9 @@ function filterLoans() {
             clients.find(c => c.id === loan.clientId);
 
         const clientName =
-            client?.name?.toLowerCase() || "";
+            (loan.clientName ||
+            client?.name ||
+            "").toLowerCase();
 
         const matchesSearch =
 
@@ -447,6 +454,31 @@ if (loanFilter)
 
 function attachLoanActions() {
 
+    // VIEW
+    document.querySelectorAll(".view-loan").forEach((button) => {
+
+        button.addEventListener("click", () => {
+
+            const loan = loans.find(
+                l => l.id === button.dataset.id
+            );
+
+            if (!loan) return;
+
+            alert(
+`CLIENT: ${loan.clientName}
+AMOUNT: ${currency(loan.amount)}
+INTEREST: ${loan.interest}%
+DURATION: ${loan.duration} Weeks
+WEEKLY PAYMENT: ${currency(loan.repayment)}
+STATUS: ${loan.status}`
+            );
+
+        });
+
+    });
+
+    // DELETE
     document.querySelectorAll(".delete-loan").forEach((button) => {
 
         button.addEventListener("click", async () => {
@@ -461,27 +493,24 @@ function attachLoanActions() {
 
     });
 
-
+    // APPROVE
     document.querySelectorAll(".approve-loan").forEach((button) => {
 
         button.addEventListener("click", async () => {
 
             await updateDoc(
-
                 doc(db, "loans", button.dataset.id),
-
                 {
                     status: "Approved",
                     updatedAt: serverTimestamp()
                 }
-
             );
 
         });
 
     });
 
-
+    // EDIT
     document.querySelectorAll(".edit-loan").forEach((button) => {
 
         button.addEventListener("click", () => {
@@ -509,10 +538,7 @@ function attachLoanActions() {
 
     });
 
-}
-
-
-// ===============================
+}// ===============================
 // CLOSE MODAL
 // ===============================
 
@@ -522,15 +548,26 @@ document.querySelectorAll(".close-modal").forEach((button) => {
 
         loanModal.classList.add("hidden");
 
-        loanForm.reset();
+        if (loanForm) {
+            loanForm.reset();
+        }
 
-        loanId.value = "";
+        if (loanId) {
+            loanId.value = "";
+        }
 
         calculateLoan();
 
     });
 
 });
+
+
+// ===============================
+// INITIAL CALCULATION
+// ===============================
+
+calculateLoan();
 
 
 // ===============================
@@ -549,6 +586,8 @@ export {
 
     loadLoans,
 
-    calculateLoan
+    calculateLoan,
+
+    renderLoans
 
 };
