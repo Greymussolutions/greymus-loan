@@ -175,7 +175,15 @@ if (loginForm) {
                 "userRole",
                 profile.role
             );
+localStorage.setItem(
+    "userName",
+    profile.name
+);
 
+localStorage.setItem(
+    "userEmail",
+    profile.email
+);
             showToast("Login successful");
 
             loginForm.reset();
@@ -228,10 +236,20 @@ onAuthStateChanged(auth, async (user) => {
         const profile =
     await getUserRole(user);
 
+localStorage.setItem(
+    "userRole",
+    profile.role
+);
+
         localStorage.setItem(
-            "userRole",
-            profile.role
-        );
+    "userName",
+    profile.name
+);
+
+localStorage.setItem(
+    "userEmail",
+    profile.email
+);
 
         if (loginSection)
             loginSection.classList.add("hidden");
