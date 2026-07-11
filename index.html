@@ -353,7 +353,65 @@ LOANS TAB
 
     </div>
 
-</section><!-- =========================
+</section>
+
+<!-- =========================
+REPAYMENTS TAB
+========================= -->
+
+<section id="repayments-tab" class="tab-content hidden">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>Repayments</h2>
+
+            <p>Record and monitor loan repayments</p>
+
+        </div>
+
+        <button
+            id="new-repayment-btn"
+            class="primary-btn"
+            type="button">
+
+            + New Repayment
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table id="repayments-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Client</th>
+                    <th>Loan No.</th>
+                    <th>Amount</th>
+                    <th>Payment Date</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+<!-- =========================
 CLIENT MODAL
 ========================= -->
 
@@ -541,7 +599,115 @@ LOAN MODAL
 
     </div>
 
-</div><!-- =========================
+</div>
+
+<!-- =========================
+REPAYMENT MODAL
+========================= -->
+
+<div id="repayment-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Record Repayment</h2>
+
+                <p>Save a client repayment</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn close-modal">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <form id="repayment-form">
+
+            <div class="form-group">
+
+                <label>Loan</label>
+
+                <select
+                    id="repayment-loan"
+                    required>
+
+                    <option value="">
+
+                        Select Loan
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Amount (KES)</label>
+
+                <input
+                    type="number"
+                    id="repayment-amount"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Payment Date</label>
+
+                <input
+                    type="date"
+                    id="repayment-date"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Notes</label>
+
+                <textarea
+                    id="repayment-notes"
+                    rows="3"></textarea>
+
+            </div>
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Save Repayment
+
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn close-modal">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
 CONFIRMATION MODAL
 ========================= -->
 
