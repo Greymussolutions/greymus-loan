@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Greymus Loan Financial Hub</title>
+    <title>Greymus Loan Financial Hub v1.1</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +54,7 @@ LOGIN
         </div>
 
         <h2>Welcome Back</h2>
+
         <p>Secure Login</p>
 
         <form id="login-form">
@@ -86,6 +87,10 @@ DASHBOARD
 
 <div class="dashboard-layout">
 
+<!-- =========================
+SIDEBAR
+========================= -->
+
 <aside class="sidebar">
 
     <div class="brand">
@@ -93,8 +98,10 @@ DASHBOARD
         <div class="brand-logo">G</div>
 
         <div>
+
             <h2>Greymus</h2>
             <p>Financial Hub</p>
+
         </div>
 
     </div>
@@ -129,6 +136,10 @@ DASHBOARD
     </nav>
 
 </aside>
+
+<!-- =========================
+MAIN CONTENT
+========================= -->
 
 <main class="main-content">
 
@@ -182,7 +193,7 @@ DASHBOARD TAB
         </div>
 
         <div class="stat-card">
-            <span>Income</span>
+            <span>Income (This Month)</span>
             <h3 id="stat-revenue">KES 0</h3>
         </div>
 
@@ -229,8 +240,11 @@ DASHBOARD TAB
                 <div class="action-icon">👤</div>
 
                 <div>
+
                     <h3>New Client</h3>
+
                     <p>Register a borrower</p>
+
                 </div>
 
             </button>
@@ -240,34 +254,56 @@ DASHBOARD TAB
                 <div class="action-icon">💰</div>
 
                 <div>
+
                     <h3>New Loan</h3>
-                    <p>Create a weekly loan</p>
+
+                    <p>Create Weekly Loan</p>
+
+                </div>
+
+            </button>
+
+            <button id="record-payment-btn" class="action-card">
+
+                <div class="action-icon">💳</div>
+
+                <div>
+
+                    <h3>Record Repayment</h3>
+
+                    <p>Receive Weekly Payment</p>
+
                 </div>
 
             </button>
 
         </div>
 
-    </section>
-
-</section><!-- =========================
+    </section><!-- =========================
 CLIENTS TAB
 ========================= -->
 
 <section id="clients-tab" class="tab-content hidden">
 
     <div class="section-header">
+
         <div>
+
             <h2>Clients</h2>
+
             <p>Manage registered borrowers</p>
+
         </div>
+
     </div>
 
     <div class="toolbar">
+
         <input
             type="text"
             id="client-search"
             placeholder="Search clients...">
+
     </div>
 
     <div class="table-wrapper">
@@ -275,7 +311,9 @@ CLIENTS TAB
         <table id="clients-table">
 
             <thead>
+
                 <tr>
+
                     <th>Name</th>
                     <th>Phone</th>
                     <th>ID Number</th>
@@ -283,10 +321,13 @@ CLIENTS TAB
                     <th>Guarantor</th>
                     <th>Registered By</th>
                     <th>Actions</th>
+
                 </tr>
+
             </thead>
 
             <tbody id="clients-table-body">
+
             </tbody>
 
         </table>
@@ -302,10 +343,15 @@ LOANS TAB
 <section id="loans-tab" class="tab-content hidden">
 
     <div class="section-header">
+
         <div>
+
             <h2>Loans</h2>
-            <p>Manage loans and weekly repayments</p>
+
+            <p>Manage loans and approvals</p>
+
         </div>
+
     </div>
 
     <div class="toolbar toolbar-wrap">
@@ -316,11 +362,13 @@ LOANS TAB
             placeholder="Search loans...">
 
         <select id="loan-filter">
+
             <option value="ALL">All Status</option>
             <option value="Pending">Pending</option>
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
             <option value="Arrears">Arrears</option>
+
         </select>
 
     </div>
@@ -332,21 +380,90 @@ LOANS TAB
             <thead>
 
                 <tr>
+
                     <th>Loan No.</th>
                     <th>Client</th>
                     <th>Principal</th>
                     <th>Interest</th>
-                    <th>Duration (Weeks)</th>
+                    <th>Duration</th>
                     <th>Weekly Payment</th>
-                    <th>Due Date</th>
+                    <th>Balance</th>
                     <th>Status</th>
                     <th>Officer</th>
                     <th>Actions</th>
+
                 </tr>
 
             </thead>
 
             <tbody id="loans-table-body">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+<!-- =========================
+REPAYMENTS TAB
+========================= -->
+
+<section id="repayments-tab" class="tab-content hidden">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>Repayments</h2>
+
+            <p>Weekly repayment records</p>
+
+        </div>
+
+    </div>
+
+    <div class="toolbar toolbar-wrap">
+
+        <input
+            type="text"
+            id="repayment-search"
+            placeholder="Search client or loan number">
+
+        <button
+            id="new-repayment-btn"
+            class="primary-btn"
+            type="button">
+
+            + Record Repayment
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table id="repayments-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Loan No.</th>
+                    <th>Client</th>
+                    <th>Amount Paid</th>
+                    <th>Method</th>
+                    <th>Transaction ID</th>
+                    <th>Reference</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="repayments-table-body">
+
             </tbody>
 
         </table>
@@ -364,8 +481,11 @@ CLIENT MODAL
         <div class="modal-header">
 
             <div>
+
                 <h2 id="client-modal-title">New Client</h2>
-                <p>Register a new borrower</p>
+
+                <p>Register a borrower</p>
+
             </div>
 
             <button type="button" class="modal-close-btn close-modal">
@@ -449,8 +569,11 @@ LOAN MODAL
         <div class="modal-header">
 
             <div>
+
                 <h2 id="loan-modal-title">New Loan</h2>
-                <p>Create or edit a loan</p>
+
+                <p>Create or edit loan</p>
+
             </div>
 
             <button type="button" class="modal-close-btn close-modal">
@@ -541,6 +664,136 @@ LOAN MODAL
 
     </div>
 
+</div>
+
+<!-- =========================
+REPAYMENT MODAL
+========================= -->
+
+<div id="repayment-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Record Repayment</h2>
+
+                <p>Receive weekly repayment</p>
+
+            </div>
+
+            <button type="button" class="modal-close-btn close-modal">
+                ✕
+            </button>
+
+        </div>
+
+        <form id="repayment-form">
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>Loan</label>
+
+                    <select id="repayment-loan" required>
+
+                        <option value="">
+                            Select Approved Loan
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Payment Date</label>
+
+                    <input
+                        type="date"
+                        id="repayment-date"
+                        required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Amount Paid (KES)</label>
+
+                    <input
+                        type="number"
+                        id="repayment-amount"
+                        required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Payment Method</label>
+
+                    <select id="payment-method" required>
+
+                        <option value="">Select</option>
+                        <option>Cash</option>
+                        <option>M-Pesa</option>
+                        <option>Bank Transfer</option>
+                        <option>Airtel Money</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Transaction ID</label>
+
+                    <input
+                        type="text"
+                        id="transaction-id"
+                        placeholder="e.g. SHG8K92LQ">
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Reference / Notes</label>
+
+                <textarea
+                    id="payment-reference"
+                    rows="3"
+                    placeholder="Optional remarks"></textarea>
+
+            </div>
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Save Repayment
+
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn close-modal">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </div><!-- =========================
 CONFIRMATION MODAL
 ========================= -->
@@ -549,7 +802,9 @@ CONFIRMATION MODAL
 
     <div class="modal-content confirmation-modal">
 
-        <div class="confirm-icon">⚠️</div>
+        <div class="confirm-icon">
+            ⚠️
+        </div>
 
         <h2>Confirmation</h2>
 
@@ -559,12 +814,22 @@ CONFIRMATION MODAL
 
         <div class="modal-buttons">
 
-            <button id="confirm-yes" type="button" class="primary-btn">
+            <button
+                id="confirm-yes"
+                type="button"
+                class="primary-btn">
+
                 Yes
+
             </button>
 
-            <button id="confirm-no" type="button" class="secondary-btn">
+            <button
+                id="confirm-no"
+                type="button"
+                class="secondary-btn">
+
                 Cancel
+
             </button>
 
         </div>
@@ -577,25 +842,33 @@ CONFIRMATION MODAL
 NOTIFICATION PANEL
 ========================= -->
 
-<div id="notification-panel" class="notification-panel hidden">
+<div id="notification-panel"
+     class="notification-panel hidden">
 
     <div class="notification-header">
 
         <h3>Notifications</h3>
 
-        <button id="close-notifications" type="button">
+        <button
+            id="close-notifications"
+            type="button">
+
             ✕
+
         </button>
 
     </div>
 
-    <div id="notification-list" class="notification-list">
+    <div id="notification-list"
+         class="notification-list">
 
         <div class="empty-state">
 
             <h3>No Notifications</h3>
 
-            <p>You're all caught up.</p>
+            <p>
+                You're all caught up.
+            </p>
 
         </div>
 
@@ -615,25 +888,51 @@ MOBILE NAVIGATION
 
 <nav class="mobile-nav">
 
-    <button class="tab-btn active" data-tab="dashboard">
+    <button
+        class="tab-btn active"
+        data-tab="dashboard">
+
         <span>🏠</span>
         <small>Dashboard</small>
+
     </button>
 
-    <button class="tab-btn" data-tab="clients">
+    <button
+        class="tab-btn"
+        data-tab="clients">
+
         <span>👥</span>
         <small>Clients</small>
+
     </button>
 
-    <button class="tab-btn" data-tab="loans">
+    <button
+        class="tab-btn"
+        data-tab="loans">
+
         <span>💰</span>
         <small>Loans</small>
+
     </button>
 
-    <button id="settings-btn" class="tab-btn" type="button">
-    <span>⚙️</span>
-    <small>Settings</small>
-</button>
+    <button
+        class="tab-btn"
+        data-tab="repayments">
+
+        <span>💳</span>
+        <small>Repayments</small>
+
+    </button>
+
+    <button
+        id="settings-btn"
+        class="tab-btn"
+        type="button">
+
+        <span>⚙️</span>
+        <small>Settings</small>
+
+    </button>
 
 </nav>
 
@@ -641,18 +940,27 @@ MOBILE NAVIGATION
 SETTINGS MENU
 ========================= -->
 
-<div id="settings-menu" class="settings-menu hidden">
+<div id="settings-menu"
+     class="settings-menu hidden">
 
     <div class="settings-card">
 
         <h3>Settings</h3>
 
-        <button id="mobile-logout-btn" type="button">
+        <button
+            id="mobile-logout-btn"
+            type="button">
+
             🚪 Logout
+
         </button>
 
-        <button id="close-settings" type="button">
+        <button
+            id="close-settings"
+            type="button">
+
             Close
+
         </button>
 
     </div>
@@ -671,25 +979,35 @@ FLOATING ACTION BUTTON
 
     +
 
-</button><!-- =========================
+</button>
+
+<!-- =========================
 FOOTER
 ========================= -->
 
 <footer class="app-footer">
 
     <div class="footer-left">
-        <strong>Greymus Loan Financial Hub</strong>
+
+        <strong>
+            Greymus Loan Financial Hub
+        </strong>
+
     </div>
 
     <div class="footer-right">
-        © 2026 Greymus Solutions. All Rights Reserved.
+
+        © 2026 Greymus Solutions.
+        All Rights Reserved.
+
     </div>
 
 </footer>
 
-<!-- Global Overlay -->
+<!-- GLOBAL OVERLAY -->
 
-<div id="global-overlay" class="hidden"></div>
+<div id="global-overlay"
+     class="hidden"></div>
 
 <!-- =========================
 END OF APPLICATION
