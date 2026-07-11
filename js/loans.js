@@ -462,70 +462,62 @@ function renderLoans(list) {
                 0
             );
 
-        row.innerHTML = `
+       row.innerHTML = `
 
-        <tr>
+    <td>${loan.id.substring(0,8)}</td>
 
-            <td>${loan.id.substring(0,8)}</td>
+    <td>${loan.clientName}</td>
 
-            <td>${loan.clientName}</td>
+    <td>${currency(loan.amount)}</td>
 
-            <td>${currency(loan.amount)}</td>
+    <td>${loan.interest}%</td>
 
-            <td>${loan.interest}%</td>
+    <td>${loan.duration} Weeks</td>
 
-            <td>${loan.duration} Weeks</td>
+    <td>${currency(loan.weeklyPayment || loan.repayment)}</td>
 
-            <td>${currency(loan.weeklyPayment || loan.repayment)}</td>
+    <td>${loan.dueDate}</td>
 
-            <td>${currency(balance)}</td>
+    <td>
+        <span class="status ${String(loan.status).toLowerCase()}">
+            ${loan.status}
+        </span>
+    </td>
 
-            <td>${loan.dueDate}</td>
+    <td>${loan.createdBy || "-"}</td>
 
-            <td>
+    <td>
 
-                <span class="status ${String(loan.status).toLowerCase()}">
+        <button
+            class="btn-icon view-loan"
+            data-id="${loan.id}">
+            👁️
+        </button>
 
-                    ${loan.status}
+        <button
+            class="btn-icon edit-loan"
+            data-id="${loan.id}"
+            ${loan.status==="Completed"?"disabled":""}>
+            ✏️
+        </button>
 
-                </span>
+        <button
+            class="btn-icon approve-loan"
+            data-id="${loan.id}"
+            ${loan.status!=="Pending"?"disabled":""}>
+            ✔
+        </button>
 
-            </td>
+        <button
+            class="btn-icon delete-loan"
+            data-id="${loan.id}"
+            ${loan.status==="Completed"?"disabled":""}>
+            🗑️
+        </button>
 
-            <td>
+    </td>
 
-                <button
-                    class="btn-icon view-loan"
-                    data-id="${loan.id}">
-                    👁️
-                </button>
-
-                <button
-                    class="btn-icon edit-loan"
-                    data-id="${loan.id}"
-                    ${loan.status==="Completed"?"disabled":""}>
-                    ✏️
-                </button>
-
-                <button
-                    class="btn-icon approve-loan"
-                    data-id="${loan.id}"
-                    ${loan.status!=="Pending"?"disabled":""}>
-                    ✔
-                </button>
-
-                <button
-                    class="btn-icon delete-loan"
-                    data-id="${loan.id}"
-                    ${loan.status==="Completed"?"disabled":""}>
-                    🗑️
-                </button>
-
-            </td>
-
-        </tr>
-
-        `;
+`;
 
         loansTableBody.appendChild(row);
 
@@ -695,7 +687,7 @@ Status: ${loan.status}`
 
     });
 
-}    // ==========================
+    // ==========================
     // EDIT LOAN
     // ==========================
 
@@ -800,7 +792,9 @@ Status: ${loan.status}`
 
     });
 
-}// =====================================
+}
+
+// =====================================
 // CLOSE LOAN MODAL
 // =====================================
 
