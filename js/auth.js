@@ -27,7 +27,7 @@ const loginSection = document.getElementById("login-section");
 const dashboardSection = document.getElementById("dashboard-section");
 
 const loginForm = document.getElementById("login-form");
-const logoutBtn = document.getElementById("logout-btn");
+const logoutBtn = document.getElementById("mobile-logout-btn");
 
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
