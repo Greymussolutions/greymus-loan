@@ -554,11 +554,13 @@ repaymentDate.value=today();
 
 repaymentModal.classList.add("hidden");
 
-}catch(error){
+}
 
-console.error(error);
+catch(error){
 
-alert("Failed to save repayment.");
+    console.error(error);
+
+    alert(error.message);
 
 }
 
