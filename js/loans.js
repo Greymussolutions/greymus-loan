@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 2.0
+// VERSION 3.0
 // PART 1
 // ==========================================
 
@@ -13,7 +13,6 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    getDoc,
     onSnapshot,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -58,7 +57,7 @@ const loanDueDate =
 
 
 // ==========================================
-// PREVIEW
+// PREVIEW ELEMENTS
 // ==========================================
 
 const previewPrincipal =
@@ -70,7 +69,7 @@ const previewInterest =
 const previewDuration =
     document.getElementById("preview-duration");
 
-const previewMonthly =
+const previewWeekly =
     document.getElementById("preview-monthly");
 
 
@@ -111,8 +110,11 @@ function today(){
 
     return formatDate(new Date());
 
-}// ==========================================
-// LOAN CALCULATIONS
+}
+
+
+// ==========================================
+// CALCULATE LOAN
 // ==========================================
 
 function calculateLoan(){
@@ -155,24 +157,18 @@ function calculateLoan(){
         previewDuration.textContent =
             duration + " Weeks";
 
-    if(previewMonthly)
-        previewMonthly.textContent =
+    if(previewWeekly)
+        previewWeekly.textContent =
             currency(weeklyPayment);
 
     return{
 
         amount,
-
         interest,
-
         processingFee,
-
         interestAmount,
-
         duration,
-
         totalRepayment,
-
         weeklyPayment
 
     };
@@ -193,51 +189,46 @@ function calculateLoan(){
 ].forEach(input=>{
 
     input?.addEventListener(
-
         "input",
-
         calculateLoan
-
     );
 
 });
 
 
 // ==========================================
-// REPAYMENT SCHEDULE
+// GENERATE WEEKLY REPAYMENT SCHEDULE
 // ==========================================
 
 function generateRepaymentSchedule(
-
     approvalDate,
-
-    weeks
-
+    durationWeeks,
+    weeklyPayment
 ){
 
-    const schedule=[];
+    const schedule = [];
 
-    const start=new Date(approvalDate);
+    const start = new Date(approvalDate);
 
-    for(let i=1;i<=weeks;i++){
+    for(let week=1; week<=durationWeeks; week++){
 
-        const due=new Date(start);
+        const due = new Date(start);
 
         due.setDate(
-
-            due.getDate()+
-
-            (i*7)
-
+            due.getDate() + (week * 7)
         );
 
         schedule.push({
 
-            week:i,
+            week,
 
-            dueDate:formatDate(due),
+            amount: weeklyPayment,
+
+            dueDate: formatDate(due),
 
             paid:false,
+
+            paidAmount:0,
 
             paidDate:null
 
@@ -247,18 +238,13 @@ function generateRepaymentSchedule(
 
     return schedule;
 
-}
-
-
-function getNextRepayment(schedule=[]){
-
-    return schedule.find(
-
-        item=>!item.paid
-
-    ) || null;
-
 }// ==========================================
+// PART 2
+// LOAD CLIENTS & LOANS
+// ==========================================
+
+
+// ==========================================
 // LOAD CLIENTS
 // ==========================================
 
@@ -286,8 +272,6 @@ function loadClients(){
 
             populateClientDropdown();
 
-            renderLoans(loans);
-
         }
 
     );
@@ -303,7 +287,7 @@ function populateClientDropdown(){
 
     if(!loanClient) return;
 
-    loanClient.innerHTML = `
+    loanClient.innerHTML=`
 
         <option value="">
             Select Client
@@ -313,9 +297,7 @@ function populateClientDropdown(){
 
     clients
 
-        .sort(
-
-            (a,b)=>
+        .sort((a,b)=>
 
             (a.name||"")
 
@@ -364,15 +346,17 @@ function loadLoans(){
 
                 };
 
+                // Compatibility
+
+                loan.processingFee ??=0;
+
                 loan.balance ??=
 
                     Number(
-
                         loan.totalRepayment||0
-
                     );
 
-                loan.processingFee ??=0;
+                loan.amountPaid ??=0;
 
                 loan.completed ??=false;
 
@@ -384,18 +368,16 @@ function loadLoans(){
 
                 const next=
 
-                    getNextRepayment(
+                    loan.repaymentSchedule.find(
 
-                        loan.repaymentSchedule
+                        item=>!item.paid
 
                     );
 
                 loan.nextRepaymentDate=
 
                     next
-
                     ? next.dueDate
-
                     : "-";
 
                 loans.push(loan);
@@ -408,7 +390,10 @@ function loadLoans(){
 
     );
 
-}// ==========================================
+}
+
+
+// ==========================================
 // OPEN NEW LOAN
 // ==========================================
 
@@ -450,162 +435,156 @@ document
 ?.addEventListener(
     "click",
     openLoanModal
-);
-
-
-// ==========================================
+);// ==========================================
+// PART 3
 // SAVE / UPDATE LOAN
 // ==========================================
 
 if(loanForm){
 
-loanForm.addEventListener(
+    loanForm.addEventListener("submit", async(e)=>{
 
-"submit",
+        e.preventDefault();
 
-async(e)=>{
+        const calc = calculateLoan();
 
-e.preventDefault();
+        const client = clients.find(
+            c => c.id === loanClient.value
+        );
 
-const calc=calculateLoan();
+        if(!client){
 
-const client=
+            alert("Please select a client.");
 
-clients.find(
+            return;
 
-c=>c.id===loanClient.value
+        }
 
-);
+        const approvalDate = new Date();
 
-if(!client){
+        const repaymentSchedule =
 
-alert("Please select a client.");
+            generateRepaymentSchedule(
 
-return;
+                approvalDate,
 
-}
+                calc.duration,
 
-const approvalDate=new Date();
+                calc.weeklyPayment
 
-const schedule=
+            );
 
-generateRepaymentSchedule(
+        const loanData = {
 
-approvalDate,
+            clientId: client.id,
 
-calc.duration
+            clientName: client.name,
 
-);
+            amount: calc.amount,
 
-const next=
+            processingFee: calc.processingFee,
 
-getNextRepayment(schedule);
+            interest: calc.interest,
 
-const loanData={
+            duration: calc.duration,
 
-clientId:client.id,
+            repayment: calc.weeklyPayment,
 
-clientName:client.name,
+            weeklyPayment: calc.weeklyPayment,
 
-amount:calc.amount,
+            totalRepayment: calc.totalRepayment,
 
-processingFee:calc.processingFee,
+            balance: calc.totalRepayment,
 
-interest:calc.interest,
+            amountPaid: 0,
 
-duration:calc.duration,
+            approvalDate: formatDate(approvalDate),
 
-repayment:calc.weeklyPayment,
+            dueDate: loanDueDate.value,
 
-weeklyPayment:calc.weeklyPayment,
+            repaymentSchedule,
 
-totalRepayment:calc.totalRepayment,
+            nextRepaymentDate:
+                repaymentSchedule[0]?.dueDate || null,
 
-balance:calc.totalRepayment,
+            remainingInstallments:
+                calc.duration,
 
-approvalDate:formatDate(approvalDate),
+            status: "Pending",
 
-dueDate:loanDueDate.value,
+            completed: false,
 
-repaymentSchedule:schedule,
+            createdBy:
+                localStorage.getItem("userName") ||
+                localStorage.getItem("userEmail") ||
+                "Unknown Officer",
 
-nextRepaymentDate:
+            createdAt: serverTimestamp(),
 
-next ? next.dueDate : null,
+            updatedAt: serverTimestamp()
 
-remainingInstallments:
+        };
 
-calc.duration,
+        try{
 
-status:"Pending",
+            if(loanId.value){
 
-completed:false,
+                await updateDoc(
 
-createdBy:
+                    doc(db,"loans",loanId.value),
 
-localStorage.getItem("userName") ||
+                    {
 
-localStorage.getItem("userEmail") ||
+                        ...loanData,
 
-"Unknown Officer",
+                        createdAt: undefined,
 
-createdAt:serverTimestamp(),
+                        updatedAt: serverTimestamp()
 
-updatedAt:serverTimestamp()
+                    }
 
-};
+                );
 
-try{
+                alert("Loan updated successfully.");
 
-if(loanId.value){
+            }
 
-await updateDoc(
+            else{
 
-doc(db,"loans",loanId.value),
+                await addDoc(
 
-{
+                    collection(db,"loans"),
 
-...loanData,
+                    loanData
 
-updatedAt:serverTimestamp()
+                );
 
-}
+                alert("Loan created successfully.");
 
-);
+            }
 
-alert("Loan updated successfully.");
+            loanForm.reset();
 
-}else{
+            loanId.value="";
 
-await addDoc(
+            calculateLoan();
 
-collection(db,"loans"),
+            loanModal.classList.add("hidden");
 
-loanData
+        }
 
-);
+        catch(error){
 
-alert("Loan created successfully.");
+            console.error(error);
 
-}
+            alert("Failed to save loan.");
 
-loanModal.classList.add("hidden");
+        }
 
-loanForm.reset();
-
-calculateLoan();
-
-}catch(error){
-
-console.error(error);
-
-alert("Failed to save loan.");
-
-}
-
-});
+    });
 
 }// ==========================================
+// PART 4
 // RENDER LOANS TABLE
 // ==========================================
 
@@ -613,16 +592,15 @@ function renderLoans(list){
 
     if(!loansTableBody) return;
 
-    loansTableBody.innerHTML="";
+    loansTableBody.innerHTML = "";
 
-    if(list.length===0){
+    if(list.length === 0){
 
-        loansTableBody.innerHTML=`
+        loansTableBody.innerHTML = `
 
         <tr>
 
-            <td colspan="13"
-                style="text-align:center;padding:20px;">
+            <td colspan="13" style="text-align:center;">
 
                 No loans found.
 
@@ -636,11 +614,11 @@ function renderLoans(list){
 
     }
 
-    list.forEach((loan)=>{
+    list.forEach(loan=>{
 
-        const row=document.createElement("tr");
+        const row = document.createElement("tr");
 
-        row.innerHTML=`
+        row.innerHTML = `
 
         <td>${loan.id.substring(0,8)}</td>
 
@@ -660,9 +638,17 @@ function renderLoans(list){
 
         <td>${loan.nextRepaymentDate || "-"}</td>
 
-        <td>${loan.dueDate}</td>
+        <td>${loan.dueDate || "-"}</td>
 
-        <td>${loan.status}</td>
+        <td>
+
+            <span class="status ${String(loan.status).toLowerCase()}">
+
+                ${loan.status}
+
+            </span>
+
+        </td>
 
         <td>${loan.createdBy || "-"}</td>
 
@@ -676,19 +662,22 @@ function renderLoans(list){
 
             <button
                 class="edit-loan"
-                data-id="${loan.id}">
+                data-id="${loan.id}"
+                ${loan.status!=="Pending" ? "disabled" : ""}>
                 ✏️
             </button>
 
             <button
                 class="approve-loan"
-                data-id="${loan.id}">
+                data-id="${loan.id}"
+                ${loan.status!=="Pending" ? "disabled" : ""}>
                 ✔️
             </button>
 
             <button
                 class="delete-loan"
-                data-id="${loan.id}">
+                data-id="${loan.id}"
+                ${loan.status!=="Pending" ? "disabled" : ""}>
                 🗑️
             </button>
 
@@ -711,9 +700,9 @@ function renderLoans(list){
 
 function filterLoans(){
 
-    let filtered=[...loans];
+    let filtered = [...loans];
 
-    const keyword=
+    const keyword =
 
         loanSearch?.value
 
@@ -721,41 +710,33 @@ function filterLoans(){
 
         .toLowerCase() || "";
 
-    const status=
+    const status =
 
         loanFilter?.value || "ALL";
 
     if(keyword){
 
-        filtered=filtered.filter((loan)=>{
+        filtered = filtered.filter(loan =>
 
-            return(
+            loan.clientName
+            ?.toLowerCase()
+            .includes(keyword)
 
-                loan.clientName
+            ||
 
-                ?.toLowerCase()
+            loan.id
+            .toLowerCase()
+            .includes(keyword)
 
-                .includes(keyword)
-
-                ||
-
-                loan.id
-
-                .toLowerCase()
-
-                .includes(keyword)
-
-            );
-
-        });
+        );
 
     }
 
-    if(status!=="ALL"){
+    if(status !== "ALL"){
 
-        filtered=filtered.filter(
+        filtered = filtered.filter(
 
-            loan=>loan.status===status
+            loan => loan.status === status
 
         );
 
@@ -765,41 +746,31 @@ function filterLoans(){
 
 }
 
-
 loanSearch?.addEventListener(
-
     "input",
-
     filterLoans
-
 );
 
 loanFilter?.addEventListener(
-
     "change",
-
     filterLoans
-
 );// ==========================================
+// PART 5
 // LOAN ACTIONS
 // ==========================================
 
 function attachLoanActions(){
 
 // ==========================
-// VIEW
+// VIEW LOAN
 // ==========================
 
-document.querySelectorAll(".view-loan").forEach((button)=>{
+document.querySelectorAll(".view-loan").forEach(button=>{
 
 button.onclick=()=>{
 
-const loan=
-
-loans.find(
-
+const loan=loans.find(
 l=>l.id===button.dataset.id
-
 );
 
 if(!loan) return;
@@ -826,29 +797,26 @@ ${loan.interest}%
 Weekly Repayment:
 ${currency(loan.weeklyPayment)}
 
-Total Repayment:
-${currency(loan.totalRepayment)}
+Amount Paid:
+${currency(loan.amountPaid||0)}
 
 Outstanding Balance:
 ${currency(loan.balance)}
 
-Duration:
-${loan.duration} Weeks
-
-Approval Date:
-${loan.approvalDate || "-"}
-
-Next Repayment:
-${loan.nextRepaymentDate || "-"}
-
-Due Date:
-${loan.dueDate}
+Remaining Installments:
+${loan.remainingInstallments||loan.duration}
 
 Status:
 ${loan.status}
 
+Approval Date:
+${loan.approvalDate||"-"}
+
+Next Repayment:
+${loan.nextRepaymentDate||"-"}
+
 Registered By:
-${loan.createdBy || "-"}`
+${loan.createdBy||"-"}`
 
 );
 
@@ -858,62 +826,34 @@ ${loan.createdBy || "-"}`
 
 
 // ==========================
-// EDIT
+// EDIT LOAN
 // ==========================
 
-document.querySelectorAll(".edit-loan").forEach((button)=>{
+document.querySelectorAll(".edit-loan").forEach(button=>{
 
 button.onclick=()=>{
 
-const loan=
-
-loans.find(
-
+const loan=loans.find(
 l=>l.id===button.dataset.id
-
 );
 
 if(!loan) return;
 
-if(
+if(loan.status!=="Pending"){
 
-loan.status==="Approved" ||
-
-loan.status==="Completed"
-
-){
-
-alert(
-
-"This loan cannot be edited."
-
-);
+alert("Only pending loans can be edited.");
 
 return;
 
 }
 
 loanId.value=loan.id;
-
 loanClient.value=loan.clientId;
-
 loanAmount.value=loan.amount;
-
-loanProcessingFee.value=
-
-loan.processingFee;
-
-loanInterest.value=
-
-loan.interest;
-
-loanDuration.value=
-
-loan.duration;
-
-loanDueDate.value=
-
-loan.dueDate;
+loanProcessingFee.value=loan.processingFee;
+loanInterest.value=loan.interest;
+loanDuration.value=loan.duration;
+loanDueDate.value=loan.dueDate;
 
 calculateLoan();
 
@@ -925,30 +865,22 @@ loanModal.classList.remove("hidden");
 
 
 // ==========================
-// APPROVE
+// APPROVE LOAN
 // ==========================
 
-document.querySelectorAll(".approve-loan").forEach((button)=>{
+document.querySelectorAll(".approve-loan").forEach(button=>{
 
 button.onclick=async()=>{
 
-const loan=
-
-loans.find(
-
+const loan=loans.find(
 l=>l.id===button.dataset.id
-
 );
 
 if(!loan) return;
 
 if(loan.status!=="Pending"){
 
-alert(
-
-"Loan already approved."
-
-);
+alert("Loan is already approved.");
 
 return;
 
@@ -970,21 +902,13 @@ updatedAt:serverTimestamp()
 
 );
 
-alert(
-
-"Loan approved successfully."
-
-);
+alert("Loan approved successfully.");
 
 }catch(error){
 
 console.error(error);
 
-alert(
-
-"Failed to approve loan."
-
-);
+alert("Failed to approve loan.");
 
 }
 
@@ -994,74 +918,43 @@ alert(
 
 
 // ==========================
-// DELETE
+// DELETE LOAN
 // ==========================
 
-document.querySelectorAll(".delete-loan").forEach((button)=>{
+document.querySelectorAll(".delete-loan").forEach(button=>{
 
 button.onclick=async()=>{
 
-const loan=
-
-loans.find(
-
+const loan=loans.find(
 l=>l.id===button.dataset.id
-
 );
 
 if(!loan) return;
 
-if(
+if(loan.status!=="Pending"){
 
-loan.status==="Approved" ||
-
-loan.status==="Completed"
-
-){
-
-alert(
-
-"Approved or completed loans cannot be deleted."
-
-);
+alert("Only pending loans can be deleted.");
 
 return;
 
 }
 
-if(
-
-!confirm(
-
-`Delete loan for ${loan.clientName}?`
-
-)
-
-) return;
+if(!confirm(`Delete loan for ${loan.clientName}?`))
+return;
 
 try{
 
 await deleteDoc(
-
 doc(db,"loans",loan.id)
-
 );
 
-alert(
-
-"Loan deleted successfully."
-
-);
+alert("Loan deleted successfully.");
 
 }catch(error){
 
 console.error(error);
 
-alert(
-
-"Failed to delete loan."
-
-);
+alert("Failed to delete loan.");
 
 }
 
@@ -1070,7 +963,8 @@ alert(
 });
 
 }// ==========================================
-// CHECK FOR OVERDUE LOANS
+// PART 6
+// CHECK LOAN STATUS
 // ==========================================
 
 async function checkOverdueLoans(){
@@ -1079,20 +973,23 @@ async function checkOverdueLoans(){
 
     for(const loan of loans){
 
-        if(loan.status !== "Approved") continue;
+        // Ignore pending and completed loans
+        if(
+            loan.status === "Pending" ||
+            loan.status === "Completed"
+        ){
+            continue;
+        }
 
         const schedule =
             loan.repaymentSchedule || [];
 
-        let remaining = 0;
-        let nextRepayment = null;
         let arrears = false;
+        let nextRepayment = null;
 
-        schedule.forEach(item=>{
+        for(const item of schedule){
 
             if(!item.paid){
-
-                remaining++;
 
                 if(!nextRepayment){
 
@@ -1106,18 +1003,20 @@ async function checkOverdueLoans(){
 
                 }
 
+                break;
+
             }
 
-        });
+        }
+
+        // IMPORTANT:
+        // Never mark Completed here.
+        // repayments.js is the ONLY file that marks
+        // a loan Completed after the final payment.
 
         let status = "Approved";
 
-        if(remaining === 0){
-
-            status = "Completed";
-
-        }
-        else if(arrears){
+        if(arrears){
 
             status = "Arrears";
 
@@ -1131,13 +1030,7 @@ async function checkOverdueLoans(){
 
                 {
 
-                    status,
-
-                    completed:
-                        remaining===0,
-
-                    remainingInstallments:
-                        remaining,
+                    status:status,
 
                     nextRepaymentDate:
                         nextRepayment,
@@ -1149,9 +1042,7 @@ async function checkOverdueLoans(){
 
             );
 
-        }
-
-        catch(error){
+        }catch(error){
 
             console.error(error);
 
@@ -1159,86 +1050,35 @@ async function checkOverdueLoans(){
 
     }
 
-}
-
-
+}// ==========================================
+// PART 7
+// AUTO REFRESH & INITIALIZE
 // ==========================================
-// AUTO REFRESH
-// ==========================================
+
+// Check loan status every minute
 
 setInterval(()=>{
 
     if(loans.length){
 
-        async function checkOverdueLoans(){
-
-    const todayDate = today();
-
-    for(const loan of loans){
-
-        if(
-            loan.status !== "Approved" &&
-            loan.status !== "Arrears"
-        ) continue;
-
-        const balance = Number(loan.balance || 0);
-
-        // ONLY repayments can complete a loan
-        if(balance <= 0){
-
-            await updateDoc(
-                doc(db,"loans",loan.id),
-                {
-                    status:"Completed",
-                    completed:true,
-                    updatedAt:serverTimestamp()
-                }
-            );
-
-            continue;
-        }
-
-        let status="Approved";
-
-        const schedule=loan.repaymentSchedule || [];
-
-        const next=schedule.find(item=>!item.paid);
-
-        if(next && next.dueDate < todayDate){
-
-            status="Arrears";
-
-        }
-
-        await updateDoc(
-
-            doc(db,"loans",loan.id),
-
-            {
-
-                status,
-
-                nextRepaymentDate:
-                    next ? next.dueDate : null,
-
-                updatedAt:
-                    serverTimestamp()
-
-            }
-
-        );
-
-    }
-
-}
+        checkOverdueLoans();
 
     }
 
 },60000);
 
 
+// Refresh table every 30 seconds
+
+setInterval(()=>{
+
+    filterLoans();
+
+},30000);
+
+
 // ==========================================
-// INITIALIZE
+// PAGE LOAD
 // ==========================================
 
 window.addEventListener("load",()=>{
@@ -1249,8 +1089,13 @@ window.addEventListener("load",()=>{
 
     loadLoans();
 
-});// ==========================================
-// REFRESH LOAN TABLE
+    checkOverdueLoans();
+
+});
+
+
+// ==========================================
+// HELPERS
 // ==========================================
 
 function refreshLoanTable(){
@@ -1259,55 +1104,28 @@ function refreshLoanTable(){
 
 }
 
-
-// ==========================================
-// GET LOAN BY ID
-// ==========================================
-
 function getLoanById(id){
 
     return loans.find(
 
-        loan => loan.id === id
+        loan=>loan.id===id
 
     );
 
-}
-
-
-// ==========================================
-// MANUAL REFRESH
-// ==========================================
-
-setInterval(
-
-    refreshLoanTable,
-
-    30000
-
-);
-
-
-// ==========================================
+}// ==========================================
+// PART 8
 // EXPORTS
 // ==========================================
 
 export {
 
     loadLoans,
-
     renderLoans,
-
     calculateLoan,
-
     currency,
-
-    getLoanById,
-
     refreshLoanTable,
-
+    getLoanById,
     generateRepaymentSchedule,
-
     getNextRepayment
 
 };
@@ -1317,5 +1135,5 @@ export {
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 2.0
+// VERSION 3.0
 // ==========================================
