@@ -239,7 +239,7 @@ if(closeNotifications){
 
 // TOAST SYSTEM
 
-function showToast(message, type="success") {
+function showToast(message, type = "success") {
 
 
     const toast =
@@ -421,10 +421,11 @@ closeAllModals();
 
 // DEFAULT TAB
 
-showTab(
-    "dashboard"
-);
+if (document.getElementById("dashboard-tab")) {
 
+    showTab("dashboard");
+
+}
 
 // EXPORTS
 
