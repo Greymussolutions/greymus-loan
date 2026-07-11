@@ -16,7 +16,9 @@ import {
 
 import {
     doc,
-    getDoc
+    getDoc,
+    setDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
@@ -74,33 +76,65 @@ function showToast(message) {
 }
 
 // ==========================================
-// USER ROLE
+// USER PROFILE
 // ==========================================
 
-async function getUserRole(uid) {
+async function getUserRole(user) {
 
     try {
 
-        const ref = doc(db, "users", uid);
+        const ref = doc(db, "users", user.uid);
 
         const snap = await getDoc(ref);
 
-        if (snap.exists()) {
-            return snap.data();
+        if (!snap.exists()) {
+
+            const officerName =
+                user.displayName ||
+                user.email.split("@")[0];
+
+            await setDoc(ref, {
+
+                name: officerName,
+
+                email: user.email,
+
+                role: "Field Officer",
+
+                createdAt: serverTimestamp()
+
+            });
+
+            return {
+
+                name: officerName,
+
+                email: user.email,
+
+                role: "Field Officer"
+
+            };
+
         }
 
-        return {
-            role: "Field Officer"
-        };
+        return snap.data();
 
     } catch (error) {
 
         console.error(error);
 
         return {
+
+            name: user.email,
+
+            email: user.email,
+
             role: "Field Officer"
+
         };
+
     }
+
 }
 
 // ==========================================
@@ -135,7 +169,7 @@ if (loginForm) {
             const user = credential.user;
 
             const profile =
-                await getUserRole(user.uid);
+    await getUserRole(user);
 
             localStorage.setItem(
                 "userRole",
@@ -192,7 +226,7 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
 
         const profile =
-            await getUserRole(user.uid);
+    await getUserRole(user);
 
         localStorage.setItem(
             "userRole",
