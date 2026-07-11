@@ -50,7 +50,6 @@ const repaymentNotes =
 // =====================================
 
 let repayments = [];
-
 let loans = [];
 
 
@@ -63,9 +62,7 @@ function currency(value){
     return new Intl.NumberFormat("en-KE",{
 
         style:"currency",
-
         currency:"KES",
-
         maximumFractionDigits:0
 
     }).format(Number(value)||0);
@@ -89,15 +86,12 @@ function loadLoans(){
 
             snapshot.forEach(docSnap=>{
 
-                const loan={
+                loans.push({
 
                     id:docSnap.id,
-
                     ...docSnap.data()
 
-                };
-
-                loans.push(loan);
+                });
 
             });
 
@@ -125,30 +119,44 @@ function populateLoanDropdown(){
     `;
 
     loans
+        .filter(loan => loan.status === "Approved")
+        .forEach(loan => {
 
-    .filter(
+            repaymentLoan.innerHTML += `
 
-        loan=>loan.status==="Approved"
+                <option value="${loan.id}">
 
-    )
+                    ${loan.clientName}
+                    -
+                    Balance:
+                    ${currency(loan.balance || 0)}
 
-    .forEach(loan=>{
+                </option>
 
-        repaymentLoan.innerHTML+=`
+            `;
 
-            <option value="${loan.id}">
+        });
 
-                ${loan.clientName}
-                -
-                ${currency(loan.balance)}
+}
 
-            </option>
 
-        `;
+// =====================================
+// SHOW CURRENT BALANCE
+// =====================================
 
-    });
+repaymentLoan?.addEventListener("change", () => {
 
-}// =====================================
+    const loan = loans.find(
+        l => l.id === repaymentLoan.value
+    );
+
+    if (!loan) return;
+
+    alert(
+        `Remaining Balance: ${currency(loan.balance || 0)}`
+    );
+
+});// =====================================
 // LOAD REPAYMENTS
 // =====================================
 
@@ -223,21 +231,17 @@ function renderRepayments(){
 
     repayments.forEach(payment=>{
 
-        const loan=
+        const loan = loans.find(
+            l => l.id === payment.loanId
+        );
 
-            loans.find(
+        const row = document.createElement("tr");
 
-                l=>l.id===payment.loanId
-
-            );
-
-        const row=document.createElement("tr");
-
-        row.innerHTML=`
+        row.innerHTML = `
 
             <td>
 
-                ${loan?.clientName || "-"}
+                ${payment.clientName || loan?.clientName || "-"}
 
             </td>
 
@@ -268,9 +272,7 @@ function renderRepayments(){
             <td>
 
                 <button
-
                     class="view-payment"
-
                     data-id="${payment.id}">
 
                     View
@@ -304,7 +306,6 @@ if (repaymentForm) {
         if (!loan) {
 
             alert("Please select a loan.");
-
             return;
 
         }
@@ -315,7 +316,6 @@ if (repaymentForm) {
         if (amount <= 0) {
 
             alert("Enter a valid repayment amount.");
-
             return;
 
         }
@@ -323,19 +323,27 @@ if (repaymentForm) {
         const currentBalance =
             Number(loan.balance || 0);
 
-        const newBalance =
-            Math.max(0, currentBalance - amount);
+        if (amount > currentBalance) {
 
-        let newStatus =
-            loan.status;
-
-        if (newBalance === 0) {
-
-            newStatus = "Completed";
+            alert("Repayment cannot exceed the remaining balance.");
+            return;
 
         }
 
+        const newAmountPaid =
+            Number(loan.amountPaid || 0) + amount;
+
+        const newBalance =
+            currentBalance - amount;
+
+        const newStatus =
+            newBalance <= 0
+                ? "Completed"
+                : "Approved";
+
         try {
+
+            // Save repayment
 
             await addDoc(
 
@@ -363,11 +371,15 @@ if (repaymentForm) {
 
             );
 
+            // Update loan
+
             await updateDoc(
 
                 doc(db, "loans", loan.id),
 
                 {
+
+                    amountPaid: newAmountPaid,
 
                     balance: newBalance,
 
@@ -381,6 +393,11 @@ if (repaymentForm) {
             );
 
             repaymentForm.reset();
+
+            repaymentDate.value =
+                new Date()
+                .toISOString()
+                .split("T")[0];
 
             repaymentModal.classList.add("hidden");
 
@@ -410,13 +427,9 @@ function attachRepaymentActions(){
 
         button.onclick=()=>{
 
-            const payment=
-
-                repayments.find(
-
-                    p=>p.id===button.dataset.id
-
-                );
+            const payment = repayments.find(
+                p => p.id === button.dataset.id
+            );
 
             if(!payment) return;
 
@@ -424,13 +437,13 @@ function attachRepaymentActions(){
 
 `Client: ${payment.clientName}
 
-Amount: ${currency(payment.amount)}
+Amount Paid: ${currency(payment.amount)}
 
-Date: ${payment.paymentDate}
+Payment Date: ${payment.paymentDate}
 
-Notes: ${payment.notes || "-"}
+Received By: ${payment.receivedBy || "-"}
 
-Received By: ${payment.receivedBy || "-"}`
+Notes: ${payment.notes || "-"}`
 
             );
 
@@ -450,6 +463,11 @@ document
 ?.addEventListener("click",()=>{
 
     repaymentForm?.reset();
+
+    repaymentDate.value =
+        new Date()
+        .toISOString()
+        .split("T")[0];
 
     repaymentModal?.classList.remove("hidden");
 
@@ -498,19 +516,16 @@ if(repaymentModal){
 
 if(repaymentDate){
 
-    repaymentDate.value=
-
+    repaymentDate.value =
         new Date()
-
         .toISOString()
-
         .split("T")[0];
 
 }
 
 
 // =====================================
-// START MODULE
+// INITIALIZE
 // =====================================
 
 loadLoans();
@@ -527,6 +542,7 @@ export{
     loadRepayments
 
 };
+
 
 // =====================================
 // END OF FILE
