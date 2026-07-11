@@ -187,8 +187,9 @@ function calculateLoan() {
 // RENDER LOANS TABLE
 // ===============================
 
-function renderLoans(list) {    if (!loansTableBody) return;
+function renderLoans(list) {
 
+    if (!loansTableBody) return;
     loansTableBody.innerHTML = "";
 
     list.forEach((loan) => {
@@ -296,8 +297,9 @@ function loadLoans() {
 
 // ===============================
 // SAVE / UPDATE LOAN
-// ===============================if (loanForm) {
+// ===============================
 
+if (loanForm) {
     loanForm.addEventListener("submit", async (e) => {
 
         e.preventDefault();
@@ -536,12 +538,13 @@ STATUS: ${loan.status}`
 
         });
 
-    });
+            });
 
-}// ===============================
+}
+
+// ===============================
 // CLOSE MODAL
 // ===============================
-
 document.querySelectorAll(".close-modal").forEach((button) => {
 
     button.addEventListener("click", () => {
