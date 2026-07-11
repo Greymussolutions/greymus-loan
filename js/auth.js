@@ -257,9 +257,8 @@ localStorage.setItem(
         if (dashboardSection)
             dashboardSection.classList.remove("hidden");
 
-        if (loggedUser)
-            loggedUser.textContent =
-                `${user.email} (${profile.role})`;
+        loggedUser.textContent =
+    `${profile.name} (${profile.role})`;
 
     } else {
 
