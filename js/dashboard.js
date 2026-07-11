@@ -1,7 +1,8 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// Version 1.1
+// Version 1.2
+// Part 1
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -16,14 +17,35 @@ import {
 // ELEMENTS
 // ==========================================
 
-const portfolioStat = document.getElementById("stat-portfolio");
-const clientsStat = document.getElementById("stat-clients");
-const revenueStat = document.getElementById("stat-revenue");
+const portfolioStat =
+    document.getElementById("stat-portfolio");
 
-const pendingStat = document.getElementById("stat-pending");
-const approvedStat = document.getElementById("stat-approved");
-const rejectedStat = document.getElementById("stat-rejected");
-const arrearsStat = document.getElementById("stat-arrears");
+const clientsStat =
+    document.getElementById("stat-clients");
+
+const revenueStat =
+    document.getElementById("stat-revenue");
+
+const pendingStat =
+    document.getElementById("stat-pending");
+
+const approvedStat =
+    document.getElementById("stat-approved");
+
+const rejectedStat =
+    document.getElementById("stat-rejected");
+
+const arrearsStat =
+    document.getElementById("stat-arrears");
+
+
+// ==========================================
+// DATA
+// ==========================================
+
+let loans = [];
+let repayments = [];
+let clientCount = 0;
 
 
 // ==========================================
@@ -38,7 +60,7 @@ function currency(value){
         currency:"KES",
         maximumFractionDigits:0
 
-    }).format(value || 0);
+    }).format(Number(value) || 0);
 
 }
 
@@ -53,11 +75,15 @@ onSnapshot(
 
     snapshot=>{
 
+        clientCount = snapshot.size;
+
         if(clientsStat){
 
-            clientsStat.textContent=snapshot.size;
+            clientsStat.textContent = clientCount;
 
         }
+
+        updateDashboard();
 
     }
 
@@ -68,23 +94,21 @@ onSnapshot(
 // LOANS
 // ==========================================
 
-let loans=[];
-
 onSnapshot(
 
     collection(db,"loans"),
 
     snapshot=>{
 
-        loans=[];
+        loans = [];
 
-        snapshot.forEach(doc=>{
+        snapshot.forEach(docSnap=>{
 
             loans.push({
 
-                id:doc.id,
+                id: docSnap.id,
 
-                ...doc.data()
+                ...docSnap.data()
 
             });
 
@@ -101,23 +125,21 @@ onSnapshot(
 // REPAYMENTS
 // ==========================================
 
-let repayments=[];
-
 onSnapshot(
 
     collection(db,"repayments"),
 
     snapshot=>{
 
-        repayments=[];
+        repayments = [];
 
-        snapshot.forEach(doc=>{
+        snapshot.forEach(docSnap=>{
 
             repayments.push({
 
-                id:doc.id,
+                id: docSnap.id,
 
-                ...doc.data()
+                ...docSnap.data()
 
             });
 
@@ -127,46 +149,43 @@ onSnapshot(
 
     }
 
-);
-
-
-// ==========================================
+);// ==========================================
 // DASHBOARD
 // ==========================================
 
 function updateDashboard(){
 
-    let portfolio=0;
+    let portfolio = 0;
 
-    let pending=0;
+    let pending = 0;
 
-    let approved=0;
+    let approved = 0;
 
-    let rejected=0;
+    let rejected = 0;
 
-    let arrears=0;
+    let arrears = 0;
 
-    let monthlyIncome=0;
+    let completed = 0;
+
+    let monthlyIncome = 0;
+
+    const today = new Date();
+
+    const month = today.getMonth();
+
+    const year = today.getFullYear();
 
 
-    const today=new Date();
-
-    const month=today.getMonth();
-
-    const year=today.getFullYear();
-
+    // ==========================
+    // LOAN STATISTICS
+    // ==========================
 
     loans.forEach(loan=>{
 
-        const status=loan.status || "Pending";
+        const status = loan.status || "Pending";
 
-        if(status==="Approved"){
-
-            approved++;
-
-            portfolio+=Number(loan.amount || 0);
-
-        }
+        const balance =
+            Number(loan.balance ?? loan.amount ?? 0);
 
         if(status==="Pending"){
 
@@ -174,145 +193,136 @@ function updateDashboard(){
 
         }
 
-        if(status==="Rejected"){
+        else if(status==="Approved"){
+
+            approved++;
+
+            portfolio += balance;
+
+        }
+
+        else if(status==="Arrears"){
+
+            arrears++;
+
+            portfolio += balance;
+
+        }
+
+        else if(status==="Rejected"){
 
             rejected++;
 
         }
 
-        if(status==="Arrears"){
+        else if(status==="Completed"){
 
-            arrears++;
-
-            portfolio+=Number(loan.amount || 0);
+            completed++;
 
         }
 
     });
 
+
+    // ==========================
+    // MONTHLY INCOME
+    // ==========================
 
     repayments.forEach(payment=>{
 
         if(!payment.paymentDate) return;
 
-        const date=new Date(payment.paymentDate);
+        const paymentDate =
+            new Date(payment.paymentDate);
 
         if(
 
-            date.getMonth()===month &&
+            paymentDate.getMonth() !== month ||
 
-            date.getFullYear()===year
+            paymentDate.getFullYear() !== year
 
         ){
 
-            const loan=loans.find(
+            return;
 
-                l=>l.id===payment.loanId
+        }
 
-            );
+        const loan = loans.find(
 
-            if(!loan) return;
+            l => l.id === payment.loanId
 
-            const interestRate=
+        );
 
-                Number(loan.interest || 0);
+        if(!loan) return;
 
-            const total=
+        const principal =
+            Number(loan.amount || 0);
 
-                Number(loan.totalRepayment || 0);
+        const total =
+            Number(loan.totalRepayment || principal);
 
-            const principal=
+        const interest =
+            Math.max(0, total - principal);
 
-                Number(loan.amount || 0);
+        if(total > 0){
 
-            const interest=
+            monthlyIncome +=
 
-                total-principal;
+                interest *
 
-            const ratio=
-
-                Number(payment.amount)/total;
-
-            monthlyIncome+=
-
-                interest*ratio;
+                (Number(payment.amount) / total);
 
         }
 
     });
 
+
+    // ==========================
+    // PROCESSING FEES
+    // ==========================
 
     loans.forEach(loan=>{
 
-        if(
+        if(loan.processingFee){
 
-            loan.processingFeeAdded===true
+            monthlyIncome +=
 
-        ){
-
-            monthlyIncome+=
-
-                Number(
-
-                    loan.processingFee || 0
-
-                );
+                Number(loan.processingFee);
 
         }
 
     });
 
 
-    if(portfolioStat){
+    // ==========================
+    // UPDATE DASHBOARD
+    // ==========================
 
-        portfolioStat.textContent=
+    portfolioStat.textContent =
+        currency(portfolio);
 
-            currency(portfolio);
+    revenueStat.textContent =
+        currency(monthlyIncome);
 
-    }
+    pendingStat.textContent =
+        pending;
 
-    if(revenueStat){
+    approvedStat.textContent =
+        approved;
 
-        revenueStat.textContent=
+    rejectedStat.textContent =
+        rejected;
 
-            currency(monthlyIncome);
+    arrearsStat.textContent =
+        arrears;
 
-    }
-
-    if(pendingStat){
-
-        pendingStat.textContent=pending;
-
-    }
-
-    if(approvedStat){
-
-        approvedStat.textContent=approved;
-
-    }
-
-    if(rejectedStat){
-
-        rejectedStat.textContent=rejected;
-
-    }
-
-    if(arrearsStat){
-
-        arrearsStat.textContent=arrears;
-
-    }
-
-}
-
-
-// ==========================================
+}// ==========================================
 // QUICK ACTION BUTTONS
 // ==========================================
 
 function openModal(id){
 
-    const modal=document.getElementById(id);
+    const modal = document.getElementById(id);
 
     if(modal){
 
@@ -323,7 +333,12 @@ function openModal(id){
 }
 
 
-document.getElementById("new-client-btn")
+// ==========================================
+// NEW CLIENT
+// ==========================================
+
+document
+.getElementById("new-client-btn")
 ?.addEventListener("click",()=>{
 
     openModal("client-modal");
@@ -331,15 +346,12 @@ document.getElementById("new-client-btn")
 });
 
 
-document.getElementById("new-loan-btn")
-?.addEventListener("click",()=>{
+// ==========================================
+// NEW LOAN
+// ==========================================
 
-    openModal("loan-modal");
-
-});
-
-
-document.getElementById("fab-new-loan")
+document
+.getElementById("new-loan-btn")
 ?.addEventListener("click",()=>{
 
     openModal("loan-modal");
@@ -348,11 +360,197 @@ document.getElementById("fab-new-loan")
 
 
 // ==========================================
-// EXPORT
+// FLOATING ACTION BUTTON
+// ==========================================
+
+document
+.getElementById("fab-new-loan")
+?.addEventListener("click",()=>{
+
+    openModal("loan-modal");
+
+});
+
+
+// ==========================================
+// DASHBOARD HELPERS
+// ==========================================
+
+function getTotalOutstandingBalance(){
+
+    return loans.reduce((total, loan)=>{
+
+        if(
+
+            loan.status==="Approved" ||
+
+            loan.status==="Arrears"
+
+        ){
+
+            return total +
+
+                Number(
+
+                    loan.balance ||
+
+                    loan.amount ||
+
+                    0
+
+                );
+
+        }
+
+        return total;
+
+    },0);
+
+}
+
+
+function getCompletedLoans(){
+
+    return loans.filter(
+
+        loan=>loan.status==="Completed"
+
+    ).length;
+
+}
+
+
+function getTotalCollected(){
+
+    return repayments.reduce(
+
+        (sum,payment)=>
+
+            sum +
+
+            Number(payment.amount || 0),
+
+        0
+
+    );
+
+}
+
+
+function getAverageLoanAmount(){
+
+    if(loans.length===0){
+
+        return 0;
+
+    }
+
+    const total = loans.reduce(
+
+        (sum,loan)=>
+
+            sum +
+
+            Number(loan.amount || 0),
+
+        0
+
+    );
+
+    return total / loans.length;
+
+}// ==========================================
+// REFRESH DASHBOARD
+// ==========================================
+
+function refreshDashboard(){
+
+    updateDashboard();
+
+}
+
+
+// ==========================================
+// OPTIONAL SUMMARY
+// ==========================================
+
+function dashboardSummary(){
+
+    console.log("================================");
+
+    console.log("GREYMUS DASHBOARD");
+
+    console.log("================================");
+
+    console.log("Clients:", clientCount);
+
+    console.log("Loans:", loans.length);
+
+    console.log("Approved:", approvedStat?.textContent);
+
+    console.log("Pending:", pendingStat?.textContent);
+
+    console.log("Arrears:", arrearsStat?.textContent);
+
+    console.log("Rejected:", rejectedStat?.textContent);
+
+    console.log(
+        "Outstanding:",
+        currency(getTotalOutstandingBalance())
+    );
+
+    console.log(
+        "Collected:",
+        currency(getTotalCollected())
+    );
+
+    console.log(
+        "Average Loan:",
+        currency(getAverageLoanAmount())
+    );
+
+    console.log(
+        "Completed:",
+        getCompletedLoans()
+    );
+
+    console.log("================================");
+
+}
+
+
+// ==========================================
+// AUTO REFRESH
+// ==========================================
+
+setInterval(()=>{
+
+    refreshDashboard();
+
+},60000);
+
+
+// ==========================================
+// EXPORTS
 // ==========================================
 
 export{
 
-    currency
+    currency,
+
+    refreshDashboard,
+
+    getTotalOutstandingBalance,
+
+    getCompletedLoans,
+
+    getTotalCollected,
+
+    getAverageLoanAmount
 
 };
+
+
+// ==========================================
+// END OF FILE
+// ==========================================
