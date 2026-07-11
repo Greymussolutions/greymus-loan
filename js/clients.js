@@ -342,7 +342,10 @@ if (clientForm) {
 createdBy:
     localStorage.getItem("userName") ||
     localStorage.getItem("userEmail") ||
-    "-",
+    "Unknown Officer",
+
+createdByEmail:
+    localStorage.getItem("userEmail") || "",
 
 updatedAt: serverTimestamp()
 
@@ -367,28 +370,17 @@ updatedAt: serverTimestamp()
 
                 await addDoc(
 
-                    collection(db, "clients"),
+    collection(db, "clients"),
 
-                    {
+    {
 
-                        ...clientData,
+        ...clientData,
 
-                        createdAt: serverTimestamp(),
+        createdAt: serverTimestamp()
 
-                        createdBy:
-    localStorage.getItem(
-        "userName"
-    ) || "Unknown Officer",
+    }
 
-createdByEmail:
-    localStorage.getItem(
-        "userEmail"
-    ) || ""
-
-                    }
-
-                );
-
+);
                 alert("Client added successfully.");
 
             }
