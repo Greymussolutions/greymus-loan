@@ -1,340 +1,358 @@
-// js/dashboard.js
+// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// Version 1.1
+// ==========================================
 
-import {
-    db
-} from "./firebase.js";
+import { db } from "./firebase.js";
 
 import {
     collection,
-    getDocs,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// DASHBOARD ELEMENTS
+// ==========================================
+// ELEMENTS
+// ==========================================
 
-const portfolioStat =
-    document.getElementById("stat-portfolio");
+const portfolioStat = document.getElementById("stat-portfolio");
+const clientsStat = document.getElementById("stat-clients");
+const revenueStat = document.getElementById("stat-revenue");
 
-const clientsStat =
-    document.getElementById("stat-clients");
-
-const revenueStat =
-    document.getElementById("stat-revenue");
-
-const pendingStat =
-    document.getElementById("stat-pending");
-
-const approvedStat =
-    document.getElementById("stat-approved");
-
-const rejectedStat =
-    document.getElementById("stat-rejected");
-
-const arrearsStat =
-    document.getElementById("stat-arrears");
+const pendingStat = document.getElementById("stat-pending");
+const approvedStat = document.getElementById("stat-approved");
+const rejectedStat = document.getElementById("stat-rejected");
+const arrearsStat = document.getElementById("stat-arrears");
 
 
-// FORMAT CURRENCY
+// ==========================================
+// FORMAT MONEY
+// ==========================================
 
-function formatCurrency(amount) {
+function currency(value){
 
-    return new Intl.NumberFormat(
-        "en-KE",
-        {
-            style: "currency",
-            currency: "KES",
-            maximumFractionDigits: 0
-        }
-    ).format(amount || 0);
+    return new Intl.NumberFormat("en-KE",{
+
+        style:"currency",
+        currency:"KES",
+        maximumFractionDigits:0
+
+    }).format(value || 0);
 
 }
 
 
-// LOAD CLIENT STATISTICS
+// ==========================================
+// CLIENTS
+// ==========================================
 
-function loadClientsCount() {
+onSnapshot(
 
-    const clientsRef =
-        collection(
-            db,
-            "clients"
-        );
+    collection(db,"clients"),
 
+    snapshot=>{
 
-    onSnapshot(
-        clientsRef,
-        (snapshot) => {
+        if(clientsStat){
 
-            if (clientsStat) {
-
-                clientsStat.textContent =
-                    snapshot.size;
-
-            }
+            clientsStat.textContent=snapshot.size;
 
         }
-    );
 
-}
+    }
 
-
-// LOAD LOAN STATISTICS
-
-function loadLoanStatistics() {
-
-    const loansRef =
-        collection(
-            db,
-            "loans"
-        );
+);
 
 
-    onSnapshot(
-        loansRef,
-        (snapshot) => {
+// ==========================================
+// LOANS
+// ==========================================
+
+let loans=[];
+
+onSnapshot(
+
+    collection(db,"loans"),
+
+    snapshot=>{
+
+        loans=[];
+
+        snapshot.forEach(doc=>{
+
+            loans.push({
+
+                id:doc.id,
+
+                ...doc.data()
+
+            });
+
+        });
+
+        updateDashboard();
+
+    }
+
+);
 
 
-            let portfolio = 0;
-            let revenue = 0;
+// ==========================================
+// REPAYMENTS
+// ==========================================
 
-            let pending = 0;
-            let approved = 0;
-            let rejected = 0;
-            let arrears = 0;
+let repayments=[];
 
+onSnapshot(
 
+    collection(db,"repayments"),
 
-            snapshot.forEach(
-                (doc) => {
+    snapshot=>{
 
-                    const loan =
-                        doc.data();
+        repayments=[];
 
+        snapshot.forEach(doc=>{
 
-                    const amount =
-                        Number(
-                            loan.amount ||
-                            loan.loanAmount ||
-                            0
-                        );
+            repayments.push({
 
+                id:doc.id,
 
-                    const interest =
-                        Number(
-                            loan.interest ||
-                            0
-                        );
+                ...doc.data()
 
+            });
 
-                    const status =
-                        loan.status ||
-                        "Pending";
+        });
+
+        updateDashboard();
+
+    }
+
+);
 
 
+// ==========================================
+// DASHBOARD
+// ==========================================
 
-                    if (
-                        status === "Approved"
-                    ) {
+function updateDashboard(){
 
-                        portfolio += amount;
+    let portfolio=0;
 
-                        approved++;
+    let pending=0;
 
+    let approved=0;
 
-                    } else if (
-                        status === "Pending"
-                    ) {
+    let rejected=0;
 
-                        pending++;
+    let arrears=0;
 
-
-                    } else if (
-                        status === "Rejected"
-                    ) {
-
-                        rejected++;
+    let monthlyIncome=0;
 
 
-                    } else if (
-                        status === "Arrears"
-                    ) {
+    const today=new Date();
 
-                        arrears++;
+    const month=today.getMonth();
 
-                    }
+    const year=today.getFullYear();
 
 
+    loans.forEach(loan=>{
 
-                    revenue +=
-                        amount *
-                        (interest / 100);
+        const status=loan.status || "Pending";
+
+        if(status==="Approved"){
+
+            approved++;
+
+            portfolio+=Number(loan.amount || 0);
+
+        }
+
+        if(status==="Pending"){
+
+            pending++;
+
+        }
+
+        if(status==="Rejected"){
+
+            rejected++;
+
+        }
+
+        if(status==="Arrears"){
+
+            arrears++;
+
+            portfolio+=Number(loan.amount || 0);
+
+        }
+
+    });
 
 
-                }
+    repayments.forEach(payment=>{
+
+        if(!payment.paymentDate) return;
+
+        const date=new Date(payment.paymentDate);
+
+        if(
+
+            date.getMonth()===month &&
+
+            date.getFullYear()===year
+
+        ){
+
+            const loan=loans.find(
+
+                l=>l.id===payment.loanId
+
             );
 
+            if(!loan) return;
 
+            const interestRate=
 
-            if (portfolioStat) {
+                Number(loan.interest || 0);
 
-                portfolioStat.textContent =
-                    formatCurrency(
-                        portfolio
-                    );
+            const total=
 
-            }
+                Number(loan.totalRepayment || 0);
 
+            const principal=
 
-            if (revenueStat) {
+                Number(loan.amount || 0);
 
-                revenueStat.textContent =
-                    formatCurrency(
-                        revenue
-                    );
+            const interest=
 
-            }
+                total-principal;
 
+            const ratio=
 
-            if (pendingStat) {
+                Number(payment.amount)/total;
 
-                pendingStat.textContent =
-                    pending;
+            monthlyIncome+=
 
-            }
-
-
-            if (approvedStat) {
-
-                approvedStat.textContent =
-                    approved;
-
-            }
-
-
-            if (rejectedStat) {
-
-                rejectedStat.textContent =
-                    rejected;
-
-            }
-
-
-            if (arrearsStat) {
-
-                arrearsStat.textContent =
-                    arrears;
-
-            }
-
+                interest*ratio;
 
         }
-    );
 
-}
-
-
-// QUICK ACTION BUTTONS
-
-const newClientBtn =
-    document.getElementById(
-        "new-client-btn"
-    );
+    });
 
 
-const newLoanBtn =
-    document.getElementById(
-        "new-loan-btn"
-    );
+    loans.forEach(loan=>{
+
+        if(
+
+            loan.processingFeeAdded===true
+
+        ){
+
+            monthlyIncome+=
+
+                Number(
+
+                    loan.processingFee || 0
+
+                );
+
+        }
+
+    });
 
 
-const fabLoan =
-    document.getElementById(
-        "fab-new-loan"
-    );
+    if(portfolioStat){
 
+        portfolioStat.textContent=
 
+            currency(portfolio);
 
-function openModal(id) {
+    }
 
-    const modal =
-        document.getElementById(id);
+    if(revenueStat){
 
+        revenueStat.textContent=
 
-    if (modal) {
+            currency(monthlyIncome);
 
-        modal.classList.remove(
-            "hidden"
-        );
+    }
+
+    if(pendingStat){
+
+        pendingStat.textContent=pending;
+
+    }
+
+    if(approvedStat){
+
+        approvedStat.textContent=approved;
+
+    }
+
+    if(rejectedStat){
+
+        rejectedStat.textContent=rejected;
+
+    }
+
+    if(arrearsStat){
+
+        arrearsStat.textContent=arrears;
 
     }
 
 }
 
 
+// ==========================================
+// QUICK ACTION BUTTONS
+// ==========================================
 
-if (newClientBtn) {
+function openModal(id){
 
-    newClientBtn.addEventListener(
-        "click",
-        () => {
+    const modal=document.getElementById(id);
 
-            openModal(
-                "client-modal"
-            );
+    if(modal){
 
-        }
-    );
+        modal.classList.remove("hidden");
 
-}
-
-
-
-if (newLoanBtn) {
-
-    newLoanBtn.addEventListener(
-        "click",
-        () => {
-
-            openModal(
-                "loan-modal"
-            );
-
-        }
-    );
+    }
 
 }
 
 
+document.getElementById("new-client-btn")
+?.addEventListener("click",()=>{
 
-if (fabLoan) {
+    openModal("client-modal");
 
-    fabLoan.addEventListener(
-        "click",
-        () => {
-
-            openModal(
-                "loan-modal"
-            );
-
-        }
-    );
-
-}
+});
 
 
+document.getElementById("new-loan-btn")
+?.addEventListener("click",()=>{
 
-// INITIALIZE DASHBOARD
+    openModal("loan-modal");
 
-loadClientsCount();
-
-loadLoanStatistics();
+});
 
 
+document.getElementById("fab-new-loan")
+?.addEventListener("click",()=>{
+
+    openModal("loan-modal");
+
+});
+
+
+// ==========================================
 // EXPORT
+// ==========================================
 
-export {
+export{
 
-    formatCurrency
+    currency
 
 };
