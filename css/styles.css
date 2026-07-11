@@ -1660,3 +1660,934 @@ tbody tr:hover{
    END OF styles.css
    Version 1.1 Stable
 ===================================================== */
+
+/* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.2 Responsive Update
+   PART 1
+===================================================== */
+
+/* Prevent horizontal scrolling */
+
+html,
+body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+}
+
+/* Better sizing */
+
+*,
+*::before,
+*::after{
+    box-sizing:border-box;
+}
+
+/* Images */
+
+img{
+    max-width:100%;
+    height:auto;
+}
+
+/* Videos & iframes */
+
+video,
+iframe{
+    max-width:100%;
+}
+
+/* Tables */
+
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+table{
+    width:100%;
+    min-width:950px;
+}
+
+/* Sidebar */
+
+.sidebar{
+
+    overflow-y:auto;
+
+    scrollbar-width:thin;
+
+}
+
+/* Main content */
+
+.main-content{
+
+    min-width:0;
+
+}
+
+/* Buttons */
+
+button{
+
+    white-space:nowrap;
+
+}
+
+/* Toolbar */
+
+.toolbar{
+
+    align-items:center;
+
+}
+
+.toolbar input{
+
+    min-width:220px;
+
+}
+
+.toolbar select{
+
+    min-width:180px;
+
+}
+
+/* Forms */
+
+.form-grid{
+
+    align-items:start;
+
+}
+
+.form-group{
+
+    width:100%;
+
+}
+
+/* Inputs */
+
+input,
+select,
+textarea{
+
+    max-width:100%;
+
+}
+
+/* Modal */
+
+.modal{
+
+    overflow-y:auto;
+
+}
+
+.modal-content{
+
+    width:min(720px,100%);
+
+}
+
+/* Loan Summary */
+
+.summary-row{
+
+    gap:20px;
+
+}
+
+/* Notification */
+
+.notification-panel{
+
+    max-width:calc(100vw - 30px);
+
+}
+
+/* Footer */
+
+.app-footer{
+
+    flex-wrap:wrap;
+
+}
+
+/* Desktop Large Screens */
+
+@media (min-width:1600px){
+
+    .main-content{
+
+        padding:40px 50px;
+
+    }
+
+    .stats-grid{
+
+        grid-template-columns:
+        repeat(4,1fr);
+
+    }
+
+    .quick-grid{
+
+        grid-template-columns:
+        repeat(4,1fr);
+
+    }
+
+}
+
+/* =====================================================
+   END OF PART 1
+===================================================== */
+
+/* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.2 Responsive Update
+   PART 2
+   Sidebar • Desktop • Tablet • Mobile
+===================================================== */
+
+/* ===========================
+   SIDEBAR
+=========================== */
+
+.sidebar{
+
+    transition:.3s ease;
+
+    z-index:3000;
+
+}
+
+.sidebar-menu{
+
+    flex:1;
+
+    overflow-y:auto;
+
+}
+
+.sidebar-menu .tab-btn{
+
+    min-height:52px;
+
+    transition:all .25s ease;
+
+}
+
+.sidebar-menu .tab-btn:hover{
+
+    transform:translateX(4px);
+
+}
+
+.sidebar-menu .tab-btn.active{
+
+    box-shadow:
+        inset 4px 0 0 rgba(255,255,255,.7);
+
+}
+
+/* ===========================
+   TOPBAR
+=========================== */
+
+.topbar{
+
+    flex-wrap:wrap;
+
+}
+
+.topbar-actions{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    justify-content:flex-end;
+
+}
+
+/* ===========================
+   HERO CARD
+=========================== */
+
+.hero-card{
+
+    gap:20px;
+
+}
+
+.hero-card>*{
+
+    flex:1;
+
+}
+
+/* ===========================
+   TABLET
+=========================== */
+
+@media (max-width:1024px){
+
+    .sidebar{
+
+        width:220px;
+
+    }
+
+    .main-content{
+
+        margin-left:220px;
+
+        padding:24px;
+
+    }
+
+    .stats-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .quick-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+}
+
+/* ===========================
+   MOBILE
+=========================== */
+
+@media (max-width:768px){
+
+    .sidebar{
+
+        display:none;
+
+    }
+
+    .main-content{
+
+        margin-left:0;
+
+        width:100%;
+
+        padding:18px;
+
+        padding-bottom:90px;
+
+    }
+
+    .topbar{
+
+        align-items:flex-start;
+
+    }
+
+    .topbar-actions{
+
+        width:100%;
+
+        justify-content:flex-start;
+
+    }
+
+    .hero-card{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .hero-icon{
+
+        font-size:42px;
+
+    }
+
+    .stats-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .quick-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+/* ===========================
+   SMALL PHONES
+=========================== */
+
+@media (max-width:480px){
+
+    .main-content{
+
+        padding:15px;
+
+    }
+
+    .topbar h1{
+
+        font-size:24px;
+
+    }
+
+    .hero-card{
+
+        padding:20px;
+
+    }
+
+    .hero-card h2{
+
+        font-size:26px;
+
+    }
+
+    .brand h2{
+
+        font-size:18px;
+
+    }
+
+}
+
+/* =====================================================
+   END OF PART 2
+===================================================== */
+
+/* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.2 Responsive Update
+   PART 3
+   Tables • Forms • Buttons • Modals
+===================================================== */
+
+/* ===========================
+   TABLES
+=========================== */
+
+.table-wrapper{
+
+    overflow-x:auto;
+
+    -webkit-overflow-scrolling:touch;
+
+    border-radius:16px;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+th,
+td{
+
+    white-space:nowrap;
+
+    vertical-align:middle;
+
+}
+
+tbody tr{
+
+    transition:.25s;
+
+}
+
+tbody tr:hover{
+
+    background:#f8fafc;
+
+}
+
+/* ===========================
+   ACTION BUTTONS
+=========================== */
+
+.loan-actions{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:8px;
+
+    justify-content:flex-start;
+
+    align-items:center;
+
+}
+
+.loan-actions button{
+
+    min-width:40px;
+
+}
+
+.primary-btn,
+.secondary-btn{
+
+    min-height:46px;
+
+    font-weight:600;
+
+}
+
+.primary-btn{
+
+    white-space:nowrap;
+
+}
+
+/* ===========================
+   FORMS
+=========================== */
+
+form{
+
+    width:100%;
+
+}
+
+.form-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap:18px;
+
+}
+
+.form-group{
+
+    width:100%;
+
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+
+    width:100%;
+
+}
+
+/* ===========================
+   MODALS
+=========================== */
+
+.modal{
+
+    padding:20px;
+
+    overflow-y:auto;
+
+}
+
+.modal-content{
+
+    width:100%;
+
+    max-width:760px;
+
+    margin:auto;
+
+}
+
+.modal-buttons{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+
+}
+
+/* ===========================
+   TOOLBAR
+=========================== */
+
+.toolbar{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+}
+
+.toolbar input{
+
+    flex:1;
+
+    min-width:220px;
+
+}
+
+.toolbar select{
+
+    min-width:180px;
+
+}
+
+/* ===========================
+   MOBILE
+=========================== */
+
+@media (max-width:768px){
+
+    .form-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .modal-content{
+
+        padding:20px;
+
+        max-height:90vh;
+
+    }
+
+    .modal-buttons{
+
+        flex-direction:column;
+
+    }
+
+    .modal-buttons button{
+
+        width:100%;
+
+    }
+
+    .loan-actions{
+
+        justify-content:center;
+
+    }
+
+    .loan-actions button{
+
+        flex:1;
+
+        min-width:90px;
+
+    }
+
+    th,
+    td{
+
+        font-size:13px;
+
+        padding:12px;
+
+    }
+
+}
+
+/* ===========================
+   SMALL PHONES
+=========================== */
+
+@media (max-width:480px){
+
+    .toolbar{
+
+        flex-direction:column;
+
+    }
+
+    .toolbar input,
+    .toolbar select,
+    .toolbar button{
+
+        width:100%;
+
+    }
+
+    .primary-btn,
+    .secondary-btn{
+
+        width:100%;
+
+    }
+
+}
+
+/* =====================================================
+   END OF PART 3
+===================================================== */
+
+/* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.2 Responsive Update
+   PART 4
+   Finishing Touches
+===================================================== */
+
+/* ===========================
+   FLOATING ACTION BUTTON
+=========================== */
+
+.fab{
+
+    transition:.25s ease;
+
+}
+
+.fab:hover{
+
+    transform:scale(1.08);
+
+}
+
+@media (min-width:769px){
+
+    /* Desktop uses toolbar buttons */
+
+    .fab{
+
+        display:none;
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .fab{
+
+        display:flex;
+
+        justify-content:center;
+
+        align-items:center;
+
+        right:20px;
+
+        bottom:80px;
+
+    }
+
+}
+
+
+/* ===========================
+   NOTIFICATION PANEL
+=========================== */
+
+.notification-panel{
+
+    max-width:360px;
+
+}
+
+@media (max-width:768px){
+
+    .notification-panel{
+
+        left:10px;
+
+        right:10px;
+
+        width:auto;
+
+        max-width:none;
+
+        top:70px;
+
+    }
+
+}
+
+
+/* ===========================
+   SETTINGS
+=========================== */
+
+.settings-card{
+
+    max-width:400px;
+
+    width:100%;
+
+}
+
+@media (max-width:480px){
+
+    .settings-card{
+
+        margin:15px;
+
+        padding:20px;
+
+    }
+
+}
+
+
+/* ===========================
+   FOOTER
+=========================== */
+
+.app-footer{
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+}
+
+@media (max-width:768px){
+
+    .app-footer{
+
+        flex-direction:column;
+
+        align-items:center;
+
+        text-align:center;
+
+    }
+
+}
+
+
+/* ===========================
+   MOBILE NAVIGATION
+=========================== */
+
+.mobile-nav{
+
+    border-top:1px solid var(--border);
+
+}
+
+.mobile-nav .tab-btn{
+
+    flex:1;
+
+    min-width:60px;
+
+    color:var(--text);
+
+}
+
+.mobile-nav .tab-btn.active{
+
+    color:var(--primary);
+
+    font-weight:600;
+
+}
+
+
+/* ===========================
+   DESKTOP IMPROVEMENTS
+=========================== */
+
+@media (min-width:1200px){
+
+    .stats-grid{
+
+        grid-template-columns:
+            repeat(4,1fr);
+
+    }
+
+    .quick-grid{
+
+        grid-template-columns:
+            repeat(4,1fr);
+
+    }
+
+    .main-content{
+
+        padding:32px;
+
+    }
+
+}
+
+@media (min-width:1600px){
+
+    .main-content{
+
+        max-width:1500px;
+
+        margin-left:250px;
+
+    }
+
+}
+
+
+/* ===========================
+   ACCESSIBILITY
+=========================== */
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus{
+
+    outline:2px solid rgba(37,99,235,.25);
+
+    outline-offset:2px;
+
+}
+
+
+/* ===========================
+   SMOOTH SCROLLING
+=========================== */
+
+.table-wrapper,
+.sidebar,
+.notification-list,
+.modal-content{
+
+    scroll-behavior:smooth;
+
+}
+
+
+/* ===========================
+   END
+=========================== */
