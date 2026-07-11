@@ -747,6 +747,84 @@ function renderLoans(list){
 
     attachLoanActions();
 
+// =====================================
+// RENDER LOANS TABLE
+// =====================================
+
+function renderLoans(list){
+
+    ...
+
+    attachLoanActions();
+
+}
+
+
+// =====================================
+// SEARCH & FILTER
+// =====================================
+
+function filterLoans(){
+
+    let filtered = [...loans];
+
+    const search =
+        loanSearch?.value
+        .toLowerCase()
+        .trim() || "";
+
+    const status =
+        loanFilter?.value || "ALL";
+
+    filtered = filtered.filter(loan => {
+
+        const matchesSearch =
+
+            loan.clientName
+            ?.toLowerCase()
+            .includes(search)
+
+            ||
+
+            loan.id
+            .toLowerCase()
+            .includes(search);
+
+        const matchesStatus =
+
+            status === "ALL"
+
+            ||
+
+            loan.status === status;
+
+        return matchesSearch && matchesStatus;
+
+    });
+
+    renderLoans(filtered);
+
+}
+
+loanSearch?.addEventListener(
+    "input",
+    filterLoans
+);
+
+loanFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+// =====================================
+// LOAN ACTIONS
+// =====================================
+
+function attachLoanActions(){
+
+    ...
+
 }// ==========================
 // VIEW LOAN
 // ==========================
