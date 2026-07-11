@@ -369,7 +369,15 @@ if (clientForm) {
 
                         createdAt: serverTimestamp(),
 
-                        createdBy: localStorage.getItem("userRole") || "User"
+                        createdBy:
+    localStorage.getItem(
+        "userName"
+    ) || "Unknown Officer",
+
+createdByEmail:
+    localStorage.getItem(
+        "userEmail"
+    ) || ""
 
                     }
 
