@@ -425,6 +425,14 @@ item=>!item.paid
 
 );
 
+const remainingInstallments =
+
+schedule.filter(
+
+item => !item.paid
+
+).length;
+
 const newBalance =
     Number(loan.balance) - amount;
 
