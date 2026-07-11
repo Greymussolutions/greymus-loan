@@ -1170,7 +1170,67 @@ setInterval(()=>{
 
     if(loans.length){
 
-        checkOverdueLoans();
+        async function checkOverdueLoans(){
+
+    const todayDate = today();
+
+    for(const loan of loans){
+
+        if(
+            loan.status !== "Approved" &&
+            loan.status !== "Arrears"
+        ) continue;
+
+        const balance = Number(loan.balance || 0);
+
+        // ONLY repayments can complete a loan
+        if(balance <= 0){
+
+            await updateDoc(
+                doc(db,"loans",loan.id),
+                {
+                    status:"Completed",
+                    completed:true,
+                    updatedAt:serverTimestamp()
+                }
+            );
+
+            continue;
+        }
+
+        let status="Approved";
+
+        const schedule=loan.repaymentSchedule || [];
+
+        const next=schedule.find(item=>!item.paid);
+
+        if(next && next.dueDate < todayDate){
+
+            status="Arrears";
+
+        }
+
+        await updateDoc(
+
+            doc(db,"loans",loan.id),
+
+            {
+
+                status,
+
+                nextRepaymentDate:
+                    next ? next.dueDate : null,
+
+                updatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+    }
+
+}
 
     }
 
