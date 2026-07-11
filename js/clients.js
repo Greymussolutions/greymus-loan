@@ -104,7 +104,21 @@ function renderClients(list) {
     clientsTableBody.innerHTML = "";
 
 
-    list.forEach((client) => {
+    if (list.length === 0) {
+
+    clientsTableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center">
+                No clients found.
+            </td>
+        </tr>
+    `;
+
+    return;
+
+}
+
+list.forEach((client) => {
 
 
         const row =
@@ -231,7 +245,14 @@ if (clientForm) {
                     clientGuarantorPhone.value.trim(),
 
                 security:
-                    clientSecurity.value.trim(),
+                    nameLower:
+    clientName.value.trim().toLowerCase(),
+
+phoneLower:
+    clientPhone.value.trim().toLowerCase(),
+
+idNumberLower:
+    clientIdNumber.value.trim().toLowerCase(),
 
                 updatedAt:
                     serverTimestamp()
@@ -326,10 +347,9 @@ if (clientSearch) {
 
 
             const value =
-                clientSearch.value
-                    .toLowerCase();
-
-
+    clientSearch.value
+        .trim()
+        .toLowerCase();
             const filtered =
                 clients.filter(
                     (client) => {
@@ -449,15 +469,38 @@ function attachActions() {
                     async () => {
 
 
-                        await deleteDoc(
+                        if (!confirm("Delete this client?")) {
 
-                            doc(
-                                db,
-                                "clients",
-                                button.dataset.id
-                            )
+    return (
 
-                        );
+    (client.nameLower || "")
+        .includes(value)
+
+    ||
+
+    (client.phoneLower || "")
+        .includes(value)
+
+    ||
+
+    (client.idNumberLower || "")
+        .includes(value)
+
+    ||
+
+    (client.occupation || "")
+        .toLowerCase()
+        .includes(value)
+
+    ||
+
+    (client.guarantor || "")
+        .toLowerCase()
+        .includes(value)
+
+);
+
+);
 
 
                     }
