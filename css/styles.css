@@ -1607,4 +1607,15 @@ END OF FILE
 
 #close-settings{
     background:#334155;
+}/* Mobile logout button fix */
+@media (max-width:480px){
+
+    .logout-btn{
+        display:flex !important;
+        align-items:center;
+        justify-content:center;
+        width:100%;
+        margin-top:15px;
+    }
+
 }
