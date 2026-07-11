@@ -425,35 +425,25 @@ item=>!item.paid
 
 );
 
-const remainingInstallments=
+const newBalance =
+    Number(loan.balance) - amount;
 
-schedule.filter(
+const allPaid =
+    schedule.every(item => item.paid);
 
-item=>!item.paid
+let newStatus = "Approved";
 
-).length;
+if (allPaid) {
 
-const newBalance=
-
-Number(loan.balance)-amount;
-
-let newStatus="Approved";
-
-if(newBalance<=0){
-
-newStatus="Completed";
+    newStatus = "Completed";
 
 }
+else if (
+    nextInstallment &&
+    nextInstallment.dueDate < today()
+) {
 
-else if(
-
-nextInstallment &&
-
-nextInstallment.dueDate<today()
-
-){
-
-newStatus="Arrears";
+    newStatus = "Arrears";
 
 }
 
@@ -528,8 +518,7 @@ balance:newBalance,
 status:newStatus,
 
 completed:
-
-newStatus==="Completed",
+allPaid,
 
 repaymentSchedule:schedule,
 
