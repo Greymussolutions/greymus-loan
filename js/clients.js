@@ -18,7 +18,7 @@ import {
 // ELEMENTS
 
 const clientsTableBody =
-    document.querySelector("#clients-table tbody");
+    document.getElementById("clients-table-body");
 
 const clientForm =
     document.getElementById("client-form");
@@ -64,13 +64,23 @@ let clients = [];
 
 // CLOSE MODAL
 
-function closeClientModal() {
+function safe(value) {
 
-    if (clientModal) {
+    if (value === undefined || value === null) {
 
-        clientModal.classList.add("hidden");
+        return "-";
 
     }
+
+    if (String(value).trim() === "") {
+
+        return "-";
+
+    }
+
+    return value;
+
+}
 
 }
 
@@ -113,7 +123,7 @@ function renderClients(list) {
 
             <td>${safe(client.guarantor)}</td>
 
-            <td>${safe(client.createdBy)}</td>
+            <td>${safe(client.createdBy || client.officer || client.createdByName)}</td>
 
             <td>
 
