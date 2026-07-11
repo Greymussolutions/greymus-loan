@@ -530,20 +530,12 @@ if(loanForm){
             if(loanId.value){
 
                 await updateDoc(
-
-                    doc(db,"loans",loanId.value),
-
-                    {
-
-                        ...loanData,
-
-                        createdAt: undefined,
-
-                        updatedAt: serverTimestamp()
-
-                    }
-
-                );
+    doc(db,"loans",loanId.value),
+    {
+        ...loanData,
+        updatedAt: serverTimestamp()
+    }
+);
 
                 alert("Loan updated successfully.");
 
@@ -1112,7 +1104,15 @@ function getLoanById(id){
 
     );
 
-}// ==========================================
+}
+
+function getNextRepayment(schedule = []) {
+
+    return schedule.find(item => !item.paid) || null;
+
+}
+
+// ==========================================
 // PART 8
 // EXPORTS
 // ==========================================
