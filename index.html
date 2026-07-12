@@ -864,6 +864,64 @@ FOOTER
 END OF APPLICATION
 ========================= -->
 
+<!-- ==========================================
+REPAYMENT SCHEDULE MODAL
+========================================== -->
+
+<div id="schedule-modal" class="modal hidden">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <h2>Repayment Schedule</h2>
+
+            <button id="close-schedule-modal">&times;</button>
+
+        </div>
+
+        <div class="schedule-summary">
+
+            <p><strong>Client:</strong>
+                <span id="schedule-client">-</span>
+            </p>
+
+            <p><strong>Outstanding Balance:</strong>
+                <span id="schedule-balance">KES 0</span>
+            </p>
+
+        </div>
+
+        <table id="schedule-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Week</th>
+
+                    <th>Due Date</th>
+
+                    <th>Amount</th>
+
+                    <th>Status</th>
+
+                    <th>Paid Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="schedule-table-body">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
 </body>
 
 </html>
