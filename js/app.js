@@ -30,6 +30,25 @@ const settingsBtnMobile =
 document.getElementById("settings-btn-mobile");
 const settingsMenu = document.getElementById("settings-menu");
 const closeSettings = document.getElementById("close-settings");
+// Close Settings
+
+if (closeSettings && settingsMenu) {
+
+    closeSettings.addEventListener("click", () => {
+
+        settingsMenu.classList.add("hidden");
+
+    });
+
+}settingsMenu?.addEventListener("click", (e) => {
+
+    if (e.target === settingsMenu) {
+
+        settingsMenu.classList.add("hidden");
+
+    }
+
+});
 const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
 const mobileNav = document.querySelector(".mobile-nav");
 const fab = document.getElementById("fab-new-loan");
