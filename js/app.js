@@ -23,7 +23,11 @@ const tabButtons = document.querySelectorAll(".tab-btn");
 const tabContents = document.querySelectorAll(".tab-content");
 
 // Settings
-const settingsBtn = document.getElementById("settings-btn");
+const settingsBtn =
+document.getElementById("settings-btn");
+
+const settingsBtnMobile =
+document.getElementById("settings-btn-mobile");
 const settingsMenu = document.getElementById("settings-menu");
 const closeSettings = document.getElementById("close-settings");
 const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
@@ -110,11 +114,11 @@ if (settingsBtn && settingsMenu) {
 
 }
 
-if (closeSettings && settingsMenu) {
+if (settingsBtnMobile && settingsMenu) {
 
-    closeSettings.addEventListener("click", () => {
+    settingsBtnMobile.addEventListener("click", () => {
 
-        settingsMenu.classList.add("hidden");
+        settingsMenu.classList.remove("hidden");
 
     });
 
