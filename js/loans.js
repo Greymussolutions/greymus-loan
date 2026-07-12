@@ -249,19 +249,25 @@ function generateRepaymentSchedule(
 
         schedule.push({
 
-            week: week,
+    week: week,
 
-            amount: Number(weeklyPayment),
+    amount: Number(weeklyPayment),
 
-            dueDate: formatDate(dueDate),
+    paidAmount: 0,
 
-            paid: false,
+    remainingAmount: Number(weeklyPayment),
 
-            paidAmount: 0,
+    dueDate: formatDate(dueDate),
 
-            paidDate: null
+    paid: false,
 
-        });
+    status: "Pending",
+
+    paidDate: null,
+
+    paymentHistory: []
+
+});
 
     }
 
