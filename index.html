@@ -544,6 +544,114 @@ LOAN MODAL
 </div>
 
 <!-- =========================
+REPAYMENT MODAL
+========================= -->
+
+<div id="repayment-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <h2>Loan Repayment</h2>
+                <p>Receive a repayment</p>
+            </div>
+
+            <button type="button"
+                    class="modal-close-btn close-modal">
+                ✕
+            </button>
+
+        </div>
+
+        <form id="repayment-form">
+
+            <input type="hidden"
+                   id="repayment-loan-id">
+
+            <div class="form-group">
+
+                <label>Client</label>
+
+                <input
+                    type="text"
+                    id="repayment-client"
+                    readonly>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Outstanding Balance</label>
+
+                <input
+                    type="text"
+                    id="repayment-balance"
+                    readonly>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Amount Paid</label>
+
+                <input
+                    type="number"
+                    id="repayment-amount"
+                    min="1"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Payment Date</label>
+
+                <input
+                    type="date"
+                    id="repayment-date"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Remarks</label>
+
+                <textarea
+                    id="repayment-notes"
+                    rows="3"></textarea>
+
+            </div>
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Save Repayment
+
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn close-modal">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
 CONFIRMATION MODAL
 ========================= -->
 
