@@ -703,6 +703,8 @@ ${payment.notes || "-"}`
 // RENDER REPAYMENTS TABLE
 // ==========================================
 
+alert("renderRepayments() called. Records: " + repayments.length);
+
 function renderRepayments(list = repayments) {
 
     if (!repaymentsTableBody) return;
@@ -928,22 +930,36 @@ async function confirmPayment(paymentId, confirm = true) {
 
 function initializeRepayments() {
 
-    loadLoans();
+    try {
 
-    loadRepayments();
+        console.log("Repayments initialization started");
 
-    if (repaymentDate) {
+        loadLoans();
 
-        repaymentDate.value = today();
+        console.log("Loans listener attached");
 
-    }
+        loadRepayments();
 
-    if (repaymentAmount) {
+        console.log("Repayments listener attached");
 
-        repaymentAmount.placeholder =
-            "Enter amount received";
+        if (repaymentDate) {
+            repaymentDate.value = today();
+        }
 
-        repaymentAmount.readOnly = false;
+        if (repaymentAmount) {
+            repaymentAmount.placeholder = "Enter amount received";
+        }
+
+        console.log("Repayments initialized successfully");
+
+    } catch (error) {
+
+        alert(
+            "Repayment Error:\n\n" +
+            error.message
+        );
+
+        console.error(error);
 
     }
 
