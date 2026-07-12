@@ -74,6 +74,33 @@ const loanDuration =
 const loanDueDate =
     document.getElementById("loan-due-date");
 
+// ==========================================
+// REPAYMENT MODAL ELEMENTS
+// ==========================================
+
+const repaymentModal =
+    document.getElementById("repayment-modal");
+
+const repaymentForm =
+    document.getElementById("repayment-form");
+
+const repaymentLoanId =
+    document.getElementById("repayment-loan-id");
+
+const repaymentClient =
+    document.getElementById("repayment-client");
+
+const repaymentBalance =
+    document.getElementById("repayment-balance");
+
+const repaymentAmount =
+    document.getElementById("repayment-amount");
+
+const repaymentDate =
+    document.getElementById("repayment-date");
+
+const repaymentNotes =
+    document.getElementById("repayment-notes");
 
 // ==========================================
 // REPAYMENT SCHEDULE MODAL
@@ -788,6 +815,49 @@ document.querySelectorAll(".view-loan").forEach(button=>{
 
 });
 
+// ==========================================
+// RECEIVE REPAYMENT
+// ==========================================
+
+document.querySelectorAll(".repay-loan").forEach(button => {
+
+    button.onclick = () => {
+
+        const loan = loans.find(
+            l => l.id === button.dataset.id
+        );
+
+        if (!loan) return;
+
+        repaymentLoanId.value = loan.id;
+
+        repaymentClient.value =
+            loan.clientName;
+
+        repaymentBalance.value =
+            currency(loan.balance);
+
+const weeklyRepayment =
+    document.getElementById("repayment-weekly");
+
+if (weeklyRepayment) {
+
+    weeklyRepayment.value =
+        currency(loan.weeklyPayment);
+
+}
+
+        repaymentAmount.value = "";
+
+        repaymentNotes.value = "";
+
+        repaymentDate.value = today();
+
+        repaymentModal.classList.remove("hidden");
+
+    };
+
+});
 
 // ==========================================
 // EDIT LOAN
@@ -1243,6 +1313,139 @@ function getNextRepayment(schedule=[]){
 
 }
 
+// ==========================================
+// RECEIVE REPAYMENT
+// ==========================================
+
+repaymentForm?.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const loan = loans.find(
+        l => l.id === repaymentLoanId.value
+    );
+
+    if (!loan) {
+        alert("Loan not found.");
+        return;
+    }
+
+    const payment = Number(repaymentAmount.value);
+
+if (payment > loan.balance) {
+
+    alert("Payment cannot exceed the outstanding balance.");
+
+    return;
+
+}
+
+    if (payment <= 0) {
+        alert("Enter a valid repayment amount.");
+        return;
+    }
+
+    let balance = Number(loan.balance);
+    let amountPaid = Number(loan.amountPaid || 0);
+
+    balance -= payment;
+    amountPaid += payment;
+
+    const schedule = [...loan.repaymentSchedule];
+
+    let remaining = payment;
+
+    for (const item of schedule) {
+
+        if (remaining <= 0) break;
+
+        if (item.paid) continue;
+
+        const unpaid = item.amount - item.paidAmount;
+
+        if (remaining >= unpaid) {
+
+            item.paidAmount += unpaid;
+            item.remainingAmount = 0;
+            item.paid = true;
+            item.status = "Paid";
+            item.paidDate = repaymentDate.value;
+
+item.paymentHistory.push({
+    amount: unpaid,
+    date: repaymentDate.value,
+    notes: repaymentNotes.value || ""
+});
+
+            remaining -= unpaid;
+
+        } else {
+
+            item.paidAmount += remaining;
+            item.remainingAmount -= remaining;
+            item.status = "Partial";
+
+item.paymentHistory.push({
+    amount: remaining,
+    date: repaymentDate.value,
+    notes: repaymentNotes.value || ""
+});
+
+            remaining = 0;
+
+        }
+
+    }
+
+    const next = schedule.find(x => !x.paid);
+
+    let status = "Approved";
+
+    if (balance <= 0) {
+
+        status = "Completed";
+        balance = 0;
+
+    }
+
+    try {
+
+        await updateDoc(
+            doc(db, "loans", loan.id),
+            {
+
+                balance,
+
+                amountPaid,
+
+                repaymentSchedule: schedule,
+
+                nextRepaymentDate: next ? next.dueDate : "-",
+
+                remainingInstallments: schedule.filter(x => !x.paid).length,
+
+                status,
+
+                updatedAt: serverTimestamp()
+
+            }
+        );
+
+        repaymentModal.classList.add("hidden");
+
+        repaymentForm.reset();
+
+        alert("Repayment recorded successfully.");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Failed to record repayment.");
+
+    }
+
+});
 
 // ==========================================
 // EXPORTS
