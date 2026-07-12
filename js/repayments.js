@@ -1,8 +1,9 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // repayments.js
-// VERSION 5.0
-// PART 1 OF 8
+// VERSION 6.0
+// PART A OF D
+// Imports • Helpers • Load Data • Loan Dropdown
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -12,30 +13,27 @@ import {
     addDoc,
     updateDoc,
     doc,
-    onSnapshot,
     query,
     orderBy,
+    onSnapshot,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// ADMIN SETTINGS
+// ADMIN
 // ==========================================
 
 const ADMIN_EMAIL = "gayisi0901@gmail.com";
 
 function isAdmin() {
-
     return (
         (localStorage.getItem("userEmail") || "")
-        .toLowerCase() ===
-        ADMIN_EMAIL.toLowerCase()
+            .toLowerCase() === ADMIN_EMAIL.toLowerCase()
     );
-
 }
 
 // ==========================================
-// DOM ELEMENTS
+// DOM
 // ==========================================
 
 const repaymentsTableBody =
@@ -64,7 +62,6 @@ const repaymentNotes =
 // ==========================================
 
 let loans = [];
-
 let repayments = [];
 
 // ==========================================
@@ -103,7 +100,7 @@ function getLoan(id) {
 function getNextInstallment(schedule = []) {
 
     return schedule.find(
-        item => !item.paid
+        installment => !installment.paid
     ) || null;
 
 }
@@ -119,21 +116,12 @@ function calculateOutstanding(installment) {
 }
 
 // ==========================================
-// INITIALIZE DEFAULT DATE
+// DEFAULT DATE
 // ==========================================
 
 if (repaymentDate) {
-
     repaymentDate.value = today();
-
 }
-
-console.log("Repayments Version 5.0 loaded");
-
-// ==========================================
-// PART 2 OF 8
-// LOAD LOANS & REPAYMENTS
-// ==========================================
 
 // ==========================================
 // LOAD LOANS
@@ -150,11 +138,11 @@ function loadLoans() {
 
         loansQuery,
 
-        (snapshot) => {
+        snapshot => {
 
             loans = [];
 
-            snapshot.forEach((docSnap) => {
+            snapshot.forEach(docSnap => {
 
                 const loan = {
 
@@ -163,19 +151,20 @@ function loadLoans() {
 
                 };
 
-                // Compatibility
                 loan.repaymentSchedule ??= [];
-
                 loan.amountPaid ??= 0;
-
                 loan.balance ??=
                     Number(loan.totalRepayment || 0);
 
-                loan.weeklyPayment ??=
-                    Number(loan.weeklyPayment || loan.repayment || 0);
-
                 loan.remainingInstallments ??=
                     loan.duration || 0;
+
+                loan.weeklyPayment ??=
+                    Number(
+                        loan.weeklyPayment ||
+                        loan.repayment ||
+                        0
+                    );
 
                 loans.push(loan);
 
@@ -185,9 +174,12 @@ function loadLoans() {
 
         },
 
-        (error) => {
+        error => {
 
-            console.error("Load Loans:", error);
+            console.error(
+                "Error loading loans:",
+                error
+            );
 
         }
 
@@ -210,11 +202,11 @@ function loadRepayments() {
 
         repaymentsQuery,
 
-        (snapshot) => {
+        snapshot => {
 
             repayments = [];
 
-            snapshot.forEach((docSnap) => {
+            snapshot.forEach(docSnap => {
 
                 repayments.push({
 
@@ -229,17 +221,21 @@ function loadRepayments() {
 
         },
 
-        (error) => {
+        error => {
 
-            console.error("Load Repayments:", error);
+            console.error(
+                "Error loading repayments:",
+                error
+            );
 
         }
 
     );
 
-}// ==========================================
-// PART 3 OF 8
-// LOAN DROPDOWN & INSTALLMENT PREVIEW
+}
+
+// ==========================================
+// POPULATE LOAN DROPDOWN
 // ==========================================
 
 function populateLoanDropdown() {
@@ -253,29 +249,22 @@ function populateLoanDropdown() {
     `;
 
     loans
-
-        .filter(loan => loan.status !== "Completed")
-
+        .filter(
+            loan => loan.status !== "Completed"
+        )
         .forEach(loan => {
 
             repaymentLoan.innerHTML += `
-
                 <option value="${loan.id}">
-
                     ${loan.clientName}
-
                     •
-
                     ${currency(loan.balance)}
-
                 </option>
-
             `;
 
         });
 
 }
-
 
 // ==========================================
 // LOAN SELECTED
@@ -283,13 +272,16 @@ function populateLoanDropdown() {
 
 repaymentLoan?.addEventListener("change", () => {
 
-    const loan = getLoan(repaymentLoan.value);
+    const loan = getLoan(
+        repaymentLoan.value
+    );
 
     if (!loan) return;
 
-    const installment = getNextInstallment(
-        loan.repaymentSchedule
-    );
+    const installment =
+        getNextInstallment(
+            loan.repaymentSchedule
+        );
 
     if (!installment) {
 
@@ -302,13 +294,13 @@ repaymentLoan?.addEventListener("change", () => {
     }
 
     repaymentAmount.value =
-        calculateOutstanding(installment);
+        calculateOutstanding(
+            installment
+        );
 
     repaymentAmount.readOnly = false;
 
-    alert(
-
-`CLIENT
+    alert(`CLIENT
 ${loan.clientName}
 
 CURRENT WEEK
@@ -325,315 +317,353 @@ ${currency(installment.paidAmount)}
 
 BALANCE THIS WEEK
 ${currency(
-calculateOutstanding(installment)
+calculateOutstanding(
+installment
+)
 )}
 
-Remaining Loan Balance
-
+REMAINING LOAN
 ${currency(loan.balance)}
 
 Enter any amount.
-The system will automatically:
+Partial and overpayments
+are supported automatically.`);
 
-• apply partial payments
+});
 
-• complete the week automatically
+console.log("repayments.js Part A loaded");// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// repayments.js
+// VERSION 6.0
+// PART B OF D
+// Smart Payment Engine + Save Repayment
+// ==========================================
 
-• carry any extra money to the next week.`
+// ==========================================
+// SMART PAYMENT ENGINE
+// ==========================================
+
+async function processRepayment(loan, paymentAmount) {
+
+    let remaining = Number(paymentAmount);
+
+    const schedule = [...loan.repaymentSchedule];
+
+    let firstWeek = null;
+
+    for (const installment of schedule) {
+
+        if (remaining <= 0) break;
+
+        if (installment.paid) continue;
+
+        if (firstWeek === null) {
+            firstWeek = installment.week;
+        }
+
+        installment.paidAmount =
+            Number(installment.paidAmount || 0);
+
+        const outstanding =
+            Number(installment.amount) -
+            installment.paidAmount;
+
+        if (remaining >= outstanding) {
+
+            installment.paidAmount =
+                Number(installment.amount);
+
+            installment.paid = true;
+
+            installment.paidDate =
+                repaymentDate.value;
+
+            remaining -= outstanding;
+
+        } else {
+
+            installment.paidAmount += remaining;
+
+            remaining = 0;
+
+        }
+
+    }
+
+    const totalPaid = schedule.reduce(
+
+        (sum, item) =>
+
+            sum + Number(item.paidAmount || 0),
+
+        0
 
     );
 
-});// ==========================================
-// PART 4 OF 8
+    const balance = Math.max(
+
+        0,
+
+        Number(loan.totalRepayment) -
+
+        totalPaid
+
+    );
+
+    const remainingInstallments =
+
+        schedule.filter(
+
+            item => !item.paid
+
+        ).length;
+
+    const nextInstallment =
+
+        schedule.find(
+
+            item => !item.paid
+
+        );
+
+    await updateDoc(
+
+        doc(db, "loans", loan.id),
+
+        {
+
+            repaymentSchedule: schedule,
+
+            amountPaid: totalPaid,
+
+            balance,
+
+            remainingInstallments,
+
+            nextRepaymentDate:
+
+                nextInstallment
+
+                    ? nextInstallment.dueDate
+
+                    : null,
+
+            completed: balance === 0,
+
+            status:
+
+                balance === 0
+
+                    ? "Completed"
+
+                    : "Approved",
+
+            updatedAt:
+
+                serverTimestamp()
+
+        }
+
+    );
+
+    return {
+
+        schedule,
+
+        totalPaid,
+
+        balance,
+
+        paymentWeek: firstWeek,
+
+        carriedForward: remaining
+
+    };
+
+}
+
+// ==========================================
 // SAVE REPAYMENT
-// Supports:
-//
-// ✔ Partial payments
-// ✔ Overpayments
-// ✔ Automatic carry forward
-// ✔ Auto-complete installment
 // ==========================================
 
 if (repaymentForm) {
 
-repaymentForm.addEventListener("submit", async (e) => {
+    repaymentForm.addEventListener(
 
-e.preventDefault();
+        "submit",
 
-const loan = getLoan(repaymentLoan.value);
+        async (e) => {
 
-if (!loan) {
+            e.preventDefault();
 
-alert("Select a loan.");
+            const loan = getLoan(
 
-return;
+                repaymentLoan.value
 
-}
+            );
 
-let amount = Number(repaymentAmount.value);
+            if (!loan) {
 
-if (amount <= 0) {
+                alert("Select a loan.");
 
-alert("Enter a valid amount.");
+                return;
 
-return;
+            }
 
-}
+            const amount = Number(
 
-const schedule = [...loan.repaymentSchedule];
+                repaymentAmount.value
 
-let remainingMoney = amount;
+            );
 
-let paymentWeek = null;
+            if (amount <= 0) {
 
-for (const installment of schedule) {
+                alert(
 
-if (remainingMoney <= 0) break;
+                    "Enter a valid payment amount."
 
-if (installment.paid) continue;
+                );
 
-if (!paymentWeek) {
+                return;
 
-paymentWeek = installment.week;
+            }
 
-}
+            try {
 
-const outstanding =
+                const result =
 
-Number(installment.amount) -
+                    await processRepayment(
 
-Number(installment.paidAmount || 0);
+                        loan,
 
-if (remainingMoney >= outstanding) {
+                        amount
 
-installment.paidAmount =
+                    );
 
-Number(installment.amount);
+                await addDoc(
 
-installment.paid = true;
+                    collection(
 
-installment.paidDate = repaymentDate.value;
+                        db,
 
-remainingMoney -= outstanding;
+                        "repayments"
 
-} else {
+                    ),
 
-installment.paidAmount =
+                    {
 
-Number(installment.paidAmount || 0)
+                        loanId: loan.id,
 
-+ remainingMoney;
+                        loanNumber:
 
-remainingMoney = 0;
+                            loan.id.substring(0, 8),
 
-}
+                        clientName:
 
-}
+                            loan.clientName,
 
-const totalPaid =
+                        amount,
 
-schedule.reduce(
+                        paymentDate:
 
-(sum, item) =>
+                            repaymentDate.value,
 
-sum + Number(item.paidAmount || 0),
+                        installmentWeek:
 
-0
+                            result.paymentWeek,
 
-);
+                        receivedBy:
 
-const balance =
+                            localStorage.getItem("userName") ||
 
-Math.max(
+                            localStorage.getItem("userEmail") ||
 
-0,
+                            "Officer",
 
-loan.totalRepayment - totalPaid
+                        notes:
 
-);
+                            repaymentNotes.value || "",
 
-const remainingInstallments =
+                        confirmed: false,
 
-schedule.filter(
+                        createdAt:
 
-item => !item.paid
+                            serverTimestamp()
 
-).length;
+                    }
 
-const next =
+                );
 
-schedule.find(
+                alert(
 
-item => !item.paid
-
-);
-
-let status = "Approved";
-
-if (balance === 0) {
-
-status = "Completed";
-
-}
-
-try {
-
-await addDoc(
-
-collection(db, "repayments"),
-
-{
-
-loanId: loan.id,
-
-loanNumber: loan.id.substring(0,8),
-
-clientName: loan.clientName,
-
-amount: amount,
-
-paymentDate: repaymentDate.value,
-
-installmentWeek: paymentWeek,
-
-receivedBy:
-
-localStorage.getItem("userName")
-
-||
-
-localStorage.getItem("userEmail")
-
-||
-
-"Officer",
-
-notes:
-
-repaymentNotes.value,
-
-createdAt:
-
-serverTimestamp()
-
-}
-
-);
-
-await updateDoc(
-
-doc(db,"loans",loan.id),
-
-{
-
-repaymentSchedule: schedule,
-
-amountPaid: totalPaid,
-
-balance: balance,
-
-remainingInstallments,
-
-nextRepaymentDate:
-
-next
-
-? next.dueDate
-
-: null,
-
-completed:
-
-balance===0,
-
-status,
-
-updatedAt:
-
-serverTimestamp()
-
-}
-
-);
-
-alert(
-
-`Payment received.
+`Payment saved successfully.
 
 Paid:
-
 ${currency(amount)}
 
-Remaining balance:
+Remaining Balance:
+${currency(result.balance)}`
 
-${currency(balance)}`
+                );
 
-);
+                repaymentForm.reset();
 
-repaymentForm.reset();
+                repaymentDate.value = today();
 
-repaymentDate.value = today();
+                if (repaymentModal) {
 
-repaymentModal.classList.add("hidden");
+                    repaymentModal.classList.add("hidden");
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                alert(error.message);
+
+            }
+
+        }
+
+    );
 
 }
 
-catch(error){
+console.log("repayments.js Part B loaded");// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// repayments.js
+// VERSION 6.0
+// PART C OF D
+// Repayments Table • Search • View Payment
+// ==========================================
 
-console.error(error);
-
-alert(error.message);
-
-}
-
-});
-
-}// ==========================================
-// PART 5 OF 8
-// VIEW REPAYMENTS
-// CONFIRM PAYMENT
+// ==========================================
+// VIEW PAYMENT DETAILS
 // ==========================================
 
 function attachRepaymentActions() {
 
-document.querySelectorAll(".view-payment").forEach(button => {
+    document
+        .querySelectorAll(".view-payment")
+        .forEach(button => {
 
-button.onclick = () => {
+            button.onclick = () => {
 
-const payment = repayments.find(
+                const payment = repayments.find(
 
-p => p.id === button.dataset.id
+                    p => p.id === button.dataset.id
 
-);
+                );
 
-if (!payment) return;
+                if (!payment) return;
 
-const confirmed = payment.confirmed === true;
+                const confirmed =
+                    payment.confirmed === true;
 
-let action = "";
-
-if (confirmed) {
-
-if (isAdmin()) {
-
-action =
-"\n\n↩ Only the Administrator can reverse this payment.";
-
-} else {
-
-action =
-"\n\n✓ Payment has been confirmed.";
-
-}
-
-} else {
-
-action =
-"\n\n☐ Payment awaiting confirmation.";
-
-}
-
-alert(
+                alert(
 
 `REPAYMENT DETAILS
 
@@ -643,49 +673,49 @@ ${payment.clientName}
 Loan:
 ${payment.loanNumber}
 
-Week:
-${payment.installmentWeek}
+Installment:
+Week ${payment.installmentWeek}
 
 Amount:
 ${currency(payment.amount)}
 
-Date:
+Payment Date:
 ${payment.paymentDate}
 
-Officer:
+Received By:
 ${payment.receivedBy}
 
 Status:
 ${confirmed ? "CONFIRMED" : "PENDING"}
 
-${action}`
+Notes:
+${payment.notes || "-"}`
 
-);
+                );
 
-};
+            };
 
-});
+        });
 
 }
 
 // ==========================================
-// PART 6 OF 8
 // RENDER REPAYMENTS TABLE
 // ==========================================
 
-function renderRepayments() {
+function renderRepayments(list = repayments) {
 
     if (!repaymentsTableBody) return;
 
     repaymentsTableBody.innerHTML = "";
 
-    if (repayments.length === 0) {
+    if (!list.length) {
 
         repaymentsTableBody.innerHTML = `
 
             <tr>
 
-                <td colspan="9" style="text-align:center;">
+                <td colspan="8" style="text-align:center;">
 
                     No repayments found.
 
@@ -699,12 +729,13 @@ function renderRepayments() {
 
     }
 
-    repayments.forEach(payment => {
+    list.forEach(payment => {
 
         const confirmed =
             payment.confirmed === true;
 
-        const row = document.createElement("tr");
+        const row =
+            document.createElement("tr");
 
         row.innerHTML = `
 
@@ -722,11 +753,11 @@ function renderRepayments() {
 
             <td>
 
-                ${
-                    confirmed
-                    ? "<span class='status completed'>✔ Confirmed</span>"
-                    : "<span class='status pending'>Pending</span>"
-                }
+                <span class="status ${confirmed ? "completed" : "pending"}">
+
+                    ${confirmed ? "✔ Confirmed" : "Pending"}
+
+                </span>
 
             </td>
 
@@ -756,94 +787,86 @@ function renderRepayments() {
 // SEARCH REPAYMENTS
 // ==========================================
 
-function searchRepayments(keyword){
+function searchRepayments(keyword = "") {
 
-    keyword = keyword.toLowerCase().trim();
+    keyword = keyword
+        .toLowerCase()
+        .trim();
 
-    const filtered = repayments.filter(payment=>{
+    if (keyword === "") {
+
+        renderRepayments();
+
+        return;
+
+    }
+
+    const filtered = repayments.filter(payment => {
 
         return (
 
             payment.clientName
-            ?.toLowerCase()
-            .includes(keyword)
+                ?.toLowerCase()
+                .includes(keyword)
 
             ||
 
             payment.loanNumber
-            ?.toLowerCase()
-            .includes(keyword)
+                ?.toLowerCase()
+                .includes(keyword)
 
             ||
 
             payment.receivedBy
-            ?.toLowerCase()
-            .includes(keyword)
+                ?.toLowerCase()
+                .includes(keyword)
+
+            ||
+
+            String(payment.installmentWeek)
+                .includes(keyword)
 
         );
 
     });
 
-    repaymentsTableBody.innerHTML="";
+    renderRepayments(filtered);
 
-    filtered.forEach(payment=>{
+}
 
-        const confirmed =
-            payment.confirmed === true;
-
-        const row=document.createElement("tr");
-
-        row.innerHTML=`
-
-            <td>${payment.clientName}</td>
-
-            <td>${payment.loanNumber}</td>
-
-            <td>Week ${payment.installmentWeek}</td>
-
-            <td>${currency(payment.amount)}</td>
-
-            <td>${payment.paymentDate}</td>
-
-            <td>${payment.receivedBy}</td>
-
-            <td>
-
-                ${
-                    confirmed
-                    ? "✔ Confirmed"
-                    : "Pending"
-                }
-
-            </td>
-
-            <td>
-
-                <button
-                    class="view-payment"
-                    data-id="${payment.id}">
-
-                    View
-
-                </button>
-
-            </td>
-
-        `;
-
-        repaymentsTableBody.appendChild(row);
-
-    });
-
-    attachRepaymentActions();
-
-}// ==========================================
-// PART 8 OF 8
-// INITIALIZATION & ADMIN PAYMENT CONFIRMATION
-// VERSION 5.0
+// ==========================================
+// OPTIONAL SEARCH INPUT
 // ==========================================
 
+const repaymentSearch =
 
+    document.getElementById(
+        "repayment-search"
+    );
+
+if (repaymentSearch) {
+
+    repaymentSearch.addEventListener(
+
+        "input",
+
+        e => {
+
+            searchRepayments(e.target.value);
+
+        }
+
+    );
+
+}
+
+console.log("repayments.js Part C loaded");// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// repayments.js
+// VERSION 6.0
+// PART D OF D
+// Initialization • Admin • Exports
+// ==========================================
 
 // ==========================================
 // ADMIN CONFIRM / REVERSE PAYMENT
@@ -853,7 +876,7 @@ async function confirmPayment(paymentId, confirm = true) {
 
     if (!isAdmin()) {
 
-        alert("Only the Administrator can change payment confirmation.");
+        alert("Only the Administrator can confirm or reverse payments.");
 
         return;
 
@@ -870,12 +893,20 @@ async function confirmPayment(paymentId, confirm = true) {
                 confirmed: confirm,
 
                 confirmedBy:
-                    localStorage.getItem("userEmail"),
+                    localStorage.getItem("userEmail") || "",
 
                 confirmedAt:
                     serverTimestamp()
 
             }
+
+        );
+
+        alert(
+
+            confirm
+                ? "Payment confirmed successfully."
+                : "Payment confirmation removed."
 
         );
 
@@ -892,7 +923,7 @@ async function confirmPayment(paymentId, confirm = true) {
 }
 
 // ==========================================
-// INITIALIZE
+// INITIALIZATION
 // ==========================================
 
 function initializeRepayments() {
@@ -918,6 +949,10 @@ function initializeRepayments() {
 
 }
 
+// ==========================================
+// DOM READY
+// ==========================================
+
 document.addEventListener(
 
     "DOMContentLoaded",
@@ -926,6 +961,15 @@ document.addEventListener(
 
 );
 
+// ==========================================
+// OPTIONAL AUTO REFRESH
+// ==========================================
+
+setInterval(() => {
+
+    renderRepayments();
+
+}, 30000);
 
 // ==========================================
 // EXPORTS
@@ -943,15 +987,21 @@ export {
 
     calculateOutstanding,
 
+    searchRepayments,
+
+    renderRepayments,
+
+    confirmPayment,
+
     currency,
 
-    today,
-
-    confirmPayment
+    today
 
 };
 
 // ==========================================
 // END OF FILE
-// repayments.js VERSION 5.0
+// repayments.js VERSION 6.0
 // ==========================================
+
+console.log("repayments.js Version 6.0 loaded successfully.");
