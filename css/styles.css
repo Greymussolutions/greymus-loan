@@ -2587,6 +2587,13 @@ textarea:focus{
 
 }
 
+/* Repayment modal scroll */
+
+#repayment-modal .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
 
 /* ===========================
    END
