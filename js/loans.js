@@ -45,7 +45,7 @@ const loanModal =
     document.getElementById("loan-modal");
 
 const loansTableBody =
-    document.querySelector("#loans-table tbody");
+document.getElementById("loans-table-body");
 
 const loanSearch =
     document.getElementById("loan-search");
@@ -225,71 +225,7 @@ function calculateLoan(){
 
 }
 
-
 // ==========================================
-// LIVE PREVIEW
-// ==========================================
-
-[
-    loanAmount,
-    loanInterest,
-    loanDuration,
-    loanProcessingFee
-].forEach(input=>{
-
-    input?.addEventListener(
-        "input",
-        calculateLoan
-    );
-
-});
-
-
-// ==========================================
-// GENERATE WEEKLY REPAYMENT SCHEDULE
-// ==========================================
-
-function generateRepaymentSchedule(
-
-    approvalDate,
-    durationWeeks,
-    weeklyPayment
-
-){
-
-    const schedule = [];
-
-    const start = new Date(approvalDate);
-
-    for(let week = 1; week <= durationWeeks; week++){
-
-        const due = new Date(start);
-
-        due.setDate(
-            due.getDate() + (week * 7)
-        );
-
-        schedule.push({
-
-            week,
-
-            dueDate: formatDate(due),
-
-            amount: Number(weeklyPayment.toFixed(2)),
-
-            paid: false,
-
-            paidAmount: 0,
-
-            paidDate: null
-
-        });
-
-    }
-
-    return schedule;
-
-}// ==========================================
 // GENERATE WEEKLY REPAYMENT SCHEDULE
 // ==========================================
 
@@ -354,7 +290,9 @@ function generateRepaymentSchedule(
 
     );
 
-});// ==========================================
+})
+
+;// ==========================================
 // PART 3 OF 8
 // LOAD CLIENTS & LOAD LOANS
 // ==========================================
@@ -741,16 +679,24 @@ function renderLoans(list){
 
         <td>${loan.createdBy || "-"}</td>
 
-        <td>
-            ...
-        </td>
+        <td class="loan-actions">
+
+    <button class="view-loan" data-id="${loan.id}">👁️</button>
+
+    <button class="edit-loan" data-id="${loan.id}">✏️</button>
+
+    <button class="approve-loan" data-id="${loan.id}">✔️</button>
+
+    <button class="delete-loan" data-id="${loan.id}">🗑️</button>
+
+</td>
+
     `;
 
     loansTableBody.appendChild(row);
 
 });
 
-    });
 
     attachLoanActions();
 
@@ -1119,7 +1065,7 @@ setInterval(()=>{
 // PAGE LOAD
 // ==========================================
 
-window.addEventListener("load",()=>{
+document.addEventListener("DOMContentLoaded",()=>{
 
     calculateLoan();
 
