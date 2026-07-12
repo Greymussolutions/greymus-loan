@@ -128,7 +128,9 @@ if (repaymentDate) {
 
 }
 
-console.log("Repayments Version 5.0 loaded");// ==========================================
+console.log("Repayments Version 5.0 loaded");
+
+// ==========================================
 // PART 2 OF 8
 // LOAD LOANS & REPAYMENTS
 // ==========================================
@@ -664,113 +666,10 @@ ${action}`
 
 });
 
-}// ==========================================
-// PART 7 OF 8
-// SMART PAYMENT ENGINE
+}
+
 // ==========================================
-
-async function processRepayment(loan, paymentAmount){
-
-    let remaining = Number(paymentAmount);
-
-    const schedule = [...loan.repaymentSchedule];
-
-    for(const installment of schedule){
-
-        if(remaining <= 0) break;
-
-        if(installment.paid) continue;
-
-        installment.paidAmount =
-            Number(installment.paidAmount || 0);
-
-        const balanceNeeded =
-            installment.amount -
-            installment.paidAmount;
-
-        if(remaining >= balanceNeeded){
-
-            installment.paidAmount += balanceNeeded;
-
-            installment.paid = true;
-
-            installment.paidDate =
-                repaymentDate.value;
-
-            remaining -= balanceNeeded;
-
-        }else{
-
-            installment.paidAmount += remaining;
-
-            remaining = 0;
-
-        }
-
-    }
-
-    const balance = schedule.reduce((sum,item)=>{
-
-        return sum + Math.max(
-            0,
-            item.amount -
-            Number(item.paidAmount || 0)
-        );
-
-    },0);
-
-    const remainingInstallments =
-        schedule.filter(i=>!i.paid).length;
-
-    const next =
-        schedule.find(i=>!i.paid);
-
-    await updateDoc(
-
-        doc(db,"loans",loan.id),
-
-        {
-
-            repaymentSchedule:schedule,
-
-            amountPaid:
-                Number(loan.totalRepayment) -
-                balance,
-
-            balance:balance,
-
-            remainingInstallments,
-
-            nextRepaymentDate:
-                next ? next.dueDate : null,
-
-            status:
-                balance===0
-                ? "Completed"
-                : "Approved",
-
-            completed:
-                balance===0,
-
-            updatedAt:
-                serverTimestamp()
-
-        }
-
-    );
-
-    return{
-
-        schedule,
-
-        balance,
-
-        carriedForward:remaining
-
-    };
-
-}// ==========================================
-// PART 7 OF 8
+// PART 6 OF 8
 // RENDER REPAYMENTS TABLE
 // ==========================================
 
@@ -944,25 +843,7 @@ function searchRepayments(keyword){
 // VERSION 5.0
 // ==========================================
 
-function getLoan(id) {
 
-    return loans.find(loan => loan.id === id);
-
-}
-
-function calculateOutstanding(installment) {
-
-    return Math.max(
-
-        0,
-
-        Number(installment.amount) -
-
-        Number(installment.paidAmount || 0)
-
-    );
-
-}
 
 // ==========================================
 // ADMIN CONFIRM / REVERSE PAYMENT
@@ -1045,15 +926,6 @@ document.addEventListener(
 
 );
 
-// ==========================================
-// AUTO REFRESH
-// ==========================================
-
-setInterval(() => {
-
-    renderRepayments();
-
-}, 30000);
 
 // ==========================================
 // EXPORTS
