@@ -316,7 +316,7 @@ function renderRepayments(){
 
             <td>${payment.clientName}</td>
 
-            <td>${payment.loanNumber || payment.loanId.substring(0,8)}</td>
+            <td>${payment.loanNumber || (payment.loanId ? payment.loanId.substring(0,8) : "-")}</td>
 
             <td>${currency(payment.amount)}</td>
 
@@ -840,9 +840,11 @@ setInterval(()=>{
 // PAGE LOAD
 // ==========================================
 
-window.addEventListener("load",()=>{
+document.addEventListener("DOMContentLoaded",()=>{
 
     initializeRepayments();
+
+});
 
 });
 
@@ -878,15 +880,8 @@ function getRepaymentById(id){
 // GET NEXT UNPAID INSTALLMENT
 // ==========================================
 
-function getNextInstallment(loan){
 
-    if(!loan) return null;
-
-    return (loan.repaymentSchedule || [])
-
-        .find(item => !item.paid) || null;
-
-}// ==========================================
+// ==========================================
 // PART 8 OF 8
 // EXPORTS
 // ==========================================
