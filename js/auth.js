@@ -1,7 +1,8 @@
 // ==========================================
-// Greymus Loan Financial Hub
+// GREYMUS LOAN FINANCIAL HUB
 // auth.js
-// FINISHED
+// VERSION 4.0
+// PART 1 OF 4
 // ==========================================
 
 console.log("auth.js loaded");
@@ -21,201 +22,421 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
+// ==========================================
+// SYSTEM ADMIN
+// ==========================================
+
+const ADMIN_EMAIL = "gayisi0901@gmail.com";
+
+
 // ==========================================
 // DOM ELEMENTS
 // ==========================================
 
-const loginSection = document.getElementById("login-section");
-const dashboardSection = document.getElementById("dashboard-section");
+const loginSection =
+    document.getElementById("login-section");
 
-const loginForm = document.getElementById("login-form");
-const logoutBtn = document.getElementById("mobile-logout-btn");
+const dashboardSection =
+    document.getElementById("dashboard-section");
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
+const loginForm =
+    document.getElementById("login-form");
 
-const loggedUser = document.getElementById("logged-user");
+const logoutBtn =
+    document.getElementById("mobile-logout-btn");
 
-const loadingOverlay = document.getElementById("loading-overlay");
+const emailInput =
+    document.getElementById("email");
+
+const passwordInput =
+    document.getElementById("password");
+
+const loggedUser =
+    document.getElementById("logged-user");
+
+const loadingOverlay =
+    document.getElementById("loading-overlay");
+
 
 // ==========================================
 // LOADER
 // ==========================================
 
-function showLoader() {
-    if (loadingOverlay) {
+function showLoader(){
+
+    if(loadingOverlay){
+
         loadingOverlay.classList.remove("hidden");
+
     }
+
 }
 
-function hideLoader() {
-    if (loadingOverlay) {
+function hideLoader(){
+
+    if(loadingOverlay){
+
         loadingOverlay.classList.add("hidden");
+
     }
+
 }
+
 
 // ==========================================
 // TOAST
 // ==========================================
 
-function showToast(message) {
+function showToast(message){
 
-    const toast = document.getElementById("toast");
+    const toast =
+        document.getElementById("toast");
 
-    if (!toast) {
+    if(!toast){
+
         alert(message);
+
         return;
+
     }
 
     toast.textContent = message;
+
     toast.classList.add("show");
 
-    setTimeout(() => {
+    setTimeout(()=>{
+
         toast.classList.remove("show");
-    }, 3000);
+
+    },3000);
+
 }
 
+
 // ==========================================
-// USER PROFILE
+// ROLE HELPERS
 // ==========================================
 
-async function getUserRole(user) {
+function isAdminEmail(email){
 
-    try {
+    return (
+        email &&
+        email.toLowerCase() ===
+        ADMIN_EMAIL.toLowerCase()
+    );
 
-        const ref = doc(db, "users", user.uid);
+}
 
-        const snap = await getDoc(ref);
+function defaultRole(email){
 
-        if (!snap.exists()) {
+    return isAdminEmail(email)
 
-            const officerName =
-                user.displayName ||
-                user.email.split("@")[0];
+        ? "Administrator"
 
-            await setDoc(ref, {
+        : "Loan Officer";
+
+}// ==========================================
+// PART 2 OF 4
+// USER PROFILE & ROLE MANAGEMENT
+// ==========================================
+
+async function getUserRole(user){
+
+    try{
+
+        const userRef =
+            doc(db,"users",user.uid);
+
+        const snap =
+            await getDoc(userRef);
+
+        const role =
+            defaultRole(user.email);
+
+        const officerName =
+            user.displayName ||
+            user.email.split("@")[0];
+
+        // ==================================
+        // FIRST LOGIN
+        // ==================================
+
+        if(!snap.exists()){
+
+            const profile={
 
                 name: officerName,
 
                 email: user.email,
 
-                role: "Field Officer",
+                role: role,
 
-                createdAt: serverTimestamp()
+                active: true,
 
-            });
+                createdAt: serverTimestamp(),
 
-            return {
-
-                name: officerName,
-
-                email: user.email,
-
-                role: "Field Officer"
+                updatedAt: serverTimestamp()
 
             };
 
+            await setDoc(
+
+                userRef,
+
+                profile
+
+            );
+
+            return profile;
+
         }
 
-        return snap.data();
+        // ==================================
+        // EXISTING USER
+        // ==================================
 
-    } catch (error) {
+        const profile =
+            snap.data();
 
-        console.error(error);
+        // Always make the official
+        // admin account Administrator
 
-        return {
+        if(
 
-            name: user.email,
+            isAdminEmail(user.email) &&
 
-            email: user.email,
+            profile.role !== "Administrator"
 
-            role: "Field Officer"
+        ){
+
+            await setDoc(
+
+                userRef,
+
+                {
+
+                    ...profile,
+
+                    role:"Administrator",
+
+                    updatedAt:
+                        serverTimestamp()
+
+                },
+
+                {
+
+                    merge:true
+
+                }
+
+            );
+
+            profile.role =
+                "Administrator";
+
+        }
+
+        // Always make every other user
+        // Loan Officer
+
+        if(
+
+            !isAdminEmail(user.email) &&
+
+            profile.role !== "Loan Officer"
+
+        ){
+
+            await setDoc(
+
+                userRef,
+
+                {
+
+                    ...profile,
+
+                    role:"Loan Officer",
+
+                    updatedAt:
+                        serverTimestamp()
+
+                },
+
+                {
+
+                    merge:true
+
+                }
+
+            );
+
+            profile.role =
+                "Loan Officer";
+
+        }
+
+        return{
+
+            name:
+                profile.name ||
+                officerName,
+
+            email:
+                profile.email ||
+                user.email,
+
+            role:
+                profile.role
 
         };
 
     }
 
-}
+    catch(error){
 
+        console.error(error);
+
+        return{
+
+            name:
+                user.displayName ||
+                user.email.split("@")[0],
+
+            email:
+                user.email,
+
+            role:
+                defaultRole(user.email)
+
+        };
+
+    }
+
+}// ==========================================
+// PART 3 OF 4
+// LOGIN & AUTH STATE
 // ==========================================
-// LOGIN
-// ==========================================
 
-if (loginForm) {
+if(loginForm){
 
-    loginForm.addEventListener("submit", async (e) => {
+    loginForm.addEventListener("submit", async(e)=>{
 
         e.preventDefault();
 
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+        const email =
+            emailInput.value.trim();
 
-        if (!email || !password) {
-            showToast("Enter email and password.");
+        const password =
+            passwordInput.value.trim();
+
+        if(!email || !password){
+
+            showToast(
+                "Enter email and password."
+            );
+
             return;
+
         }
 
-        try {
+        try{
 
             showLoader();
 
             const credential =
+
                 await signInWithEmailAndPassword(
+
                     auth,
+
                     email,
+
                     password
+
                 );
 
-            const user = credential.user;
+            const user =
+                credential.user;
 
             const profile =
-    await getUserRole(user);
+                await getUserRole(user);
 
             localStorage.setItem(
                 "userRole",
                 profile.role
             );
-localStorage.setItem(
-    "userName",
-    profile.name
-);
 
-localStorage.setItem(
-    "userEmail",
-    profile.email
-);
-            showToast("Login successful");
+            localStorage.setItem(
+                "userName",
+                profile.name
+            );
+
+            localStorage.setItem(
+                "userEmail",
+                profile.email
+            );
+
+            showToast(
+                `Welcome ${profile.name}`
+            );
 
             loginForm.reset();
 
-        } catch (error) {
+        }
+
+        catch(error){
 
             console.error(error);
 
-            switch (error.code) {
+            switch(error.code){
 
                 case "auth/invalid-email":
-                    showToast("Invalid email.");
+
+                    showToast(
+                        "Invalid email."
+                    );
+
                     break;
 
                 case "auth/user-not-found":
-                    showToast("User not found.");
+
+                    showToast(
+                        "User not found."
+                    );
+
                     break;
 
                 case "auth/wrong-password":
+
                 case "auth/invalid-credential":
-                    showToast("Incorrect email or password.");
+
+                    showToast(
+                        "Incorrect email or password."
+                    );
+
                     break;
 
                 case "auth/network-request-failed":
-                    showToast("Network error.");
+
+                    showToast(
+                        "Network error."
+                    );
+
                     break;
 
                 default:
-                    showToast(error.message);
+
+                    showToast(
+                        error.message
+                    );
+
             }
 
-        } finally {
+        }
+
+        finally{
 
             hideLoader();
 
@@ -225,81 +446,125 @@ localStorage.setItem(
 
 }
 
+
 // ==========================================
-// AUTH STATE
+// AUTH STATE CHANGED
 // ==========================================
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async(user)=>{
 
-    if (user) {
+    if(user){
 
         const profile =
-    await getUserRole(user);
-
-localStorage.setItem(
-    "userRole",
-    profile.role
-);
+            await getUserRole(user);
 
         localStorage.setItem(
-    "userName",
-    profile.name
-);
+            "userRole",
+            profile.role
+        );
 
-localStorage.setItem(
-    "userEmail",
-    profile.email
-);
+        localStorage.setItem(
+            "userName",
+            profile.name
+        );
 
-        if (loginSection)
-            loginSection.classList.add("hidden");
+        localStorage.setItem(
+            "userEmail",
+            profile.email
+        );
 
-        if (dashboardSection)
-            dashboardSection.classList.remove("hidden");
+        if(loginSection){
 
-        loggedUser.textContent =
-    `${profile.name} (${profile.role})`;
+            loginSection.classList.add(
+                "hidden"
+            );
 
-    } else {
+        }
 
-        if (loginSection)
-            loginSection.classList.remove("hidden");
+        if(dashboardSection){
 
-        if (dashboardSection)
-            dashboardSection.classList.add("hidden");
+            dashboardSection.classList.remove(
+                "hidden"
+            );
 
-        if (loggedUser)
-            loggedUser.textContent = "";
+        }
+
+        if(loggedUser){
+
+            loggedUser.textContent =
+
+                `${profile.name} (${profile.role})`;
+
+        }
 
     }
 
-});
+    else{
 
-// ==========================================
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userEmail");
+
+        if(loginSection){
+
+            loginSection.classList.remove(
+                "hidden"
+            );
+
+        }
+
+        if(dashboardSection){
+
+            dashboardSection.classList.add(
+                "hidden"
+            );
+
+        }
+
+        if(loggedUser){
+
+            loggedUser.textContent = "";
+
+        }
+
+    }
+
+});// ==========================================
+// PART 4 OF 4
 // LOGOUT
 // ==========================================
 
-if (logoutBtn) {
+if(logoutBtn){
 
-    logoutBtn.addEventListener("click", async () => {
+    logoutBtn.addEventListener("click", async()=>{
 
-        try {
+        try{
 
             showLoader();
 
             await signOut(auth);
 
             localStorage.removeItem("userRole");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userEmail");
 
-            showToast("Logged out successfully");
+            showToast(
+                "Logged out successfully."
+            );
 
-        } catch (error) {
+        }
+
+        catch(error){
 
             console.error(error);
 
-            showToast("Logout failed.");
+            showToast(
+                "Logout failed."
+            );
 
-        } finally {
+        }
+
+        finally{
 
             hideLoader();
 
@@ -309,7 +574,80 @@ if (logoutBtn) {
 
 }
 
+
+// ==========================================
+// ROLE HELPERS
+// ==========================================
+
+function getCurrentUserRole(){
+
+    return (
+
+        localStorage.getItem("userRole")
+
+        || "Loan Officer"
+
+    );
+
+}
+
+function getCurrentUserEmail(){
+
+    return (
+
+        localStorage.getItem("userEmail")
+
+        || ""
+
+    );
+
+}
+
+function getCurrentUserName(){
+
+    return (
+
+        localStorage.getItem("userName")
+
+        || ""
+
+    );
+
+}
+
+function isCurrentUserAdmin(){
+
+    return (
+
+        getCurrentUserRole()
+
+        === "Administrator"
+
+    );
+
+}
+
+
+// ==========================================
+// EXPORTS
+// ==========================================
+
+export{
+
+    getCurrentUserRole,
+
+    getCurrentUserEmail,
+
+    getCurrentUserName,
+
+    isCurrentUserAdmin
+
+};
+
+
 // ==========================================
 // END OF FILE
-// FINISHED
+// GREYMUS LOAN FINANCIAL HUB
+// auth.js
+// VERSION 4.0
 // ==========================================
