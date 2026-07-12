@@ -31,7 +31,9 @@ document.getElementById("settings-btn-mobile");
 const settingsMenu = document.getElementById("settings-menu");
 const closeSettings = document.getElementById("close-settings");
 const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
-
+const mobileNav = document.querySelector(".mobile-nav");
+const fab = document.getElementById("fab-new-loan");
+const footer = document.querySelector(".app-footer");
 // ======================================================
 // AUTH STATE
 // ======================================================
@@ -42,7 +44,9 @@ onAuthStateChanged(auth, (user) => {
 
         loginSection.classList.add("hidden");
         dashboardSection.classList.remove("hidden");
-
+mobileNav?.classList.remove("hidden");
+fab?.classList.remove("hidden");
+footer?.classList.remove("hidden");
         if (loggedUser) {
             loggedUser.textContent = user.email;
         }
@@ -53,6 +57,9 @@ onAuthStateChanged(auth, (user) => {
 
         dashboardSection.classList.add("hidden");
         loginSection.classList.remove("hidden");
+mobileNav?.classList.add("hidden");
+fab?.classList.add("hidden");
+footer?.classList.add("hidden");
 
     }
 
