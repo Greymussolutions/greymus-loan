@@ -1141,15 +1141,21 @@ function renderRepaymentSchedule(loan){
 
                 <td>${item.dueDate}</td>
 
-                <td>${currency(item.amount)}</td>
+                <td>
+    ${currency(item.paidAmount)}
+    /
+    ${currency(item.amount)}
+</td>
 
                 <td>
 
                     ${
-                        item.paid
-                        ? "Paid ✅"
-                        : "Pending"
-                    }
+    item.paid
+        ? "✅ Paid"
+        : item.paidAmount > 0
+            ? "🟡 Partial"
+            : "⏳ Pending"
+}
 
                 </td>
 
