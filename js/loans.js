@@ -55,6 +55,24 @@ const loanDuration =
 const loanDueDate =
     document.getElementById("loan-due-date");
 
+// ==========================================
+// REPAYMENT SCHEDULE MODAL
+// ==========================================
+
+const scheduleModal =
+    document.getElementById("schedule-modal");
+
+const scheduleClient =
+    document.getElementById("schedule-client");
+
+const scheduleBalance =
+    document.getElementById("schedule-balance");
+
+const scheduleTableBody =
+    document.getElementById("schedule-table-body");
+
+const closeScheduleModal =
+    document.getElementById("close-schedule-modal");
 
 // ==========================================
 // PREVIEW ELEMENTS
