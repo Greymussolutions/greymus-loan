@@ -442,12 +442,14 @@ function loadLoans(){
 
             snapshot.forEach((docSnap)=>{
 
-                const loan = {
+                const data = docSnap.data();
 
-                    id: docSnap.id,
-                    ...docSnap.data()
+if (!data) return;
 
-                };
+const loan = {
+    id: docSnap.id,
+    ...data
+};
 
                 // Compatibility for older records
 
@@ -699,86 +701,50 @@ function renderLoans(list){
 
     }
 
-    list.forEach(loan=>{
+    list.forEach((loan) => {
 
-        const row = document.createElement("tr");
+    if (!loan || !loan.id) return;
 
-        row.innerHTML = `
+    const row = document.createElement("tr");
 
-        <td>${loan.id.substring(0,8)}</td>
+    row.innerHTML = `
 
-        <td>${loan.clientName}</td>
+        <td>${String(loan.id).substring(0,8)}</td>
 
-        <td>${currency(loan.amount)}</td>
+        <td>${loan.clientName || "-"}</td>
 
-        <td>${currency(loan.processingFee)}</td>
+        <td>${currency(loan.amount || 0)}</td>
 
-        <td>${loan.interest}%</td>
+        <td>${currency(loan.processingFee || 0)}</td>
 
-        <td>${loan.duration} Weeks</td>
+        <td>${loan.interest || 0}%</td>
 
-        <td>${currency(loan.weeklyPayment)}</td>
+        <td>${loan.duration || 0} Weeks</td>
 
-        <td>${currency(loan.balance)}</td>
+        <td>${currency(loan.weeklyPayment || 0)}</td>
+
+        <td>${currency(loan.balance || 0)}</td>
 
         <td>${loan.nextRepaymentDate || "-"}</td>
 
         <td>${loan.dueDate || "-"}</td>
 
         <td>
-
-            <span class="status ${String(loan.status).toLowerCase()}">
-
-                ${loan.status}
-
+            <span class="status ${(loan.status || "Pending").toLowerCase()}">
+                ${loan.status || "Pending"}
             </span>
-
         </td>
 
         <td>${loan.createdBy || "-"}</td>
 
         <td>
-
-            <button
-                class="view-loan"
-                data-id="${loan.id}">
-                View
-            </button>
-
-            <button
-                class="edit-loan"
-                data-id="${loan.id}"
-                ${loan.status !== "Pending" ? "disabled" : ""}>
-                Edit
-            </button>
-
-            <button
-                class="approve-loan"
-                data-id="${loan.id}"
-                ${loan.status !== "Pending" ? "disabled" : ""}>
-                Approve
-            </button>
-
-            ${
-                isAdmin()
-                ?
-                `
-                <button
-                    class="delete-loan"
-                    data-id="${loan.id}"
-                    ${loan.status !== "Pending" ? "disabled" : ""}>
-                    Delete
-                </button>
-                `
-                :
-                ""
-            }
-
+            ...
         </td>
+    `;
 
-        `;
+    loansTableBody.appendChild(row);
 
-        loansTableBody.appendChild(row);
+});
 
     });
 
