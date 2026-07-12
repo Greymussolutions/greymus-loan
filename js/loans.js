@@ -1117,6 +1117,48 @@ window.addEventListener("load",()=>{
 // HELPERS
 // ==========================================
 
+// ==========================================
+// RENDER REPAYMENT SCHEDULE
+// ==========================================
+
+function renderRepaymentSchedule(loan){
+
+    if(!scheduleModal || !scheduleTableBody) return;
+
+    scheduleClient.textContent =
+        loan.clientName || "-";
+
+    scheduleBalance.textContent =
+        currency(loan.balance || 0);
+
+    scheduleTableBody.innerHTML = "";
+
+    (loan.repaymentSchedule || []).forEach(item=>{
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${item.week}</td>
+
+            <td>${item.dueDate}</td>
+
+            <td>${currency(item.amount)}</td>
+
+            <td>${item.paid ? "Paid" : "Pending"}</td>
+
+            <td>${item.paidDate || "-"}</td>
+
+        `;
+
+        scheduleTableBody.appendChild(row);
+
+    });
+
+    scheduleModal.classList.remove("hidden");
+
+}
+
 function refreshLoanTable(){
 
     filterLoans();
