@@ -130,6 +130,15 @@ function today(){
 
 }
 
+// ==========================================
+// CLOSE SCHEDULE MODAL
+// ==========================================
+
+closeScheduleModal?.addEventListener("click", () => {
+
+    scheduleModal.classList.add("hidden");
+
+});
 
 // ==========================================
 // CALCULATE LOAN
