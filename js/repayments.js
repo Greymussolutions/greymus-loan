@@ -248,32 +248,45 @@ The amount will be filled automatically.`
 
 function loadRepayments(){
 
-    const repaymentsQuery = query(
+    onSnapshot(
 
         collection(db,"repayments"),
 
-        orderBy("createdAt","desc")
+        (snapshot)=>{
 
-    );
+            repayments = [];
 
-    onSnapshot(repaymentsQuery,(snapshot)=>{
+            snapshot.forEach((docSnap)=>{
 
-        repayments = [];
+                repayments.push({
 
-        snapshot.forEach((docSnap)=>{
+                    id: docSnap.id,
+                    ...docSnap.data()
 
-            repayments.push({
-
-                id:docSnap.id,
-                ...docSnap.data()
+                });
 
             });
 
-        });
+            repayments.sort((a,b)=>{
 
-        renderRepayments();
+                const A = a.createdAt?.seconds || 0;
+                const B = b.createdAt?.seconds || 0;
 
-    });
+                return B - A;
+
+            });
+
+            renderRepayments();
+
+        },
+
+        (error)=>{
+
+            console.error(error);
+
+        }
+
+    );
 
 }
 
