@@ -451,6 +451,8 @@ const loan = {
     ...data
 };
 
+console.log("Loan loaded:", loan);
+
                 // Compatibility for older records
 
                 loan.processingFee ??= 0;
@@ -481,6 +483,8 @@ const loan = {
                 loans.push(loan);
 
             });
+
+console.log("Loans array:", loans);
 
             filterLoans();
 
