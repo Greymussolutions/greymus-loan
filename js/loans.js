@@ -714,15 +714,41 @@ function renderLoans(list){
 
         <td class="loan-actions">
 
-    <button class="view-loan" data-id="${loan.id}" title="View Schedule">👁️</button>
+    <button class="view-loan"
+        data-id="${loan.id}"
+        title="View Schedule">
+        👁️
+    </button>
 
-    <button class="repay-loan" data-id="${loan.id}" title="Receive Repayment">💵</button>
+    ${loan.status !== "Completed" ? `
+    <button class="repay-loan"
+        data-id="${loan.id}"
+        title="Receive Repayment">
+        💵
+    </button>
+    ` : ""}
 
-    <button class="edit-loan" data-id="${loan.id}" title="Edit">✏️</button>
+    ${loan.status === "Pending" ? `
+    <button class="edit-loan"
+        data-id="${loan.id}"
+        title="Edit">
+        ✏️
+    </button>
 
-    <button class="approve-loan" data-id="${loan.id}" title="Approve">✔️</button>
+    <button class="approve-loan"
+        data-id="${loan.id}"
+        title="Approve">
+        ✔️
+    </button>
+    ` : ""}
 
-    <button class="delete-loan" data-id="${loan.id}" title="Delete">🗑️</button>
+    ${loan.status === "Pending" && isAdmin() ? `
+    <button class="delete-loan"
+        data-id="${loan.id}"
+        title="Delete">
+        🗑️
+    </button>
+    ` : ""}
 
 </td>
 
