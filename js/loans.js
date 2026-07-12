@@ -794,50 +794,7 @@ l=>l.id===button.dataset.id
 
 if(!loan) return;
 
-alert(
-
-`LOAN DETAILS
-
-Loan No:
-${loan.id.substring(0,8)}
-
-Client:
-${loan.clientName}
-
-Principal:
-${currency(loan.amount)}
-
-Processing Fee:
-${currency(loan.processingFee)}
-
-Interest:
-${loan.interest}%
-
-Weekly Repayment:
-${currency(loan.weeklyPayment)}
-
-Amount Paid:
-${currency(loan.amountPaid||0)}
-
-Outstanding Balance:
-${currency(loan.balance)}
-
-Remaining Installments:
-${loan.remainingInstallments||loan.duration}
-
-Status:
-${loan.status}
-
-Approval Date:
-${loan.approvalDate||"-"}
-
-Next Repayment:
-${loan.nextRepaymentDate||"-"}
-
-Registered By:
-${loan.createdBy||"-"}`
-
-);
+renderRepaymentSchedule(loan);
 
 };
 
