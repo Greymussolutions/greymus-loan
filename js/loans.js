@@ -687,13 +687,15 @@ function renderLoans(list){
 
         <td class="loan-actions">
 
-    <button class="view-loan" data-id="${loan.id}">👁️</button>
+    <button class="view-loan" data-id="${loan.id}" title="View Schedule">👁️</button>
 
-    <button class="edit-loan" data-id="${loan.id}">✏️</button>
+    <button class="repay-loan" data-id="${loan.id}" title="Receive Repayment">💵</button>
 
-    <button class="approve-loan" data-id="${loan.id}">✔️</button>
+    <button class="edit-loan" data-id="${loan.id}" title="Edit">✏️</button>
 
-    <button class="delete-loan" data-id="${loan.id}">🗑️</button>
+    <button class="approve-loan" data-id="${loan.id}" title="Approve">✔️</button>
+
+    <button class="delete-loan" data-id="${loan.id}" title="Delete">🗑️</button>
 
 </td>
 
