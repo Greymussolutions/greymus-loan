@@ -257,4 +257,102 @@ window.matchMedia(
     }
 );
 
+// ==========================================
+// SETTINGS MENU OPEN / CLOSE
+// ==========================================
+
+const settingsBtn = document.getElementById("settings-btn");
+const settingsBtnMobile = document.getElementById("settings-btn-mobile");
+
+const settingsMenu = document.getElementById("settings-menu");
+const closeSettings = document.getElementById("close-settings");
+
+
+function openSettings(){
+
+    if(settingsMenu){
+        settingsMenu.classList.remove("hidden");
+    }
+
+}
+
+
+function closeSettingsMenu(){
+
+    if(settingsMenu){
+        settingsMenu.classList.add("hidden");
+    }
+
+}
+
+
+settingsBtn?.addEventListener(
+    "click",
+    openSettings
+);
+
+
+settingsBtnMobile?.addEventListener(
+    "click",
+    openSettings
+);
+
+
+closeSettings?.addEventListener(
+    "click",
+    closeSettingsMenu
+);
+
+
+// Close when clicking outside card
+
+settingsMenu?.addEventListener(
+    "click",
+    (e)=>{
+
+        if(e.target === settingsMenu){
+
+            closeSettingsMenu();
+
+        }
+
+    }
+);
+
+
+// Logout button
+
+const logoutBtn = document.getElementById(
+    "mobile-logout-btn"
+);
+
+
+logoutBtn?.addEventListener(
+    "click",
+    async()=>{
+
+        try{
+
+            await auth.signOut();
+
+            location.reload();
+
+        }
+        catch(error){
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            showToast(
+                "Logout failed",
+                "error"
+            );
+
+        }
+
+    }
+);
+
 export { showToast };
