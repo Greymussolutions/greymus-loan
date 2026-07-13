@@ -431,4 +431,14 @@ profileModal?.addEventListener(
     }
 );
 
+console.log(
+    "Profile button:",
+    profileSettingsBtn
+);
+
+console.log(
+    "Profile modal:",
+    profileModal
+);
+
 export { showToast };
