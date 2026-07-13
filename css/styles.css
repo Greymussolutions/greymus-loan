@@ -3580,5 +3580,48 @@ tbody tr:hover{
 }
 
 /* =====================================================
+   DARK MODE TABLE FIX
+===================================================== */
+
+html[data-theme="dark"] .table-wrapper{
+    background:#1f2937 !important;
+    border-color:#374151 !important;
+}
+
+html[data-theme="dark"] table{
+    background:#1f2937 !important;
+}
+
+html[data-theme="dark"] thead{
+    background:#111827 !important;
+}
+
+html[data-theme="dark"] thead th{
+    color:#e5e7eb !important;
+    border-color:#374151 !important;
+}
+
+html[data-theme="dark"] tbody td{
+    background:#1f2937 !important;
+    color:#f9fafb !important;
+    border-color:#374151 !important;
+}
+
+html[data-theme="dark"] tbody tr:nth-child(even) td{
+    background:#273449 !important;
+}
+
+html[data-theme="dark"] tbody tr:hover td{
+    background:#334155 !important;
+}
+
+html[data-theme="dark"] .customer-name,
+html[data-theme="dark"] .loan-number,
+html[data-theme="dark"] .amount,
+html[data-theme="dark"] .balance{
+    color:#f9fafb !important;
+}
+
+/* =====================================================
    END THEME SYSTEM
 ===================================================== */
