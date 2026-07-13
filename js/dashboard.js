@@ -12,6 +12,171 @@ import {
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ==========================================
+// DASHBOARD COLLECTION TRACKING
+// ==========================================
+
+let dashboardLoans = [];
+let dashboardRepayments = [];
+
+
+// LOAD LOANS
+
+onSnapshot(
+    collection(db, "loans"),
+    (snapshot)=>{
+
+        dashboardLoans = [];
+
+        snapshot.forEach((doc)=>{
+
+            dashboardLoans.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+
+        calculateDashboard();
+
+    }
+);
+
+
+// LOAD REPAYMENTS
+
+onSnapshot(
+    collection(db, "repayments"),
+    (snapshot)=>{
+
+        dashboardRepayments = [];
+
+        snapshot.forEach((doc)=>{
+
+            dashboardRepayments.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+
+        calculateDashboard();
+
+    }
+);
+
+
+// ==========================================
+// DASHBOARD CALCULATIONS
+// ==========================================
+
+function calculateDashboard(){
+
+    const today = new Date()
+        .toISOString()
+        .split("T")[0];
+
+
+    let clientsDueToday = [];
+    let expectedToday = 0;
+    let collectedToday = 0;
+
+
+    dashboardLoans.forEach((loan)=>{
+
+
+        if(
+            loan.status === "Approved" &&
+            loan.repaymentSchedule
+        ){
+
+
+            loan.repaymentSchedule.forEach((payment)=>{
+
+
+                if(
+                    payment.dueDate === today &&
+                    payment.status !== "Paid"
+                ){
+
+
+                    let paid = 0;
+
+
+                    dashboardRepayments.forEach((rep)=>{
+
+
+                        if(
+                            rep.loanId === loan.id &&
+                            rep.scheduleId === payment.id
+                        ){
+
+                            paid += Number(rep.amount || 0);
+
+                        }
+
+                    });
+
+
+
+                    let balance =
+                        Number(payment.amount) - paid;
+
+
+
+                    if(balance > 0){
+
+
+                        expectedToday += balance;
+
+
+                        clientsDueToday.push({
+
+                            client:
+                            loan.clientName || "Unknown",
+
+                            amount:
+                            balance
+
+                        });
+
+
+                    }
+
+
+                }
+
+
+            });
+
+
+        }
+
+
+    });
+
+
+
+    console.log(
+        "Clients due today:",
+        clientsDueToday
+    );
+
+
+    console.log(
+        "Expected today:",
+        expectedToday
+    );
+
+
+    console.log(
+        "Collected today:",
+        collectedToday
+    );
+
+}
 
 // ==========================================
 // ELEMENTS
