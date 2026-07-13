@@ -404,43 +404,25 @@ textarea{
 
 
 .center-page{
-
+    min-height:100svh;
     min-height:100vh;
-
     display:flex;
-
     justify-content:center;
-
     align-items:center;
-
-    padding:24px;
-
-    background:
-
-    linear-gradient(
-        135deg,
-        #2563eb,
-        #1d4ed8
-    );
-
+    padding:20px;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
 }
 
 
 
 .login-card{
-
     width:100%;
-
     max-width:430px;
-
+    margin:auto;
     background:#fff;
-
     border-radius:22px;
-
-    padding:40px 32px;
-
+    padding:32px;
     box-shadow:var(--shadow);
-
 }
 
 
@@ -4568,8 +4550,9 @@ th{
 }
 
 .login-logo{
-    width:170px;
-    max-width:100%;
+    width:120px;
+    height:120px;
+    object-fit:contain;
     display:block;
     margin:0 auto 20px;
 }
