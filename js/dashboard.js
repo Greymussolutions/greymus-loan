@@ -1,8 +1,8 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// Version 1.2
-// Part 1
+// VERSION 2.0
+// PART 1A
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -12,174 +12,18 @@ import {
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
 // ==========================================
-// DASHBOARD COLLECTION TRACKING
+// FIRESTORE DATA
 // ==========================================
 
-let dashboardLoans = [];
-let dashboardRepayments = [];
-
-
-// LOAD LOANS
-
-onSnapshot(
-    collection(db, "loans"),
-    (snapshot)=>{
-
-        dashboardLoans = [];
-
-        snapshot.forEach((doc)=>{
-
-            dashboardLoans.push({
-                id: doc.id,
-                ...doc.data()
-            });
-
-        });
-
-
-        calculateDashboard();
-
-    }
-);
-
-
-// LOAD REPAYMENTS
-
-onSnapshot(
-    collection(db, "repayments"),
-    (snapshot)=>{
-
-        dashboardRepayments = [];
-
-        snapshot.forEach((doc)=>{
-
-            dashboardRepayments.push({
-                id: doc.id,
-                ...doc.data()
-            });
-
-        });
-
-
-        calculateDashboard();
-
-    }
-);
+let loans = [];
+let clients = [];
+let repayments = [];
 
 
 // ==========================================
-// DASHBOARD CALCULATIONS
-// ==========================================
-
-function calculateDashboard(){
-
-    const today = new Date()
-        .toISOString()
-        .split("T")[0];
-
-
-    let clientsDueToday = [];
-    let expectedToday = 0;
-    let collectedToday = 0;
-
-
-    dashboardLoans.forEach((loan)=>{
-
-
-        if(
-            loan.status === "Approved" &&
-            loan.repaymentSchedule
-        ){
-
-
-            loan.repaymentSchedule.forEach((payment)=>{
-
-
-                if(
-                    payment.dueDate === today &&
-                    payment.status !== "Paid"
-                ){
-
-
-                    let paid = 0;
-
-
-                    dashboardRepayments.forEach((rep)=>{
-
-
-                        if(
-                            rep.loanId === loan.id &&
-                            rep.scheduleId === payment.id
-                        ){
-
-                            paid += Number(rep.amount || 0);
-
-                        }
-
-                    });
-
-
-
-                    let balance =
-                        Number(payment.amount) - paid;
-
-
-
-                    if(balance > 0){
-
-
-                        expectedToday += balance;
-
-
-                        clientsDueToday.push({
-
-                            client:
-                            loan.clientName || "Unknown",
-
-                            amount:
-                            balance
-
-                        });
-
-
-                    }
-
-
-                }
-
-
-            });
-
-
-        }
-
-
-    });
-
-
-
-    console.log(
-        "Clients due today:",
-        clientsDueToday
-    );
-
-
-    console.log(
-        "Expected today:",
-        expectedToday
-    );
-
-
-    console.log(
-        "Collected today:",
-        collectedToday
-    );
-
-}
-
-// ==========================================
-// ELEMENTS
+// DASHBOARD ELEMENTS
 // ==========================================
 
 const portfolioStat =
@@ -205,27 +49,55 @@ const arrearsStat =
 
 
 // ==========================================
-// DATA
+// TODAY'S COLLECTION ELEMENTS
 // ==========================================
 
-let loans = [];
-let repayments = [];
-let clientCount = 0;
+const clientsDueTodayElement =
+    document.getElementById("clientsDueToday");
+
+const expectedCollectionElement =
+    document.getElementById("expectedCollection");
+
+const collectedTodayElement =
+    document.getElementById("collectedToday");
+
+const remainingCollectionElement =
+    document.getElementById("remainingCollection");
+
+const collectionRateElement =
+    document.getElementById("collectionRate");
+
+const todayDueList =
+    document.getElementById("todayDueList");
 
 
 // ==========================================
-// FORMAT MONEY
+// MONEY FORMAT
 // ==========================================
 
 function currency(value){
 
-    return new Intl.NumberFormat("en-KE",{
+    return new Intl.NumberFormat(
+        "en-KE",
+        {
+            style:"currency",
+            currency:"KES",
+            maximumFractionDigits:0
+        }
+    ).format(Number(value)||0);
 
-        style:"currency",
-        currency:"KES",
-        maximumFractionDigits:0
+}
 
-    }).format(Number(value) || 0);
+
+// ==========================================
+// DATE
+// ==========================================
+
+function todayString(){
+
+    return new Date()
+        .toISOString()
+        .split("T")[0];
 
 }
 
@@ -240,11 +112,24 @@ onSnapshot(
 
     snapshot=>{
 
-        clientCount = snapshot.size;
+        clients = [];
+
+        snapshot.forEach(doc=>{
+
+            clients.push({
+
+                id:doc.id,
+
+                ...doc.data()
+
+            });
+
+        });
 
         if(clientsStat){
 
-            clientsStat.textContent = clientCount;
+            clientsStat.textContent =
+                clients.length;
 
         }
 
@@ -267,13 +152,13 @@ onSnapshot(
 
         loans = [];
 
-        snapshot.forEach(docSnap=>{
+        snapshot.forEach(doc=>{
 
             loans.push({
 
-                id: docSnap.id,
+                id:doc.id,
 
-                ...docSnap.data()
+                ...doc.data()
 
             });
 
@@ -287,7 +172,8 @@ onSnapshot(
 
 
 // ==========================================
-// REPAYMENTS
+// OPTIONAL REPAYMENTS COLLECTION
+// (kept for compatibility)
 // ==========================================
 
 onSnapshot(
@@ -298,13 +184,13 @@ onSnapshot(
 
         repayments = [];
 
-        snapshot.forEach(docSnap=>{
+        snapshot.forEach(doc=>{
 
             repayments.push({
 
-                id: docSnap.id,
+                id:doc.id,
 
-                ...docSnap.data()
+                ...doc.data()
 
             });
 
@@ -314,8 +200,18 @@ onSnapshot(
 
     }
 
-);// ==========================================
-// DASHBOARD
+);
+
+
+// ==========================================
+// UPDATE DASHBOARD
+// Continues in PART 1B
+// ==========================================// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// VERSION 2.0
+// PART 1B
+// Continues from Part 1A
 // ==========================================
 
 function updateDashboard(){
@@ -334,64 +230,133 @@ function updateDashboard(){
 
     let monthlyIncome = 0;
 
-    const today = new Date();
+    let expectedToday = 0;
 
-    const month = today.getMonth();
+    let collectedToday = 0;
 
-    const year = today.getFullYear();
+    const clientsDueToday = [];
+
+    const today = todayString();
+
+    const now = new Date();
+
+    const month = now.getMonth();
+
+    const year = now.getFullYear();
 
 
-    // ==========================
+    // ======================================
     // LOAN STATISTICS
-    // ==========================
+    // ======================================
 
     loans.forEach(loan=>{
 
         const status = loan.status || "Pending";
 
         const balance =
-            Number(loan.balance ?? loan.amount ?? 0);
+            Number(
+                loan.balance ??
+                loan.amount ??
+                0
+            );
 
-        if(status==="Pending"){
+        switch(status){
 
-            pending++;
+            case "Pending":
+                pending++;
+                break;
+
+            case "Approved":
+                approved++;
+                portfolio += balance;
+                break;
+
+            case "Rejected":
+                rejected++;
+                break;
+
+            case "Arrears":
+                arrears++;
+                portfolio += balance;
+                break;
+
+            case "Completed":
+                completed++;
+                break;
+
+        }
+
+
+        // ======================================
+        // TODAY'S COLLECTION
+        // ======================================
+
+        if(
+            status==="Approved" &&
+            Array.isArray(loan.repaymentSchedule)
+        ){
+
+            loan.repaymentSchedule.forEach(item=>{
+
+                if(item.dueDate !== today){
+
+                    return;
+
+                }
+
+                const due =
+                    Number(item.amount || 0);
+
+                const paid =
+                    Number(item.paidAmount || 0);
+
+                const balance =
+                    Math.max(0,due-paid);
+
+                expectedToday += due;
+
+                collectedToday += paid;
+
+                clientsDueToday.push({
+
+                    client:
+                        loan.clientName ||
+                        "Unknown Client",
+
+                    due,
+
+                    paid,
+
+                    balance,
+
+                    status:
+                        paid >= due
+                        ? "Paid"
+                        : paid > 0
+                        ? "Partial"
+                        : "Pending"
+
+                });
+
+            });
 
         }
 
-        else if(status==="Approved"){
 
-            approved++;
+        // ======================================
+        // PROCESSING FEES
+        // ======================================
 
-            portfolio += balance;
-
-        }
-
-        else if(status==="Arrears"){
-
-            arrears++;
-
-            portfolio += balance;
-
-        }
-
-        else if(status==="Rejected"){
-
-            rejected++;
-
-        }
-
-        else if(status==="Completed"){
-
-            completed++;
-
-        }
+        monthlyIncome += Number(
+            loan.processingFee || 0
+        );
 
     });
 
 
-    // ==========================
-    // MONTHLY INCOME
-    // ==========================
+    // ======================================
+    // INTEREST EARNED
+    // ======================================
 
     repayments.forEach(payment=>{
 
@@ -401,97 +366,197 @@ function updateDashboard(){
             new Date(payment.paymentDate);
 
         if(
-
-            paymentDate.getMonth() !== month ||
-
-            paymentDate.getFullYear() !== year
-
+            paymentDate.getMonth()!==month ||
+            paymentDate.getFullYear()!==year
         ){
 
             return;
 
         }
 
-        const loan = loans.find(
-
-            l => l.id === payment.loanId
-
-        );
+        const loan =
+            loans.find(
+                l=>l.id===payment.loanId
+            );
 
         if(!loan) return;
 
         const principal =
-            Number(loan.amount || 0);
+            Number(loan.amount||0);
 
         const total =
-            Number(loan.totalRepayment || principal);
+            Number(
+                loan.totalRepayment ||
+                principal
+            );
 
         const interest =
-            Math.max(0, total - principal);
+            Math.max(
+                0,
+                total-principal
+            );
 
-        if(total > 0){
+        if(total>0){
 
             monthlyIncome +=
 
                 interest *
 
-                (Number(payment.amount) / total);
+                (
+                    Number(payment.amount||0)
+                    / total
+                );
 
         }
 
     });
 
 
-    // ==========================
-    // PROCESSING FEES
-    // ==========================
+    // ======================================
+    // UPDATE MAIN DASHBOARD
+    // Continues in PART 1C
+    // ======================================    // ======================================
+    // UPDATE MAIN DASHBOARD
+    // ======================================
 
-    loans.forEach(loan=>{
+    if(portfolioStat){
 
-        if(loan.processingFee){
+        portfolioStat.textContent =
+            currency(portfolio);
 
-            monthlyIncome +=
+    }
 
-                Number(loan.processingFee);
+    if(revenueStat){
+
+        revenueStat.textContent =
+            currency(monthlyIncome);
+
+    }
+
+    if(pendingStat){
+
+        pendingStat.textContent =
+            pending;
+
+    }
+
+    if(approvedStat){
+
+        approvedStat.textContent =
+            approved;
+
+    }
+
+    if(rejectedStat){
+
+        rejectedStat.textContent =
+            rejected;
+
+    }
+
+    if(arrearsStat){
+
+        arrearsStat.textContent =
+            arrears;
+
+    }
+
+
+    // ======================================
+    // TODAY'S COLLECTION SUMMARY
+    // ======================================
+
+    const remaining =
+        Math.max(
+            0,
+            expectedToday - collectedToday
+        );
+
+    const collectionRate =
+        expectedToday > 0
+        ? Math.round(
+            (collectedToday / expectedToday) * 100
+        )
+        : 0;
+
+
+    if(clientsDueTodayElement){
+
+        clientsDueTodayElement.textContent =
+            clientsDueToday.length;
+
+    }
+
+    if(expectedCollectionElement){
+
+        expectedCollectionElement.textContent =
+            currency(expectedToday);
+
+    }
+
+    if(collectedTodayElement){
+
+        collectedTodayElement.textContent =
+            currency(collectedToday);
+
+    }
+
+    if(remainingCollectionElement){
+
+        remainingCollectionElement.textContent =
+            currency(remaining);
+
+    }
+
+    if(collectionRateElement){
+
+        collectionRateElement.textContent =
+            collectionRate + "%";
+
+    }
+
+
+    // ======================================
+    // CLIENTS DUE TODAY LIST
+    // ======================================
+
+    if(todayDueList){
+
+        todayDueList.innerHTML = "";
+
+        if(clientsDueToday.length === 0){
+
+            todayDueList.innerHTML = `
+                <div class="empty-state">
+                    No repayments are due today.
+                </div>
+            `;
+
+        }else{
+
+            clientsDueToday.forEach(client=>{
+
+                todayDueList.innerHTML += `
+
+                <div class="today-card">
+
+                    <h4>${client.client}</h4>
+
+                    <p><strong>Due:</strong> ${currency(client.due)}</p>
+
+                    <p><strong>Paid:</strong> ${currency(client.paid)}</p>
+
+                    <p><strong>Balance:</strong> ${currency(client.balance)}</p>
+
+                    <p><strong>Status:</strong> ${client.status}</p>
+
+                </div>
+
+                `;
+
+            });
 
         }
-
-    });
-
-
-    // ==========================
-    // UPDATE DASHBOARD
-    // ==========================
-
-    portfolioStat.textContent =
-        currency(portfolio);
-
-    revenueStat.textContent =
-        currency(monthlyIncome);
-
-    pendingStat.textContent =
-        pending;
-
-    approvedStat.textContent =
-        approved;
-
-    rejectedStat.textContent =
-        rejected;
-
-    arrearsStat.textContent =
-        arrears;
-
-}// ==========================================
-// QUICK ACTION BUTTONS
-// ==========================================
-
-function openModal(id){
-
-    const modal = document.getElementById(id);
-
-    if(modal){
-
-        modal.classList.remove("hidden");
 
     }
 
@@ -499,46 +564,21 @@ function openModal(id){
 
 
 // ==========================================
-// NEW CLIENT
+// CONTINUES IN PART 2A
+// Helper functions, Quick Actions,
+// Dashboard Summary, Auto Refresh,
+// and Exports.
+// ==========================================// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// VERSION 2.0
+// PART 2A
+// Helper Functions
 // ==========================================
-
-document
-.getElementById("new-client-btn")
-?.addEventListener("click",()=>{
-
-    openModal("client-modal");
-
-});
-
-
-// ==========================================
-// NEW LOAN
-// ==========================================
-
-document
-.getElementById("new-loan-btn")
-?.addEventListener("click",()=>{
-
-    openModal("loan-modal");
-
-});
 
 
 // ==========================================
-// FLOATING ACTION BUTTON
-// ==========================================
-
-document
-.getElementById("fab-new-loan")
-?.addEventListener("click",()=>{
-
-    openModal("loan-modal");
-
-});
-
-
-// ==========================================
-// DASHBOARD HELPERS
+// TOTAL OUTSTANDING BALANCE
 // ==========================================
 
 function getTotalOutstandingBalance(){
@@ -547,9 +587,9 @@ function getTotalOutstandingBalance(){
 
         if(
 
-            loan.status==="Approved" ||
+            loan.status === "Approved" ||
 
-            loan.status==="Arrears"
+            loan.status === "Arrears"
 
         ){
 
@@ -557,9 +597,9 @@ function getTotalOutstandingBalance(){
 
                 Number(
 
-                    loan.balance ||
+                    loan.balance ??
 
-                    loan.amount ||
+                    loan.amount ??
 
                     0
 
@@ -574,26 +614,100 @@ function getTotalOutstandingBalance(){
 }
 
 
+// ==========================================
+// COMPLETED LOANS
+// ==========================================
+
 function getCompletedLoans(){
 
     return loans.filter(
 
-        loan=>loan.status==="Completed"
+        loan => loan.status === "Completed"
 
     ).length;
 
 }
 
 
+// ==========================================
+// TOTAL COLLECTED
+// Reads repaymentSchedule first,
+// falls back to repayments collection.
+// ==========================================
+
 function getTotalCollected(){
 
-    return repayments.reduce(
+    let total = 0;
 
-        (sum,payment)=>
+    loans.forEach(loan=>{
+
+        if(
+
+            Array.isArray(
+                loan.repaymentSchedule
+            )
+
+        ){
+
+            loan.repaymentSchedule.forEach(item=>{
+
+                total += Number(
+                    item.paidAmount || 0
+                );
+
+            });
+
+        }
+
+    });
+
+
+    // Compatibility with old repayment collection
+
+    if(total === 0){
+
+        repayments.forEach(payment=>{
+
+            total += Number(
+
+                payment.amount ||
+
+                payment.amountPaid ||
+
+                0
+
+            );
+
+        });
+
+    }
+
+    return total;
+
+}
+
+
+// ==========================================
+// TOTAL EXPECTED REPAYMENT
+// ==========================================
+
+function getTotalExpectedRepayment(){
+
+    return loans.reduce(
+
+        (sum,loan)=>
 
             sum +
 
-            Number(payment.amount || 0),
+            Number(
+
+                loan.totalRepayment ||
+
+                loan.amount ||
+
+                0
+
+            ),
 
         0
 
@@ -601,6 +715,10 @@ function getTotalCollected(){
 
 }
 
+
+// ==========================================
+// AVERAGE LOAN
+// ==========================================
 
 function getAverageLoanAmount(){
 
@@ -616,7 +734,11 @@ function getAverageLoanAmount(){
 
             sum +
 
-            Number(loan.amount || 0),
+            Number(
+
+                loan.amount || 0
+
+            ),
 
         0
 
@@ -624,7 +746,81 @@ function getAverageLoanAmount(){
 
     return total / loans.length;
 
-}// ==========================================
+}
+
+
+// ==========================================
+// TOTAL PROCESSING FEES
+// ==========================================
+
+function getProcessingFees(){
+
+    return loans.reduce(
+
+        (sum,loan)=>
+
+            sum +
+
+            Number(
+
+                loan.processingFee || 0
+
+            ),
+
+        0
+
+    );
+
+}
+
+
+// ==========================================
+// TOTAL INTEREST
+// ==========================================
+
+function getInterestEarned(){
+
+    return loans.reduce((sum,loan)=>{
+
+        const principal =
+            Number(loan.amount || 0);
+
+        const total =
+            Number(
+
+                loan.totalRepayment ||
+
+                principal
+
+            );
+
+        return sum +
+
+            Math.max(
+                0,
+                total - principal
+            );
+
+    },0);
+
+}
+
+
+// ==========================================
+// CONTINUES IN PART 2B
+// Dashboard Summary,
+// Refresh,
+// Quick Actions,
+// Exports.
+// ==========================================// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// VERSION 2.0
+// PART 2B (FINAL)
+// ==========================================
+
+
+// ==========================================
 // REFRESH DASHBOARD
 // ==========================================
 
@@ -636,42 +832,87 @@ function refreshDashboard(){
 
 
 // ==========================================
-// OPTIONAL SUMMARY
+// DASHBOARD SUMMARY
 // ==========================================
 
 function dashboardSummary(){
 
-    console.log("================================");
+    console.log("====================================");
 
-    console.log("GREYMUS DASHBOARD");
+    console.log("GREYMUS LOAN FINANCIAL HUB");
 
-    console.log("================================");
+    console.log("====================================");
 
-    console.log("Clients:", clientCount);
+    console.log(
+        "Clients:",
+        clients.length
+    );
 
-    console.log("Loans:", loans.length);
+    console.log(
+        "Loans:",
+        loans.length
+    );
 
-    console.log("Approved:", approvedStat?.textContent);
+    console.log(
+        "Approved:",
+        approvedStat?.textContent || 0
+    );
 
-    console.log("Pending:", pendingStat?.textContent);
+    console.log(
+        "Pending:",
+        pendingStat?.textContent || 0
+    );
 
-    console.log("Arrears:", arrearsStat?.textContent);
+    console.log(
+        "Rejected:",
+        rejectedStat?.textContent || 0
+    );
 
-    console.log("Rejected:", rejectedStat?.textContent);
+    console.log(
+        "Arrears:",
+        arrearsStat?.textContent || 0
+    );
 
     console.log(
         "Outstanding:",
-        currency(getTotalOutstandingBalance())
+        currency(
+            getTotalOutstandingBalance()
+        )
     );
 
     console.log(
         "Collected:",
-        currency(getTotalCollected())
+        currency(
+            getTotalCollected()
+        )
+    );
+
+    console.log(
+        "Expected Repayment:",
+        currency(
+            getTotalExpectedRepayment()
+        )
+    );
+
+    console.log(
+        "Interest:",
+        currency(
+            getInterestEarned()
+        )
+    );
+
+    console.log(
+        "Processing Fees:",
+        currency(
+            getProcessingFees()
+        )
     );
 
     console.log(
         "Average Loan:",
-        currency(getAverageLoanAmount())
+        currency(
+            getAverageLoanAmount()
+        )
     );
 
     console.log(
@@ -679,9 +920,54 @@ function dashboardSummary(){
         getCompletedLoans()
     );
 
-    console.log("================================");
+    console.log("====================================");
 
 }
+
+
+// ==========================================
+// QUICK ACTION BUTTONS
+// ==========================================
+
+function openModal(id){
+
+    const modal =
+        document.getElementById(id);
+
+    if(modal){
+
+        modal.classList.remove("hidden");
+
+    }
+
+}
+
+
+document
+.getElementById("new-client-btn")
+?.addEventListener("click",()=>{
+
+    openModal("client-modal");
+
+});
+
+
+document
+.getElementById("new-loan-btn")
+?.addEventListener("click",()=>{
+
+    openModal("loan-modal");
+
+});
+
+
+document
+.getElementById("fab-new-loan")
+?.addEventListener("click",()=>{
+
+    openModal("loan-modal");
+
+});
 
 
 // ==========================================
@@ -696,6 +982,13 @@ setInterval(()=>{
 
 
 // ==========================================
+// INITIAL LOAD
+// ==========================================
+
+refreshDashboard();
+
+
+// ==========================================
 // EXPORTS
 // ==========================================
 
@@ -705,11 +998,19 @@ export{
 
     refreshDashboard,
 
+    dashboardSummary,
+
     getTotalOutstandingBalance,
 
     getCompletedLoans,
 
     getTotalCollected,
+
+    getTotalExpectedRepayment,
+
+    getProcessingFees,
+
+    getInterestEarned,
 
     getAverageLoanAmount
 
@@ -717,5 +1018,7 @@ export{
 
 
 // ==========================================
-// END OF FILE
+// dashboard.js
+// VERSION 2.0
+// STATUS: ✅ FINISHED
 // ==========================================
