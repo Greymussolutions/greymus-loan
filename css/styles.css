@@ -3552,6 +3552,33 @@ tbody tr:hover{
 
 }
 
+/* ===== FINAL MOBILE OVERRIDE ===== */
+
+@media screen and (max-width:768px){
+
+    .stats-grid{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+        gap:16px !important;
+    }
+
+    .stat-card{
+        width:100% !important;
+        min-height:140px !important;
+        padding:18px !important;
+    }
+
+    .stat-card span{
+        font-size:14px !important;
+        white-space:normal !important;
+    }
+
+    .stat-card h3{
+        font-size:28px !important;
+    }
+
+}
+
 /* =====================================================
    END THEME SYSTEM
 ===================================================== */
