@@ -355,4 +355,80 @@ logoutBtn?.addEventListener(
     }
 );
 
+// ==========================================
+// PROFILE MODAL OPEN / CLOSE
+// ==========================================
+
+const profileSettingsBtn = document.getElementById(
+    "profile-settings-btn"
+);
+
+const profileModal = document.getElementById(
+    "profile-modal"
+);
+
+const closeProfileButtons = document.querySelectorAll(
+    ".close-profile"
+);
+
+
+// Open profile modal
+
+profileSettingsBtn?.addEventListener(
+    "click",
+    () => {
+
+        if(profileModal){
+
+            profileModal.classList.remove(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+// Close profile modal
+
+closeProfileButtons.forEach(
+    (btn)=>{
+
+        btn.addEventListener(
+            "click",
+            ()=>{
+
+                if(profileModal){
+
+                    profileModal.classList.add(
+                        "hidden"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// Close when clicking outside modal
+
+profileModal?.addEventListener(
+    "click",
+    (e)=>{
+
+        if(e.target === profileModal){
+
+            profileModal.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
 export { showToast };
