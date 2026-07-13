@@ -4,75 +4,35 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Greymus Loan Financial Hub</title>
 
-    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link rel="preconnect"
-          href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
+    <link rel="stylesheet" href="css/styles.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-
-    <!-- Main Styles -->
-
-    <link rel="stylesheet"
-          href="css/styles.css">
-
-    <!-- JavaScript Modules -->
-
-    <script type="module"
-            src="js/firebase.js"></script>
-
-    <script type="module"
-            src="js/utils.js"></script>
-
-    <script type="module"
-            src="js/auth.js"></script>
-
-    <script type="module"
-            src="js/dashboard.js"></script>
-
-    <script type="module"
-            src="js/clients.js"></script>
-
-    <script type="module"
-            src="js/loans.js"></script>
-
-    <script type="module"
-            src="js/settings.js"></script>
-
-    <script type="module"
-            src="js/ui.js"></script>
-
-    <script type="module"
-            src="js/app.js"></script>
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/clients.js"></script>
+    <script type="module" src="js/loans.js"></script>
+    <script type="module" src="js/settings.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/app.js"></script>
 
 </head>
 
 <body>
 
-<!-- =========================
-LOADING
-========================= -->
-
 <div id="loading-overlay" class="hidden">
-
     <div class="spinner"></div>
-
     <p>Loading...</p>
-
 </div>
-
-<!-- Toast -->
 
 <div id="toast"></div>
 
@@ -80,65 +40,36 @@ LOADING
 LOGIN
 ========================= -->
 
-<section id="login-section"
-         class="center-page">
+<section id="login-section" class="center-page">
 
     <div class="login-card">
 
         <div class="logo-area">
 
-            <div class="logo-circle">
-                G
-            </div>
+            <div class="logo-circle">G</div>
 
             <h1>Greymus Loan</h1>
-
             <span>Financial Hub</span>
 
         </div>
 
         <h2>Welcome Back</h2>
-
         <p>Secure Login</p>
 
         <form id="login-form">
 
             <div class="form-group">
-
-                <label for="email">
-                    Email Address
-                </label>
-
-                <input
-                    id="email"
-                    type="email"
-                    autocomplete="username"
-                    placeholder="Enter your email"
-                    required>
-
+                <label>Email</label>
+                <input id="email" type="email" required>
             </div>
 
             <div class="form-group">
-
-                <label for="password">
-                    Password
-                </label>
-
-                <input
-                    id="password"
-                    type="password"
-                    autocomplete="current-password"
-                    placeholder="Enter your password"
-                    required>
-
+                <label>Password</label>
+                <input id="password" type="password" required>
             </div>
 
-            <button
-                id="login-btn"
-                type="submit">
-
+            <button id="login-btn" type="submit">
                 Login
-
             </button>
 
         </form>
@@ -151,10 +82,11 @@ LOGIN
 DASHBOARD
 ========================= -->
 
-<section id="dashboard-section"
-         class="hidden">
+<section id="dashboard-section" class="hidden">
 
-<div class="dashboard-layout"><aside class="sidebar">
+<div class="dashboard-layout">
+
+<aside class="sidebar">
 
     <div class="brand">
 
@@ -169,46 +101,24 @@ DASHBOARD
 
     <nav class="sidebar-menu">
 
-        <button class="tab-btn active"
-                data-tab="dashboard"
-                type="button">
-
+        <button class="tab-btn active" data-tab="dashboard">
             <span>🏠</span>
-
             <small>Dashboard</small>
-
         </button>
 
-        <button class="tab-btn"
-                data-tab="clients"
-                type="button">
-
+        <button class="tab-btn" data-tab="clients">
             <span>👥</span>
-
             <small>Clients</small>
-
         </button>
 
-        <button class="tab-btn"
-                data-tab="loans"
-                type="button">
-
+        <button class="tab-btn" data-tab="loans">
             <span>💰</span>
-
             <small>Loans</small>
-
         </button>
 
-        <!-- Settings is now a normal page -->
-
-        <button class="tab-btn"
-                data-tab="settings"
-                type="button">
-
+        <button id="settings-btn" class="tab-btn" type="button">
             <span>⚙️</span>
-
             <small>Settings</small>
-
         </button>
 
     </nav>
@@ -229,13 +139,8 @@ DASHBOARD
 
     <div class="topbar-actions">
 
-        <button id="notification-btn"
-                class="notification-btn"
-                type="button"
-                title="Notifications">
-
+        <button id="notification-btn" class="notification-btn">
             🔔
-
         </button>
 
     </div>
@@ -246,8 +151,7 @@ DASHBOARD
 DASHBOARD TAB
 ========================= -->
 
-<section id="dashboard-tab"
-         class="tab-content">
+<section id="dashboard-tab" class="tab-content">
 
     <div class="hero-card">
 
@@ -260,12 +164,12 @@ DASHBOARD TAB
         </div>
 
         <div class="hero-icon">
-
             💼
-
         </div>
 
-    </div><!-- =========================
+    </div>
+
+<!-- =========================
 TODAY'S COLLECTION
 ========================= -->
 
@@ -337,8 +241,7 @@ TODAY'S COLLECTION
 
     </div>
 
-    <div id="todayDueList"
-         class="today-due-list">
+    <div id="todayDueList" class="today-due-list">
 
         <div class="empty-state">
 
@@ -348,124 +251,193 @@ TODAY'S COLLECTION
 
     </div>
 
-</section><div class="stats-grid">
+</section>
 
-    <div class="stat-card">
+    <div class="stats-grid">
 
-        <span>Clients</span>
+        <div class="stat-card">
+            <span>Clients</span>
+            <h3 id="stat-clients">0</h3>
+        </div>
 
-        <h3 id="stat-clients">0</h3>
+        <div class="stat-card">
+            <span>Income</span>
+            <h3 id="stat-revenue">KES 0</h3>
+        </div>
 
-    </div>
+        <div class="stat-card">
+            <span>Pending Loans</span>
+            <h3 id="stat-pending">0</h3>
+        </div>
 
-    <div class="stat-card">
+        <div class="stat-card">
+            <span>Approved Loans</span>
+            <h3 id="stat-approved">0</h3>
+        </div>
 
-        <span>Income</span>
+        <div class="stat-card">
+            <span>Rejected Loans</span>
+            <h3 id="stat-rejected">0</h3>
+        </div>
 
-        <h3 id="stat-revenue">KES 0</h3>
-
-    </div>
-
-    <div class="stat-card">
-
-        <span>Pending Loans</span>
-
-        <h3 id="stat-pending">0</h3>
-
-    </div>
-
-    <div class="stat-card">
-
-        <span>Approved Loans</span>
-
-        <h3 id="stat-approved">0</h3>
-
-    </div>
-
-    <div class="stat-card">
-
-        <span>Rejected Loans</span>
-
-        <h3 id="stat-rejected">0</h3>
-
-    </div>
-
-    <div class="stat-card danger">
-
-        <span>Loans in Arrears</span>
-
-        <h3 id="stat-arrears">0</h3>
-
-    </div>
-
-</div><section class="quick-actions">
-
-    <div class="section-header">
-
-        <div>
-
-            <h2>Quick Actions</h2>
-
-            <p>Frequently used operations</p>
-
+        <div class="stat-card danger">
+            <span>Loans in Arrears</span>
+            <h3 id="stat-arrears">0</h3>
         </div>
 
     </div>
 
-    <div class="quick-grid">
+    <section class="quick-actions">
 
-        <button id="new-client-btn"
-                class="action-card"
-                type="button">
-
-            <div class="action-icon">
-
-                👤
-
-            </div>
+        <div class="section-header">
 
             <div>
 
-                <h3>New Client</h3>
+                <h2>Quick Actions</h2>
 
-                <p>Register a borrower</p>
-
-            </div>
-
-        </button>
-
-        <button id="new-loan-btn"
-                class="action-card"
-                type="button">
-
-            <div class="action-icon">
-
-                💰
+                <p>Frequently used operations</p>
 
             </div>
 
-            <div>
+        </div>
 
-                <h3>New Loan</h3>
+        <div class="quick-grid">
 
-                <p>Create a weekly loan</p>
+            <button id="new-client-btn" class="action-card">
 
-            </div>
+                <div class="action-icon">👤</div>
 
-        </button>
+                <div>
+                    <h3>New Client</h3>
+                    <p>Register a borrower</p>
+                </div>
+
+            </button>
+
+            <button id="new-loan-btn" class="action-card">
+
+                <div class="action-icon">💰</div>
+
+                <div>
+                    <h3>New Loan</h3>
+                    <p>Create a weekly loan</p>
+                </div>
+
+            </button>
+
+        </div>
+
+    </section>
+
+</section><!-- =========================
+CLIENTS TAB
+========================= -->
+
+<section id="clients-tab" class="tab-content hidden">
+
+    <div class="section-header">
+        <div>
+            <h2>Clients</h2>
+            <p>Manage registered borrowers</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <input
+            type="text"
+            id="client-search"
+            placeholder="Search clients...">
+    </div>
+
+    <div class="table-wrapper">
+
+        <table id="clients-table">
+
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>ID Number</th>
+                    <th>Occupation</th>
+                    <th>Guarantor</th>
+                    <th>Registered By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="clients-table-body">
+            </tbody>
+
+        </table>
 
     </div>
 
 </section>
 
+<!-- =========================
+LOANS TAB
+========================= -->
+
+<section id="loans-tab" class="tab-content hidden">
+
+    <div class="section-header">
+        <div>
+            <h2>Loans</h2>
+            <p>Manage loans and weekly repayments</p>
+        </div>
+    </div>
+
+    <div class="toolbar toolbar-wrap">
+
+        <input
+            type="text"
+            id="loan-search"
+            placeholder="Search loans...">
+
+        <select id="loan-filter">
+            <option value="ALL">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Arrears">Arrears</option>
+        </select>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table id="loans-table">
+
+            <thead>
+
+                <tr>
+    <th>Loan No.</th>
+    <th>Client</th>
+    <th>Principal</th>
+    <th>Processing Fee</th>
+    <th>Interest</th>
+    <th>Duration (Weeks)</th>
+    <th>Weekly Payment</th>
+    <th>Outstanding Balance</th>
+    <th>Next Repayment</th>
+    <th>Due Date</th>
+    <th>Status</th>
+    <th>Officer</th>
+    <th>Actions</th>
+</tr>
+
+            </thead>
+
+            <tbody id="loans-table-body">
+            </tbody>
+
+        </table>
+
+    </div>
+
 </section>
 
 <!-- =========================
-CLIENTS TAB
-========================= -->
-
-<section id="clients-tab"
-         class="tab-content hidden"><!-- =========================
 CLIENT MODAL
 ========================= -->
 
@@ -704,16 +676,16 @@ REPAYMENT MODAL
 
             </div>
 
-            <div class="form-group">
+<div class="form-group">
 
-                <label>Weekly Repayment</label>
+    <label>Weekly Repayment</label>
 
-                <input
-                    type="text"
-                    id="repayment-weekly"
-                    readonly>
+    <input
+        type="text"
+        id="repayment-weekly"
+        readonly>
 
-            </div>
+</div>
 
             <div class="form-group">
 
@@ -772,7 +744,9 @@ REPAYMENT MODAL
 
     </div>
 
-</div><!-- =========================
+</div>
+
+<!-- =========================
 CONFIRMATION MODAL
 ========================= -->
 
@@ -790,15 +764,11 @@ CONFIRMATION MODAL
 
         <div class="modal-buttons">
 
-            <button id="confirm-yes"
-                    type="button"
-                    class="primary-btn">
+            <button id="confirm-yes" type="button" class="primary-btn">
                 Yes
             </button>
 
-            <button id="confirm-no"
-                    type="button"
-                    class="secondary-btn">
+            <button id="confirm-no" type="button" class="secondary-btn">
                 Cancel
             </button>
 
@@ -812,22 +782,19 @@ CONFIRMATION MODAL
 NOTIFICATION PANEL
 ========================= -->
 
-<div id="notification-panel"
-     class="notification-panel hidden">
+<div id="notification-panel" class="notification-panel hidden">
 
     <div class="notification-header">
 
         <h3>Notifications</h3>
 
-        <button id="close-notifications"
-                type="button">
+        <button id="close-notifications" type="button">
             ✕
         </button>
 
     </div>
 
-    <div id="notification-list"
-         class="notification-list">
+    <div id="notification-list" class="notification-list">
 
         <div class="empty-state">
 
@@ -853,46 +820,134 @@ MOBILE NAVIGATION
 
 <nav class="mobile-nav">
 
-    <button class="tab-btn active"
-            data-tab="dashboard">
-
+    <button class="tab-btn active" data-tab="dashboard">
         <span>🏠</span>
         <small>Dashboard</small>
-
     </button>
 
-    <button class="tab-btn"
-            data-tab="clients">
-
+    <button class="tab-btn" data-tab="clients">
         <span>👥</span>
         <small>Clients</small>
-
     </button>
 
-    <button class="tab-btn"
-            data-tab="loans">
-
+    <button class="tab-btn" data-tab="loans">
         <span>💰</span>
         <small>Loans</small>
-
     </button>
 
-    <button class="tab-btn"
-            data-tab="settings">
-
+    <button id="settings-btn-mobile"
+            class="tab-btn"
+            type="button">
         <span>⚙️</span>
         <small>Settings</small>
-
     </button>
 
 </nav>
 
 <!-- =========================
+SETTINGS MENU
+========================= -->
+
+<!-- =========================
+SETTINGS MENU
+========================= -->
+
+<div id="settings-menu" class="settings-menu hidden">
+
+    <div class="settings-card">
+
+        <h3>⚙️ Settings</h3>
+
+
+        <!-- Appearance -->
+
+        <div class="settings-section">
+
+            <h4>🎨 Appearance</h4>
+
+            <label for="theme-select">
+                Theme
+            </label>
+
+            <select id="theme-select">
+
+                <option value="system">
+                    📱 System Default
+                </option>
+
+                <option value="light">
+                    ☀️ Light Theme
+                </option>
+
+                <option value="dark">
+                    🌙 Dark Theme
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Account -->
+
+        <div class="settings-section">
+
+            <h4>👤 Account</h4>
+
+            <button id="profile-settings-btn">
+                Profile
+            </button>
+
+
+            <button id="security-settings-btn">
+                🔒 Change Password
+            </button>
+
+        </div>
+
+
+        <!-- User Management -->
+
+        <div class="settings-section admin-only">
+
+            <h4>👥 User Management</h4>
+
+            <button id="add-user-btn">
+                ➕ Add User
+            </button>
+
+            <button id="manage-users-btn">
+                Manage Users
+            </button>
+
+        </div>
+
+
+        <!-- Logout -->
+
+        <button id="mobile-logout-btn" type="button">
+
+            🚪 Logout
+
+        </button>
+
+
+        <button id="close-settings" type="button">
+
+            Close
+
+        </button>
+
+
+    </div>
+
+</div>
+
+<!-- =========================
 PROFILE SETTINGS MODAL
 ========================= -->
 
-<div id="profile-modal"
-     class="modal hidden">
+<div id="profile-modal" class="modal hidden">
 
     <div class="modal-content">
 
@@ -902,24 +957,33 @@ PROFILE SETTINGS MODAL
 
                 <h2>Profile Settings</h2>
 
-                <p>Update your account information</p>
+                <p>
+                    Update your account information
+                </p>
 
             </div>
 
-            <button type="button"
-                    class="modal-close-btn close-profile">
+
+            <button
+                type="button"
+                class="modal-close-btn close-profile">
 
                 ✕
 
             </button>
 
+
         </div>
+
 
         <form id="profile-form">
 
+
             <div class="form-group">
 
-                <label>Full Name</label>
+                <label>
+                    Full Name
+                </label>
 
                 <input
                     type="text"
@@ -929,9 +993,13 @@ PROFILE SETTINGS MODAL
 
             </div>
 
+
+
             <div class="form-group">
 
-                <label>Email Address</label>
+                <label>
+                    Email Address
+                </label>
 
                 <input
                     type="email"
@@ -940,16 +1008,25 @@ PROFILE SETTINGS MODAL
 
             </div>
 
+
+
             <div class="form-group">
 
-                <label>Phone Number</label>
+                <label>
+                    Phone Number
+                </label>
 
                 <input
                     type="tel"
                     id="settings-phone"
                     placeholder="Enter phone number">
 
-            </div>            <div class="modal-buttons">
+            </div>
+
+
+
+            <div class="modal-buttons">
+
 
                 <button
                     type="submit"
@@ -959,6 +1036,8 @@ PROFILE SETTINGS MODAL
 
                 </button>
 
+
+
                 <button
                     type="button"
                     class="secondary-btn close-profile">
@@ -967,11 +1046,15 @@ PROFILE SETTINGS MODAL
 
                 </button>
 
+
             </div>
+
 
         </form>
 
+
     </div>
+
 
 </div>
 
@@ -987,9 +1070,7 @@ FLOATING ACTION BUTTON
 
     +
 
-</button>
-
-<!-- =========================
+</button><!-- =========================
 FOOTER
 ========================= -->
 
@@ -1025,34 +1106,36 @@ REPAYMENT SCHEDULE MODAL
 
             <h2>Repayment Schedule</h2>
 
-            <button id="close-schedule-modal" type="button">
-                &times;
-            </button>
+            <button id="close-schedule-modal">&times;</button>
 
         </div>
 
         <div class="schedule-summary">
 
-            <p>
-                <strong>Client:</strong>
+            <p><strong>Client:</strong>
                 <span id="schedule-client">-</span>
             </p>
 
-            <p>
-                <strong>Outstanding Balance:</strong>
+            <p><strong>Outstanding Balance:</strong>
                 <span id="schedule-balance">KES 0</span>
             </p>
 
-        </div>        <table id="schedule-table">
+        </div>
+
+        <table id="schedule-table">
 
             <thead>
 
                 <tr>
 
                     <th>Week</th>
+
                     <th>Due Date</th>
+
                     <th>Amount</th>
+
                     <th>Status</th>
+
                     <th>Paid Date</th>
 
                 </tr>
@@ -1065,7 +1148,7 @@ REPAYMENT SCHEDULE MODAL
 
         </table>
 
-        <div id="schedule-cards"></div>
+<div id="schedule-cards"></div>
 
     </div>
 
