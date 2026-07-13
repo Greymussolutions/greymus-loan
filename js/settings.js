@@ -1,5 +1,6 @@
 // js/settings.js
 
+console.log("SETTINGS.JS LOADED");
 import { auth } from "./firebase.js";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -365,6 +366,16 @@ const profileBtn = document.getElementById(
 
 const profileModal = document.getElementById(
     "profile-modal"
+);
+
+console.log(
+    "Profile button:",
+    document.getElementById("profile-settings-btn")
+);
+
+console.log(
+    "Profile modal:",
+    document.getElementById("profile-modal")
 );
 
 const closeProfileButtons = document.querySelectorAll(
