@@ -367,16 +367,18 @@ const profileModal = document.getElementById(
     "profile-modal"
 );
 
-const closeButtons = document.querySelectorAll(
+const closeProfileButtons = document.querySelectorAll(
     ".close-profile"
 );
 
 
-if(profileBtn && profileModal){
+if (profileBtn && profileModal) {
 
     profileBtn.addEventListener(
         "click",
         () => {
+
+            console.log("Profile button clicked");
 
             profileModal.classList.remove("hidden");
 
@@ -386,7 +388,7 @@ if(profileBtn && profileModal){
 }
 
 
-closeButtons.forEach((btn)=>{
+closeProfileButtons.forEach((btn)=>{
 
     btn.addEventListener(
         "click",
@@ -404,9 +406,9 @@ if(profileModal){
 
     profileModal.addEventListener(
         "click",
-        (event)=>{
+        (e)=>{
 
-            if(event.target === profileModal){
+            if(e.target === profileModal){
 
                 profileModal.classList.add("hidden");
 
