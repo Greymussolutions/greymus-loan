@@ -356,50 +356,63 @@ logoutBtn?.addEventListener(
 );
 
 // ==========================================
-// PROFILE MODAL OPEN / CLOSE
+// PROFILE MODAL
 // ==========================================
 
-const profileSettingsBtn = document.getElementById(
-    "profile-settings-btn"
-);
+document.addEventListener("DOMContentLoaded", () => {
 
-const profileModal = document.getElementById(
-    "profile-modal"
-);
+    const profileBtn = document.getElementById(
+        "profile-settings-btn"
+    );
 
-const closeProfileButtons = document.querySelectorAll(
-    ".close-profile"
-);
+    const profileModal = document.getElementById(
+        "profile-modal"
+    );
+
+    const closeButtons = document.querySelectorAll(
+        ".close-profile"
+    );
 
 
-// Open profile modal
+    if(profileBtn && profileModal){
 
-profileSettingsBtn?.addEventListener(
-    "click",
-    () => {
+        profileBtn.addEventListener(
+            "click",
+            () => {
 
-        if(profileModal){
+                profileModal.classList.remove(
+                    "hidden"
+                );
 
-            profileModal.classList.remove(
-                "hidden"
-            );
-
-        }
+            }
+        );
 
     }
-);
 
 
-// Close profile modal
-
-closeProfileButtons.forEach(
-    (btn)=>{
+    closeButtons.forEach((btn)=>{
 
         btn.addEventListener(
             "click",
             ()=>{
 
-                if(profileModal){
+                profileModal.classList.add(
+                    "hidden"
+                );
+
+            }
+        );
+
+    });
+
+
+    if(profileModal){
+
+        profileModal.addEventListener(
+            "click",
+            (event)=>{
+
+                if(event.target === profileModal){
 
                     profileModal.classList.add(
                         "hidden"
@@ -411,34 +424,7 @@ closeProfileButtons.forEach(
         );
 
     }
-);
 
-
-// Close when clicking outside modal
-
-profileModal?.addEventListener(
-    "click",
-    (e)=>{
-
-        if(e.target === profileModal){
-
-            profileModal.classList.add(
-                "hidden"
-            );
-
-        }
-
-    }
-);
-
-console.log(
-    "Profile button:",
-    profileSettingsBtn
-);
-
-console.log(
-    "Profile modal:",
-    profileModal
-);
+});
 
 export { showToast };
