@@ -467,4 +467,103 @@ manageUsersBtn?.addEventListener("click", () => {
 
 });
 
+// ==========================================
+// ADD USER MODAL
+// ==========================================
+
+const addUserBtn = document.getElementById("add-user-btn");
+
+const addUserModal = document.getElementById(
+    "add-user-modal"
+);
+
+const closeAddUserButtons = document.querySelectorAll(
+    ".close-add-user"
+);
+
+
+addUserBtn?.addEventListener("click", () => {
+
+    if(addUserModal){
+
+        addUserModal.classList.remove("hidden");
+
+    }
+
+});
+
+
+closeAddUserButtons.forEach((btn)=>{
+
+    btn.addEventListener("click",()=>{
+
+        addUserModal?.classList.add("hidden");
+
+    });
+
+});
+
+
+addUserModal?.addEventListener(
+    "click",
+    (e)=>{
+
+        if(e.target === addUserModal){
+
+            addUserModal.classList.add("hidden");
+
+        }
+
+    }
+);
+
+
+// Add User Form
+
+const addUserForm = document.getElementById(
+    "add-user-form"
+);
+
+
+addUserForm?.addEventListener(
+    "submit",
+    (e)=>{
+
+        e.preventDefault();
+
+
+        const name =
+        document.getElementById(
+            "new-user-name"
+        ).value;
+
+
+        const email =
+        document.getElementById(
+            "new-user-email"
+        ).value;
+
+
+        showToast(
+            `User ${name} created successfully`,
+            "success"
+        );
+
+
+        addUserForm.reset();
+
+        addUserModal.classList.add("hidden");
+
+
+        console.log(
+            "New user:",
+            {
+                name,
+                email
+            }
+        );
+
+    }
+);
+
 export { showToast };
