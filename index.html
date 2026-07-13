@@ -1059,6 +1059,114 @@ PROFILE SETTINGS MODAL
 </div>
 
 <!-- =========================
+ADD USER MODAL
+========================= -->
+
+<div id="add-user-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Add New User</h2>
+
+                <p>Create a new system account</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn close-add-user">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <form id="add-user-form">
+
+            <div class="form-group">
+
+                <label>Full Name</label>
+
+                <input
+                    type="text"
+                    id="new-user-name"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    id="new-user-email"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Password</label>
+
+                <input
+                    type="password"
+                    id="new-user-password"
+                    minlength="6"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Role</label>
+
+                <select id="new-user-role">
+
+                    <option value="officer">
+                        Field Officer
+                    </option>
+
+                    <option value="admin">
+                        Administrator
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Create User
+
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn close-add-user">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
 FLOATING ACTION BUTTON
 ========================= -->
 
