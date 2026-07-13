@@ -118,6 +118,34 @@ if (securityForm) {
     });
 }
 
+// ==========================================
+// CHANGE PASSWORD BUTTON
+// ==========================================
+
+const securityBtn = document.getElementById("security-settings-btn");
+
+securityBtn?.addEventListener("click", () => {
+
+    if (!securityForm) {
+
+        showToast(
+            "Change Password page is not yet installed.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    securityForm.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    currentPassword?.focus();
+
+});
+
 // Danger Zone
 const clearDataBtn = document.getElementById("clear-data-btn");
 const exportDataBtn = document.getElementById("export-data-btn");
@@ -358,77 +386,85 @@ logoutBtn?.addEventListener(
 );
 
 // ==========================================
-// PROFILE MODAL
+// PROFILE SETTINGS
 // ==========================================
 
-const profileBtn = document.getElementById(
-    "profile-settings-btn"
-);
+const profileBtn = document.getElementById("profile-settings-btn");
+const profileModal = document.getElementById("profile-modal");
+const profileForm = document.getElementById("profile-form");
+const closeProfileButtons = document.querySelectorAll(".close-profile");
 
-const profileModal = document.getElementById(
-    "profile-modal"
-);
+profileBtn?.addEventListener("click", () => {
 
-console.log(
-    "Profile button:",
-    document.getElementById("profile-settings-btn")
-);
+    profileModal?.classList.remove("hidden");
 
-console.log(
-    "Profile modal:",
-    document.getElementById("profile-modal")
-);
+    if (auth.currentUser) {
+        settingsEmail.value = auth.currentUser.email || "";
+    }
 
-const closeProfileButtons = document.querySelectorAll(
-    ".close-profile"
-);
+    settingsName.value = localStorage.getItem("userName") || "";
+    settingsPhone.value = localStorage.getItem("userPhone") || "";
 
+});
 
-if (profileBtn && profileModal) {
+closeProfileButtons.forEach(btn => {
 
-    profileBtn.addEventListener(
-        "click",
-        () => {
+    btn.addEventListener("click", () => {
 
-            console.log("Profile button clicked");
+        profileModal?.classList.add("hidden");
 
-            profileModal.classList.remove("hidden");
+    });
 
-        }
-    );
+});
 
-}
+profileModal?.addEventListener("click", (e) => {
 
+    if (e.target === profileModal) {
 
-closeProfileButtons.forEach((btn)=>{
+        profileModal.classList.add("hidden");
 
-    btn.addEventListener(
-        "click",
-        ()=>{
+    }
 
-            profileModal.classList.add("hidden");
+});
 
-        }
+profileForm?.addEventListener("submit", (e) => {
+
+    e.preventDefault();
+
+    localStorage.setItem("userName", settingsName.value.trim());
+    localStorage.setItem("userPhone", settingsPhone.value.trim());
+
+    profileModal.classList.add("hidden");
+
+    showToast("Profile updated successfully", "success");
+
+});
+
+// ==========================================
+// USER MANAGEMENT BUTTONS
+// ==========================================
+
+const addUserBtn = document.getElementById("add-user-btn");
+const manageUsersBtn = document.getElementById("manage-users-btn");
+
+// Add User
+addUserBtn?.addEventListener("click", () => {
+
+    showToast(
+        "Add User feature coming next.",
+        "success"
     );
 
 });
 
+// Manage Users
+manageUsersBtn?.addEventListener("click", () => {
 
-if(profileModal){
-
-    profileModal.addEventListener(
-        "click",
-        (e)=>{
-
-            if(e.target === profileModal){
-
-                profileModal.classList.add("hidden");
-
-            }
-
-        }
+    showToast(
+        "Manage Users feature coming next.",
+        "success"
     );
 
-}
+});
 
 export { showToast };
