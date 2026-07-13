@@ -1,5 +1,6 @@
 // js/settings.js
 
+console.log("SETTINGS FILE STARTED");
 console.log("SETTINGS.JS LOADED");
 import { auth } from "./firebase.js";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
