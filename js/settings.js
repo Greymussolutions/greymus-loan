@@ -359,72 +359,62 @@ logoutBtn?.addEventListener(
 // PROFILE MODAL
 // ==========================================
 
-document.addEventListener("DOMContentLoaded", () => {
+const profileBtn = document.getElementById(
+    "profile-settings-btn"
+);
 
-    const profileBtn = document.getElementById(
-        "profile-settings-btn"
+const profileModal = document.getElementById(
+    "profile-modal"
+);
+
+const closeButtons = document.querySelectorAll(
+    ".close-profile"
+);
+
+
+if(profileBtn && profileModal){
+
+    profileBtn.addEventListener(
+        "click",
+        () => {
+
+            profileModal.classList.remove("hidden");
+
+        }
     );
 
-    const profileModal = document.getElementById(
-        "profile-modal"
+}
+
+
+closeButtons.forEach((btn)=>{
+
+    btn.addEventListener(
+        "click",
+        ()=>{
+
+            profileModal.classList.add("hidden");
+
+        }
     );
-
-    const closeButtons = document.querySelectorAll(
-        ".close-profile"
-    );
-
-
-    if(profileBtn && profileModal){
-
-        profileBtn.addEventListener(
-            "click",
-            () => {
-
-                profileModal.classList.remove(
-                    "hidden"
-                );
-
-            }
-        );
-
-    }
-
-
-    closeButtons.forEach((btn)=>{
-
-        btn.addEventListener(
-            "click",
-            ()=>{
-
-                profileModal.classList.add(
-                    "hidden"
-                );
-
-            }
-        );
-
-    });
-
-
-    if(profileModal){
-
-        profileModal.addEventListener(
-            "click",
-            (event)=>{
-
-                if(event.target === profileModal){
-
-                    profileModal.classList.add(
-                        "hidden"
-                    );
-
-                }
-
-            }
-        );
-
-    }
 
 });
+
+
+if(profileModal){
+
+    profileModal.addEventListener(
+        "click",
+        (event)=>{
+
+            if(event.target === profileModal){
+
+                profileModal.classList.add("hidden");
+
+            }
+
+        }
+    );
+
+}
 
 export { showToast };
