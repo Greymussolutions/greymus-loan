@@ -3516,6 +3516,20 @@ tbody tr:hover{
     background:#e5e7eb;
 }
 
+@media (max-width:768px){
+
+    .table-wrapper{
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    table{
+        min-width:700px;
+    }
+
+}
+
 /* =====================================================
    END THEME SYSTEM
 ===================================================== */
