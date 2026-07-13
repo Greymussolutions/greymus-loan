@@ -764,19 +764,96 @@ MOBILE NAVIGATION
 SETTINGS MENU
 ========================= -->
 
+<!-- =========================
+SETTINGS MENU
+========================= -->
+
 <div id="settings-menu" class="settings-menu hidden">
 
     <div class="settings-card">
 
-        <h3>Settings</h3>
+        <h3>⚙️ Settings</h3>
+
+
+        <!-- Appearance -->
+
+        <div class="settings-section">
+
+            <h4>🎨 Appearance</h4>
+
+            <label for="theme-select">
+                Theme
+            </label>
+
+            <select id="theme-select">
+
+                <option value="system">
+                    📱 System Default
+                </option>
+
+                <option value="light">
+                    ☀️ Light Theme
+                </option>
+
+                <option value="dark">
+                    🌙 Dark Theme
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Account -->
+
+        <div class="settings-section">
+
+            <h4>👤 Account</h4>
+
+            <button id="profile-settings-btn">
+                Profile
+            </button>
+
+
+            <button id="security-settings-btn">
+                🔒 Change Password
+            </button>
+
+        </div>
+
+
+        <!-- User Management -->
+
+        <div class="settings-section admin-only">
+
+            <h4>👥 User Management</h4>
+
+            <button id="add-user-btn">
+                ➕ Add User
+            </button>
+
+            <button id="manage-users-btn">
+                Manage Users
+            </button>
+
+        </div>
+
+
+        <!-- Logout -->
 
         <button id="mobile-logout-btn" type="button">
+
             🚪 Logout
+
         </button>
 
+
         <button id="close-settings" type="button">
+
             Close
+
         </button>
+
 
     </div>
 
