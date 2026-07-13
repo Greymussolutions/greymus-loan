@@ -1,235 +1,407 @@
 /* =====================================================
    GREYMUS LOAN FINANCIAL HUB
    styles.css
-   Version 1.1 Stable
-   PART 1A
+   Version 1.4 Clean Stable
+
+   PART 1
+   Reset • Variables • Global System
 ===================================================== */
+
 
 /* ===========================
    RESET
 =========================== */
 
-*{
+*,
+*::before,
+*::after{
+
     margin:0;
     padding:0;
     box-sizing:border-box;
+
 }
+
 
 html{
+
     scroll-behavior:smooth;
+    width:100%;
+    overflow-x:hidden;
+
 }
+
 
 body{
-    font-family:"Inter",sans-serif;
+
+    font-family:"Inter",Arial,sans-serif;
+
     background:#f5f7fb;
+
     color:#1f2937;
+
     min-height:100vh;
+
     line-height:1.5;
+
+    overflow-x:hidden;
+
 }
 
+
 /* ===========================
-   VARIABLES
+   ROOT VARIABLES
 =========================== */
 
 :root{
 
+
+    /* Brand */
+
     --primary:#2563eb;
+
     --primary-dark:#1d4ed8;
 
+
+    /* Status */
+
     --success:#16a34a;
+
     --warning:#f59e0b;
+
     --danger:#dc2626;
 
+
+    /* Colors */
+
     --white:#ffffff;
+
     --black:#111827;
 
-    --border:#e5e7eb;
+
+    /* Background */
+
     --background:#f5f7fb;
 
+
+    /* Text */
+
     --text:#1f2937;
+
     --text-light:#6b7280;
 
-    --radius:14px;
+
+    /* Border */
+
+    --border:#e5e7eb;
+
+
+    /* Radius */
+
+    --radius-sm:10px;
+
+    --radius-md:14px;
+
+    --radius-lg:20px;
+
+
+    /* Shadow */
 
     --shadow:
-        0 10px 25px rgba(0,0,0,.08);
+
+    0 10px 30px rgba(15,23,42,.08);
+
+
+    /* Transition */
 
     --transition:.25s ease;
 
+
 }
+
 
 /* ===========================
-   COMMON
+   GLOBAL ELEMENTS
 =========================== */
 
-.hidden{
-    display:none !important;
-}
-
-.text-center{
-    text-align:center;
-}
 
 img{
+
     max-width:100%;
+
+    height:auto;
+
     display:block;
+
 }
 
-button{
-    cursor:pointer;
-    font-family:inherit;
-    border:none;
-    outline:none;
-    transition:var(--transition);
+
+a{
+
+    color:inherit;
+
+    text-decoration:none;
+
 }
+
+
+button{
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    font-family:inherit;
+
+    transition:var(--transition);
+
+}
+
 
 input,
 select,
 textarea{
+
     width:100%;
+
     font-family:inherit;
+
     font-size:15px;
-    border:1px solid var(--border);
-    border-radius:10px;
+
     padding:12px 14px;
-    outline:none;
-    transition:var(--transition);
+
+    border-radius:var(--radius-sm);
+
+    border:1px solid var(--border);
+
     background:var(--white);
+
+    color:var(--text);
+
+    outline:none;
+
+    transition:var(--transition);
+
 }
+
+
 
 input:focus,
 select:focus,
 textarea:focus{
 
+
     border-color:var(--primary);
 
+
     box-shadow:
-        0 0 0 3px
-        rgba(37,99,235,.15);
+
+    0 0 0 4px rgba(37,99,235,.12);
+
 
 }
+
 
 textarea{
+
     resize:vertical;
+
 }
 
+
 /* ===========================
-   LINKS
+   UTILITY CLASSES
 =========================== */
 
-a{
-    color:inherit;
-    text-decoration:none;
+
+.hidden{
+
+    display:none !important;
+
 }
 
-/* ===========================
-   LOADING
-=========================== */
 
-#loading-overlay{
+.text-center{
 
-    position:fixed;
+    text-align:center;
 
-    inset:0;
+}
 
-    background:
-        rgba(255,255,255,.85);
+
+.flex{
 
     display:flex;
 
-    flex-direction:column;
+}
+
+
+.flex-center{
+
+    display:flex;
 
     justify-content:center;
 
     align-items:center;
 
+}
+
+
+/* ===========================
+   LOADING OVERLAY
+=========================== */
+
+
+#loading-overlay{
+
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(255,255,255,.85);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
     gap:16px;
 
     z-index:5000;
 
+
 }
 
+
+
 .spinner{
+
 
     width:52px;
 
     height:52px;
 
-    border:5px solid #dbeafe;
-
-    border-top-color:var(--primary);
 
     border-radius:50%;
 
-    animation:spin .9s linear infinite;
+
+    border:5px solid #dbeafe;
+
+
+    border-top-color:var(--primary);
+
+
+    animation:
+
+    spin .9s linear infinite;
+
 
 }
+
+
 
 @keyframes spin{
 
+
     from{
+
         transform:rotate(0deg);
+
     }
 
+
     to{
+
         transform:rotate(360deg);
+
     }
+
 
 }
 
+
 /* ===========================
-   TOAST
+   TOAST MESSAGE
 =========================== */
+
 
 #toast{
 
+
     position:fixed;
+
 
     top:20px;
 
     right:20px;
 
+
     min-width:240px;
+
 
     padding:14px 18px;
 
-    background:var(--black);
 
-    color:var(--white);
+    border-radius:12px;
 
-    border-radius:10px;
+
+    background:#111827;
+
+
+    color:#fff;
+
 
     opacity:0;
 
+
     pointer-events:none;
+
 
     transform:translateY(-20px);
 
+
     transition:.3s;
+
 
     z-index:6000;
 
+
 }
+
+
 
 #toast.show{
 
+
     opacity:1;
+
 
     transform:translateY(0);
 
+
 }
 
-/* ===========================
-   END OF PART 1A
-=========================== *//* =====================================================
-   PART 1B
-   LOGIN • DASHBOARD LAYOUT • SIDEBAR • TOPBAR
+
+/* =====================================================
+   END OF PART 1
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 2
+   Login • Layout • Sidebar • Topbar
 ===================================================== */
 
 
 /* ===========================
    LOGIN PAGE
 =========================== */
+
 
 .center-page{
 
@@ -243,7 +415,9 @@ a{
 
     padding:24px;
 
-    background:linear-gradient(
+    background:
+
+    linear-gradient(
         135deg,
         #2563eb,
         #1d4ed8
@@ -251,20 +425,25 @@ a{
 
 }
 
+
+
 .login-card{
 
     width:100%;
+
     max-width:430px;
 
     background:#fff;
 
-    border-radius:18px;
+    border-radius:22px;
 
     padding:40px 32px;
 
     box-shadow:var(--shadow);
 
 }
+
+
 
 .logo-area{
 
@@ -274,6 +453,8 @@ a{
 
 }
 
+
+
 .logo-circle{
 
     width:80px;
@@ -282,115 +463,149 @@ a{
 
     margin:0 auto 18px;
 
+
     border-radius:50%;
+
 
     background:var(--primary);
 
+
     color:#fff;
+
 
     display:flex;
 
+    justify-content:center;
+
     align-items:center;
 
-    justify-content:center;
 
     font-size:34px;
 
     font-weight:700;
 
+
 }
 
+
+
 .logo-area h1{
+
 
     font-size:30px;
 
     color:var(--black);
 
+
 }
+
+
 
 .logo-area span{
 
+
     color:var(--text-light);
 
+
 }
+
+
 
 .login-card h2{
 
-    margin-top:20px;
 
     text-align:center;
 
+    margin-bottom:10px;
+
+
 }
 
+
+
 .login-card p{
+
 
     text-align:center;
 
     color:var(--text-light);
 
-    margin:8px 0 28px;
+    margin-bottom:28px;
+
 
 }
+
+
 
 #login-btn{
 
+
     width:100%;
 
-    margin-top:12px;
 
     padding:14px;
 
-    border-radius:10px;
+
+    border-radius:12px;
+
 
     background:var(--primary);
 
+
     color:#fff;
+
 
     font-size:16px;
 
+
     font-weight:600;
 
+
 }
+
+
 
 #login-btn:hover{
 
+
     background:var(--primary-dark);
 
+
 }
+
 
 
 /* ===========================
-   DASHBOARD LAYOUT
+   DASHBOARD STRUCTURE
 =========================== */
+
 
 .dashboard-layout{
 
+
     display:flex;
+
 
     min-height:100vh;
 
+
 }
+
 
 
 /* ===========================
    SIDEBAR
 =========================== */
 
+
 .sidebar{
+
 
     width:250px;
 
-    background:#111827;
-
-    color:#fff;
-
-    display:flex;
-
-    flex-direction:column;
-
-    padding:24px 18px;
 
     position:fixed;
+
 
     left:0;
 
@@ -398,218 +613,495 @@ a{
 
     bottom:0;
 
+
+    background:#111827;
+
+
+    color:#fff;
+
+
+    padding:24px 18px;
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
     overflow-y:auto;
 
+
+    z-index:3000;
+
+
 }
+
+
+
 
 .brand{
 
+
     display:flex;
 
+
     align-items:center;
+
 
     gap:14px;
 
+
     margin-bottom:35px;
 
+
 }
+
+
 
 .brand-logo{
 
+
     width:55px;
+
 
     height:55px;
 
+
     border-radius:50%;
+
 
     background:var(--primary);
 
+
     display:flex;
+
 
     justify-content:center;
 
+
     align-items:center;
+
 
     font-size:24px;
 
-    font-weight:bold;
+
+    font-weight:700;
+
 
 }
+
+
 
 .brand h2{
 
+
     font-size:22px;
 
+
 }
+
+
 
 .brand p{
 
+
     font-size:13px;
+
 
     color:#cbd5e1;
 
+
 }
+
 
 
 /* ===========================
    SIDEBAR MENU
 =========================== */
 
+
 .sidebar-menu{
 
+
     display:flex;
+
 
     flex-direction:column;
 
+
     gap:10px;
 
+
 }
+
+
 
 .sidebar-menu .tab-btn{
 
-    display:flex;
-
-    align-items:center;
-
-    gap:14px;
 
     width:100%;
 
+
+    min-height:52px;
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    gap:14px;
+
+
     padding:14px;
 
-    border-radius:10px;
+
+    border-radius:12px;
+
 
     background:transparent;
 
+
     color:#fff;
+
 
     text-align:left;
 
+
 }
+
+
 
 .sidebar-menu .tab-btn span{
 
+
     font-size:22px;
 
+
 }
+
+
 
 .sidebar-menu .tab-btn small{
 
+
     font-size:15px;
 
+
 }
+
+
 
 .sidebar-menu .tab-btn:hover{
 
+
     background:rgba(255,255,255,.08);
 
+
+    transform:translateX(4px);
+
+
 }
+
+
 
 .sidebar-menu .tab-btn.active{
 
+
     background:var(--primary);
 
+
 }
+
 
 
 /* ===========================
    MAIN CONTENT
 =========================== */
 
+
 .main-content{
+
 
     flex:1;
 
+
     margin-left:250px;
+
 
     padding:28px;
 
+
+    min-width:0;
+
+
 }
+
 
 
 /* ===========================
    TOP BAR
 =========================== */
 
+
 .topbar{
 
+
     display:flex;
+
 
     justify-content:space-between;
 
+
     align-items:center;
 
-    margin-bottom:30px;
 
     gap:20px;
 
+
+    margin-bottom:28px;
+
+
+    padding:18px 24px;
+
+
+    background:#fff;
+
+
+    border-radius:18px;
+
+
+    border:1px solid var(--border);
+
+
+    box-shadow:var(--shadow);
+
+
 }
 
+
+
+.topbar-left h1,
 .topbar h1{
 
-    font-size:32px;
+
+    font-size:30px;
+
+
+    font-weight:700;
+
 
     color:var(--black);
 
+
 }
 
+
+
+.topbar-left p,
 .topbar p{
+
 
     color:var(--text-light);
 
-    margin-top:6px;
+
+    margin-top:5px;
+
 
 }
+
+
 
 .topbar-actions{
 
+
     display:flex;
+
 
     align-items:center;
 
-    gap:12px;
+
+    gap:14px;
+
 
 }
+
 
 
 /* ===========================
    NOTIFICATION BUTTON
 =========================== */
 
+
 .notification-btn{
 
-    width:46px;
 
-    height:46px;
+    width:48px;
 
-    border-radius:50%;
 
-    background:#fff;
+    height:48px;
 
-    box-shadow:var(--shadow);
+
+    border-radius:14px;
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
+    display:flex;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
 
     font-size:20px;
 
+
 }
+
+
 
 .notification-btn:hover{
 
-    transform:scale(1.05);
+
+    background:var(--primary);
+
+
+    color:#fff;
+
 
 }
 
 
+
 /* ===========================
-   END OF PART 1B
-=========================== *//* =====================================================
-   PART 1C
-   DASHBOARD CARDS • TABLES • TOOLBARS
+   USER PROFILE
+=========================== */
+
+
+.user-profile{
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    gap:12px;
+
+
+    padding:8px 14px;
+
+
+    border-radius:14px;
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
+}
+
+
+
+.user-avatar{
+
+
+    width:42px;
+
+
+    height:42px;
+
+
+    border-radius:50%;
+
+
+    background:var(--primary);
+
+
+    color:#fff;
+
+
+    display:flex;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+    font-weight:700;
+
+
+}
+
+
+
+.user-details strong{
+
+
+    display:block;
+
+
+    font-size:14px;
+
+
+}
+
+
+
+.user-details small{
+
+
+    color:var(--text-light);
+
+
+}
+
+
+/* =====================================================
+   END OF PART 2
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 3
+   Dashboard Cards • Quick Actions • Tables
 ===================================================== */
 
 
 /* ===========================
-   HERO CARD
+   DASHBOARD CONTAINER
 =========================== */
+
+
+#dashboard-tab{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:24px;
+
+}
+
+
+/* ===========================
+   HERO / PORTFOLIO CARD
+=========================== */
+
 
 .hero-card{
 
@@ -619,347 +1111,737 @@ a{
 
     align-items:center;
 
-    padding:28px;
+    gap:20px;
 
-    background:linear-gradient(
+    padding:30px;
+
+    min-height:160px;
+
+    border-radius:22px;
+
+    background:
+
+    linear-gradient(
         135deg,
-        var(--primary),
-        var(--primary-dark)
+        #0f4c81,
+        #2563eb
     );
 
     color:#fff;
 
-    border-radius:18px;
-
-    margin-bottom:24px;
-
     box-shadow:var(--shadow);
 
+
 }
+
+
 
 .hero-card p{
 
-    opacity:.9;
-
     font-size:15px;
+
+    opacity:.9;
 
 }
 
+
+
 .hero-card h2{
 
-    margin-top:10px;
+    margin-top:8px;
 
-    font-size:36px;
+    font-size:42px;
 
     font-weight:700;
 
 }
 
+
+
 .hero-icon{
 
-    font-size:52px;
+    width:90px;
+
+    height:90px;
+
+    border-radius:22px;
+
+
+    background:
+
+    rgba(255,255,255,.15);
+
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+
+    font-size:42px;
+
+
+    flex-shrink:0;
 
 }
+
 
 
 /* ===========================
    STATISTICS GRID
 =========================== */
 
+
 .stats-grid{
+
 
     display:grid;
 
+
     grid-template-columns:
-        repeat(auto-fit,minmax(220px,1fr));
 
-    gap:20px;
+    repeat(4,minmax(0,1fr));
 
-    margin-bottom:30px;
+
+    gap:18px;
+
 
 }
+
+
+
+/* ===========================
+   STAT CARD
+=========================== */
+
 
 .stat-card{
 
+
+    position:relative;
+
+
+    overflow:hidden;
+
+
     background:#fff;
 
-    border-radius:14px;
+
+    border-radius:18px;
+
 
     padding:22px;
 
-    box-shadow:var(--shadow);
+
+    min-height:125px;
+
+
+    border:1px solid var(--border);
+
+
+    box-shadow:0 8px 20px rgba(0,0,0,.05);
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
+    justify-content:center;
+
 
     transition:var(--transition);
 
+
 }
+
+
 
 .stat-card:hover{
 
-    transform:translateY(-4px);
+
+    transform:translateY(-5px);
+
 
 }
+
+
+
+.stat-card::before{
+
+
+    content:"";
+
+
+    position:absolute;
+
+
+    top:0;
+
+
+    left:0;
+
+
+    width:100%;
+
+
+    height:4px;
+
+
+    background:var(--primary);
+
+
+}
+
+
 
 .stat-card span{
 
-    display:block;
 
     color:var(--text-light);
 
+
+    font-size:14px;
+
+
     margin-bottom:10px;
 
+
 }
+
+
 
 .stat-card h3{
 
+
     font-size:30px;
+
 
     color:var(--black);
 
-}
 
-.stat-card.danger{
+    font-weight:700;
 
-    border-left:5px solid var(--danger);
 
 }
+
+
+
+/* CARD COLORS */
+
+
+.stat-card.success::before{
+
+    background:var(--success);
+
+}
+
+
+.stat-card.warning::before{
+
+    background:var(--warning);
+
+}
+
+
+.stat-card.danger::before{
+
+    background:var(--danger);
+
+}
+
+
+.stat-card.info::before{
+
+    background:var(--primary);
+
+}
+
 
 
 /* ===========================
    QUICK ACTIONS
 =========================== */
 
+
 .quick-actions{
 
-    margin-top:30px;
+
+    margin-top:10px;
+
 
 }
+
+
 
 .quick-grid{
 
+
     display:grid;
 
+
     grid-template-columns:
-        repeat(auto-fit,minmax(240px,1fr));
 
-    gap:20px;
+    repeat(4,minmax(0,1fr));
 
-}
-
-.action-card{
-
-    display:flex;
-
-    align-items:center;
 
     gap:18px;
 
+
+}
+
+
+
+.action-card{
+
+
     background:#fff;
 
-    border-radius:14px;
+
+    border:1px solid var(--border);
+
+
+    border-radius:18px;
+
 
     padding:20px;
 
-    box-shadow:var(--shadow);
 
-    transition:var(--transition);
+    min-height:110px;
 
-}
-
-.action-card:hover{
-
-    transform:translateY(-4px);
-
-}
-
-.action-icon{
-
-    width:60px;
-
-    height:60px;
-
-    border-radius:50%;
-
-    background:#dbeafe;
-
-    color:var(--primary);
 
     display:flex;
 
+
     align-items:center;
+
+
+    gap:16px;
+
+
+    transition:var(--transition);
+
+
+}
+
+
+
+.action-card:hover{
+
+
+    transform:translateY(-5px);
+
+
+    box-shadow:var(--shadow);
+
+
+}
+
+
+
+.action-icon{
+
+
+    width:56px;
+
+
+    height:56px;
+
+
+    border-radius:16px;
+
+
+    background:#eff6ff;
+
+
+    color:var(--primary);
+
+
+    display:flex;
+
 
     justify-content:center;
 
-    font-size:28px;
+
+    align-items:center;
+
+
+    font-size:24px;
+
+
+    flex-shrink:0;
+
 
 }
+
+
 
 .action-card h3{
 
-    margin-bottom:5px;
+
+    font-size:17px;
+
+
+    margin-bottom:4px;
+
 
 }
+
+
 
 .action-card p{
 
+
+    font-size:13px;
+
+
     color:var(--text-light);
 
-    font-size:14px;
 
 }
+
 
 
 /* ===========================
    SECTION HEADER
 =========================== */
 
+
 .section-header{
+
 
     display:flex;
 
+
     justify-content:space-between;
+
 
     align-items:center;
 
-    margin-bottom:20px;
 
     gap:15px;
 
+
+    margin-bottom:18px;
+
+
 }
+
+
 
 .section-header h2{
 
-    font-size:28px;
+
+    font-size:26px;
+
+
+    color:var(--black);
+
 
 }
+
+
 
 .section-header p{
 
+
     color:var(--text-light);
 
-    margin-top:5px;
 
 }
+
 
 
 /* ===========================
    TOOLBAR
 =========================== */
 
+
 .toolbar{
+
 
     display:flex;
 
-    gap:15px;
-
-    margin-bottom:20px;
-
-}
-
-.toolbar-wrap{
 
     flex-wrap:wrap;
 
-}
 
-.toolbar input{
-
-    flex:1;
-
-}
-
-.toolbar select{
-
-    width:220px;
-
-}
+    align-items:center;
 
 
-/* ===========================
-   TABLES
-=========================== */
+    gap:14px;
 
-.table-wrapper{
 
     background:#fff;
 
-    border-radius:16px;
 
-    overflow:auto;
+    padding:18px;
 
-    box-shadow:var(--shadow);
+
+    border-radius:18px;
+
+
+    border:1px solid var(--border);
+
+
+    margin-bottom:24px;
+
 
 }
 
-table{
+
+
+.toolbar input{
+
+
+    flex:1;
+
+
+    min-width:220px;
+
+
+}
+
+
+
+.toolbar select{
+
+
+    min-width:180px;
+
+
+}
+
+
+
+/* ===========================
+   TABLE CONTAINER
+=========================== */
+
+
+.table-wrapper{
+
 
     width:100%;
 
-    border-collapse:collapse;
 
-    min-width:900px;
+    overflow-x:auto;
+
+
+    background:#fff;
+
+
+    border-radius:20px;
+
+
+    border:1px solid var(--border);
+
+
+    box-shadow:var(--shadow);
+
+
+    -webkit-overflow-scrolling:touch;
+
 
 }
+
+
+
+/* ===========================
+   TABLE
+=========================== */
+
+
+table{
+
+
+    width:100%;
+
+
+    min-width:1000px;
+
+
+    border-collapse:separate;
+
+
+    border-spacing:0;
+
+
+}
+
+
 
 thead{
 
-    background:#f3f4f6;
+
+    background:#f8fafc;
+
 
 }
 
-th{
+
+
+thead th{
+
+
+    padding:18px 20px;
+
+
+    font-size:13px;
+
+
+    text-transform:uppercase;
+
+
+    letter-spacing:.05em;
+
+
+    color:#64748b;
+
+
+    border-bottom:1px solid var(--border);
+
 
     text-align:left;
 
-    padding:16px;
+
+}
+
+
+
+tbody td{
+
+
+    padding:18px 20px;
+
 
     font-size:14px;
+
 
     color:var(--text);
 
-    border-bottom:1px solid var(--border);
+
+    border-bottom:1px solid #edf2f7;
+
 
 }
 
-td{
 
-    padding:16px;
-
-    border-bottom:1px solid var(--border);
-
-    font-size:14px;
-
-}
 
 tbody tr{
 
-    transition:var(--transition);
+
+    transition:.25s;
+
 
 }
+
+
 
 tbody tr:hover{
 
-    background:#f9fafb;
+
+    background:#eff6ff;
+
 
 }
+
+
+
+/* ===========================
+   TABLE TEXT HELPERS
+=========================== */
+
+
+.customer-name{
+
+
+    font-weight:600;
+
+
+}
+
+
+
+.loan-number{
+
+
+    color:var(--primary);
+
+
+    font-weight:700;
+
+
+}
+
+
+
+.amount{
+
+
+    color:var(--success);
+
+
+    font-weight:700;
+
+
+}
+
+
+
+.balance{
+
+
+    color:var(--danger);
+
+
+    font-weight:700;
+
+
+}
+
+
+/* =====================================================
+   END OF PART 3
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 4
+   Status • Buttons • Modals • Forms
+===================================================== */
 
 
 /* ===========================
    STATUS BADGES
 =========================== */
 
+
 .status{
 
-    display:inline-block;
+    display:inline-flex;
 
-    padding:6px 12px;
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:95px;
+
+    padding:7px 14px;
 
     border-radius:999px;
 
     font-size:12px;
 
-    font-weight:600;
+    font-weight:700;
 
 }
+
+
+
+/* Pending */
 
 .status.pending{
 
@@ -969,6 +1851,10 @@ tbody tr:hover{
 
 }
 
+
+
+/* Approved */
+
 .status.approved{
 
     background:#dcfce7;
@@ -977,21 +1863,9 @@ tbody tr:hover{
 
 }
 
-.status.rejected{
 
-    background:#fee2e2;
 
-    color:#991b1b;
-
-}
-
-.status.arrears{
-
-    background:#fecaca;
-
-    color:#b91c1c;
-
-}
+/* Completed */
 
 .status.completed{
 
@@ -1002,45 +1876,104 @@ tbody tr:hover{
 }
 
 
+
+/* Arrears */
+
+.status.arrears{
+
+    background:#fee2e2;
+
+    color:#b91c1c;
+
+}
+
+
+
+/* Rejected */
+
+.status.rejected{
+
+    background:#fce7f3;
+
+    color:#be185d;
+
+}
+
+
+
 /* ===========================
    TABLE ACTION BUTTONS
 =========================== */
 
+
 .loan-actions{
 
-    display:flex;
-
-    gap:8px;
-
-    flex-wrap:wrap;
-
-}
-
-.btn-icon{
-
-    width:36px;
-
-    height:36px;
-
-    border-radius:8px;
-
-    background:#f3f4f6;
 
     display:flex;
 
-    align-items:center;
 
     justify-content:center;
 
-    font-size:16px;
+
+    align-items:center;
+
+
+    gap:10px;
+
+
+    flex-wrap:wrap;
+
 
 }
+
+
+
+.btn-icon{
+
+
+    width:40px;
+
+
+    height:40px;
+
+
+    border-radius:12px;
+
+
+    display:flex;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
+    transition:var(--transition);
+
+
+}
+
+
 
 .btn-icon:hover{
 
-    transform:scale(1.08);
+
+    transform:translateY(-2px);
+
+
+    box-shadow:0 8px 18px rgba(0,0,0,.08);
+
 
 }
+
+
 
 .btn-view{
 
@@ -1048,17 +1981,20 @@ tbody tr:hover{
 
 }
 
+
 .btn-edit{
 
     color:var(--warning);
 
 }
 
+
 .btn-success{
 
     color:var(--success);
 
 }
+
 
 .btn-delete{
 
@@ -1067,2561 +2003,2559 @@ tbody tr:hover{
 }
 
 
-/* ===========================
-   END OF PART 1C
-=========================== *//* =====================================================
-   PART 1D
-   MODALS • FORMS • FAB • FOOTER • MOBILE
-===================================================== */
-
 
 /* ===========================
-   MODALS
+   MODAL SYSTEM
 =========================== */
+
 
 .modal{
 
+
     position:fixed;
+
 
     inset:0;
 
+
     display:flex;
+
 
     justify-content:center;
 
+
     align-items:center;
+
 
     padding:20px;
 
-    background:rgba(0,0,0,.45);
+
+    background:rgba(15,23,42,.45);
+
+
+    backdrop-filter:blur(8px);
+
 
     z-index:4000;
 
-}
-
-.modal-content{
-
-    width:100%;
-
-    max-width:720px;
-
-    background:#fff;
-
-    border-radius:18px;
-
-    padding:28px;
-
-    box-shadow:var(--shadow);
-
-    max-height:90vh;
 
     overflow-y:auto;
 
-}
-
-.modal-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:24px;
 
 }
 
-.modal-header h2{
 
-    font-size:26px;
+
+.modal-content{
+
+
+    width:100%;
+
+
+    max-width:760px;
+
+
+    max-height:90vh;
+
+
+    overflow-y:auto;
+
+
+    background:#fff;
+
+
+    border-radius:24px;
+
+
+    padding:30px;
+
+
+    border:1px solid var(--border);
+
+
+    box-shadow:
+
+    0 25px 60px rgba(15,23,42,.18);
+
 
 }
 
-.modal-header p{
-
-    color:var(--text-light);
-
-    margin-top:4px;
-
-}
-
-.modal-close-btn{
-
-    width:42px;
-
-    height:42px;
-
-    border-radius:50%;
-
-    background:#f3f4f6;
-
-    font-size:20px;
-
-}
 
 
 /* ===========================
-   FORMS
+   MODAL HEADER
 =========================== */
 
-.form-grid{
 
-    display:grid;
+.modal-header{
 
-    grid-template-columns:
-        repeat(auto-fit,minmax(250px,1fr));
-
-    gap:18px;
-
-}
-
-.form-group{
 
     display:flex;
 
-    flex-direction:column;
 
-    gap:8px;
+    justify-content:space-between;
 
-    margin-bottom:16px;
 
-}
+    align-items:center;
 
-.form-group label{
 
-    font-size:14px;
+    gap:15px;
 
-    font-weight:600;
 
-    color:var(--text);
+    padding-bottom:18px;
 
-}
 
-.modal-buttons{
+    margin-bottom:28px;
 
-    display:flex;
 
-    justify-content:flex-end;
+    border-bottom:1px solid var(--border);
 
-    gap:12px;
-
-    margin-top:24px;
 
 }
 
-.primary-btn{
+
+
+.modal-header h2{
+
+
+    font-size:28px;
+
+
+    color:var(--black);
+
+
+}
+
+
+
+.modal-header p{
+
+
+    color:var(--text-light);
+
+
+}
+
+
+
+.modal-close-btn{
+
+
+    width:44px;
+
+
+    height:44px;
+
+
+    border-radius:12px;
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
+    font-size:20px;
+
+
+}
+
+
+
+.modal-close-btn:hover{
+
 
     background:var(--primary);
 
+
     color:#fff;
 
-    padding:12px 24px;
 
-    border-radius:10px;
+}
+
+
+
+/* ===========================
+   FORM GRID
+=========================== */
+
+
+.form-grid{
+
+
+    display:grid;
+
+
+    grid-template-columns:
+
+    repeat(2,minmax(0,1fr));
+
+
+    gap:22px;
+
+
+}
+
+
+
+.form-group{
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
+    gap:8px;
+
+
+}
+
+
+
+.form-group label{
+
+
+    font-size:13px;
+
+
+    font-weight:700;
+
+
+    color:#475569;
+
+
+    text-transform:uppercase;
+
+
+    letter-spacing:.04em;
+
+
+}
+
+
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+
+
+    width:100%;
+
+
+    height:52px;
+
+
+    border-radius:14px;
+
+
+    border:1px solid #dbe2ea;
+
+
+    padding:0 16px;
+
+
+}
+
+
+
+.form-group textarea{
+
+
+    height:auto;
+
+
+    min-height:120px;
+
+
+    padding-top:14px;
+
+
+}
+
+
+
+/* ===========================
+   MODAL BUTTONS
+=========================== */
+
+
+.modal-buttons{
+
+
+    display:flex;
+
+
+    justify-content:flex-end;
+
+
+    gap:14px;
+
+
+    margin-top:30px;
+
+
+}
+
+
+
+.primary-btn,
+.secondary-btn{
+
+
+    height:52px;
+
+
+    min-width:170px;
+
+
+    padding:0 24px;
+
+
+    border-radius:14px;
+
 
     font-weight:600;
 
+
 }
+
+
+
+.primary-btn{
+
+
+    background:linear-gradient(
+
+    135deg,
+
+    #2563eb,
+
+    #1d4ed8
+
+    );
+
+
+    color:#fff;
+
+
+}
+
+
 
 .primary-btn:hover{
 
+
     background:var(--primary-dark);
 
+
 }
+
+
 
 .secondary-btn{
 
-    background:#e5e7eb;
+
+    background:#f3f4f6;
+
 
     color:var(--text);
 
-    padding:12px 24px;
 
-    border-radius:10px;
+    border:1px solid var(--border);
+
 
 }
+
+
+
+.secondary-btn:hover{
+
+
+    background:#e5e7eb;
+
+
+}
+
 
 
 /* ===========================
    LOAN SUMMARY CARD
 =========================== */
 
+
 .loan-summary-card{
+
 
     margin-top:22px;
 
-    background:#f8fafc;
-
-    border:1px solid var(--border);
-
-    border-radius:14px;
 
     padding:20px;
 
+
+    border-radius:16px;
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
 }
+
+
 
 .loan-summary-card h3{
 
+
     margin-bottom:16px;
 
+
 }
+
+
 
 .summary-row{
 
+
     display:flex;
+
 
     justify-content:space-between;
 
+
+    gap:20px;
+
+
     padding:10px 0;
 
-    border-bottom:1px solid #eceff3;
+
+    border-bottom:1px solid #edf2f7;
+
 
 }
+
+
 
 .summary-row:last-child{
 
+
     border-bottom:none;
 
+
 }
+
+
 
 .summary-row strong{
 
+
     color:var(--primary);
 
+
 }
+
+
+/* =====================================================
+   END OF PART 4
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 5
+   Repayment • Notifications • Settings • FAB • Footer
+===================================================== */
+
+
+/* ===========================
+   REPAYMENT MODAL
+=========================== */
+
+
+#repayment-modal .modal-content{
+
+
+    width:95%;
+
+
+    max-width:800px;
+
+
+    max-height:90vh;
+
+
+    overflow-y:auto;
+
+
+}
+
+
+
+/* Repayment Details */
+
+
+.repayment-summary{
+
+
+    background:#f8fafc;
+
+
+    border:1px solid var(--border);
+
+
+    border-radius:16px;
+
+
+    padding:20px;
+
+
+    margin-bottom:20px;
+
+
+}
+
+
+
+.repayment-summary h3{
+
+
+    margin-bottom:15px;
+
+
+}
+
+
+
+.repayment-row{
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    gap:20px;
+
+
+    padding:10px 0;
+
+
+    border-bottom:1px solid var(--border);
+
+
+}
+
+
+
+.repayment-row:last-child{
+
+
+    border-bottom:none;
+
+
+}
+
 
 
 /* ===========================
    NOTIFICATION PANEL
 =========================== */
 
+
 .notification-panel{
+
 
     position:fixed;
 
-    right:20px;
 
     top:80px;
 
-    width:340px;
+
+    right:20px;
+
+
+    width:360px;
+
 
     max-height:500px;
 
+
     background:#fff;
 
-    border-radius:16px;
+
+    border-radius:18px;
+
 
     box-shadow:var(--shadow);
+
+
+    border:1px solid var(--border);
+
 
     overflow:hidden;
 
+
     z-index:3500;
 
+
 }
+
+
 
 .notification-header{
 
+
     display:flex;
+
 
     justify-content:space-between;
 
+
     align-items:center;
+
 
     padding:18px;
 
+
     border-bottom:1px solid var(--border);
 
+
 }
+
+
+
+.notification-header h3{
+
+
+    font-size:18px;
+
+
+}
+
+
 
 .notification-list{
 
+
     max-height:420px;
 
-    overflow-y:auto;
-
-}
-
-.empty-state{
-
-    text-align:center;
-
-    padding:40px 20px;
-
-    color:var(--text-light);
-
-}
-
-
-/* ===========================
-   SETTINGS
-=========================== */
-
-.settings-menu{
-
-    position:fixed;
-
-    inset:0;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    background:rgba(0,0,0,.4);
-
-    z-index:4500;
-
-}
-
-.settings-card{
-
-    width:320px;
-
-    background:#fff;
-
-    border-radius:16px;
-
-    padding:24px;
-
-    box-shadow:var(--shadow);
-
-}
-
-.settings-card h3{
-
-    margin-bottom:20px;
-
-}
-
-.settings-card button{
-
-    width:100%;
-
-    padding:12px;
-
-    margin-bottom:10px;
-
-    border-radius:10px;
-
-}
-
-#mobile-logout-btn{
-
-    background:var(--danger);
-
-    color:#fff;
-
-}
-
-
-/* ===========================
-   FAB
-=========================== */
-
-.fab{
-
-    position:fixed;
-
-    right:24px;
-
-    bottom:90px;
-
-    width:60px;
-
-    height:60px;
-
-    border-radius:50%;
-
-    background:var(--primary);
-
-    color:#fff;
-
-    font-size:32px;
-
-    box-shadow:var(--shadow);
-
-    z-index:2000;
-
-}
-
-.fab:hover{
-
-    background:var(--primary-dark);
-
-    transform:scale(1.08);
-
-}
-
-
-/* ===========================
-   FOOTER
-=========================== */
-
-.app-footer{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-top:40px;
-
-    padding:20px 0;
-
-    color:var(--text-light);
-
-    border-top:1px solid var(--border);
-
-    font-size:14px;
-
-}
-
-
-/* ===========================
-   MOBILE NAVIGATION
-=========================== */
-
-.mobile-nav{
-
-    display:none;
-
-}
-
-
-/* ===========================
-   RESPONSIVE
-=========================== */
-
-@media (max-width:768px){
-
-    .sidebar{
-
-        display:none;
-
-    }
-
-    .main-content{
-
-        margin-left:0;
-
-        padding:20px;
-
-        padding-bottom:90px;
-
-    }
-
-    .mobile-nav{
-
-        display:flex;
-
-        position:fixed;
-
-        left:0;
-
-        right:0;
-
-        bottom:0;
-
-        background:#fff;
-
-        justify-content:space-around;
-
-        padding:10px 0;
-
-        box-shadow:0 -3px 12px rgba(0,0,0,.1);
-
-        z-index:3000;
-
-    }
-
-    .mobile-nav .tab-btn{
-
-        background:none;
-
-        display:flex;
-
-        flex-direction:column;
-
-        align-items:center;
-
-        gap:4px;
-
-    }
-
-    .topbar{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .hero-card{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-        gap:18px;
-
-    }
-
-    .stats-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .quick-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .form-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .modal-content{
-
-        padding:20px;
-
-    }
-
-    .app-footer{
-
-        flex-direction:column;
-
-        gap:10px;
-
-        text-align:center;
-
-    }
-
-}
-
-@media (max-width:480px){
-
-    .logo-circle{
-
-        width:60px;
-
-        height:60px;
-
-        font-size:28px;
-
-    }
-
-    .topbar h1{
-
-        font-size:24px;
-
-    }
-
-    .hero-card h2{
-
-        font-size:28px;
-
-    }
-
-    .stat-card h3{
-
-        font-size:24px;
-
-    }
-
-    .section-header{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .toolbar{
-
-        flex-direction:column;
-
-    }
-
-    .toolbar select{
-
-        width:100%;
-
-    }
-
-}
-
-/* =====================================================
-   END OF styles.css
-   Version 1.1 Stable
-===================================================== */
-
-/* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.2 Responsive Update
-   PART 1
-===================================================== */
-
-/* Prevent horizontal scrolling */
-
-html,
-body{
-    width:100%;
-    max-width:100%;
-    overflow-x:hidden;
-}
-
-/* Better sizing */
-
-*,
-*::before,
-*::after{
-    box-sizing:border-box;
-}
-
-/* Images */
-
-img{
-    max-width:100%;
-    height:auto;
-}
-
-/* Videos & iframes */
-
-video,
-iframe{
-    max-width:100%;
-}
-
-/* Tables */
-
-.table-wrapper{
-    width:100%;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-}
-
-table{
-    width:100%;
-    min-width:950px;
-}
-
-/* Sidebar */
-
-.sidebar{
 
     overflow-y:auto;
 
-    scrollbar-width:thin;
 
 }
 
-/* Main content */
 
-.main-content{
 
-    min-width:0;
+.notification-item{
 
-}
 
-/* Buttons */
+    padding:15px 18px;
 
-button{
 
-    white-space:nowrap;
+    border-bottom:1px solid var(--border);
+
 
 }
 
-/* Toolbar */
 
-.toolbar{
 
-    align-items:center;
+.notification-item:hover{
 
-}
-
-.toolbar input{
-
-    min-width:220px;
-
-}
-
-.toolbar select{
-
-    min-width:180px;
-
-}
-
-/* Forms */
-
-.form-grid{
-
-    align-items:start;
-
-}
-
-.form-group{
-
-    width:100%;
-
-}
-
-/* Inputs */
-
-input,
-select,
-textarea{
-
-    max-width:100%;
-
-}
-
-/* Modal */
-
-.modal{
-
-    overflow-y:auto;
-
-}
-
-.modal-content{
-
-    width:min(720px,100%);
-
-}
-
-/* Loan Summary */
-
-.summary-row{
-
-    gap:20px;
-
-}
-
-/* Notification */
-
-.notification-panel{
-
-    max-width:calc(100vw - 30px);
-
-}
-
-/* Footer */
-
-.app-footer{
-
-    flex-wrap:wrap;
-
-}
-
-/* Desktop Large Screens */
-
-@media (min-width:1600px){
-
-    .main-content{
-
-        padding:40px 50px;
-
-    }
-
-    .stats-grid{
-
-        grid-template-columns:
-        repeat(4,1fr);
-
-    }
-
-    .quick-grid{
-
-        grid-template-columns:
-        repeat(4,1fr);
-
-    }
-
-}
-
-/* =====================================================
-   END OF PART 1
-===================================================== */
-
-/* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.2 Responsive Update
-   PART 2
-   Sidebar • Desktop • Tablet • Mobile
-===================================================== */
-
-/* ===========================
-   SIDEBAR
-=========================== */
-
-.sidebar{
-
-    transition:.3s ease;
-
-    z-index:3000;
-
-}
-
-.sidebar-menu{
-
-    flex:1;
-
-    overflow-y:auto;
-
-}
-
-.sidebar-menu .tab-btn{
-
-    min-height:52px;
-
-    transition:all .25s ease;
-
-}
-
-.sidebar-menu .tab-btn:hover{
-
-    transform:translateX(4px);
-
-}
-
-.sidebar-menu .tab-btn.active{
-
-    box-shadow:
-        inset 4px 0 0 rgba(255,255,255,.7);
-
-}
-
-/* ===========================
-   TOPBAR
-=========================== */
-
-.topbar{
-
-    flex-wrap:wrap;
-
-}
-
-.topbar-actions{
-
-    display:flex;
-
-    flex-wrap:wrap;
-
-    justify-content:flex-end;
-
-}
-
-/* ===========================
-   HERO CARD
-=========================== */
-
-.hero-card{
-
-    gap:20px;
-
-}
-
-.hero-card>*{
-
-    flex:1;
-
-}
-
-/* ===========================
-   TABLET
-=========================== */
-
-@media (max-width:1024px){
-
-    .sidebar{
-
-        width:220px;
-
-    }
-
-    .main-content{
-
-        margin-left:220px;
-
-        padding:24px;
-
-    }
-
-    .stats-grid{
-
-        grid-template-columns:
-            repeat(2,1fr);
-
-    }
-
-    .quick-grid{
-
-        grid-template-columns:
-            repeat(2,1fr);
-
-    }
-
-}
-
-/* ===========================
-   MOBILE
-=========================== */
-
-@media (max-width:768px){
-
-    .sidebar{
-
-        display:none;
-
-    }
-
-    .main-content{
-
-        margin-left:0;
-
-        width:100%;
-
-        padding:18px;
-
-        padding-bottom:90px;
-
-    }
-
-    .topbar{
-
-        align-items:flex-start;
-
-    }
-
-    .topbar-actions{
-
-        width:100%;
-
-        justify-content:flex-start;
-
-    }
-
-    .hero-card{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-    }
-
-    .hero-icon{
-
-        font-size:42px;
-
-    }
-
-    .stats-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .quick-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-}
-
-/* ===========================
-   SMALL PHONES
-=========================== */
-
-@media (max-width:480px){
-
-    .main-content{
-
-        padding:15px;
-
-    }
-
-    .topbar h1{
-
-        font-size:24px;
-
-    }
-
-    .hero-card{
-
-        padding:20px;
-
-    }
-
-    .hero-card h2{
-
-        font-size:26px;
-
-    }
-
-    .brand h2{
-
-        font-size:18px;
-
-    }
-
-}
-
-/* =====================================================
-   END OF PART 2
-===================================================== */
-
-/* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.2 Responsive Update
-   PART 3
-   Tables • Forms • Buttons • Modals
-===================================================== */
-
-/* ===========================
-   TABLES
-=========================== */
-
-.table-wrapper{
-
-    overflow-x:auto;
-
-    -webkit-overflow-scrolling:touch;
-
-    border-radius:16px;
-
-}
-
-table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-}
-
-th,
-td{
-
-    white-space:nowrap;
-
-    vertical-align:middle;
-
-}
-
-tbody tr{
-
-    transition:.25s;
-
-}
-
-tbody tr:hover{
 
     background:#f8fafc;
 
+
 }
 
+
+
+.empty-state{
+
+
+    padding:40px 20px;
+
+
+    text-align:center;
+
+
+    color:var(--text-light);
+
+
+}
+
+
+
 /* ===========================
-   ACTION BUTTONS
+   SETTINGS PANEL
 =========================== */
 
-.loan-actions{
+
+.settings-menu{
+
+
+    position:fixed;
+
+
+    inset:0;
+
 
     display:flex;
 
-    flex-wrap:wrap;
 
-    gap:8px;
+    justify-content:center;
 
-    justify-content:flex-start;
 
     align-items:center;
 
-}
 
-.loan-actions button{
+    background:rgba(0,0,0,.4);
 
-    min-width:40px;
 
-}
+    z-index:4500;
 
-.primary-btn,
-.secondary-btn{
-
-    min-height:46px;
-
-    font-weight:600;
 
 }
 
-.primary-btn{
 
-    white-space:nowrap;
 
-}
+.settings-card{
 
-/* ===========================
-   FORMS
-=========================== */
-
-form{
 
     width:100%;
 
+
+    max-width:400px;
+
+
+    background:#fff;
+
+
+    border-radius:20px;
+
+
+    padding:24px;
+
+
+    box-shadow:var(--shadow);
+
+
 }
 
-.form-grid{
 
-    display:grid;
 
-    grid-template-columns:
-        repeat(2,minmax(0,1fr));
+.settings-card h3{
 
-    gap:18px;
+
+    margin-bottom:20px;
+
 
 }
 
-.form-group{
+
+
+.settings-section{
+
+
+    margin-bottom:20px;
+
+
+}
+
+
+
+.settings-section h4{
+
+
+    margin-bottom:10px;
+
+
+    font-size:15px;
+
+
+}
+
+
+
+.settings-card button{
+
 
     width:100%;
 
-}
 
-.form-group input,
-.form-group select,
-.form-group textarea{
+    padding:12px;
 
-    width:100%;
 
-}
+    margin-bottom:10px;
 
-/* ===========================
-   MODALS
-=========================== */
 
-.modal{
+    border-radius:10px;
 
-    padding:20px;
-
-    overflow-y:auto;
 
 }
 
-.modal-content{
 
-    width:100%;
 
-    max-width:760px;
+#mobile-logout-btn{
 
-    margin:auto;
 
-}
+    background:var(--danger);
 
-.modal-buttons{
 
-    display:flex;
+    color:#fff;
 
-    justify-content:flex-end;
-
-    gap:12px;
-
-    flex-wrap:wrap;
 
 }
 
-/* ===========================
-   TOOLBAR
-=========================== */
 
-.toolbar{
-
-    display:flex;
-
-    flex-wrap:wrap;
-
-    gap:12px;
-
-}
-
-.toolbar input{
-
-    flex:1;
-
-    min-width:220px;
-
-}
-
-.toolbar select{
-
-    min-width:180px;
-
-}
-
-/* ===========================
-   MOBILE
-=========================== */
-
-@media (max-width:768px){
-
-    .form-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .modal-content{
-
-        padding:20px;
-
-        max-height:90vh;
-
-    }
-
-    .modal-buttons{
-
-        flex-direction:column;
-
-    }
-
-    .modal-buttons button{
-
-        width:100%;
-
-    }
-
-    .loan-actions{
-
-        justify-content:center;
-
-    }
-
-    .loan-actions button{
-
-        flex:1;
-
-        min-width:90px;
-
-    }
-
-    th,
-    td{
-
-        font-size:13px;
-
-        padding:12px;
-
-    }
-
-}
-
-/* ===========================
-   SMALL PHONES
-=========================== */
-
-@media (max-width:480px){
-
-    .toolbar{
-
-        flex-direction:column;
-
-    }
-
-    .toolbar input,
-    .toolbar select,
-    .toolbar button{
-
-        width:100%;
-
-    }
-
-    .primary-btn,
-    .secondary-btn{
-
-        width:100%;
-
-    }
-
-}
-
-/* =====================================================
-   END OF PART 3
-===================================================== */
-
-/* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.2 Responsive Update
-   PART 4
-   Finishing Touches
-===================================================== */
 
 /* ===========================
    FLOATING ACTION BUTTON
 =========================== */
 
+
 .fab{
 
-    transition:.25s ease;
+
+    position:fixed;
+
+
+    right:24px;
+
+
+    bottom:90px;
+
+
+    width:60px;
+
+
+    height:60px;
+
+
+    border-radius:50%;
+
+
+    background:var(--primary);
+
+
+    color:#fff;
+
+
+    font-size:32px;
+
+
+    display:flex;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+    box-shadow:var(--shadow);
+
+
+    z-index:2000;
+
 
 }
+
+
 
 .fab:hover{
 
+
+    background:var(--primary-dark);
+
+
     transform:scale(1.08);
+
 
 }
 
-@media (min-width:769px){
 
-    /* Desktop uses toolbar buttons */
+
+/* Hide desktop FAB */
+
+
+@media(min-width:769px){
+
 
     .fab{
+
 
         display:none;
 
-    }
-
-}
-
-@media (max-width:768px){
-
-    .fab{
-
-        display:flex;
-
-        justify-content:center;
-
-        align-items:center;
-
-        right:20px;
-
-        bottom:80px;
 
     }
 
-}
-
-
-/* ===========================
-   NOTIFICATION PANEL
-=========================== */
-
-.notification-panel{
-
-    max-width:360px;
 
 }
 
-@media (max-width:768px){
-
-    .notification-panel{
-
-        left:10px;
-
-        right:10px;
-
-        width:auto;
-
-        max-width:none;
-
-        top:70px;
-
-    }
-
-}
-
-
-/* ===========================
-   SETTINGS
-=========================== */
-
-.settings-card{
-
-    max-width:400px;
-
-    width:100%;
-
-}
-
-@media (max-width:480px){
-
-    .settings-card{
-
-        margin:15px;
-
-        padding:20px;
-
-    }
-
-}
 
 
 /* ===========================
    FOOTER
 =========================== */
 
+
 .app-footer{
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    align-items:center;
+
+
+    gap:15px;
+
 
     flex-wrap:wrap;
 
-    gap:12px;
+
+    margin-top:40px;
+
+
+    padding:20px 0;
+
+
+    border-top:1px solid var(--border);
+
+
+    color:var(--text-light);
+
+
+    font-size:14px;
+
 
 }
 
-@media (max-width:768px){
-
-    .app-footer{
-
-        flex-direction:column;
-
-        align-items:center;
-
-        text-align:center;
-
-    }
-
-}
 
 
 /* ===========================
    MOBILE NAVIGATION
 =========================== */
 
+
 .mobile-nav{
 
-    border-top:1px solid var(--border);
 
-}
+    display:none;
 
-.mobile-nav .tab-btn{
-
-    flex:1;
-
-    min-width:60px;
-
-    color:var(--text);
-
-}
-
-.mobile-nav .tab-btn.active{
-
-    color:var(--primary);
-
-    font-weight:600;
 
 }
 
 
-/* ===========================
-   DESKTOP IMPROVEMENTS
-=========================== */
 
-@media (min-width:1200px){
+@media(max-width:768px){
 
-    .stats-grid{
 
-        grid-template-columns:
-            repeat(4,1fr);
+
+    .fab{
+
+
+        display:flex;
+
+
+        right:20px;
+
+
+        bottom:80px;
+
 
     }
 
-    .quick-grid{
 
-        grid-template-columns:
-            repeat(4,1fr);
+
+    .notification-panel{
+
+
+        left:10px;
+
+
+        right:10px;
+
+
+        width:auto;
+
+
+        max-width:none;
+
+
+        top:70px;
+
 
     }
 
-    .main-content{
 
-        padding:32px;
+
+    .app-footer{
+
+
+        flex-direction:column;
+
+
+        text-align:center;
+
 
     }
 
-}
 
-@media (min-width:1600px){
-
-    .main-content{
-
-        max-width:1500px;
-
-        margin-left:250px;
-
-    }
 
 }
 
-
-/* ===========================
-   ACCESSIBILITY
-=========================== */
-
-button:focus,
-input:focus,
-select:focus,
-textarea:focus{
-
-    outline:2px solid rgba(37,99,235,.25);
-
-    outline-offset:2px;
-
-}
-
-
-/* ===========================
-   SMOOTH SCROLLING
-=========================== */
-
-.table-wrapper,
-.sidebar,
-.notification-list,
-.modal-content{
-
-    scroll-behavior:smooth;
-
-}
-
-/* Repayment modal scroll */
-
-#repayment-modal .modal-content {
-    width: 95%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-/* ===========================
-   END
-=========================== */
 
 /* =====================================================
-   THEME SYSTEM
-   Light / Dark / System Default
+   END OF PART 5
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 6
+   Responsive System
 ===================================================== */
 
 
-/* DARK THEME VARIABLES */
+/* ===========================
+   LARGE DESKTOP
+=========================== */
+
+
+@media (min-width:1400px){
+
+
+    .main-content{
+
+
+        padding:40px 50px;
+
+
+    }
+
+
+
+    .stats-grid{
+
+
+        grid-template-columns:
+
+        repeat(4,1fr);
+
+
+    }
+
+
+
+    .quick-grid{
+
+
+        grid-template-columns:
+
+        repeat(4,1fr);
+
+
+    }
+
+
+}
+
+
+
+/* ===========================
+   TABLET LANDSCAPE
+=========================== */
+
+
+@media (max-width:1200px){
+
+
+
+    .sidebar{
+
+
+        width:220px;
+
+
+    }
+
+
+
+    .main-content{
+
+
+        margin-left:220px;
+
+
+        padding:24px;
+
+
+    }
+
+
+
+    .stats-grid{
+
+
+        grid-template-columns:
+
+        repeat(2,1fr);
+
+
+    }
+
+
+
+    .quick-grid{
+
+
+        grid-template-columns:
+
+        repeat(2,1fr);
+
+
+    }
+
+
+
+    .hero-card h2{
+
+
+        font-size:34px;
+
+
+    }
+
+
+
+}
+
+
+
+/* ===========================
+   MOBILE
+=========================== */
+
+
+@media (max-width:768px){
+
+
+
+    /* Sidebar hidden */
+
+
+    .sidebar{
+
+
+        display:none;
+
+
+    }
+
+
+
+
+    .main-content{
+
+
+        margin-left:0;
+
+
+        width:100%;
+
+
+        padding:18px;
+
+
+        padding-bottom:100px;
+
+
+    }
+
+
+
+
+    /* Topbar */
+
+
+    .topbar{
+
+
+        flex-direction:column;
+
+
+        align-items:flex-start;
+
+
+        gap:15px;
+
+
+    }
+
+
+
+    .topbar-actions{
+
+
+        width:100%;
+
+
+        justify-content:flex-start;
+
+
+        flex-wrap:wrap;
+
+
+    }
+
+
+
+
+    /* Hero */
+
+
+    .hero-card{
+
+
+        flex-direction:column;
+
+
+        align-items:flex-start;
+
+
+        padding:24px;
+
+
+    }
+
+
+
+    .hero-card h2{
+
+
+        font-size:30px;
+
+
+    }
+
+
+
+    .hero-icon{
+
+
+        width:70px;
+
+
+        height:70px;
+
+
+        font-size:34px;
+
+
+    }
+
+
+
+
+
+    /* Dashboard Cards */
+
+
+    .stats-grid{
+
+
+        grid-template-columns:
+
+        repeat(2,1fr);
+
+
+        gap:14px;
+
+
+    }
+
+
+
+    .stat-card{
+
+
+        min-height:120px;
+
+
+        padding:18px;
+
+
+    }
+
+
+
+    .stat-card h3{
+
+
+        font-size:24px;
+
+
+    }
+
+
+
+
+    /* Quick Actions */
+
+
+    .quick-grid{
+
+
+        grid-template-columns:
+
+        1fr;
+
+
+    }
+
+
+
+
+
+    /* Forms */
+
+
+    .form-grid{
+
+
+        grid-template-columns:
+
+        1fr;
+
+
+    }
+
+
+
+
+
+    /* Modal */
+
+
+    .modal{
+
+
+        padding:15px;
+
+
+    }
+
+
+
+    .modal-content{
+
+
+        padding:22px;
+
+
+        border-radius:18px;
+
+
+    }
+
+
+
+    .modal-buttons{
+
+
+        flex-direction:column;
+
+
+    }
+
+
+
+    .modal-buttons button{
+
+
+        width:100%;
+
+
+    }
+
+
+
+
+
+    /* Toolbar */
+
+
+    .toolbar{
+
+
+        flex-direction:column;
+
+
+        align-items:stretch;
+
+
+    }
+
+
+
+    .toolbar input,
+    .toolbar select,
+    .toolbar button{
+
+
+        width:100%;
+
+
+    }
+
+
+
+
+
+    /* Mobile Navigation */
+
+
+    .mobile-nav{
+
+
+        display:flex;
+
+
+        position:fixed;
+
+
+        left:0;
+
+
+        right:0;
+
+
+        bottom:0;
+
+
+        height:75px;
+
+
+        background:#fff;
+
+
+        border-top:1px solid var(--border);
+
+
+        justify-content:space-around;
+
+
+        align-items:center;
+
+
+        box-shadow:
+
+        0 -5px 15px rgba(0,0,0,.08);
+
+
+        z-index:3000;
+
+
+    }
+
+
+
+    .mobile-nav .tab-btn{
+
+
+        flex:1;
+
+
+        height:100%;
+
+
+        background:none;
+
+
+        color:var(--text);
+
+
+        display:flex;
+
+
+        flex-direction:column;
+
+
+        align-items:center;
+
+
+        justify-content:center;
+
+
+        gap:4px;
+
+
+    }
+
+
+
+    .mobile-nav .tab-btn.active{
+
+
+        color:var(--primary);
+
+
+        font-weight:600;
+
+
+    }
+
+
+
+}
+
+
+
+/* ===========================
+   SMALL PHONES
+=========================== */
+
+
+@media (max-width:480px){
+
+
+
+    .main-content{
+
+
+        padding:15px;
+
+
+    }
+
+
+
+
+    .topbar h1{
+
+
+        font-size:24px;
+
+
+    }
+
+
+
+
+    .hero-card{
+
+
+        padding:20px;
+
+
+    }
+
+
+
+
+    .hero-card h2{
+
+
+        font-size:26px;
+
+
+    }
+
+
+
+
+    .stats-grid{
+
+
+        grid-template-columns:
+
+        1fr;
+
+
+    }
+
+
+
+
+    .login-card{
+
+
+        padding:30px 20px;
+
+
+    }
+
+
+
+
+    .logo-circle{
+
+
+        width:65px;
+
+
+        height:65px;
+
+
+        font-size:28px;
+
+
+    }
+
+
+
+
+    .section-header{
+
+
+        flex-direction:column;
+
+
+        align-items:flex-start;
+
+
+    }
+
+
+
+
+    .btn-icon{
+
+
+        width:36px;
+
+
+        height:36px;
+
+
+    }
+
+
+}
+
+
+/* =====================================================
+   END OF PART 6
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 7
+   Dark Mode • Accessibility • UI Polish
+===================================================== */
+
+
+/* ===========================
+   DARK MODE VARIABLES
+=========================== */
+
 
 html[data-theme="dark"]{
 
+
     --white:#1f2937;
+
+
     --black:#f9fafb;
+
 
     --background:#111827;
 
+
     --text:#f9fafb;
+
+
     --text-light:#cbd5e1;
+
 
     --border:#374151;
 
+
 }
 
 
-/* APPLY THEME */
+
+/* ===========================
+   BODY
+=========================== */
+
 
 html[data-theme="dark"] body{
 
+
     background:#111827;
+
+
     color:#f9fafb;
+
 
 }
 
 
-/* Cards */
+
+/* ===========================
+   CARDS
+=========================== */
+
 
 html[data-theme="dark"] .stat-card,
 html[data-theme="dark"] .action-card,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .table-wrapper,
 html[data-theme="dark"] .modal-content,
 html[data-theme="dark"] .settings-card,
-html[data-theme="dark"] .notification-panel,
-html[data-theme="dark"] .table-wrapper{
+html[data-theme="dark"] .notification-panel{
+
 
     background:#1f2937;
-    color:#f9fafb;
-
-}
 
 
-/* Inputs */
-
-html[data-theme="dark"] input,
-html[data-theme="dark"] select,
-html[data-theme="dark"] textarea{
-
-    background:#111827;
-    color:#f9fafb;
     border-color:#374151;
 
-}
-
-
-/* Tables */
-
-html[data-theme="dark"] thead{
-
-    background:#111827;
-
-}
-
-
-html[data-theme="dark"] th,
-html[data-theme="dark"] td{
 
     color:#f9fafb;
-    border-color:#374151;
+
 
 }
 
 
-html[data-theme="dark"] tbody tr:hover{
 
-    background:#374151;
+/* ===========================
+   HEADINGS
+=========================== */
 
-}
-
-
-/* Text */
 
 html[data-theme="dark"] h1,
 html[data-theme="dark"] h2,
 html[data-theme="dark"] h3,
 html[data-theme="dark"] h4{
 
+
     color:#f9fafb;
+
 
 }
 
 
-/* Mobile navigation */
+
+/* ===========================
+   TEXT
+=========================== */
+
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] span{
+
+
+    color:#cbd5e1;
+
+
+}
+
+
+
+/* ===========================
+   INPUTS
+=========================== */
+
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea{
+
+
+    background:#111827;
+
+
+    color:#f9fafb;
+
+
+    border-color:#374151;
+
+
+}
+
+
+
+html[data-theme="dark"] input::placeholder{
+
+
+    color:#94a3b8;
+
+
+}
+
+
+
+/* ===========================
+   TABLES
+=========================== */
+
+
+html[data-theme="dark"] table{
+
+
+    background:#1f2937;
+
+
+}
+
+
+
+html[data-theme="dark"] thead{
+
+
+    background:#111827;
+
+
+}
+
+
+
+html[data-theme="dark"] th{
+
+
+    color:#e5e7eb;
+
+
+    border-color:#374151;
+
+
+}
+
+
+
+html[data-theme="dark"] td{
+
+
+    color:#f9fafb;
+
+
+    border-color:#374151;
+
+
+}
+
+
+
+html[data-theme="dark"] tbody tr:hover{
+
+
+    background:#334155;
+
+
+}
+
+
+
+/* ===========================
+   BUTTONS
+=========================== */
+
+
+html[data-theme="dark"] .secondary-btn{
+
+
+    background:#374151;
+
+
+    color:#f9fafb;
+
+
+    border-color:#4b5563;
+
+
+}
+
+
+
+html[data-theme="dark"] .notification-btn{
+
+
+    background:#1f2937;
+
+
+    color:#f9fafb;
+
+
+    border-color:#374151;
+
+
+}
+
+
+
+/* ===========================
+   MOBILE NAV
+=========================== */
+
 
 html[data-theme="dark"] .mobile-nav{
 
+
     background:#1f2937;
+
+
     border-color:#374151;
 
+
 }
+
 
 
 html[data-theme="dark"] .mobile-nav .tab-btn{
 
+
     color:#f9fafb;
 
-}
-
-
-/* Settings sections */
-
-.settings-section{
-
-    margin-bottom:20px;
 
 }
 
 
-.settings-section h4{
 
-    margin-bottom:10px;
+html[data-theme="dark"] .mobile-nav .tab-btn.active{
 
-    font-size:15px;
+
+    color:#60a5fa;
+
 
 }
 
 
-/* Theme dropdown */
 
-#theme-select{
+/* ===========================
+   MODAL OVERLAY
+=========================== */
 
-    margin-top:8px;
-
-}
-
-
-/* Dark modal overlay */
 
 html[data-theme="dark"] .modal{
 
+
     background:rgba(0,0,0,.65);
 
+
 }
 
-/* =====================================================
-   GREYMUS BANKING UI
-   VERSION 1.3
-   PART 1
-   Dashboard Redesign
-===================================================== */
 
-/* ------------------------------
-   Dashboard Background
------------------------------- */
 
-#dashboard-tab{
-    display:flex;
-    flex-direction:column;
-    gap:24px;
-}
+/* ===========================
+   SETTINGS
+=========================== */
 
-/* ------------------------------
-   Portfolio Card
------------------------------- */
 
-.hero-card{
-    background:linear-gradient(135deg,#0f4c81,#2563eb);
-    border-radius:22px;
-    padding:30px;
-    color:#fff;
-    box-shadow:0 15px 35px rgba(37,99,235,.15);
-    min-height:150px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+#theme-select{
 
-.hero-card h2{
-    font-size:42px;
-    font-weight:700;
+
     margin-top:8px;
-}
 
-.hero-card p{
-    font-size:15px;
-    opacity:.9;
-    letter-spacing:.5px;
-}
-
-.hero-icon{
-    width:90px;
-    height:90px;
-    border-radius:20px;
-    background:rgba(255,255,255,.15);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:42px;
-}
-
-/* ------------------------------
-   Statistics Grid
------------------------------- */
-
-.stats-grid{
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(4,minmax(0,1fr));
-
-    gap:18px;
 
 }
 
-/* ------------------------------
-   Banking Cards
------------------------------- */
 
-.stat-card{
 
-    background:#fff;
+/* ===========================
+   ACCESSIBILITY
+=========================== */
 
-    border-radius:18px;
 
-    padding:22px;
+button:focus,
+input:focus,
+select:focus,
+textarea:focus{
 
-    min-height:125px;
 
-    display:flex;
+    outline:2px solid rgba(37,99,235,.35);
 
-    flex-direction:column;
 
-    justify-content:center;
+    outline-offset:2px;
 
-    position:relative;
-
-    overflow:hidden;
-
-    border:1px solid #edf2f7;
-
-    transition:.25s;
 
 }
 
-.stat-card:hover{
 
-    transform:translateY(-5px);
 
-    box-shadow:
-        0 14px 30px rgba(0,0,0,.08);
+/* ===========================
+   SMOOTH SCROLL AREAS
+=========================== */
 
-}
 
-/* Top Accent */
-
-.stat-card::before{
-
-    content:"";
-
-    position:absolute;
-
-    left:0;
-
-    top:0;
-
-    width:100%;
-
-    height:4px;
-
-    background:#2563eb;
-
-}
-
-/* Card Title */
-
-.stat-card span{
-
-    font-size:14px;
-
-    color:#6b7280;
-
-    margin-bottom:10px;
-
-}
-
-/* Card Value */
-
-.stat-card h3{
-
-    font-size:30px;
-
-    font-weight:700;
-
-    color:#111827;
-
-}
-
-/* Remove oversized icons */
-
-.stat-card i,
-.stat-card svg,
-.stat-card img{
-
-    display:none;
-
-}
-
-/* ------------------------------
-   Special Colors
------------------------------- */
-
-.stat-card.danger::before{
-
-    background:#dc2626;
-
-}
-
-.stat-card.success::before{
-
-    background:#16a34a;
-
-}
-
-.stat-card.warning::before{
-
-    background:#f59e0b;
-
-}
-
-.stat-card.info::before{
-
-    background:#2563eb;
-
-}
-
-/* =====================================================
-   GREYMUS BANKING UI
-   VERSION 1.3
-   PART 2
-   Topbar • Quick Actions • Toolbar
-===================================================== */
-
-/* ------------------------------
-   TOP BAR
------------------------------- */
-
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:24px;
-    margin-bottom:28px;
-    padding:18px 24px;
-    background:#fff;
-    border-radius:18px;
-    border:1px solid #e5e7eb;
-    box-shadow:0 8px 20px rgba(0,0,0,.05);
-}
-
-.topbar-left h1{
-    font-size:30px;
-    font-weight:700;
-    color:#111827;
-    margin:0;
-}
-
-.topbar-left p{
-    color:#6b7280;
-    margin-top:4px;
-}
-
-.topbar-actions{
-    display:flex;
-    align-items:center;
-    gap:14px;
-}
-
-/* Notification Button */
-
-.notification-btn{
-    width:48px;
-    height:48px;
-    border-radius:14px;
-    background:#f8fafc;
-    border:1px solid #e5e7eb;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:20px;
-    transition:.25s;
-}
-
-.notification-btn:hover{
-    background:#2563eb;
-    color:#fff;
-}
-
-/* User Profile */
-
-.user-profile{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:8px 14px;
-    border-radius:14px;
-    background:#f8fafc;
-    border:1px solid #e5e7eb;
-}
-
-.user-avatar{
-    width:42px;
-    height:42px;
-    border-radius:50%;
-    background:#2563eb;
-    color:#fff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-weight:700;
-}
-
-.user-details strong{
-    display:block;
-    font-size:14px;
-}
-
-.user-details small{
-    color:#6b7280;
-}
-
-/* ------------------------------
-   QUICK ACTIONS
------------------------------- */
-
-.quick-actions{
-    margin-top:10px;
-}
-
-.quick-grid{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:18px;
-}
-
-.action-card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:18px;
-    padding:20px;
-    display:flex;
-    align-items:center;
-    gap:16px;
-    min-height:110px;
-    transition:.25s;
-}
-
-.action-card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 12px 28px rgba(0,0,0,.08);
-}
-
-.action-icon{
-    width:56px;
-    height:56px;
-    border-radius:16px;
-    background:#eff6ff;
-    color:#2563eb;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:24px;
-    flex-shrink:0;
-}
-
-.action-card h3{
-    margin:0 0 4px;
-    font-size:17px;
-    color:#111827;
-}
-
-.action-card p{
-    margin:0;
-    font-size:13px;
-    color:#6b7280;
-}
-
-/* ------------------------------
-   SEARCH / FILTER TOOLBAR
------------------------------- */
-
-.toolbar{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:14px;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:18px;
-    padding:18px;
-    margin-bottom:24px;
-}
-
-.toolbar input,
-.toolbar select{
-    height:48px;
-    border-radius:12px;
-    border:1px solid #d1d5db;
-    background:#fff;
-}
-
-.toolbar button{
-    height:48px;
-    padding:0 22px;
-    border-radius:12px;
-    font-weight:600;
-}
-
-/* ------------------------------
-   SECTION HEADERS
------------------------------- */
-
-.section-header{
-    margin-bottom:18px;
-}
-
-.section-header h2{
-    font-size:26px;
-    font-weight:700;
-    color:#111827;
-}
-
-.section-header p{
-    color:#6b7280;
-}
-
-/* ------------------------------
-   RESPONSIVE
------------------------------- */
-
-@media (max-width:1100px){
-
-    .quick-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .topbar{
-        flex-wrap:wrap;
-    }
-
-}
-
-@media (max-width:768px){
-
-    .topbar{
-        flex-direction:column;
-        align-items:flex-start;
-    }
-
-    .topbar-actions{
-        width:100%;
-        justify-content:flex-start;
-    }
-
-    .quick-grid{
-        grid-template-columns:1fr;
-    }
-
-    .user-profile{
-        width:100%;
-    }
-
-}
-
-/* =====================================================
-   GREYMUS BANKING UI
-   VERSION 1.3
-   PART 3
-   Professional Banking Tables
-===================================================== */
-
-/* TABLE CONTAINER */
-
-.table-wrapper{
-    background:#ffffff;
-    border:1px solid #e5e7eb;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(15,23,42,.06);
-}
-
-/* TABLE */
-
-table{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-    min-width:1000px;
-}
-
-/* HEADER */
-
-thead{
-    background:#f8fafc;
-}
-
-thead th{
-    padding:18px 20px;
-    font-size:13px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    font-weight:700;
-    color:#64748b;
-    border-bottom:2px solid #e5e7eb;
-    position:sticky;
-    top:0;
-    z-index:5;
-}
-
-/* BODY */
-
-tbody td{
-    padding:18px 20px;
-    font-size:14px;
-    color:#1e293b;
-    border-bottom:1px solid #edf2f7;
-    vertical-align:middle;
-}
-
-tbody tr{
-    transition:.25s ease;
-}
-
-tbody tr:nth-child(even){
-    background:#fcfdff;
-}
-
-tbody tr:hover{
-    background:#eff6ff;
-}
-
-/* CUSTOMER NAME */
-
-.customer-name{
-    font-weight:600;
-    color:#111827;
-}
-
-/* LOAN NUMBER */
-
-.loan-number{
-    font-weight:700;
-    color:#2563eb;
-}
-
-/* MONEY */
-
-.amount{
-    font-weight:700;
-    color:#059669;
-}
-
-/* BALANCE */
-
-.balance{
-    font-weight:700;
-    color:#dc2626;
-}
-
-/* STATUS */
-
-.status{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-width:95px;
-    padding:7px 14px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:700;
-}
-
-.status.pending{
-    background:#FEF3C7;
-    color:#92400E;
-}
-
-.status.approved{
-    background:#DCFCE7;
-    color:#166534;
-}
-
-.status.completed{
-    background:#DBEAFE;
-    color:#1D4ED8;
-}
-
-.status.arrears{
-    background:#FEE2E2;
-    color:#B91C1C;
-}
-
-.status.rejected{
-    background:#FCE7F3;
-    color:#BE185D;
-}
-
-/* ACTION BUTTONS */
-
-.loan-actions{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    flex-wrap:nowrap;
-}
-
-.btn-icon{
-    width:40px;
-    height:40px;
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#f8fafc;
-    border:1px solid #e5e7eb;
-    transition:.25s;
-}
-
-.btn-icon:hover{
-    transform:translateY(-2px);
-    box-shadow:0 8px 18px rgba(0,0,0,.08);
-}
-
-.btn-view{
-    color:#2563eb;
-}
-
-.btn-edit{
-    color:#f59e0b;
-}
-
-/* =====================================================
-   GREYMUS BANKING UI
-   VERSION 1.3
-   PART 4
-   Forms • Loan Modal • Repayment UI
-===================================================== */
-
-/* ==========================
-   MODAL
-========================== */
-
-.modal{
-    backdrop-filter:blur(8px);
-    background:rgba(15,23,42,.45);
-}
-
+.table-wrapper,
+.sidebar,
+.notification-list,
 .modal-content{
 
-    background:#ffffff;
-    border-radius:24px;
-    border:1px solid #e5e7eb;
-    box-shadow:0 25px 60px rgba(15,23,42,.18);
-    padding:30px;
+
+    scroll-behavior:smooth;
+
 
 }
 
-/* ==========================
-   HEADER
-========================== */
 
-.modal-header{
 
-    border-bottom:1px solid #edf2f7;
-    padding-bottom:18px;
-    margin-bottom:28px;
+/* ===========================
+   DISABLED ELEMENTS
+=========================== */
 
-}
 
-.modal-header h2{
+button:disabled{
 
-    font-size:28px;
-    font-weight:700;
-    color:#111827;
+
+    opacity:.6;
+
+
+    cursor:not-allowed;
+
 
 }
 
-.modal-header p{
 
-    color:#6b7280;
-    margin-top:6px;
 
-}
+/* ===========================
+   PROFESSIONAL TOUCHES
+=========================== */
 
-.modal-close-btn{
 
-    width:44px;
-    height:44px;
-    border-radius:12px;
-    background:#f8fafc;
-    border:1px solid #e5e7eb;
+.card-shadow{
+
+
+    box-shadow:var(--shadow);
+
 
 }
 
-.modal-close-btn:hover{
 
-    background:#2563eb;
-    color:#fff;
 
-}
+.rounded{
 
-/* ==========================
-   FORM GRID
-========================== */
 
-.form-grid{
+    border-radius:var(--radius-lg);
 
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:22px;
 
 }
 
-.form-group{
 
-    margin-bottom:0;
 
-}
+/* ===========================
+   PRINT CLEANUP
+=========================== */
 
-.form-group label{
 
-    display:block;
-    margin-bottom:8px;
-    font-size:13px;
-    font-weight:700;
-    color:#475569;
-    text-transform:uppercase;
-    letter-spacing:.04em;
+@media print{
 
-}
 
-/* ==========================
-   INPUTS
-========================== */
+    .sidebar,
+    .mobile-nav,
+    .fab,
+    .notification-btn{
 
-.form-group input,
-.form-group select,
-.form-group textarea{
 
-    height:52px;
-    border-radius:14px;
-    border:1px solid #dbe2ea;
-    background:#ffffff;
-    padding:0 16px;
-    transition:.25s;
+        display:none !important;
 
-}
 
-.form-group textarea{
-
-    min-height:120px;
-    padding-top:14px;
-
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus{
-
-    border-color:#2563eb;
-    box-shadow:0 0 0 4px rgba(37,99,235,.12);
-
-}
-
-/* ==========================
-   BUTTONS
-========================== */
-
-.modal-buttons{
-
-    margin-top:30px;
-    display:flex;
-    justify-content:flex-end;
-    gap:14px;
-
-}
-
-.primary-btn{
-
-    min-width:170px;
-    height:52px;
-    border-radius:14px;
-    background:linear-gradient(135deg,#1d4ed8,#1e40af);
-}
-
-.secondary-btn{
-    min-width:170px;
-    height:52px;
-    border-radius:14px;
-    background:#f3f4f6;
-    color:#111827;
-    border:1px solid #d1d5db;
-    cursor:pointer;
-    transition:.25s;
-}
-
-.secondary-btn:hover{
-    background:#e5e7eb;
-}
-
-@media (max-width:768px){
-
-    .table-wrapper{
-        overflow-x:auto;
-        overflow-y:hidden;
-        -webkit-overflow-scrolling:touch;
     }
 
-    table{
-        min-width:700px;
+
+
+    .main-content{
+
+
+        margin:0;
+
+
+        padding:0;
+
+
     }
+
+
 
 }
 
-@media (max-width:768px){
-
-    .stats-grid{
-        grid-template-columns:repeat(2,1fr) !important;
-        gap:12px;
-    }
-
-    .stat-card{
-        min-height:120px;
-        padding:16px;
-    }
-
-    .stat-card span{
-        font-size:13px;
-    }
-
-    .stat-card h3{
-        font-size:24px;
-    }
-
-}
-
-/* ===== FINAL MOBILE OVERRIDE ===== */
-
-@media screen and (max-width:768px){
-
-    .stats-grid{
-        display:grid !important;
-        grid-template-columns:1fr 1fr !important;
-        gap:16px !important;
-    }
-
-    .stat-card{
-        width:100% !important;
-        min-height:140px !important;
-        padding:18px !important;
-    }
-
-    .stat-card span{
-        font-size:14px !important;
-        white-space:normal !important;
-    }
-
-    .stat-card h3{
-        font-size:28px !important;
-    }
-
-}
 
 /* =====================================================
-   DARK MODE TABLE FIX
+   END OF PART 7
+===================================================== *//* =====================================================
+   GREYMUS LOAN FINANCIAL HUB
+   Version 1.4 Clean Stable
+
+   PART 8
+   Final Fixes • Tables • Repayments • Final Overrides
 ===================================================== */
 
-html[data-theme="dark"] .table-wrapper{
-    background:#1f2937 !important;
-    border-color:#374151 !important;
+
+/* ===========================
+   TABLE MOBILE SUPPORT
+=========================== */
+
+
+.table-wrapper{
+
+
+    overflow-x:auto;
+
+
+    -webkit-overflow-scrolling:touch;
+
+
 }
 
-html[data-theme="dark"] table{
-    background:#1f2937 !important;
+
+
+table{
+
+
+    white-space:nowrap;
+
+
 }
 
-html[data-theme="dark"] thead{
-    background:#111827 !important;
+
+
+/* Keep important columns readable */
+
+
+td,
+th{
+
+
+    vertical-align:middle;
+
+
 }
 
-html[data-theme="dark"] thead th{
-    color:#e5e7eb !important;
-    border-color:#374151 !important;
+
+
+/* ===========================
+   LOAN ACTION RESPONSIVE
+=========================== */
+
+
+.loan-actions{
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    gap:8px;
+
+
+    flex-wrap:wrap;
+
+
 }
 
-html[data-theme="dark"] tbody td{
-    background:#1f2937 !important;
-    color:#f9fafb !important;
-    border-color:#374151 !important;
+
+
+.loan-actions button{
+
+
+    flex-shrink:0;
+
+
 }
 
-html[data-theme="dark"] tbody tr:nth-child(even) td{
-    background:#273449 !important;
+
+
+/* ===========================
+   REPAYMENT SCHEDULE
+=========================== */
+
+
+.repayment-table{
+
+
+    width:100%;
+
+
+    border-radius:16px;
+
+
+    overflow:hidden;
+
+
 }
 
-html[data-theme="dark"] tbody tr:hover td{
-    background:#334155 !important;
+
+
+.repayment-table th{
+
+
+    background:#f8fafc;
+
+
 }
 
-html[data-theme="dark"] .customer-name,
-html[data-theme="dark"] .loan-number,
-html[data-theme="dark"] .amount,
-html[data-theme="dark"] .balance{
-    color:#f9fafb !important;
+
+
+.repayment-table td{
+
+
+    padding:14px;
+
+
 }
+
+
+
+/* Payment status */
+
+
+.payment-paid{
+
+
+    color:var(--success);
+
+
+    font-weight:700;
+
+
+}
+
+
+
+.payment-pending{
+
+
+    color:var(--warning);
+
+
+    font-weight:700;
+
+
+}
+
+
+
+.payment-late{
+
+
+    color:var(--danger);
+
+
+    font-weight:700;
+
+
+}
+
+
+
+/* ===========================
+   EMPTY STATES
+=========================== */
+
+
+.empty-state{
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+    min-height:200px;
+
+
+    color:var(--text-light);
+
+
+}
+
+
+
+.empty-state span{
+
+
+    font-size:42px;
+
+
+    margin-bottom:12px;
+
+
+}
+
+
+
+/* ===========================
+   LOAN SUMMARY IMPROVEMENT
+=========================== */
+
+
+.loan-summary-card{
+
+
+    box-shadow:
+
+    0 8px 20px rgba(0,0,0,.04);
+
+
+}
+
+
+
+.summary-row strong{
+
+
+    font-weight:700;
+
+
+}
+
+
+
+/* ===========================
+   LARGE SCREEN OPTIMIZATION
+=========================== */
+
+
+@media(min-width:1600px){
+
+
+
+    .main-content{
+
+
+        max-width:1500px;
+
+
+    }
+
+
+
+    .hero-card{
+
+
+        min-height:180px;
+
+
+    }
+
+
+
+    .hero-card h2{
+
+
+        font-size:48px;
+
+
+    }
+
+
+}
+
+
+
+/* ===========================
+   TABLET
+=========================== */
+
+
+@media(max-width:1024px){
+
+
+
+    .table-wrapper{
+
+
+        border-radius:14px;
+
+
+    }
+
+
+
+    table{
+
+
+        min-width:850px;
+
+
+    }
+
+
+
+}
+
+
+
+/* ===========================
+   MOBILE FINAL OVERRIDE
+=========================== */
+
+
+@media(max-width:768px){
+
+
+
+    .table-wrapper{
+
+
+        margin-left:-2px;
+
+
+        margin-right:-2px;
+
+
+    }
+
+
+
+    table{
+
+
+        min-width:750px;
+
+
+    }
+
+
+
+
+    .loan-actions{
+
+
+        justify-content:flex-start;
+
+
+    }
+
+
+
+
+    .summary-row{
+
+
+        flex-direction:column;
+
+
+        gap:5px;
+
+
+    }
+
+
+
+
+    .repayment-table{
+
+
+        min-width:650px;
+
+
+    }
+
+
+
+}
+
+
+
+/* ===========================
+   VERY SMALL PHONES
+=========================== */
+
+
+@media(max-width:380px){
+
+
+
+    .main-content{
+
+
+        padding:12px;
+
+
+    }
+
+
+
+    .stat-card{
+
+
+        padding:14px;
+
+
+    }
+
+
+
+    .stat-card h3{
+
+
+        font-size:22px;
+
+
+    }
+
+
+
+}
+
+
+
+/* ===========================
+   FINAL SECURITY OVERRIDES
+=========================== */
+
+
+/* Prevent accidental overflow */
+
+
+.dashboard-layout,
+.main-content,
+.modal-content{
+
+
+    max-width:100%;
+
+
+}
+
+
+
+/* Ensure hidden works everywhere */
+
+
+.hidden{
+
+
+    display:none !important;
+
+
+}
+
+
+
+/* Smooth animations */
+
+
+*{
+
+
+    -webkit-tap-highlight-color:transparent;
+
+
+}
+
+
 
 /* =====================================================
-   END THEME SYSTEM
+   END OF VERSION 1.4 CLEAN STABLE CSS
 ===================================================== */
