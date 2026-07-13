@@ -180,4 +180,81 @@ function showToast(message, type = "success") {
     }, 3000);
 }
 
+// ==========================================
+// THEME SETTINGS
+// Light / Dark / System Default
+// ==========================================
+
+const themeSelect = document.getElementById("theme-select");
+
+function applyTheme(theme) {
+
+    if (theme === "system") {
+
+        const systemDark = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches;
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            systemDark ? "dark" : "light"
+        );
+
+    } else {
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            theme
+        );
+    }
+}
+
+
+// Load saved theme
+const savedTheme = localStorage.getItem("appTheme") || "system";
+
+applyTheme(savedTheme);
+
+
+if (themeSelect) {
+
+    themeSelect.value = savedTheme;
+
+    themeSelect.addEventListener("change", () => {
+
+        const selectedTheme = themeSelect.value;
+
+        localStorage.setItem(
+            "appTheme",
+            selectedTheme
+        );
+
+        applyTheme(selectedTheme);
+
+        showToast(
+            "Theme updated successfully",
+            "success"
+        );
+
+    });
+}
+
+
+// Follow phone theme changes when System Default is selected
+window.matchMedia(
+    "(prefers-color-scheme: dark)"
+).addEventListener(
+    "change",
+    () => {
+
+        const currentTheme =
+            localStorage.getItem("appTheme");
+
+        if (currentTheme === "system") {
+            applyTheme("system");
+        }
+
+    }
+);
+
 export { showToast };
