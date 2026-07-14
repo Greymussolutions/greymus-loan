@@ -587,6 +587,45 @@ LOAN MODAL
                     <input type="date" id="loan-due-date" required>
                 </div>
 
+<div class="form-group">
+    <label>Loan Type</label>
+
+    <select id="loan-type">
+
+        <option value="new" selected>
+            New Loan
+        </option>
+
+        <option value="existing">
+            Existing Loan
+        </option>
+
+    </select>
+
+</div>
+
+<div class="form-group">
+
+    <label>Loan Start Date</label>
+
+    <input
+        type="date"
+        id="loan-start-date">
+
+</div>
+
+<div class="form-group">
+
+    <label>Amount Already Paid (KES)</label>
+
+    <input
+        type="number"
+        id="loan-paid"
+        value="0"
+        min="0">
+
+</div>
+
             </div>
 
             <div class="loan-summary-card">
