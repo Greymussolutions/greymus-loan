@@ -278,20 +278,23 @@ function closeClientModal() {
 
 function loadClients() {
 
+    console.log("HEADER: LOAD CLIENTS");
+
     const clientsRef = collection(db, "clients");
 
     onSnapshot(clientsRef, async (snapshot) => {
+
+        console.log("Snapshot size:", snapshot.size);
 
         clients = [];
 
         snapshot.forEach((docSnap) => {
 
+            console.log("Client:", docSnap.id, docSnap.data());
+
             clients.push({
-
                 id: docSnap.id,
-
                 ...docSnap.data()
-
             });
 
         });
@@ -306,18 +309,15 @@ function loadClients() {
         loansSnapshot.forEach((docSnap) => {
 
             clientLoans.push({
-
                 id: docSnap.id,
-
                 ...docSnap.data()
-
             });
 
         });
 
         renderClients(clients);
 
-       });
+    });
 
 }
 
