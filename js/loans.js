@@ -590,6 +590,8 @@ loanForm.addEventListener("submit", async(e)=>{
 
 e.preventDefault();
 
+alert("Submit button clicked");
+
 const calc = calculateLoan();
 
 const isHistorical =
