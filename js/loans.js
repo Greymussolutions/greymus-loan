@@ -584,188 +584,236 @@ document
 // SAVE / UPDATE LOAN
 // ==========================================
 
-if(loanForm){
+if (loanForm) {
 
-loanForm.addEventListener("submit", async(e)=>{
+    loanForm.addEventListener("submit", async (e) => {
 
-e.preventDefault();
+        let step = "START";
 
-alert("Submit button clicked");
+        try {
 
-const calc = calculateLoan();
+            e.preventDefault();
 
-const isHistorical =
-    loanType?.value === "historical";
+            step = "Submit clicked";
 
-const amountPaid =
-    isHistorical
-        ? Number(loanPaid?.value || 0)
-        : 0;
+            const calc = calculateLoan();
 
-const outstandingBalance =
-    isHistorical
-        ? Number(loanBalance?.value || calc.totalRepayment)
-        : calc.totalRepayment;
+            step = "calculateLoan()";
 
-const client = clients.find(
-c => c.id === loanClient.value
-);
-alert("Client ID: " + loanClient.value);
+            const isHistorical =
+                loanType?.value === "historical";
 
-if(!client){
+            step = "loanType";
 
-alert("Please select a client.");
+            const amountPaid =
+                isHistorical
+                    ? Number(loanPaid?.value || 0)
+                    : 0;
 
-return;
+            step = "amountPaid";
+
+            const outstandingBalance =
+                isHistorical
+                    ? Number(
+                        loanBalance?.value ||
+                        calc.totalRepayment
+                    )
+                    : calc.totalRepayment;
+
+            step = "outstandingBalance";
+
+            const client =
+                clients.find(
+                    c => c.id === loanClient.value
+                );
+
+            step = "client lookup";
+
+            if (!client) {
+
+                throw new Error(
+                    "No client selected."
+                );
+
+            }
+
+            const approvalDate =
+                isHistorical
+                    ? new Date(
+                        loanStartDate?.value
+                    )
+                    : new Date();
+
+            step = "approvalDate";
+
+            let repaymentSchedule =
+                generateRepaymentSchedule(
+                    approvalDate,
+                    calc.duration,
+                    calc.weeklyPayment
+                );
+
+            step = "repaymentSchedule";
+
+            if (isHistorical) {
+
+                repaymentSchedule =
+                    applyHistoricalPayments(
+                        repaymentSchedule,
+                        amountPaid
+                    );
+
+            }
+
+            step = "historical payments";
+
+            const loanData = {
+
+                clientId: client.id,
+
+                clientName: client.name,
+
+                loanNumber:
+                    "LN-" + Date.now(),
+
+                loanType:
+                    loanType?.value || "new",
+
+                amount: calc.amount,
+
+                processingFee:
+                    calc.processingFee,
+
+                interest:
+                    calc.interest,
+
+                duration:
+                    calc.duration,
+
+                repayment:
+                    calc.weeklyPayment,
+
+                weeklyPayment:
+                    calc.weeklyPayment,
+
+                totalRepayment:
+                    calc.totalRepayment,
+
+                balance:
+                    outstandingBalance,
+
+                openingBalance:
+                    calc.totalRepayment,
+
+                amountPaid:
+                    amountPaid,
+
+                approvalDate:
+                    formatDate(approvalDate),
+
+                dueDate:
+                    loanDueDate?.value || "",
+
+                repaymentSchedule,
+
+                nextRepaymentDate:
+                    repaymentSchedule[0]?.dueDate || null,
+
+                remainingInstallments:
+                    calc.duration,
+
+                status:
+                    isHistorical
+                        ? (
+                            outstandingBalance <= 0
+                                ? "Completed"
+                                : "Approved"
+                        )
+                        : "Pending",
+
+                completed: false,
+
+                createdBy:
+                    localStorage.getItem("userName") ||
+                    localStorage.getItem("userEmail") ||
+                    "Unknown Officer",
+
+                createdAt:
+                    serverTimestamp(),
+
+                updatedAt:
+                    serverTimestamp()
+
+            };
+
+            step = "loanData created";
+
+            console.log("loanData", loanData);
+
+            if (loanId?.value) {
+
+                step = "updateDoc";
+
+                await updateDoc(
+
+                    doc(db, "loans", loanId.value),
+
+                    {
+
+                        ...loanData,
+
+                        updatedAt:
+                            serverTimestamp()
+
+                    }
+
+                );
+
+                alert("Loan updated successfully.");
+
+            } else {
+
+                step = "addDoc";
+
+                await addDoc(
+
+                    collection(db, "loans"),
+
+                    loanData
+
+                );
+
+                alert("Loan created successfully.");
+
+            }
+
+            loanForm.reset();
+
+            loanId.value = "";
+
+            calculateLoan();
+
+            loanModal.classList.add("hidden");
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "ERROR DETECTED\n\n" +
+                "Last Step:\n" + step +
+                "\n\nName:\n" + error.name +
+                "\n\nMessage:\n" + error.message +
+                "\n\nStack:\n" + error.stack
+            );
+
+        }
+
+    });
 
 }
 
-alert("Step 1");
-
-const approvalDate =
-    loanType?.value === "historical"
-        ? new Date(loanStartDate?.value)
-        : new Date();
-
-alert("Step 2");
-
-let repaymentSchedule =
-    generateRepaymentSchedule(
-        approvalDate,
-        calc.duration,
-        calc.weeklyPayment
-    );
-
-alert("Step 3");
-
-if (isHistorical) {
-
-    repaymentSchedule =
-        applyHistoricalPayments(
-            repaymentSchedule,
-            amountPaid
-        );
-
-}
-
-alert("Step 4");
-
-const loanData = {
-
-clientId: client.id,
-
-clientName: client.name,
-
-loanNumber:
-"LN-" + Date.now(),
-
-loanType:
-document.getElementById("loan-type")?.value || "new",
-
-amount: calc.amount,
-
-processingFee: calc.processingFee,
-
-interest: calc.interest,
-
-duration: calc.duration,
-
-repayment: calc.weeklyPayment,
-
-weeklyPayment: calc.weeklyPayment,
-
-totalRepayment: calc.totalRepayment,
-
-balance: outstandingBalance,
-
-openingBalance: calc.totalRepayment,
-
-amountPaid: amountPaid,
-
-approvalDate: formatDate(approvalDate),
-
-dueDate: loanDueDate.value,
-
-repaymentSchedule,
-
-nextRepaymentDate:
-repaymentSchedule[0]?.dueDate || null,
-
-remainingInstallments:
-calc.duration,
-
-status: isHistorical
-    ? (outstandingBalance <= 0 ? "Completed" : "Approved")
-    : "Pending",
-
-completed: false,
-
-createdBy:
-localStorage.getItem("userName") ||
-localStorage.getItem("userEmail") ||
-"Unknown Officer",
-
-createdAt: serverTimestamp(),
-
-updatedAt: serverTimestamp()
-
-};
-
-alert(JSON.stringify(loanData, null, 2));
-
-try{
-
-if(loanId.value){
-
-await updateDoc(
-
-doc(db,"loans",loanId.value),
-
-{
-
-...loanData,
-
-updatedAt: serverTimestamp()
-
-}
-
-);
-
-alert("Loan updated successfully.");
-
-}else{
-
-await addDoc(
-
-collection(db,"loans"),
-
-loanData
-
-);
-
-alert("Loan created successfully.");
-
-}
-
-loanForm.reset();
-
-loanId.value = "";
-
-calculateLoan();
-
-loanModal.classList.add("hidden");
-
-}catch(error){
-
-console.error(error);
-
-alert("Failed to save loan.");
-
-}
-
-});
-
-}// ==========================================
+// ==========================================
 // PART 5 OF 8
 // RENDER LOANS TABLE
 // ==========================================
