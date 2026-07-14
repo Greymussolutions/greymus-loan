@@ -355,61 +355,36 @@ function updateDashboard(){
 
 
     // ======================================
-    // INTEREST EARNED
-    // ======================================
+// INTEREST EARNED
+// Reads from each loan instead of the
+// repayments collection.
+// ======================================
 
-    repayments.forEach(payment=>{
+loans.forEach(loan => {
 
-        if(!payment.paymentDate) return;
+    const principal = Number(loan.amount || 0);
 
-        const paymentDate =
-            new Date(payment.paymentDate);
+    const totalRepayment = Number(
+        loan.totalRepayment || principal
+    );
 
-        if(
-            paymentDate.getMonth()!==month ||
-            paymentDate.getFullYear()!==year
-        ){
+    const interest = Math.max(
+        0,
+        totalRepayment - principal
+    );
 
-            return;
+    const paid = Number(
+        loan.amountPaid || 0
+    );
 
-        }
+    if (paid > 0 && totalRepayment > 0) {
 
-        const loan =
-            loans.find(
-                l=>l.id===payment.loanId
-            );
+        monthlyIncome +=
+            interest * (paid / totalRepayment);
 
-        if(!loan) return;
+    }
 
-        const principal =
-            Number(loan.amount||0);
-
-        const total =
-            Number(
-                loan.totalRepayment ||
-                principal
-            );
-
-        const interest =
-            Math.max(
-                0,
-                total-principal
-            );
-
-        if(total>0){
-
-            monthlyIncome +=
-
-                interest *
-
-                (
-                    Number(payment.amount||0)
-                    / total
-                );
-
-        }
-
-    });
+});
 
 
     // ======================================
