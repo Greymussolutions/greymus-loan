@@ -529,6 +529,88 @@ CLIENT MODAL
 </div>
 
 <!-- =========================
+CLIENT LOAN HISTORY MODAL
+========================= -->
+
+<div id="client-history-modal" class="modal hidden">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Client Loan History</h2>
+
+                <p id="history-client-name">
+                    Loan summary
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                id="close-history-modal"
+                class="modal-close-btn">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="schedule-summary">
+
+            <p>
+                <strong>Total Loans:</strong>
+                <span id="history-total-loans">0</span>
+            </p>
+
+            <p>
+                <strong>Total Borrowed:</strong>
+                <span id="history-total-borrowed">KES 0</span>
+            </p>
+
+            <p>
+                <strong>Outstanding Balance:</strong>
+                <span id="history-balance">KES 0</span>
+            </p>
+
+        </div>
+
+        <table id="client-history-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Loan No.</th>
+
+                    <th>Principal</th>
+
+                    <th>Status</th>
+
+                    <th>Start Date</th>
+
+                    <th>Due Date</th>
+
+                    <th>Outstanding</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="client-history-body">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- =========================
 LOAN MODAL
 ========================= -->
 
