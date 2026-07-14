@@ -614,6 +614,10 @@ CLIENT LOAN HISTORY MODAL
 LOAN MODAL
 ========================= -->
 
+<!-- =========================
+LOAN MODAL
+========================= -->
+
 <div id="loan-modal" class="modal hidden">
 
     <div class="modal-content">
@@ -625,7 +629,8 @@ LOAN MODAL
                 <p>Create or edit a loan</p>
             </div>
 
-            <button type="button" class="modal-close-btn close-modal">
+            <button type="button"
+                    class="modal-close-btn close-modal">
                 ✕
             </button>
 
@@ -637,103 +642,125 @@ LOAN MODAL
 
             <div class="form-grid">
 
+                <!-- Client -->
+
                 <div class="form-group">
                     <label>Client</label>
+
                     <select id="loan-client" required>
                         <option value="">Select Client</option>
                     </select>
                 </div>
 
+                <!-- Principal -->
+
                 <div class="form-group">
                     <label>Loan Amount (KES)</label>
-                    <input type="number" id="loan-amount" required>
+
+                    <input
+                        type="number"
+                        id="loan-amount"
+                        min="1"
+                        required>
                 </div>
+
+                <!-- Processing Fee -->
 
                 <div class="form-group">
                     <label>Processing Fee (KES)</label>
-                    <input type="number" id="loan-processing-fee">
-</div>
 
-<div class="form-group historical-only">
-
-    <label>Amount Already Paid (KES)</label>
-
-    <input
-        type="number"
-        id="loan-paid"
-        value="0"
-        min="0">
-
-</div>
-
-<div class="form-group historical-only">
-
-    <label>Current Outstanding Balance (KES)</label>
-
-    <input
-        type="number"
-        id="loan-balance"
-        value="0"
-        min="0">
-
+                    <input
+                        type="number"
+                        id="loan-processing-fee"
+                        value="0"
+                        min="0">
                 </div>
+
+                <!-- Interest -->
 
                 <div class="form-group">
                     <label>Interest (%)</label>
-                    <input type="number" id="loan-interest">
+
+                    <input
+                        type="number"
+                        id="loan-interest"
+                        value="20"
+                        min="0">
                 </div>
+
+                <!-- Duration -->
 
                 <div class="form-group">
                     <label>Duration (Weeks)</label>
-<div> class="form-group">
-    <label>Duration (Weeks)</label>
 
-    <input
-        type="number"
-        id="loan-duration"
-        required>
-
-</div class="form-group">
-    <label>Loan Record Type</label>
-
-    <select id="loan-type">
-
-        <option value="new">
-            New Loan
-        </option>
-
-        <option value="historical">
-            Historical Loan
-        </option>
-
-    </select>
-
-</div>
+                    <input
+                        type="number"
+                        id="loan-duration"
+                        value="12"
+                        min="1"
+                        required>
                 </div>
 
-<div class="form-group">
+                <!-- Loan Type -->
 
-    <label>Loan Start Date</label>
+                <div class="form-group">
+                    <label>Loan Record Type</label>
 
-    <input
-        type="date"
-        id="loan-start-date">
+                    <select id="loan-type">
 
-</div>
+                        <option value="new">
+                            New Loan
+                        </option>
 
-<div class="form-group">
+                        <option value="historical">
+                            Historical Loan
+                        </option>
 
-    <label>Amount Already Paid (KES)</label>
+                    </select>
 
-    <input
-        type="number"
-        id="loan-paid"
-        value="0"
-        min="0">
+                </div>
 
-</div>
+                <!-- Start Date -->
+
+                <div class="form-group">
+                    <label>Loan Start Date</label>
+
+                    <input
+                        type="date"
+                        id="loan-start-date">
+                </div>
+
+                <!-- Historical Amount Paid -->
+
+                <div class="form-group historical-only">
+
+                    <label>Amount Already Paid (KES)</label>
+
+                    <input
+                        type="number"
+                        id="loan-paid"
+                        value="0"
+                        min="0">
+
+                </div>
+
+                <!-- Historical Balance -->
+
+                <div class="form-group historical-only">
+
+                    <label>Current Outstanding Balance (KES)</label>
+
+                    <input
+                        type="number"
+                        id="loan-balance"
+                        value="0"
+                        min="0">
+
+                </div>
 
             </div>
+
+            <!-- Loan Preview -->
 
             <div class="loan-summary-card">
 
@@ -741,34 +768,64 @@ LOAN MODAL
 
                 <div class="summary-row">
                     <span>Principal</span>
-                    <strong id="preview-principal">KES 0</strong>
+                    <strong id="preview-principal">
+                        KES 0
+                    </strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Processing Fee</span>
+                    <strong id="preview-fee">
+                        KES 0
+                    </strong>
                 </div>
 
                 <div class="summary-row">
                     <span>Interest</span>
-                    <strong id="preview-interest">0%</strong>
+                    <strong id="preview-interest">
+                        0%
+                    </strong>
                 </div>
 
                 <div class="summary-row">
-                    <span>Duration</span>
-                    <strong id="preview-duration">0 Weeks</strong>
+                    <span>Total Repayable</span>
+                    <strong id="preview-total">
+                        KES 0
+                    </strong>
                 </div>
 
                 <div class="summary-row">
                     <span>Weekly Payment</span>
-                    <strong id="preview-monthly">KES 0</strong>
+                    <strong id="preview-weekly">
+                        KES 0
+                    </strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Duration</span>
+                    <strong id="preview-duration">
+                        0 Weeks
+                    </strong>
                 </div>
 
             </div>
 
             <div class="modal-buttons">
 
-                <button type="submit" class="primary-btn">
+                <button
+                    type="submit"
+                    class="primary-btn">
+
                     Save Loan
+
                 </button>
 
-                <button type="button" class="secondary-btn close-modal">
+                <button
+                    type="button"
+                    class="secondary-btn close-modal">
+
                     Cancel
+
                 </button>
 
             </div>
