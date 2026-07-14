@@ -620,21 +620,23 @@ return;
 
 }
 
+alert("Step 1");
+
 const approvalDate =
-    loanType.value === "historical"
-        ? new Date(loanStartDate.value)
+    loanType?.value === "historical"
+        ? new Date(loanStartDate?.value)
         : new Date();
 
+alert("Step 2");
+
 let repaymentSchedule =
-generateRepaymentSchedule(
+    generateRepaymentSchedule(
+        approvalDate,
+        calc.duration,
+        calc.weeklyPayment
+    );
 
-    approvalDate,
-
-    calc.duration,
-
-    calc.weeklyPayment
-
-);
+alert("Step 3");
 
 if (isHistorical) {
 
@@ -645,6 +647,8 @@ if (isHistorical) {
         );
 
 }
+
+alert("Step 4");
 
 const loanData = {
 
