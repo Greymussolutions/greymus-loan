@@ -610,6 +610,7 @@ const outstandingBalance =
 const client = clients.find(
 c => c.id === loanClient.value
 );
+alert("Client ID: " + loanClient.value);
 
 if(!client){
 
