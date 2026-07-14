@@ -14,7 +14,8 @@ import {
     deleteDoc,
     doc,
     onSnapshot,
-    serverTimestamp
+    serverTimestamp,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
@@ -64,6 +65,9 @@ const clientSecurity =
 // ==========================================
 
 let clients = [];
+
+// Stores loan history for each client
+let clientLoans = [];
 
 
 // ==========================================
@@ -126,9 +130,9 @@ function closeClientModal() {
 
 function loadClients() {
 
-    const ref = collection(db, "clients");
+    const clientsRef = collection(db, "clients");
 
-    onSnapshot(ref, (snapshot) => {
+    onSnapshot(clientsRef, async (snapshot) => {
 
         clients = [];
 
@@ -144,11 +148,30 @@ function loadClients() {
 
         });
 
+        // Load all loans for client history
+        const loansSnapshot = await getDocs(
+            collection(db, "loans")
+        );
+
+        clientLoans = [];
+
+        loansSnapshot.forEach((docSnap) => {
+
+            clientLoans.push({
+
+                id: docSnap.id,
+
+                ...docSnap.data()
+
+            });
+
+        });
+
         renderClients(clients);
 
     });
 
-}// ==========================================
+} ==========================================
 // RENDER CLIENTS
 // ==========================================
 
@@ -198,19 +221,28 @@ function renderClients(list) {
 
             <td>
 
-                <button
-                    class="edit-client"
-                    data-id="${client.id}">
-                    ✏️
-                </button>
+    <button
+        class="loan-history"
+        data-id="${client.id}"
+        title="Loan History">
+        📋
+    </button>
 
-                <button
-                    class="delete-client"
-                    data-id="${client.id}">
-                    🗑️
-                </button>
+    <button
+        class="edit-client"
+        data-id="${client.id}"
+        title="Edit Client">
+        ✏️
+    </button>
 
-            </td>
+    <button
+        class="delete-client"
+        data-id="${client.id}"
+        title="Delete Client">
+        🗑️
+    </button>
+
+</td>
 
         `;
 
@@ -406,6 +438,37 @@ updatedAt: serverTimestamp()
 
 function attachActions() {
 
+// ==========================================
+// LOAN HISTORY
+// ==========================================
+
+document.querySelectorAll(".loan-history").forEach((button) => {
+
+    button.onclick = () => {
+
+        const client = clients.find(
+            c => c.id === button.dataset.id
+        );
+
+        if (!client) return;
+
+        const loans = clientLoans.filter(
+            loan => loan.clientId === client.id
+        );
+
+        console.log("Client:", client);
+
+        console.log("Loan History:", loans);
+
+        alert(
+            `${client.name} has ${loans.length} loan(s).\n\n` +
+            "The Loan History window will be added in the next step."
+        );
+
+    };
+
+});
+
     document.querySelectorAll(".edit-client").forEach((button) => {
 
         button.onclick = () => {
@@ -482,6 +545,19 @@ function attachActions() {
 
 loadClients();
 
+// ==========================================
+// GET CLIENT LOANS
+// ==========================================
+
+function getClientLoans(clientId) {
+
+    return clientLoans.filter(
+
+        loan => loan.clientId === clientId
+
+    );
+
+}
 
 // ==========================================
 // EXPORTS
@@ -491,7 +567,9 @@ export {
 
     loadClients,
 
-    renderClients
+    renderClients,
+
+    getClientLoans
 
 };
 
