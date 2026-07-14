@@ -479,6 +479,12 @@ function openLoanModal(){
 
     loanForm.reset();
 
+const loanType = document.getElementById("loan-type");
+
+if (loanType) {
+    loanType.value = "new";
+}
+
     if(loanId){
 
         loanId.value = "";
@@ -554,6 +560,12 @@ clientId: client.id,
 
 clientName: client.name,
 
+loanNumber:
+"LN-" + Date.now(),
+
+loanType:
+document.getElementById("loan-type")?.value || "new",
+
 amount: calc.amount,
 
 processingFee: calc.processingFee,
@@ -569,6 +581,8 @@ weeklyPayment: calc.weeklyPayment,
 totalRepayment: calc.totalRepayment,
 
 balance: calc.totalRepayment,
+
+openingBalance: calc.totalRepayment,
 
 amountPaid: 0,
 
