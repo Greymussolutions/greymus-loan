@@ -707,6 +707,8 @@ updatedAt: serverTimestamp()
 
 };
 
+alert(JSON.stringify(loanData, null, 2));
+
 try{
 
 if(loanId.value){
