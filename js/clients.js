@@ -59,6 +59,30 @@ const clientGuarantorPhone =
 const clientSecurity =
     document.getElementById("client-security");
 
+// ==========================================
+// CLIENT LOAN HISTORY ELEMENTS
+// ==========================================
+
+const clientHistoryModal =
+    document.getElementById("client-history-modal");
+
+const closeHistoryModal =
+    document.getElementById("close-history-modal");
+
+const historyClientName =
+    document.getElementById("history-client-name");
+
+const historyTotalLoans =
+    document.getElementById("history-total-loans");
+
+const historyTotalBorrowed =
+    document.getElementById("history-total-borrowed");
+
+const historyBalance =
+    document.getElementById("history-balance");
+
+const historyTableBody =
+    document.getElementById("client-history-body");
 
 // ==========================================
 // DATA
@@ -90,6 +114,130 @@ function safe(value) {
 
 }
 
+// ==========================================
+// CURRENCY FORMAT
+// ==========================================
+
+function currency(value) {
+
+    return new Intl.NumberFormat(
+        "en-KE",
+        {
+            style: "currency",
+            currency: "KES",
+            maximumFractionDigits: 0
+        }
+    ).format(Number(value) || 0);
+
+}
+
+// ==========================================
+// SHOW CLIENT LOAN HISTORY
+// ==========================================
+
+function showClientLoanHistory(client) {
+
+    if (!clientHistoryModal) return;
+
+    const loans = getClientLoans(client.id);
+
+    historyClientName.textContent =
+        client.name || "-";
+
+    historyTotalLoans.textContent =
+        loans.length;
+
+    const totalBorrowed = loans.reduce(
+
+        (sum, loan) => sum + Number(loan.amount || 0),
+
+        0
+
+    );
+
+    const totalBalance = loans.reduce(
+
+        (sum, loan) => sum + Number(loan.balance || 0),
+
+        0
+
+    );
+
+    historyTotalBorrowed.textContent =
+        currency(totalBorrowed);
+
+    historyBalance.textContent =
+        currency(totalBalance);
+
+    historyTableBody.innerHTML = "";
+
+    if (loans.length === 0) {
+
+        historyTableBody.innerHTML = `
+
+            <tr>
+
+                <td colspan="6" style="text-align:center;">
+
+                    No loans found.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    } else {
+
+        loans.forEach((loan) => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+
+                <td>${loan.id.substring(0,8)}</td>
+
+                <td>${currency(loan.amount)}</td>
+
+                <td>${loan.status || "-"}</td>
+
+                <td>${loan.approvalDate || "-"}</td>
+
+                <td>${loan.dueDate || "-"}</td>
+
+                <td>${currency(loan.balance)}</td>
+
+            `;
+
+            historyTableBody.appendChild(row);
+
+        });
+
+    }
+
+    clientHistoryModal.classList.remove("hidden");
+
+}
+
+// ==========================================
+// CLOSE CLIENT HISTORY MODAL
+// ==========================================
+
+closeHistoryModal?.addEventListener("click", () => {
+
+    clientHistoryModal.classList.add("hidden");
+
+});
+
+clientHistoryModal?.addEventListener("click", (e) => {
+
+    if (e.target === clientHistoryModal) {
+
+        clientHistoryModal.classList.add("hidden");
+
+    }
+
+});
 
 // ==========================================
 // OPEN / CLOSE MODAL
@@ -446,26 +594,15 @@ document.querySelectorAll(".loan-history").forEach((button) => {
 
     button.onclick = () => {
 
-        const client = clients.find(
-            c => c.id === button.dataset.id
-        );
+    const client = clients.find(
+        c => c.id === button.dataset.id
+    );
 
-        if (!client) return;
+    if (!client) return;
 
-        const loans = clientLoans.filter(
-            loan => loan.clientId === client.id
-        );
+    showClientLoanHistory(client);
 
-        console.log("Client:", client);
-
-        console.log("Loan History:", loans);
-
-        alert(
-            `${client.name} has ${loans.length} loan(s).\n\n` +
-            "The Loan History window will be added in the next step."
-        );
-
-    };
+};
 
 });
 
