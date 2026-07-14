@@ -65,6 +65,15 @@ const loanAmount =
 const loanProcessingFee =
     document.getElementById("loan-processing-fee");
 
+const loanPaid =
+    document.getElementById("loan-paid");
+
+const loanBalance =
+    document.getElementById("loan-balance");
+
+const loanType =
+    document.getElementById("loan-type");
+
 const loanInterest =
     document.getElementById("loan-interest");
 
@@ -184,6 +193,39 @@ function today(){
 
 }
 
+function applyHistoricalPayments(schedule, amountPaid) {
+
+    let remaining = Number(amountPaid || 0);
+
+    for (const installment of schedule) {
+
+        if (remaining <= 0) break;
+
+        if (remaining >= installment.amount) {
+
+            installment.paidAmount = installment.amount;
+            installment.remainingAmount = 0;
+            installment.paid = true;
+            installment.status = "Paid";
+
+            remaining -= installment.amount;
+
+        } else {
+
+            installment.paidAmount = remaining;
+            installment.remainingAmount =
+                installment.amount - remaining;
+            installment.status = "Partial";
+
+            remaining = 0;
+
+        }
+
+    }
+
+    return schedule;
+
+}
 
 // ==========================================
 // CLOSE SCHEDULE MODAL
@@ -482,6 +524,18 @@ function openLoanModal(){
 
     loanForm.reset();
 
+if (loanPaid) {
+
+    loanPaid.value = 0;
+
+}
+
+if (loanBalance) {
+
+    loanBalance.value = 0;
+
+}
+
 const loanType = document.getElementById("loan-type");
 
 if (loanType) {
@@ -538,6 +592,19 @@ e.preventDefault();
 
 const calc = calculateLoan();
 
+const isHistorical =
+    loanType?.value === "historical";
+
+const amountPaid =
+    isHistorical
+        ? Number(loanPaid?.value || 0)
+        : 0;
+
+const outstandingBalance =
+    isHistorical
+        ? Number(loanBalance?.value || calc.totalRepayment)
+        : calc.totalRepayment;
+
 const client = clients.find(
 c => c.id === loanClient.value
 );
@@ -555,16 +622,26 @@ const approvalDate =
         ? new Date(loanStartDate.value)
         : new Date();
 
-const repaymentSchedule =
+let repaymentSchedule =
 generateRepaymentSchedule(
 
-approvalDate,
+    approvalDate,
 
-calc.duration,
+    calc.duration,
 
-calc.weeklyPayment
+    calc.weeklyPayment
 
 );
+
+if (isHistorical) {
+
+    repaymentSchedule =
+        applyHistoricalPayments(
+            repaymentSchedule,
+            amountPaid
+        );
+
+}
 
 const loanData = {
 
@@ -592,11 +669,11 @@ weeklyPayment: calc.weeklyPayment,
 
 totalRepayment: calc.totalRepayment,
 
-balance: calc.totalRepayment,
+balance: outstandingBalance,
 
 openingBalance: calc.totalRepayment,
 
-amountPaid: 0,
+amountPaid: amountPaid,
 
 approvalDate: formatDate(approvalDate),
 
@@ -610,7 +687,9 @@ repaymentSchedule[0]?.dueDate || null,
 remainingInstallments:
 calc.duration,
 
-status: "Pending",
+status: isHistorical
+    ? (outstandingBalance <= 0 ? "Completed" : "Approved")
+    : "Pending",
 
 completed: false,
 
