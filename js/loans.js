@@ -74,6 +74,9 @@ const loanDuration =
 const loanDueDate =
     document.getElementById("loan-due-date");
 
+const loanStartDate =
+    document.getElementById("loan-start-date");
+
 // ==========================================
 // REPAYMENT MODAL ELEMENTS
 // ==========================================
@@ -499,6 +502,12 @@ if (loanType) {
 
     }
 
+if(loanStartDate){
+
+    loanStartDate.value = today();
+
+}
+
     loanModal.classList.remove("hidden");
 
 }
@@ -541,7 +550,10 @@ return;
 
 }
 
-const approvalDate = new Date();
+const approvalDate =
+    loanType.value === "historical"
+        ? new Date(loanStartDate.value)
+        : new Date();
 
 const repaymentSchedule =
 generateRepaymentSchedule(
