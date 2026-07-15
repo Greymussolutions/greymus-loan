@@ -2801,50 +2801,16 @@ tbody tr:hover{
 
 
 .fab{
-
-
-    position:fixed;
-
-
-    right:24px;
-
-
-    bottom:90px;
-
-
-    width:60px;
-
-
-    height:60px;
-
-
-    border-radius:50%;
-
-
-    background:var(--primary);
-
-
-    color:#fff;
-
-
-    font-size:32px;
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    box-shadow:var(--shadow);
-
-
-    z-index:2000;
-
-
+    position: fixed;
+    right: 20px;
+    bottom: 100px;      /* Above the mobile navigation */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    z-index: 10001;     /* Higher than the navigation */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
