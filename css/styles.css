@@ -4588,6 +4588,20 @@ SETTINGS PAGE
     color:#fff;
 }
 
+/* =========================
+SETTINGS PAGE SPACING
+========================= */
+
+.settings-page{
+    display:grid;
+    gap:20px;
+    padding-bottom:140px;
+}
+
+.settings-card:last-child{
+    margin-bottom:40px;
+}
+
 /* =====================================================
    END OF VERSION 1.4 CLEAN STABLE CSS
 ===================================================== */
