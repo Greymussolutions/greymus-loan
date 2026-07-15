@@ -4557,7 +4557,36 @@ th{
     margin:0 auto 20px;
 }
 
+/* =========================
+SETTINGS PAGE
+========================= */
 
+.settings-page{
+    display:grid;
+    gap:20px;
+}
+
+.settings-card{
+    background:var(--surface);
+    border-radius:16px;
+    padding:24px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.settings-card h3{
+    margin-bottom:15px;
+}
+
+.settings-card button,
+.settings-card select{
+    width:100%;
+    margin-top:10px;
+}
+
+.danger-btn{
+    background:#d32f2f;
+    color:#fff;
+}
 
 /* =====================================================
    END OF VERSION 1.4 CLEAN STABLE CSS
