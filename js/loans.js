@@ -824,6 +824,32 @@ function renderLoans(list){
 
     loansTableBody.innerHTML = "";
 
+// ==========================================
+// SORT BY DISBURSEMENT DATE (NEWEST FIRST)
+// ==========================================
+
+list.sort((a, b) => {
+
+    const dateA = new Date(
+        a.approvalDate ||
+        a.disbursementDate ||
+        a.loanStartDate ||
+        a.createdAt ||
+        0
+    );
+
+    const dateB = new Date(
+        b.approvalDate ||
+        b.disbursementDate ||
+        b.loanStartDate ||
+        b.createdAt ||
+        0
+    );
+
+    return dateB - dateA;
+
+});
+
     if(list.length === 0){
 
         loansTableBody.innerHTML = `
@@ -924,33 +950,6 @@ function renderLoans(list){
     attachLoanActions();
 
 }
-
-// ==========================================
-// SORT LOANS BY DISBURSEMENT DATE (NEWEST FIRST)
-// ==========================================
-
-list.sort((a, b) => {
-
-    const dateA = new Date(
-        a.disbursementDate ||
-        a.loanStartDate ||
-        a.startDate ||
-        a.createdAt ||
-        0
-    );
-
-    const dateB = new Date(
-        b.disbursementDate ||
-        b.loanStartDate ||
-        b.startDate ||
-        b.createdAt ||
-        0
-    );
-
-    return dateB - dateA;
-
-});
-
 
 // ==========================================
 // SEARCH & FILTER
