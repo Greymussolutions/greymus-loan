@@ -504,11 +504,22 @@ console.log("Loans array:", loans);
 
             filterLoans();
 
-        }
+        },
 
+(error)=>{
+
+    console.error(
+        "Failed to load loans:",
+        error
     );
 
-}// ==========================================
+}
+
+);
+
+}
+
+// ==========================================
 // PART 4 OF 8
 // OPEN LOAN MODAL
 // SAVE / UPDATE LOAN
@@ -535,8 +546,6 @@ if (loanBalance) {
     loanBalance.value = 0;
 
 }
-
-const loanType = document.getElementById("loan-type");
 
 if (loanType) {
     loanType.value = "new";
@@ -731,7 +740,8 @@ if (loanForm) {
                         )
                         : "Pending",
 
-                completed: false,
+                completed:
+    outstandingBalance <= 0,
 
                 createdBy:
                     localStorage.getItem("userName") ||
@@ -843,7 +853,6 @@ list.sort((a, b) => {
     return (a.clientName || "")
         .localeCompare(b.clientName || "");
 
-});
 });
 
     if(list.length === 0){
@@ -969,14 +978,14 @@ function filterLoans(){
 
         filtered = filtered.filter(loan=>
 
-            loan.clientName
-            ?.toLowerCase()
-            .includes(keyword)
+            (loan.clientName || "")
+.toLowerCase()
+.includes(keyword)
 
             ||
 
-            loan.id
-            .toLowerCase()
+            String(loan.id)
+.toLowerCase()
             .includes(keyword)
 
         );
@@ -1100,6 +1109,13 @@ document.querySelectorAll(".edit-loan").forEach(button=>{
         loanDuration.value = loan.duration;
         loanDueDate.value = loan.dueDate || today();
 
+if (loanType) {
+
+    loanType.value =
+        loan.loanType || "new";
+
+}
+
         calculateLoan();
 
         loanModal.classList.remove("hidden");
@@ -1113,17 +1129,17 @@ document.querySelectorAll(".edit-loan").forEach(button=>{
 // APPROVE LOAN
 // ==========================================
 
-document.querySelectorAll(".approve-loan").forEach(button=>{
+document.querySelectorAll(".approve-loan").forEach(button => {
 
-    button.onclick = async()=>{
+    button.onclick = async () => {
 
         const loan = loans.find(
             l => l.id === button.dataset.id
         );
 
-        if(!loan) return;
+        if (!loan) return;
 
-        if(loan.status !== "Pending"){
+        if (loan.status !== "Pending") {
 
             alert("Loan is already approved.");
 
@@ -1131,27 +1147,42 @@ document.querySelectorAll(".approve-loan").forEach(button=>{
 
         }
 
-        try{
+        try {
+
+            const approvalDate = new Date();
+
+            const schedule = generateRepaymentSchedule(
+                approvalDate,
+                loan.duration,
+                loan.weeklyPayment
+            );
 
             await updateDoc(
-
-                doc(db,"loans",loan.id),
-
+                doc(db, "loans", loan.id),
                 {
 
-                    status:"Approved",
+                    approvalDate: formatDate(approvalDate),
 
-                    updatedAt:serverTimestamp()
+                    repaymentSchedule: schedule,
+
+                    nextRepaymentDate:
+                        schedule.length
+                            ? schedule[0].dueDate
+                            : "-",
+
+                    remainingInstallments:
+                        schedule.length,
+
+                    status: "Approved",
+
+                    updatedAt: serverTimestamp()
 
                 }
-
             );
 
             alert("Loan approved successfully.");
 
-        }
-
-        catch(error){
+        } catch (error) {
 
             console.error(error);
 
@@ -1162,7 +1193,6 @@ document.querySelectorAll(".approve-loan").forEach(button=>{
     };
 
 });
-
 
 // ==========================================
 // DELETE LOAN (ADMIN ONLY)
@@ -1560,6 +1590,13 @@ if (payment > loan.balance) {
     let amountPaid = Number(loan.amountPaid || 0);
 
     balance -= payment;
+
+if (balance < 0) {
+
+    balance = 0;
+
+}
+
     amountPaid += payment;
 
     const schedule = [...loan.repaymentSchedule];
@@ -1582,6 +1619,8 @@ if (payment > loan.balance) {
             item.status = "Paid";
             item.paidDate = repaymentDate.value;
 
+item.paymentHistory ??= [];
+
 item.paymentHistory.push({
     amount: unpaid,
     date: repaymentDate.value,
@@ -1595,6 +1634,8 @@ item.paymentHistory.push({
             item.paidAmount += remaining;
             item.remainingAmount -= remaining;
             item.status = "Partial";
+
+item.paymentHistory ??= [];
 
 item.paymentHistory.push({
     amount: remaining,
@@ -1611,6 +1652,17 @@ item.paymentHistory.push({
     const next = schedule.find(x => !x.paid);
 
     let status = "Approved";
+
+const todayDate = today();
+
+if (
+    next &&
+    next.dueDate < todayDate
+) {
+
+    status = "Arrears";
+
+}
 
     if (balance <= 0) {
 
