@@ -868,11 +868,11 @@ list.sort((a, b) => {
 
     row.innerHTML = `
 
-    <td>${index + 1}</td>
+        <td>${index + 1}</td>
 
-    <td>${loan.approvalDate || "-"}</td>
+        <td>${loan.approvalDate || loan.disbursementDate || "-"}</td>
 
-    <td>${loan.clientName || "-"}</td>
+        <td>${loan.clientName || "-"}</td>
 
         <td>${currency(loan.amount || 0)}</td>
 
@@ -900,43 +900,43 @@ list.sort((a, b) => {
 
         <td class="loan-actions">
 
-    <button class="view-loan"
-        data-id="${loan.id}"
-        title="View Schedule">
-        👁️
-    </button>
+            <button class="view-loan"
+                data-id="${loan.id}"
+                title="View Schedule">
+                👁️
+            </button>
 
-    ${loan.status !== "Completed" ? `
-    <button class="repay-loan"
-        data-id="${loan.id}"
-        title="Receive Repayment">
-        💵
-    </button>
-    ` : ""}
+            ${loan.status !== "Completed" ? `
+            <button class="repay-loan"
+                data-id="${loan.id}"
+                title="Receive Repayment">
+                💵
+            </button>
+            ` : ""}
 
-    ${loan.status === "Pending" ? `
-    <button class="edit-loan"
-        data-id="${loan.id}"
-        title="Edit">
-        ✏️
-    </button>
+            ${loan.status === "Pending" ? `
+            <button class="edit-loan"
+                data-id="${loan.id}"
+                title="Edit">
+                ✏️
+            </button>
 
-    <button class="approve-loan"
-        data-id="${loan.id}"
-        title="Approve">
-        ✔️
-    </button>
-    ` : ""}
+            <button class="approve-loan"
+                data-id="${loan.id}"
+                title="Approve">
+                ✔️
+            </button>
+            ` : ""}
 
-    ${loan.status === "Pending" && isAdmin() ? `
-    <button class="delete-loan"
-        data-id="${loan.id}"
-        title="Delete">
-        🗑️
-    </button>
-    ` : ""}
+            ${loan.status === "Pending" && isAdmin() ? `
+            <button class="delete-loan"
+                data-id="${loan.id}"
+                title="Delete">
+                🗑️
+            </button>
+            ` : ""}
 
-</td>
+        </td>
 
     `;
 
