@@ -337,7 +337,7 @@ function renderClients(list) {
 
             <tr>
 
-                <td colspan="7" style="text-align:center;padding:20px;">
+                <td colspan="8" style="text-align:center;padding:20px;">
 
                     No clients found.
 
@@ -351,13 +351,15 @@ function renderClients(list) {
 
     }
 
-    list.forEach((client) => {
+    list.forEach((client, index) => {
 
         const row = document.createElement("tr");
 
         row.innerHTML = `
 
-            <td>${safe(client.name)}</td>
+    <td>${index + 1}</td>
+
+    <td>${safe(client.name)}</td>
 
             <td>${safe(client.phone)}</td>
 
