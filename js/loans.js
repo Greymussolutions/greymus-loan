@@ -850,7 +850,7 @@ list.sort((a, b) => {
 
         loansTableBody.innerHTML = `
             <tr>
-                <td colspan="13" style="text-align:center;">
+                <td colspan="15" style="text-align:center;">
                     No loans found.
                 </td>
             </tr>
