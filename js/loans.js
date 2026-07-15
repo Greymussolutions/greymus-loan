@@ -825,29 +825,25 @@ function renderLoans(list){
     loansTableBody.innerHTML = "";
 
 // ==========================================
-// SORT BY DISBURSEMENT DATE (NEWEST FIRST)
+// SORT BY DISBURSEMENT DATE (LATEST FIRST)
+// GROUP SAME DATES TOGETHER
 // ==========================================
 
 list.sort((a, b) => {
 
-    const dateA = new Date(
-        a.approvalDate ||
-        a.disbursementDate ||
-        a.loanStartDate ||
-        a.createdAt ||
-        0
-    );
+    const dateA = a.approvalDate || "";
+    const dateB = b.approvalDate || "";
 
-    const dateB = new Date(
-        b.approvalDate ||
-        b.disbursementDate ||
-        b.loanStartDate ||
-        b.createdAt ||
-        0
-    );
+    if (dateA !== dateB) {
 
-    return dateB - dateA;
+        return new Date(dateB) - new Date(dateA);
 
+    }
+
+    return (a.clientName || "")
+        .localeCompare(b.clientName || "");
+
+});
 });
 
     if(list.length === 0){
@@ -864,7 +860,7 @@ list.sort((a, b) => {
 
     }
 
-    list.forEach((loan) => {
+    list.forEach((loan, index) => {
 
     if (!loan || !loan.id) return;
 
@@ -872,9 +868,11 @@ list.sort((a, b) => {
 
     row.innerHTML = `
 
-        <td>${String(loan.id).substring(0,8)}</td>
+    <td>${index + 1}</td>
 
-        <td>${loan.clientName || "-"}</td>
+    <td>${loan.approvalDate || "-"}</td>
+
+    <td>${loan.clientName || "-"}</td>
 
         <td>${currency(loan.amount || 0)}</td>
 
