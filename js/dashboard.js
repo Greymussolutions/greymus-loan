@@ -65,6 +65,17 @@ const rejectedStat =
 const arrearsStat =
     document.getElementById("stat-arrears");
 
+const activeLoansStat =
+    document.getElementById("stat-active-loans");
+
+const completedLoansStat =
+    document.getElementById("stat-completed-loans");
+
+const historicalLoansStat =
+    document.getElementById("stat-historical-loans");
+
+const repeatLoansStat =
+    document.getElementById("stat-repeat-loans");
 
 // ==========================================
 // TODAY'S COLLECTION ELEMENTS
@@ -272,6 +283,12 @@ function updateDashboard(){
 
     let totalLoansIssued = 0;
 
+    let activeLoans = 0;
+
+    let historicalLoans = 0;
+
+    let repeatLoans = 0;
+
     let expectedToday = 0;
 
     let collectedToday = 0;
@@ -417,33 +434,30 @@ totalLoansIssued++;
 
             case "Approved":
 
-                approved++;
+    approved++;
+    activeLoans++;
+    currentPortfolio += outstanding;
 
-                currentPortfolio += outstanding;
+    break;
 
-                break;
+case "Arrears":
 
-            case "Rejected":
+    arrears++;
+    activeLoans++;
+    currentPortfolio += outstanding;
 
-                rejected++;
+    break;
 
-                break;
+case "Completed":
 
-            case "Arrears":
+    completed++;
+    historicalLoans++;
 
-                arrears++;
+    break;
 
-                currentPortfolio += outstanding;
+        }
 
-                break;
-
-            case "Completed":
-
-                completed++;
-
-                break;
-
-        }// ==========================================
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 3.0
@@ -617,7 +631,37 @@ if(totalLoansIssuedStat){
         arrearsStat.textContent =
             arrears;
 
-    }// ==========================================
+    }
+
+if(activeLoansStat){
+
+    activeLoansStat.textContent =
+        activeLoans;
+
+}
+
+if(completedLoansStat){
+
+    completedLoansStat.textContent =
+        completed;
+
+}
+
+if(historicalLoansStat){
+
+    historicalLoansStat.textContent =
+        historicalLoans;
+
+}
+
+if(repeatLoansStat){
+
+    repeatLoansStat.textContent =
+        repeatLoans;
+
+}
+
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 3.0
