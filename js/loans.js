@@ -925,6 +925,32 @@ function renderLoans(list){
 
 }
 
+// ==========================================
+// SORT LOANS BY DISBURSEMENT DATE (NEWEST FIRST)
+// ==========================================
+
+list.sort((a, b) => {
+
+    const dateA = new Date(
+        a.disbursementDate ||
+        a.loanStartDate ||
+        a.startDate ||
+        a.createdAt ||
+        0
+    );
+
+    const dateB = new Date(
+        b.disbursementDate ||
+        b.loanStartDate ||
+        b.startDate ||
+        b.createdAt ||
+        0
+    );
+
+    return dateB - dateA;
+
+});
+
 
 // ==========================================
 // SEARCH & FILTER
