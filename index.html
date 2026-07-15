@@ -187,16 +187,10 @@ DASHBOARD
 
                 </button>
 
-                <button
-                    id="settings-btn"
-                    class="tab-btn"
-                    type="button">
-
-                    <span>⚙️</span>
-
-                    <small>Settings</small>
-
-                </button>
+                <button class="tab-btn" data-tab="settings">
+    <span>⚙️</span>
+    <small>Settings</small>
+</button>
 
             </nav>
 
@@ -693,6 +687,84 @@ DASHBOARD
                 </div>
 
             </section>
+
+<!-- =========================
+SETTINGS TAB
+========================= -->
+
+<section id="settings-tab" class="tab-content hidden">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>Settings</h2>
+
+            <p>Manage your account and application preferences.</p>
+
+        </div>
+
+    </div>
+
+    <div class="settings-page">
+
+        <div class="settings-card">
+
+            <h3>Appearance</h3>
+
+            <label>Theme</label>
+
+            <select id="theme-select">
+
+                <option value="system">System Default</option>
+                <option value="light">Light Theme</option>
+                <option value="dark">Dark Theme</option>
+
+            </select>
+
+        </div>
+
+        <div class="settings-card">
+
+            <h3>Account</h3>
+
+            <button id="profile-settings-btn">
+                Edit Profile
+            </button>
+
+            <button id="security-settings-btn">
+                Change Password
+            </button>
+
+        </div>
+
+        <div class="settings-card admin-only">
+
+            <h3>User Management</h3>
+
+            <button id="add-user-btn">
+                Add User
+            </button>
+
+            <button id="manage-users-btn">
+                Manage Users
+            </button>
+
+        </div>
+
+        <div class="settings-card">
+
+            <h3>Session</h3>
+
+            <button id="logout-btn" class="danger-btn">
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
 
             <!-- =========================
             CLIENT MODAL
@@ -1448,121 +1520,13 @@ MOBILE NAVIGATION
 
     </button>
 
-    <button
-        id="settings-btn-mobile"
-        class="tab-btn"
-        type="button">
-
-        <span>⚙️</span>
-
-        <small>Settings</small>
-
-    </button>
+    <button class="tab-btn" data-tab="settings">
+    <span>⚙️</span>
+    <small>Settings</small>
+</button>
 
 </nav>
 
-<!-- =========================
-SETTINGS MENU
-========================= -->
-
-<div id="settings-menu"
-     class="settings-menu hidden">
-
-    <div class="settings-card">
-
-        <h3>⚙️ Settings</h3>
-
-        <!-- Appearance -->
-
-        <div class="settings-section">
-
-            <h4>🎨 Appearance</h4>
-
-            <label for="theme-select">
-
-                Theme
-
-            </label>
-
-            <select id="theme-select">
-
-                <option value="system">
-                    📱 System Default
-                </option>
-
-                <option value="light">
-                    ☀️ Light Theme
-                </option>
-
-                <option value="dark">
-                    🌙 Dark Theme
-                </option>
-
-            </select>
-
-        </div>
-
-        <!-- Account -->
-
-        <div class="settings-section">
-
-            <h4>👤 Account</h4>
-
-            <button id="profile-settings-btn">
-
-                Profile
-
-            </button>
-
-            <button id="security-settings-btn">
-
-                🔒 Change Password
-
-            </button>
-
-        </div>
-
-        <!-- User Management -->
-
-        <div class="settings-section admin-only">
-
-            <h4>👥 User Management</h4>
-
-            <button id="add-user-btn">
-
-                ➕ Add User
-
-            </button>
-
-            <button id="manage-users-btn">
-
-                Manage Users
-
-            </button>
-
-        </div>
-
-        <!-- Logout -->
-
-        <button
-            id="mobile-logout-btn"
-            type="button">
-
-            🚪 Logout
-
-        </button>
-
-        <button
-            id="close-settings"
-            type="button">
-
-            Close
-
-        </button>
-
-    </div>
-
-</div>
 
 <!-- =========================
 PROFILE SETTINGS MODAL
