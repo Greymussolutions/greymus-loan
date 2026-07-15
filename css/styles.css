@@ -2995,6 +2995,17 @@ tbody tr:hover{
 
 }
 
+.mobile-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:80px;
+    z-index:9999;
+    background:#fff;
+    border-top:1px solid #ddd;
+}
+
 
 /* =====================================================
    END OF PART 5
