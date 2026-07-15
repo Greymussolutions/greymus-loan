@@ -5,6 +5,8 @@
 const tabButtons =
     document.querySelectorAll(".tab-btn");
 
+data-tab="settings"
+
 const tabContents =
     document.querySelectorAll(".tab-content");
 
