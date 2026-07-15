@@ -335,32 +335,39 @@ totalLoansIssued++;
             monthKey(approvalDate);
 
         const principal =
-            Number(loan.amount || 0);
+    Number(loan.amount || 0);
 
-        const processingFee =
-            Number(loan.processingFee || 0);
+const processingFee =
+    Number(loan.processingFee || 0);
 
-        const totalRepayment =
-            Number(
-                loan.totalRepayment ||
-                principal
-            );
+const totalRepayment =
+    Number(
+        loan.totalRepayment ||
+        principal
+    );
 
-        const interest =
-            Math.max(
-                0,
-                totalRepayment - principal
-            );
+const amountPaid =
+    Number(loan.amountPaid || 0);
 
-        const income =
-            processingFee + interest;
+const totalInterest =
+    Math.max(
+        0,
+        totalRepayment - principal
+    );
 
-        const outstanding =
-            Number(
-                loan.balance ??
-                principal
-            );
+const interestEarned =
+    totalRepayment > 0
+        ? (amountPaid / totalRepayment) * totalInterest
+        : 0;
 
+const income =
+    processingFee + interestEarned;
+
+const outstanding =
+    Number(
+        loan.balance ??
+        principal
+    );
 
         // ==================================
         // PORTFOLIO HISTORY
