@@ -41,6 +41,9 @@ const previousPortfolioStat =
 const clientsStat =
     document.getElementById("stat-clients");
 
+const totalLoansIssuedStat =
+    document.getElementById("stat-total-loans-issued");
+
 const revenueStat =
     document.getElementById("stat-revenue");
 
@@ -267,6 +270,8 @@ function updateDashboard(){
 
     let completed = 0;
 
+    let totalLoansIssued = 0;
+
     let expectedToday = 0;
 
     let collectedToday = 0;
@@ -296,6 +301,8 @@ function updateDashboard(){
 // ==========================================
 
     loans.forEach(loan=>{
+
+totalLoansIssued++;
 
         const status =
             loan.status || "Pending";
@@ -520,6 +527,20 @@ function updateDashboard(){
 // ==========================================
 // UPDATE DASHBOARD CARDS
 // ==========================================
+
+if(clientsStat){
+
+    clientsStat.textContent =
+        clients.length;
+
+}
+
+if(totalLoansIssuedStat){
+
+    totalLoansIssuedStat.textContent =
+        totalLoansIssued;
+
+}
 
     if(portfolioStat){
 
