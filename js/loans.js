@@ -678,84 +678,63 @@ if (loanForm) {
 
             const loanData = {
 
-                clientId: client.id,
+    clientId: client.id,
 
-                clientName: client.name,
+    clientName: client.name,
 
-                loanNumber:
-                    "LN-" + Date.now(),
+    loanNumber: "LN-" + Date.now(),
 
-                loanType:
-                    loanType?.value || "new",
+    loanType: loanType?.value || "new",
 
-                amount: calc.amount,
+    amount: calc.amount,
 
-                processingFee:
-                    calc.processingFee,
+    processingFee: calc.processingFee,
 
-                interest:
-                    calc.interest,
+    interest: calc.interest,
 
-                duration:
-                    calc.duration,
+    duration: calc.duration,
 
-                repayment:
-                    calc.weeklyPayment,
+    repayment: calc.weeklyPayment,
 
-                weeklyPayment:
-                    calc.weeklyPayment,
+    weeklyPayment: calc.weeklyPayment,
 
-                totalRepayment:
-                    calc.totalRepayment,
+    totalRepayment: calc.totalRepayment,
 
-                balance:
-                    outstandingBalance,
+    balance: outstandingBalance,
 
-                openingBalance:
-                    calc.totalRepayment,
+    totalIncome: calc.processingFee,
 
-                amountPaid:
-                    amountPaid,
+    openingBalance: calc.totalRepayment,
 
-                approvalDate:
-                    formatDate(approvalDate),
+    amountPaid: amountPaid,
 
-                dueDate:
-                    loanDueDate?.value || "",
+    approvalDate: formatDate(approvalDate),
 
-                repaymentSchedule,
+    dueDate: loanDueDate?.value || "",
 
-                nextRepaymentDate:
-                    repaymentSchedule[0]?.dueDate || null,
+    repaymentSchedule: repaymentSchedule,
 
-                remainingInstallments:
-                    calc.duration,
+    nextRepaymentDate: repaymentSchedule[0]?.dueDate || null,
 
-                status:
-                    isHistorical
-                        ? (
-                            outstandingBalance <= 0
-                                ? "Completed"
-                                : "Approved"
-                        )
-                        : "Pending",
+    remainingInstallments: calc.duration,
 
-                completed:
-    outstandingBalance <= 0,
+    status: isHistorical
+        ? (outstandingBalance <= 0 ? "Completed" : "Approved")
+        : "Pending",
 
-                createdBy:
-                    localStorage.getItem("userName") ||
-                    localStorage.getItem("userEmail") ||
-                    "Unknown Officer",
+    completed: outstandingBalance <= 0,
 
-                createdAt:
-                    serverTimestamp(),
+    createdBy:
+        localStorage.getItem("userName") ||
+        localStorage.getItem("userEmail") ||
+        "Unknown Officer",
 
-                updatedAt:
-                    serverTimestamp()
+    createdAt: serverTimestamp(),
 
-            };
+    updatedAt: serverTimestamp()
 
+};
+             
             step = "loanData created";
 
             console.log("loanData", loanData);
@@ -1599,6 +1578,18 @@ if (balance < 0) {
 
     amountPaid += payment;
 
+const totalInterest =
+    Number(loan.totalRepayment) - Number(loan.amount);
+
+const interestRatio =
+    totalInterest / Number(loan.totalRepayment);
+
+const incomeEarned =
+    payment * interestRatio;
+
+const totalIncome =
+    Number(loan.totalIncome || 0) + incomeEarned;
+
     const schedule = [...loan.repaymentSchedule];
 
     let remaining = payment;
@@ -1680,6 +1671,8 @@ if (
                 balance,
 
                 amountPaid,
+
+                totalIncome,
 
                 repaymentSchedule: schedule,
 
