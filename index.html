@@ -4,16 +4,30 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Greymus Loan Financial Hub</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Fonts -->
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
 
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Main Styles -->
+
+    <link rel="stylesheet"
+          href="css/styles.css">
+
+    <!-- JavaScript Modules -->
 
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/utils.js"></script>
@@ -29,50 +43,78 @@
 
 <body>
 
+<!-- =========================
+GLOBAL LOADER
+========================= -->
+
 <div id="loading-overlay" class="hidden">
+
     <div class="spinner"></div>
+
     <p>Loading...</p>
+
 </div>
+
+<!-- Toast Notifications -->
 
 <div id="toast"></div>
 
 <!-- =========================
-LOGIN
+LOGIN SECTION
 ========================= -->
 
-<section id="login-section" class="center-page">
+<section id="login-section"
+         class="center-page">
 
     <div class="login-card">
 
         <div class="logo-area">
 
-    <img
-    src="images/greymus-logo.jpg"
-    alt="Greymus Ventures Loans Solution"
-    class="login-logo">
+            <img
+                src="images/greymus-logo.jpg"
+                alt="Greymus Ventures Loans Solution"
+                class="login-logo">
 
-    <h1>GREYMUS</h1>
-    <span>Ventures Loans Solution</span>
+            <h1>GREYMUS</h1>
 
-</div>
+            <span>Ventures Loans Solution</span>
+
+        </div>
 
         <h2>Welcome Back</h2>
+
         <p>Secure Login</p>
 
         <form id="login-form">
 
             <div class="form-group">
+
                 <label>Email</label>
-                <input id="email" type="email" required>
+
+                <input
+                    id="email"
+                    type="email"
+                    required>
+
             </div>
 
             <div class="form-group">
+
                 <label>Password</label>
-                <input id="password" type="password" required>
+
+                <input
+                    id="password"
+                    type="password"
+                    required>
+
             </div>
 
-            <button id="login-btn" type="submit">
+            <button
+                id="login-btn"
+                type="submit">
+
                 Login
+
             </button>
 
         </form>
@@ -85,941 +127,1288 @@ LOGIN
 DASHBOARD
 ========================= -->
 
-<section id="dashboard-section" class="hidden">
+<section id="dashboard-section"
+         class="hidden">
 
-<div class="dashboard-layout">
+    <div class="dashboard-layout">
 
-<aside class="sidebar">
+        <!-- =========================
+        SIDEBAR
+        ========================= -->
 
-    <div class="brand">
+        <aside class="sidebar">
 
-    <img
-    src="images/greymus-logo.jpg"
-    alt="Greymus Ventures Loans Solution"
-    class="brand-logo">
+            <div class="brand">
 
-    <div>
-        <h2>GREYMUS</h2>
-        <p>Ventures Loans Solution</p>
-    </div>
-
-</div>
-
-    <nav class="sidebar-menu">
-
-        <button class="tab-btn active" data-tab="dashboard">
-            <span>🏠</span>
-            <small>Dashboard</small>
-        </button>
-
-        <button class="tab-btn" data-tab="clients">
-            <span>👥</span>
-            <small>Clients</small>
-        </button>
-
-        <button class="tab-btn" data-tab="loans">
-            <span>💰</span>
-            <small>Loans</small>
-        </button>
-
-        <button id="settings-btn" class="tab-btn" type="button">
-            <span>⚙️</span>
-            <small>Settings</small>
-        </button>
-
-    </nav>
-
-</aside>
-
-<main class="main-content">
-
-<header class="topbar">
-
-    <div>
-
-        <h1>Loan Management Dashboard</h1>
-
-        <p id="logged-user"></p>
-
-    </div>
-
-    <div class="topbar-actions">
-
-        <button id="notification-btn" class="notification-btn">
-            🔔
-        </button>
-
-    </div>
-
-</header>
-
-<!-- =========================
-DASHBOARD TAB
-========================= -->
-
-<section id="dashboard-tab" class="tab-content">
-
-    <div class="hero-card">
-
-        <div>
-
-            <p>Total Portfolio</p>
-
-            <h2 id="stat-portfolio">KES 0</h2>
-
-        </div>
-
-        <div class="hero-icon">
-            💼
-        </div>
-
-    </div>
-
-<!-- =========================
-TODAY'S COLLECTION
-========================= -->
-
-<section class="today-collection">
-
-    <div class="section-header">
-
-        <div>
-
-            <h2>Today's Collection</h2>
-
-            <p>Daily repayment performance</p>
-
-        </div>
-
-    </div>
-
-    <div class="today-summary-grid">
-
-        <div class="stat-card">
-
-            <span>Clients Due Today</span>
-
-            <h3 id="clientsDueToday">0</h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Expected</span>
-
-            <h3 id="expectedCollection">KES 0</h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Collected</span>
-
-            <h3 id="collectedToday">KES 0</h3>
-
-        </div>
-
-        <div class="stat-card">
-
-            <span>Remaining</span>
-
-            <h3 id="remainingCollection">KES 0</h3>
-
-        </div>
-
-        <div class="stat-card success">
-
-            <span>Collection Rate</span>
-
-            <h3 id="collectionRate">0%</h3>
-
-        </div>
-
-    </div>
-
-    <div class="section-header">
-
-        <div>
-
-            <h2>Clients Due Today</h2>
-
-        </div>
-
-    </div>
-
-    <div id="todayDueList" class="today-due-list">
-
-        <div class="empty-state">
-
-            <p>No repayments due today.</p>
-
-        </div>
-
-    </div>
-
-</section>
-
-    <div class="stats-grid">
-
-        <div class="stat-card">
-            <span>Clients</span>
-            <h3 id="stat-clients">0</h3>
-        </div>
-
-        <div class="stat-card">
-            <span>Income</span>
-            <h3 id="stat-revenue">KES 0</h3>
-        </div>
-
-        <div class="stat-card">
-            <span>Pending Loans</span>
-            <h3 id="stat-pending">0</h3>
-        </div>
-
-        <div class="stat-card">
-            <span>Approved Loans</span>
-            <h3 id="stat-approved">0</h3>
-        </div>
-
-        <div class="stat-card">
-            <span>Rejected Loans</span>
-            <h3 id="stat-rejected">0</h3>
-        </div>
-
-        <div class="stat-card danger">
-            <span>Loans in Arrears</span>
-            <h3 id="stat-arrears">0</h3>
-        </div>
-
-    </div>
-
-    <section class="quick-actions">
-
-        <div class="section-header">
-
-            <div>
-
-                <h2>Quick Actions</h2>
-
-                <p>Frequently used operations</p>
-
-            </div>
-
-        </div>
-
-        <div class="quick-grid">
-
-            <button id="new-client-btn" class="action-card">
-
-                <div class="action-icon">👤</div>
+                <img
+                    src="images/greymus-logo.jpg"
+                    alt="Greymus Ventures Loans Solution"
+                    class="brand-logo">
 
                 <div>
-                    <h3>New Client</h3>
-                    <p>Register a borrower</p>
+
+                    <h2>GREYMUS</h2>
+
+                    <p>Ventures Loans Solution</p>
+
                 </div>
 
-            </button>
+            </div>
 
-            <button id="new-loan-btn" class="action-card">
+            <nav class="sidebar-menu">
 
-                <div class="action-icon">💰</div>
+                <button
+                    class="tab-btn active"
+                    data-tab="dashboard">
+
+                    <span>🏠</span>
+
+                    <small>Dashboard</small>
+
+                </button>
+
+                <button
+                    class="tab-btn"
+                    data-tab="clients">
+
+                    <span>👥</span>
+
+                    <small>Clients</small>
+
+                </button>
+
+                <button
+                    class="tab-btn"
+                    data-tab="loans">
+
+                    <span>💰</span>
+
+                    <small>Loans</small>
+
+                </button>
+
+                <button
+                    id="settings-btn"
+                    class="tab-btn"
+                    type="button">
+
+                    <span>⚙️</span>
+
+                    <small>Settings</small>
+
+                </button>
+
+            </nav>
+
+        </aside>
+
+        <!-- =========================
+        MAIN CONTENT
+        ========================= -->
+
+        <main class="main-content">
+
+            <!-- =========================
+            TOP BAR
+            ========================= -->
+
+            <header class="topbar">
 
                 <div>
-                    <h3>New Loan</h3>
-                    <p>Create a weekly loan</p>
+
+                    <h1>Loan Management Dashboard</h1>
+
+                    <p id="logged-user"></p>
+
                 </div>
 
-            </button>
+                <div class="topbar-actions">
+
+                    <button
+                        id="notification-btn"
+                        class="notification-btn">
+
+                        🔔
+
+                    </button>
+
+                </div>
+
+            </header>
+
+            <!-- =========================
+            DASHBOARD TAB
+            ========================= -->
+
+            <section id="dashboard-tab"
+                     class="tab-content">                <!-- =========================
+                HERO CARD
+                ========================= -->
+
+                <div class="hero-card">
+
+                    <div class="hero-content">
+
+                        <p>Current Outstanding Portfolio</p>
+
+                        <h2 id="stat-portfolio">
+                            KES 0
+                        </h2>
+
+                        <small id="stat-monthly-portfolio">
+                            This Month Portfolio: KES 0
+                        </small>
+
+                    </div>
+
+                    <div class="hero-icon">
+                        💼
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                TODAY'S COLLECTION
+                ========================= -->
+
+                <section class="today-collection">
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Today's Collection</h2>
+
+                            <p>Daily repayment performance</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="today-summary-grid">
+
+                        <div class="stat-card">
+
+                            <span>Clients Due Today</span>
+
+                            <h3 id="clientsDueToday">
+                                0
+                            </h3>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <span>Expected</span>
+
+                            <h3 id="expectedCollection">
+                                KES 0
+                            </h3>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <span>Collected</span>
+
+                            <h3 id="collectedToday">
+                                KES 0
+                            </h3>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <span>Remaining</span>
+
+                            <h3 id="remainingCollection">
+                                KES 0
+                            </h3>
+
+                        </div>
+
+                        <div class="stat-card success">
+
+                            <span>Collection Rate</span>
+
+                            <h3 id="collectionRate">
+                                0%
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Clients Due Today</h2>
+
+                        </div>
+
+                    </div>
+
+                    <div id="todayDueList"
+                         class="today-due-list">
+
+                        <div class="empty-state">
+
+                            <p>No repayments due today.</p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- =========================
+                DASHBOARD STATISTICS
+                ========================= -->
+
+                <div class="stats-grid">                    <div class="stat-card">
+
+                        <span>Total Portfolio Issued</span>
+
+                        <h3 id="stat-total-portfolio">
+                            KES 0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Previous Months Portfolio</span>
+
+                        <h3 id="stat-previous-portfolio">
+                            KES 0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Clients</span>
+
+                        <h3 id="stat-clients">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>This Month Income</span>
+
+                        <h3 id="stat-revenue">
+                            KES 0
+                        </h3>
+
+                        <small>
+                            Auto resets every month
+                        </small>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Total Income</span>
+
+                        <h3 id="stat-total-income">
+                            KES 0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Previous Months Income</span>
+
+                        <h3 id="stat-previous-income">
+                            KES 0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Pending Loans</span>
+
+                        <h3 id="stat-pending">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Approved Loans</span>
+
+                        <h3 id="stat-approved">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span>Rejected Loans</span>
+
+                        <h3 id="stat-rejected">
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-card danger">
+
+                        <span>Loans in Arrears</span>
+
+                        <h3 id="stat-arrears">
+                            0
+                        </h3>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                QUICK ACTIONS
+                ========================= -->
+
+                <section class="quick-actions">                    <div class="section-header">
+
+                        <div>
+
+                            <h2>Quick Actions</h2>
+
+                            <p>Frequently used operations</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="quick-grid">
+
+                        <button
+                            id="new-client-btn"
+                            class="action-card">
+
+                            <div class="action-icon">
+                                👤
+                            </div>
+
+                            <div>
+
+                                <h3>New Client</h3>
+
+                                <p>Register a borrower</p>
+
+                            </div>
+
+                        </button>
+
+                        <button
+                            id="new-loan-btn"
+                            class="action-card">
+
+                            <div class="action-icon">
+                                💰
+                            </div>
+
+                            <div>
+
+                                <h3>New Loan</h3>
+
+                                <p>Create a weekly loan</p>
+
+                            </div>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <!-- =========================
+            CLIENTS TAB
+            ========================= -->
+
+            <section id="clients-tab"
+                     class="tab-content hidden">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <h2>Clients</h2>
+
+                        <p>Manage registered borrowers</p>
+
+                    </div>
+
+                </div>
+
+                <div class="toolbar">
+
+                    <input
+                        type="text"
+                        id="client-search"
+                        placeholder="Search clients...">
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table id="clients-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Name</th>
+
+                                <th>Phone</th>
+
+                                <th>ID Number</th>
+
+                                <th>Occupation</th>
+
+                                <th>Guarantor</th>
+
+                                <th>Registered By</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="clients-table-body">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <!-- =========================
+            LOANS TAB
+            ========================= -->
+
+            <section id="loans-tab"
+                     class="tab-content hidden">                <div class="section-header">
+
+                    <div>
+
+                        <h2>Loans</h2>
+
+                        <p>Manage loans and weekly repayments</p>
+
+                    </div>
+
+                </div>
+
+                <div class="toolbar toolbar-wrap">
+
+                    <input
+                        type="text"
+                        id="loan-search"
+                        placeholder="Search loans...">
+
+                    <select id="loan-filter">
+
+                        <option value="ALL">
+                            All Status
+                        </option>
+
+                        <option value="Pending">
+                            Pending
+                        </option>
+
+                        <option value="Approved">
+                            Approved
+                        </option>
+
+                        <option value="Rejected">
+                            Rejected
+                        </option>
+
+                        <option value="Arrears">
+                            Arrears
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table id="loans-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Loan No.</th>
+
+                                <th>Client</th>
+
+                                <th>Principal</th>
+
+                                <th>Processing Fee</th>
+
+                                <th>Interest</th>
+
+                                <th>Duration (Weeks)</th>
+
+                                <th>Weekly Payment</th>
+
+                                <th>Outstanding Balance</th>
+
+                                <th>Next Repayment</th>
+
+                                <th>Due Date</th>
+
+                                <th>Status</th>
+
+                                <th>Officer</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="loans-table-body">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <!-- =========================
+            CLIENT MODAL
+            ========================= -->
+
+            <div id="client-modal"
+                 class="modal hidden">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+
+                        <div>
+
+                            <h2 id="client-modal-title">
+                                New Client
+                            </h2>
+
+                            <p>
+                                Register a new borrower
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="modal-close-btn close-modal">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    <form id="client-form">
+
+                        <input
+                            type="hidden"
+                            id="client-id">                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label>Full Name</label>
+
+                                <input
+                                    type="text"
+                                    id="client-name"
+                                    required>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>Phone Number</label>
+
+                                <input
+                                    type="tel"
+                                    id="client-phone"
+                                    required>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>ID Number</label>
+
+                                <input
+                                    type="text"
+                                    id="client-id-number"
+                                    required>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>Occupation</label>
+
+                                <input
+                                    type="text"
+                                    id="client-occupation">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>Guarantor</label>
+
+                                <input
+                                    type="text"
+                                    id="client-guarantor">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label>Guarantor Phone</label>
+
+                                <input
+                                    type="tel"
+                                    id="client-guarantor-phone">
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Collateral / Security</label>
+
+                            <textarea
+                                id="client-security"
+                                rows="4"></textarea>
+
+                        </div>
+
+                        <div class="modal-buttons">
+
+                            <button
+                                type="submit"
+                                class="primary-btn">
+
+                                Save Client
+
+                            </button>
+
+                            <button
+                                type="button"
+                                class="secondary-btn close-modal">
+
+                                Cancel
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <!-- =========================
+            CLIENT LOAN HISTORY MODAL
+            ========================= -->
+
+            <div id="client-history-modal"
+                 class="modal hidden">                <div class="modal-content large">
+
+                    <div class="modal-header">
+
+                        <div>
+
+                            <h2>Client Loan History</h2>
+
+                            <p id="history-client-name">
+                                Loan Summary
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            id="close-history-modal"
+                            class="modal-close-btn">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    <div class="schedule-summary">
+
+                        <p>
+
+                            <strong>Total Loans:</strong>
+
+                            <span id="history-total-loans">
+                                0
+                            </span>
+
+                        </p>
+
+                        <p>
+
+                            <strong>Total Borrowed:</strong>
+
+                            <span id="history-total-borrowed">
+                                KES 0
+                            </span>
+
+                        </p>
+
+                        <p>
+
+                            <strong>Outstanding Balance:</strong>
+
+                            <span id="history-balance">
+                                KES 0
+                            </span>
+
+                        </p>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table id="client-history-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Loan No.</th>
+
+                                    <th>Principal</th>
+
+                                    <th>Status</th>
+
+                                    <th>Start Date</th>
+
+                                    <th>Due Date</th>
+
+                                    <th>Outstanding</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="client-history-body">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- =========================
+            LOAN MODAL
+            ========================= -->
+
+            <div id="loan-modal"
+                 class="modal hidden">                <div class="modal-content">
+
+                    <div class="modal-header">
+
+                        <div>
+
+                            <h2 id="loan-modal-title">
+                                New Loan
+                            </h2>
+
+                            <p>
+                                Create or edit a loan
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="modal-close-btn close-modal">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    <form id="loan-form">
+
+                        <input
+                            type="hidden"
+                            id="loan-id">
+
+                        <div class="form-grid">
+
+                            <!-- Client -->
+
+                            <div class="form-group">
+
+                                <label>Client</label>
+
+                                <select id="loan-client" required>
+
+                                    <option value="">
+                                        Select Client
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- Principal -->
+
+                            <div class="form-group">
+
+                                <label>Loan Amount (KES)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-amount"
+                                    min="1"
+                                    required>
+
+                            </div>
+
+                            <!-- Processing Fee -->
+
+                            <div class="form-group">
+
+                                <label>Processing Fee (KES)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-processing-fee"
+                                    value="0"
+                                    min="0">
+
+                            </div>
+
+                            <!-- Interest -->
+
+                            <div class="form-group">
+
+                                <label>Interest (%)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-interest"
+                                    value="20"
+                                    min="0">
+
+                            </div>
+
+                            <!-- Duration -->
+
+                            <div class="form-group">
+
+                                <label>Duration (Weeks)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-duration"
+                                    value="12"
+                                    min="1"
+                                    required>
+
+                            </div>
+
+                            <!-- Loan Record Type -->
+
+                            <div class="form-group">
+
+                                <label>Loan Record Type</label>
+
+                                <select id="loan-type">
+
+                                    <option value="new">
+                                        New Loan
+                                    </option>
+
+                                    <option value="historical">
+                                        Historical Loan
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- Loan Start Date -->
+
+                            <div class="form-group">
+
+                                <label>Loan Start Date</label>
+
+                                <input
+                                    type="date"
+                                    id="loan-start-date">
+
+                            </div>
+
+                            <!-- Historical Amount Paid -->
+
+                            <div class="form-group historical-only">
+
+                                <label>Amount Already Paid (KES)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-paid"
+                                    value="0"
+                                    min="0">
+
+                            </div>
+
+                            <!-- Historical Balance -->
+
+                            <div class="form-group historical-only">
+
+                                <label>Current Outstanding Balance (KES)</label>
+
+                                <input
+                                    type="number"
+                                    id="loan-balance"
+                                    value="0"
+                                    min="0">
+
+                            </div>
+
+                        </div>
+
+                        <!-- Loan Preview -->
+
+                        <div class="loan-summary-card">                        <h3>Loan Preview</h3>
+
+                        <div class="summary-row">
+
+                            <span>Principal</span>
+
+                            <strong id="preview-principal">
+                                KES 0
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Processing Fee</span>
+
+                            <strong id="preview-fee">
+                                KES 0
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Interest</span>
+
+                            <strong id="preview-interest">
+                                0%
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Total Repayable</span>
+
+                            <strong id="preview-total">
+                                KES 0
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Weekly Payment</span>
+
+                            <strong id="preview-weekly">
+                                KES 0
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>Duration</span>
+
+                            <strong id="preview-duration">
+                                0 Weeks
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-buttons">
+
+                        <button
+                            type="submit"
+                            class="primary-btn">
+
+                            Save Loan
+
+                        </button>
+
+                        <button
+                            type="button"
+                            class="secondary-btn close-modal">
+
+                            Cancel
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
 
         </div>
 
-    </section>
+        <!-- =========================
+        REPAYMENT MODAL
+        ========================= -->
 
-</section><!-- =========================
-CLIENTS TAB
-========================= -->
+        <div id="repayment-modal"
+             class="modal hidden">            <div class="modal-content">
 
-<section id="clients-tab" class="tab-content hidden">
+                <div class="modal-header">
 
-    <div class="section-header">
-        <div>
-            <h2>Clients</h2>
-            <p>Manage registered borrowers</p>
-        </div>
-    </div>
+                    <div>
 
-    <div class="toolbar">
-        <input
-            type="text"
-            id="client-search"
-            placeholder="Search clients...">
-    </div>
+                        <h2>Loan Repayment</h2>
 
-    <div class="table-wrapper">
+                        <p>Receive a repayment</p>
 
-        <table id="clients-table">
+                    </div>
 
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>ID Number</th>
-                    <th>Occupation</th>
-                    <th>Guarantor</th>
-                    <th>Registered By</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+                    <button
+                        type="button"
+                        class="modal-close-btn close-modal">
 
-            <tbody id="clients-table-body">
-            </tbody>
+                        ✕
 
-        </table>
+                    </button>
 
-    </div>
+                </div>
 
-</section>
+                <form id="repayment-form">
 
-<!-- =========================
-LOANS TAB
-========================= -->
+                    <input
+                        type="hidden"
+                        id="repayment-loan-id">
 
-<section id="loans-tab" class="tab-content hidden">
+                    <div class="form-group">
 
-    <div class="section-header">
-        <div>
-            <h2>Loans</h2>
-            <p>Manage loans and weekly repayments</p>
-        </div>
-    </div>
+                        <label>Client</label>
 
-    <div class="toolbar toolbar-wrap">
+                        <input
+                            type="text"
+                            id="repayment-client"
+                            readonly>
 
-        <input
-            type="text"
-            id="loan-search"
-            placeholder="Search loans...">
+                    </div>
 
-        <select id="loan-filter">
-            <option value="ALL">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Arrears">Arrears</option>
-        </select>
+                    <div class="form-group">
 
-    </div>
+                        <label>Outstanding Balance</label>
 
-    <div class="table-wrapper">
+                        <input
+                            type="text"
+                            id="repayment-balance"
+                            readonly>
 
-        <table id="loans-table">
+                    </div>
 
-            <thead>
+                    <div class="form-group">
 
-                <tr>
-    <th>Loan No.</th>
-    <th>Client</th>
-    <th>Principal</th>
-    <th>Processing Fee</th>
-    <th>Interest</th>
-    <th>Duration (Weeks)</th>
-    <th>Weekly Payment</th>
-    <th>Outstanding Balance</th>
-    <th>Next Repayment</th>
-    <th>Due Date</th>
-    <th>Status</th>
-    <th>Officer</th>
-    <th>Actions</th>
-</tr>
+                        <label>Weekly Repayment</label>
 
-            </thead>
+                        <input
+                            type="text"
+                            id="repayment-weekly"
+                            readonly>
 
-            <tbody id="loans-table-body">
-            </tbody>
+                    </div>
 
-        </table>
+                    <div class="form-group">
 
-    </div>
+                        <label>Amount Paid</label>
 
-</section>
+                        <input
+                            type="number"
+                            id="repayment-amount"
+                            min="1"
+                            required>
 
-<!-- =========================
-CLIENT MODAL
-========================= -->
+                    </div>
 
-<div id="client-modal" class="modal hidden">
+                    <div class="form-group">
 
-    <div class="modal-content">
+                        <label>Payment Date</label>
 
-        <div class="modal-header">
+                        <input
+                            type="date"
+                            id="repayment-date"
+                            required>
 
-            <div>
-                <h2 id="client-modal-title">New Client</h2>
-                <p>Register a new borrower</p>
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Remarks</label>
+
+                        <textarea
+                            id="repayment-notes"
+                            rows="3"></textarea>
+
+                    </div>
+
+                    <div class="modal-buttons">                        <button
+                            type="submit"
+                            class="primary-btn">
+
+                            Save Repayment
+
+                        </button>
+
+                        <button
+                            type="button"
+                            class="secondary-btn close-modal">
+
+                            Cancel
+
+                        </button>
+
+                    </div>
+
+                </form>
+
             </div>
-
-            <button type="button" class="modal-close-btn close-modal">
-                ✕
-            </button>
 
         </div>
 
-        <form id="client-form">
+        <!-- =========================
+        CONFIRMATION MODAL
+        ========================= -->
 
-            <input type="hidden" id="client-id">
+        <div id="confirm-modal"
+             class="modal hidden">
 
-            <div class="form-grid">
+            <div class="modal-content confirmation-modal">
 
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="client-name" required>
+                <div class="confirm-icon">
+                    ⚠️
                 </div>
 
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="tel" id="client-phone" required>
-                </div>
+                <h2>Confirmation</h2>
 
-                <div class="form-group">
-                    <label>ID Number</label>
-                    <input type="text" id="client-id-number" required>
-                </div>
+                <p id="confirm-message">
 
-                <div class="form-group">
-                    <label>Occupation</label>
-                    <input type="text" id="client-occupation">
-                </div>
+                    Are you sure you want to continue?
 
-                <div class="form-group">
-                    <label>Guarantor</label>
-                    <input type="text" id="client-guarantor">
-                </div>
-
-                <div class="form-group">
-                    <label>Guarantor Phone</label>
-                    <input type="tel" id="client-guarantor-phone">
-                </div>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Collateral / Security</label>
-
-                <textarea id="client-security" rows="4"></textarea>
-
-            </div>
-
-            <div class="modal-buttons">
-
-                <button type="submit" class="primary-btn">
-                    Save Client
-                </button>
-
-                <button type="button" class="secondary-btn close-modal">
-                    Cancel
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<!-- =========================
-CLIENT LOAN HISTORY MODAL
-========================= -->
-
-<div id="client-history-modal" class="modal hidden">
-
-    <div class="modal-content large">
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2>Client Loan History</h2>
-
-                <p id="history-client-name">
-                    Loan summary
                 </p>
 
+                <div class="modal-buttons">
+
+                    <button
+                        id="confirm-yes"
+                        type="button"
+                        class="primary-btn">
+
+                        Yes
+
+                    </button>
+
+                    <button
+                        id="confirm-no"
+                        type="button"
+                        class="secondary-btn">
+
+                        Cancel
+
+                    </button>
+
+                </div>
+
             </div>
-
-            <button
-                type="button"
-                id="close-history-modal"
-                class="modal-close-btn">
-
-                ✕
-
-            </button>
 
         </div>
 
-        <div class="schedule-summary">
+        <!-- =========================
+        NOTIFICATION PANEL
+        ========================= -->
 
-            <p>
-                <strong>Total Loans:</strong>
-                <span id="history-total-loans">0</span>
-            </p>
+        <div id="notification-panel"
+             class="notification-panel hidden">
 
-            <p>
-                <strong>Total Borrowed:</strong>
-                <span id="history-total-borrowed">KES 0</span>
-            </p>
+            <div class="notification-header">
 
-            <p>
-                <strong>Outstanding Balance:</strong>
-                <span id="history-balance">KES 0</span>
-            </p>
-
-        </div>
-
-        <table id="client-history-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Loan No.</th>
-
-                    <th>Principal</th>
-
-                    <th>Status</th>
-
-                    <th>Start Date</th>
-
-                    <th>Due Date</th>
-
-                    <th>Outstanding</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody id="client-history-body">
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-<!-- =========================
-LOAN MODAL
-========================= -->
-
-<!-- =========================
-LOAN MODAL
-========================= -->
-
-<div id="loan-modal" class="modal hidden">
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <div>
-                <h2 id="loan-modal-title">New Loan</h2>
-                <p>Create or edit a loan</p>
-            </div>
-
-            <button type="button"
-                    class="modal-close-btn close-modal">
-                ✕
-            </button>
-
-        </div>
-
-        <form id="loan-form">
-
-            <input type="hidden" id="loan-id">
-
-            <div class="form-grid">
-
-                <!-- Client -->
-
-                <div class="form-group">
-                    <label>Client</label>
-
-                    <select id="loan-client" required>
-                        <option value="">Select Client</option>
-                    </select>
-                </div>
-
-                <!-- Principal -->
-
-                <div class="form-group">
-                    <label>Loan Amount (KES)</label>
-
-                    <input
-                        type="number"
-                        id="loan-amount"
-                        min="1"
-                        required>
-                </div>
-
-                <!-- Processing Fee -->
-
-                <div class="form-group">
-                    <label>Processing Fee (KES)</label>
-
-                    <input
-                        type="number"
-                        id="loan-processing-fee"
-                        value="0"
-                        min="0">
-                </div>
-
-                <!-- Interest -->
-
-                <div class="form-group">
-                    <label>Interest (%)</label>
-
-                    <input
-                        type="number"
-                        id="loan-interest"
-                        value="20"
-                        min="0">
-                </div>
-
-                <!-- Duration -->
-
-                <div class="form-group">
-                    <label>Duration (Weeks)</label>
-
-                    <input
-                        type="number"
-                        id="loan-duration"
-                        value="12"
-                        min="1"
-                        required>
-                </div>
-
-                <!-- Loan Type -->
-
-                <div class="form-group">
-                    <label>Loan Record Type</label>
-
-                    <select id="loan-type">
-
-                        <option value="new">
-                            New Loan
-                        </option>
-
-                        <option value="historical">
-                            Historical Loan
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <!-- Start Date -->
-
-                <div class="form-group">
-                    <label>Loan Start Date</label>
-
-                    <input
-                        type="date"
-                        id="loan-start-date">
-                </div>
-
-                <!-- Historical Amount Paid -->
-
-                <div class="form-group historical-only">
-
-                    <label>Amount Already Paid (KES)</label>
-
-                    <input
-                        type="number"
-                        id="loan-paid"
-                        value="0"
-                        min="0">
-
-                </div>
-
-                <!-- Historical Balance -->
-
-                <div class="form-group historical-only">
-
-                    <label>Current Outstanding Balance (KES)</label>
-
-                    <input
-                        type="number"
-                        id="loan-balance"
-                        value="0"
-                        min="0">
-
-                </div>
-
-            </div>
-
-            <!-- Loan Preview -->
-
-            <div class="loan-summary-card">
-
-                <h3>Loan Preview</h3>
-
-                <div class="summary-row">
-                    <span>Principal</span>
-                    <strong id="preview-principal">
-                        KES 0
-                    </strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Processing Fee</span>
-                    <strong id="preview-fee">
-                        KES 0
-                    </strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Interest</span>
-                    <strong id="preview-interest">
-                        0%
-                    </strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Total Repayable</span>
-                    <strong id="preview-total">
-                        KES 0
-                    </strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Weekly Payment</span>
-                    <strong id="preview-weekly">
-                        KES 0
-                    </strong>
-                </div>
-
-                <div class="summary-row">
-                    <span>Duration</span>
-                    <strong id="preview-duration">
-                        0 Weeks
-                    </strong>
-                </div>
-
-            </div>
-
-            <div class="modal-buttons">
+                <h3>Notifications</h3>
 
                 <button
-                    type="submit"
-                    class="primary-btn">
+                    id="close-notifications"
+                    type="button">
 
-                    Save Loan
-
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn close-modal">
-
-                    Cancel
+                    ✕
 
                 </button>
 
             </div>
 
-        </form>
+            <div id="notification-list"
+                 class="notification-list">
 
-    </div>
+                <div class="empty-state">
 
-</div>
+                    <h3>No Notifications</h3>
 
-<!-- =========================
-REPAYMENT MODAL
-========================= -->
+                    <p>You're all caught up.</p>
 
-<div id="repayment-modal" class="modal hidden">
+                </div>
 
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <div>
-                <h2>Loan Repayment</h2>
-                <p>Receive a repayment</p>
             </div>
-
-            <button type="button"
-                    class="modal-close-btn close-modal">
-                ✕
-            </button>
 
         </div>
 
-        <form id="repayment-form">
-
-            <input type="hidden"
-                   id="repayment-loan-id">
-
-            <div class="form-group">
-
-                <label>Client</label>
-
-                <input
-                    type="text"
-                    id="repayment-client"
-                    readonly>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Outstanding Balance</label>
-
-                <input
-                    type="text"
-                    id="repayment-balance"
-                    readonly>
-
-            </div>
-
-<div class="form-group">
-
-    <label>Weekly Repayment</label>
-
-    <input
-        type="text"
-        id="repayment-weekly"
-        readonly>
-
-</div>
-
-            <div class="form-group">
-
-                <label>Amount Paid</label>
-
-                <input
-                    type="number"
-                    id="repayment-amount"
-                    min="1"
-                    required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Payment Date</label>
-
-                <input
-                    type="date"
-                    id="repayment-date"
-                    required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Remarks</label>
-
-                <textarea
-                    id="repayment-notes"
-                    rows="3"></textarea>
-
-            </div>
-
-            <div class="modal-buttons">
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Save Repayment
-
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn close-modal">
-
-                    Cancel
-
-                </button>
-
-            </div>
-
-        </form>
+        </main>
 
     </div>
-
-</div>
-
-<!-- =========================
-CONFIRMATION MODAL
-========================= -->
-
-<div id="confirm-modal" class="modal hidden">
-
-    <div class="modal-content confirmation-modal">
-
-        <div class="confirm-icon">⚠️</div>
-
-        <h2>Confirmation</h2>
-
-        <p id="confirm-message">
-            Are you sure you want to continue?
-        </p>
-
-        <div class="modal-buttons">
-
-            <button id="confirm-yes" type="button" class="primary-btn">
-                Yes
-            </button>
-
-            <button id="confirm-no" type="button" class="secondary-btn">
-                Cancel
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- =========================
-NOTIFICATION PANEL
-========================= -->
-
-<div id="notification-panel" class="notification-panel hidden">
-
-    <div class="notification-header">
-
-        <h3>Notifications</h3>
-
-        <button id="close-notifications" type="button">
-            ✕
-        </button>
-
-    </div>
-
-    <div id="notification-list" class="notification-list">
-
-        <div class="empty-state">
-
-            <h3>No Notifications</h3>
-
-            <p>You're all caught up.</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-</main>
-
-</div>
 
 </section>
 
@@ -1027,28 +1416,47 @@ NOTIFICATION PANEL
 MOBILE NAVIGATION
 ========================= -->
 
-<nav class="mobile-nav">
+<nav class="mobile-nav"><nav class="mobile-nav">
 
-    <button class="tab-btn active" data-tab="dashboard">
+    <button
+        class="tab-btn active"
+        data-tab="dashboard">
+
         <span>🏠</span>
+
         <small>Dashboard</small>
+
     </button>
 
-    <button class="tab-btn" data-tab="clients">
+    <button
+        class="tab-btn"
+        data-tab="clients">
+
         <span>👥</span>
+
         <small>Clients</small>
+
     </button>
 
-    <button class="tab-btn" data-tab="loans">
+    <button
+        class="tab-btn"
+        data-tab="loans">
+
         <span>💰</span>
+
         <small>Loans</small>
+
     </button>
 
-    <button id="settings-btn-mobile"
-            class="tab-btn"
-            type="button">
+    <button
+        id="settings-btn-mobile"
+        class="tab-btn"
+        type="button">
+
         <span>⚙️</span>
+
         <small>Settings</small>
+
     </button>
 
 </nav>
@@ -1057,12 +1465,12 @@ MOBILE NAVIGATION
 SETTINGS MENU
 ========================= -->
 
-<div id="settings-menu" class="settings-menu hidden">
+<div id="settings-menu"
+     class="settings-menu hidden">
 
     <div class="settings-card">
 
         <h3>⚙️ Settings</h3>
-
 
         <!-- Appearance -->
 
@@ -1071,7 +1479,9 @@ SETTINGS MENU
             <h4>🎨 Appearance</h4>
 
             <label for="theme-select">
+
                 Theme
+
             </label>
 
             <select id="theme-select">
@@ -1092,7 +1502,6 @@ SETTINGS MENU
 
         </div>
 
-
         <!-- Account -->
 
         <div class="settings-section">
@@ -1100,16 +1509,18 @@ SETTINGS MENU
             <h4>👤 Account</h4>
 
             <button id="profile-settings-btn">
+
                 Profile
+
             </button>
 
-
             <button id="security-settings-btn">
+
                 🔒 Change Password
+
             </button>
 
         </div>
-
 
         <!-- User Management -->
 
@@ -1118,31 +1529,36 @@ SETTINGS MENU
             <h4>👥 User Management</h4>
 
             <button id="add-user-btn">
+
                 ➕ Add User
+
             </button>
 
             <button id="manage-users-btn">
+
                 Manage Users
+
             </button>
 
         </div>
 
-
         <!-- Logout -->
 
-        <button id="mobile-logout-btn" type="button">
+        <button
+            id="mobile-logout-btn"
+            type="button">
 
             🚪 Logout
 
         </button>
 
-
-        <button id="close-settings" type="button">
+        <button
+            id="close-settings"
+            type="button">
 
             Close
 
         </button>
-
 
     </div>
 
@@ -1152,7 +1568,8 @@ SETTINGS MENU
 PROFILE SETTINGS MODAL
 ========================= -->
 
-<div id="profile-modal" class="modal hidden">
+<div id="profile-modal"
+     class="modal hidden">
 
     <div class="modal-content">
 
@@ -1163,11 +1580,12 @@ PROFILE SETTINGS MODAL
                 <h2>Profile Settings</h2>
 
                 <p>
+
                     Update your account information
+
                 </p>
 
             </div>
-
 
             <button
                 type="button"
@@ -1177,201 +1595,9 @@ PROFILE SETTINGS MODAL
 
             </button>
 
-
         </div>
 
-
-        <form id="profile-form">
-
-
-            <div class="form-group">
-
-                <label>
-                    Full Name
-                </label>
-
-                <input
-                    type="text"
-                    id="settings-name"
-                    placeholder="Enter your full name"
-                    required>
-
-            </div>
-
-
-
-            <div class="form-group">
-
-                <label>
-                    Email Address
-                </label>
-
-                <input
-                    type="email"
-                    id="settings-email"
-                    readonly>
-
-            </div>
-
-
-
-            <div class="form-group">
-
-                <label>
-                    Phone Number
-                </label>
-
-                <input
-                    type="tel"
-                    id="settings-phone"
-                    placeholder="Enter phone number">
-
-            </div>
-
-
-
-            <div class="modal-buttons">
-
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Save Profile
-
-                </button>
-
-
-
-                <button
-                    type="button"
-                    class="secondary-btn close-profile">
-
-                    Cancel
-
-                </button>
-
-
-            </div>
-
-
-        </form>
-
-
-    </div>
-
-
-</div>
-
-<!-- =========================
-ADD USER MODAL
-========================= -->
-
-<div id="add-user-modal" class="modal hidden">
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2>Add New User</h2>
-
-                <p>Create a new system account</p>
-
-            </div>
-
-            <button
-                type="button"
-                class="modal-close-btn close-add-user">
-
-                ✕
-
-            </button>
-
-        </div>
-
-        <form id="add-user-form">
-
-            <div class="form-group">
-
-                <label>Full Name</label>
-
-                <input
-                    type="text"
-                    id="new-user-name"
-                    required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Email</label>
-
-                <input
-                    type="email"
-                    id="new-user-email"
-                    required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Password</label>
-
-                <input
-                    type="password"
-                    id="new-user-password"
-                    minlength="6"
-                    required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Role</label>
-
-                <select id="new-user-role">
-
-                    <option value="officer">
-                        Field Officer
-                    </option>
-
-                    <option value="admin">
-                        Administrator
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div class="modal-buttons">
-
-                <button
-                    type="submit"
-                    class="primary-btn">
-
-                    Create User
-
-                </button>
-
-                <button
-                    type="button"
-                    class="secondary-btn close-add-user">
-
-                    Cancel
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<!-- =========================
+        <form id="profile-form"><!-- =========================
 FLOATING ACTION BUTTON
 ========================= -->
 
@@ -1383,7 +1609,9 @@ FLOATING ACTION BUTTON
 
     +
 
-</button><!-- =========================
+</button>
+
+<!-- =========================
 FOOTER
 ========================= -->
 
@@ -1419,17 +1647,23 @@ REPAYMENT SCHEDULE MODAL
 
             <h2>Repayment Schedule</h2>
 
-            <button id="close-schedule-modal">&times;</button>
+            <button
+                type="button"
+                id="close-schedule-modal">
+                &times;
+            </button>
 
         </div>
 
         <div class="schedule-summary">
 
-            <p><strong>Client:</strong>
+            <p>
+                <strong>Client:</strong>
                 <span id="schedule-client">-</span>
             </p>
 
-            <p><strong>Outstanding Balance:</strong>
+            <p>
+                <strong>Outstanding Balance:</strong>
                 <span id="schedule-balance">KES 0</span>
             </p>
 
@@ -1442,13 +1676,9 @@ REPAYMENT SCHEDULE MODAL
                 <tr>
 
                     <th>Week</th>
-
                     <th>Due Date</th>
-
                     <th>Amount</th>
-
                     <th>Status</th>
-
                     <th>Paid Date</th>
 
                 </tr>
@@ -1461,12 +1691,12 @@ REPAYMENT SCHEDULE MODAL
 
         </table>
 
-<div id="schedule-cards"></div>
+        <!-- Mobile Cards -->
+        <div id="schedule-cards"></div>
 
     </div>
 
 </div>
 
 </body>
-
 </html>
