@@ -402,9 +402,7 @@ textarea{
    LOGIN PAGE
 =========================== */
 
-
 .center-page{
-    min-height:100svh;
     min-height:100vh;
     display:flex;
     justify-content:center;
@@ -413,136 +411,66 @@ textarea{
     background:linear-gradient(135deg,#2563eb,#1d4ed8);
 }
 
-
-
 .login-card{
     width:100%;
     max-width:430px;
-    margin:auto;
     background:#fff;
-    border-radius:22px;
-    padding:32px;
+    border-radius:24px;
+    padding:40px 32px;
     box-shadow:var(--shadow);
 }
 
-
-
 .logo-area{
-
-    text-align:center;
-
-    margin-bottom:28px;
-
-}
-
-
-
-.logo-circle{
-
-    width:80px;
-
-    height:80px;
-
-    margin:0 auto 18px;
-
-
-    border-radius:50%;
-
-
-    background:var(--primary);
-
-
-    color:#fff;
-
-
     display:flex;
-
-    justify-content:center;
-
+    flex-direction:column;
     align-items:center;
-
-
-    font-size:34px;
-
-    font-weight:700;
-
-
+    margin-bottom:30px;
 }
 
-
-
-.logo-area h1{
-
-
-    font-size:30px;
-
-    color:var(--black);
-
-
+.login-logo{
+    width:180px;
+    height:auto;
+    margin-bottom:20px;
 }
-
-
-
-.logo-area span{
-
-
-    color:var(--text-light);
-
-
-}
-
-
 
 .login-card h2{
-
-
+    font-size:36px;
+    font-weight:700;
+    color:#111827;
     text-align:center;
-
-    margin-bottom:10px;
-
-
+    margin-bottom:8px;
 }
-
-
 
 .login-card p{
-
-
+    font-size:20px;
+    color:#4b5563;
     text-align:center;
-
-    color:var(--text-light);
-
-    margin-bottom:28px;
-
-
+    margin-bottom:30px;
 }
 
+.login-card label{
+    display:block;
+    font-size:15px;
+    font-weight:700;
+    color:#374151;
+    margin-bottom:8px;
+}
 
+.login-card input{
+    height:58px;
+    margin-bottom:22px;
+    border-radius:14px;
+    font-size:16px;
+}
 
 #login-btn{
-
-
     width:100%;
-
-
-    padding:14px;
-
-
-    border-radius:12px;
-
-
-    background:var(--primary);
-
-
+    height:58px;
+    border-radius:14px;
+    background:#2563eb;
     color:#fff;
-
-
-    font-size:16px;
-
-
-    font-weight:600;
-
-
+    font-size:20px;
+    font-weight:700;
 }
 
 
@@ -4527,8 +4455,8 @@ th{
 }
 
 .login-logo{
-    width:120px;
-    height:120px;
+    width:180px;
+    height:auto;
     object-fit:contain;
     display:block;
     margin:0 auto 20px;
