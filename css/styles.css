@@ -4507,6 +4507,37 @@ SETTINGS PAGE SPACING
     margin-bottom:40px;
 }
 
+/* ==========================================
+   MOBILE HEADER - SHOW LOGO ONLY
+========================================== */
+
+@media (max-width:768px){
+
+    /* Hide the brand text */
+    .brand h2,
+    .brand p{
+        display:none;
+    }
+
+    /* Center the logo */
+    .brand{
+        justify-content:center;
+        margin-bottom:20px;
+    }
+
+    /* Hide dashboard title in the topbar */
+    .topbar-left h1,
+    .topbar-left p{
+        display:none;
+    }
+
+    /* Center the topbar content */
+    .topbar{
+        justify-content:center;
+    }
+
+}
+
 /* =====================================================
    END OF VERSION 1.4 CLEAN STABLE CSS
 ===================================================== */
