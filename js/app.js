@@ -53,11 +53,18 @@ const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
 const mobileNav = document.querySelector(".mobile-nav");
 const fab = document.getElementById("fab-new-loan");
 const footer = document.querySelector(".app-footer");
+
 // ======================================================
 // AUTH STATE
 // ======================================================
 
+const startupLogo = document.getElementById("startup-logo");
+
 onAuthStateChanged(auth, (user) => {
+
+    if (startupLogo) {
+        startupLogo.style.display = "none";
+    }
 
     if (user) {
 
