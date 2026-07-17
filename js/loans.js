@@ -193,6 +193,16 @@ function today(){
 
 }
 
+// ==========================================
+// ROUND REPAYMENT TO NEAREST 5
+// ==========================================
+
+function roundToNearestFive(amount){
+
+    return Math.ceil(Number(amount) / 5) * 5;
+
+}
+
 function applyHistoricalPayments(schedule, amountPaid) {
 
     let remaining = Number(amountPaid || 0);
@@ -263,9 +273,9 @@ function calculateLoan(){
         amount + interestAmount;
 
     const weeklyPayment =
-        duration > 0
-        ? totalRepayment / duration
-        : 0;
+    duration > 0
+    ? roundToNearestFive(totalRepayment / duration)
+    : 0;
 
     if(previewPrincipal)
         previewPrincipal.textContent =
@@ -304,7 +314,8 @@ function calculateLoan(){
 function generateRepaymentSchedule(
     approvalDate,
     durationWeeks,
-    weeklyPayment
+    weeklyPayment,
+    totalRepayment
 ){
 
     const schedule = [];
@@ -313,35 +324,50 @@ function generateRepaymentSchedule(
 
     for(let week = 1; week <= durationWeeks; week++){
 
-        const dueDate = new Date(startDate);
+    const dueDate = new Date(startDate);
 
-        dueDate.setDate(
-            dueDate.getDate() + (week * 7)
-        );
+    dueDate.setDate(
+        dueDate.getDate() + (week * 7)
+    );
 
-        schedule.push({
+    let installmentAmount;
 
-    week: week,
+    if (week === durationWeeks) {
 
-    amount: Number(weeklyPayment),
+        installmentAmount =
+            Number(totalRepayment) -
+            (Number(weeklyPayment) * (durationWeeks - 1));
 
-    paidAmount: 0,
+    } else {
 
-    remainingAmount: Number(weeklyPayment),
-
-    dueDate: formatDate(dueDate),
-
-    paid: false,
-
-    status: "Pending",
-
-    paidDate: null,
-
-    paymentHistory: []
-
-});
+        installmentAmount =
+            Number(weeklyPayment);
 
     }
+
+    schedule.push({
+
+        week: week,
+
+        amount: installmentAmount,
+
+        paidAmount: 0,
+
+        remainingAmount: installmentAmount,
+
+        dueDate: formatDate(dueDate),
+
+        paid: false,
+
+        status: "Pending",
+
+        paidDate: null,
+
+        paymentHistory: []
+
+    });
+
+}
 
     return schedule;
 
@@ -656,11 +682,12 @@ if (loanForm) {
             step = "approvalDate";
 
             let repaymentSchedule =
-                generateRepaymentSchedule(
-                    approvalDate,
-                    calc.duration,
-                    calc.weeklyPayment
-                );
+    generateRepaymentSchedule(
+        approvalDate,
+        calc.duration,
+        calc.weeklyPayment,
+        calc.totalRepayment
+    );
 
             step = "repaymentSchedule";
 
@@ -1131,10 +1158,11 @@ document.querySelectorAll(".approve-loan").forEach(button => {
             const approvalDate = new Date();
 
             const schedule = generateRepaymentSchedule(
-                approvalDate,
-                loan.duration,
-                loan.weeklyPayment
-            );
+    approvalDate,
+    loan.duration,
+    loan.weeklyPayment,
+    loan.totalRepayment
+);
 
             await updateDoc(
                 doc(db, "loans", loan.id),
