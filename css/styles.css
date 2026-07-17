@@ -4541,3 +4541,23 @@ SETTINGS PAGE SPACING
 /* =====================================================
    END OF VERSION 1.4 CLEAN STABLE CSS
 ===================================================== */
+
+/* ==========================================
+   APP STARTUP LOGO SCREEN
+========================================== */
+
+#startup-logo {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+#startup-logo img {
+    width: 160px;
+    height: auto;
+    object-fit: contain;
+}
