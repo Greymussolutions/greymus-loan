@@ -4585,3 +4585,63 @@ SETTINGS PAGE SPACING
     }
 
 }
+
+/* ==========================================
+   MOBILE TOP BAR FIX
+   ========================================== */
+@media (max-width: 768px) {
+
+    /* Top bar */
+    .topbar{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:12px;
+        padding:20px;
+    }
+
+    /* Left side (logo, title and username) */
+    .topbar > div:first-child{
+        flex:1;
+        min-width:0;
+    }
+
+    /* Company name */
+    .topbar h1{
+        display:block;
+        font-size:2rem;
+        line-height:1.2;
+        margin:0 0 8px;
+        word-break:break-word;
+    }
+
+    /* Company slogan */
+    .topbar p{
+        display:block;
+        margin:0 0 6px;
+        font-size:1rem;
+    }
+
+    /* Logged in user */
+    #logged-user{
+        display:block;
+        font-size:1rem;
+        font-weight:600;
+        margin-top:6px;
+    }
+
+    /* Notification button */
+    .topbar-actions{
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        flex-shrink:0;
+    }
+
+    .notification-btn{
+        width:56px;
+        height:56px;
+        border-radius:16px;
+    }
+}
+
