@@ -99,6 +99,19 @@ const collectionRateElement =
 const todayDueList =
     document.getElementById("todayDueList");
 
+// ==========================================
+// ARREARS DASHBOARD ELEMENTS
+// ==========================================
+
+const arrearsClientCount =
+    document.getElementById("arrears-client-count");
+
+const arrearsTotalAmount =
+    document.getElementById("arrears-total-amount");
+
+const arrearsClientList =
+    document.getElementById("arrears-client-list");
+
 
 // ==========================================
 // MONEY FORMAT
@@ -295,9 +308,13 @@ function updateDashboard(){
 
     const clientsDueToday = [];
 
-    const incomeHistory = {};
+const arrearsClients = [];
 
-    const portfolioHistory = {};
+let totalArrearsAmount = 0;
+
+const incomeHistory = {};
+
+const portfolioHistory = {};
 
     const today = todayString();
 
@@ -489,6 +506,30 @@ case "Completed":
         ){
 
             loan.repaymentSchedule.forEach(item=>{
+
+// ==================================
+// ARREARS CALCULATION
+// ==================================
+
+const due =
+    Number(item.amount || 0);
+
+const paid =
+    Number(item.paidAmount || 0);
+
+const balance =
+    Math.max(0, due - paid);
+
+if (item.dueDate < today && balance > 0) {
+
+    totalArrearsAmount += balance;
+
+    arrearsClients.push({
+        client: loan.clientName || "Unknown Client",
+        amount: balance
+    });
+
+}
 
                 if(item.dueDate !== today){
 
@@ -804,7 +845,47 @@ if(repeatLoansStat){
 
     }
 
-}// ==========================================
+// ==========================================
+// CLIENTS IN ARREARS
+// ==========================================
+
+if (arrearsClientCount) {
+    arrearsClientCount.textContent = arrearsClients.length;
+}
+
+if (arrearsTotalAmount) {
+    arrearsTotalAmount.textContent = currency(totalArrearsAmount);
+}
+
+if (arrearsClientList) {
+
+    arrearsClientList.innerHTML = "";
+
+    if (arrearsClients.length === 0) {
+
+        arrearsClientList.innerHTML =
+            "<p>No clients in arrears.</p>";
+
+    } else {
+
+        arrearsClients.forEach(client => {
+
+            arrearsClientList.innerHTML += `
+                <div class="today-card">
+                    <strong>${client.client}</strong><br>
+                    Arrears: ${currency(client.amount)}
+                </div>
+            `;
+
+        });
+
+    }
+
+}
+
+}
+
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 3.0
