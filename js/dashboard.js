@@ -292,6 +292,10 @@ function updateDashboard(){
 
     let arrears = 0;
 
+    let arrearsAmount = 0;
+
+    const arrearsClients = [];
+
     let completed = 0;
 
     let totalLoansIssued = 0;
@@ -386,6 +390,36 @@ const outstanding =
         principal
     );
 
+let overdueWeeks = 0;
+
+let overdueAmount = 0;
+
+if (Array.isArray(loan.repaymentSchedule)) {
+
+    loan.repaymentSchedule.forEach(item => {
+
+        const due = Number(item.amount || 0);
+
+        const paid = Number(item.paidAmount || 0);
+
+        if (
+
+            item.dueDate < today &&
+
+            paid < due
+
+        ) {
+
+            overdueWeeks++;
+
+            overdueAmount += (due - paid);
+
+        }
+
+    });
+
+}
+
         // ==================================
         // PORTFOLIO HISTORY
         // ==================================
@@ -467,16 +501,20 @@ const outstanding =
 case "Arrears":
 
     arrears++;
+
     activeLoans++;
+
     currentPortfolio += outstanding;
 
-    arrearsAmount += outstanding;
+    arrearsAmount += overdueAmount;
 
     arrearsClients.push({
 
-        name: loan.clientName || "Unknown Client",
+        client: loan.clientName || "Unknown Client",
 
-        balance: outstanding
+        weeks: overdueWeeks,
+
+        amount: overdueAmount
 
     });
 
@@ -666,6 +704,62 @@ if(totalLoansIssuedStat){
             arrears;
 
     }
+
+const arrearsAmountElement =
+    document.getElementById("arrears-total-amount");
+
+if (arrearsAmountElement) {
+
+    arrearsAmountElement.textContent =
+        currency(arrearsAmount);
+
+}
+
+const arrearsClientCount =
+    document.getElementById("arrears-client-count");
+
+if (arrearsClientCount) {
+
+    arrearsClientCount.textContent =
+        arrearsClients.length;
+
+}
+
+const arrearsClientList =
+    document.getElementById("arrears-client-list");
+
+if (arrearsClientList) {
+
+    arrearsClientList.innerHTML = "";
+
+    if (arrearsClients.length === 0) {
+
+        arrearsClientList.innerHTML =
+            "<p>No clients in arrears.</p>";
+
+    } else {
+
+        arrearsClients.forEach(client => {
+
+            arrearsClientList.innerHTML += `
+
+                <div class="today-card">
+
+                    <h4>${client.client}</h4>
+
+                    <p><strong>Missed Installments:</strong> ${client.weeks}</p>
+
+                    <p><strong>Arrears:</strong> ${currency(client.amount)}</p>
+
+                </div>
+
+            `;
+
+        });
+
+    }
+
+}
 
 if(arrearsClientCount){
 
