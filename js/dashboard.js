@@ -101,6 +101,19 @@ const todayDueList =
 
 
 // ==========================================
+// ARREARS DASHBOARD ELEMENTS
+// ==========================================
+
+const arrearsClientCount =
+    document.getElementById("arrears-client-count");
+
+const arrearsTotalAmount =
+    document.getElementById("arrears-total-amount");
+
+const arrearsClientList =
+    document.getElementById("arrears-client-list");
+
+// ==========================================
 // MONEY FORMAT
 // ==========================================
 
@@ -293,6 +306,10 @@ function updateDashboard(){
 
     let collectedToday = 0;
 
+    let arrearsAmount = 0;
+
+    const arrearsClients = [];
+
     const clientsDueToday = [];
 
     const incomeHistory = {};
@@ -452,6 +469,16 @@ case "Arrears":
     arrears++;
     activeLoans++;
     currentPortfolio += outstanding;
+
+    arrearsAmount += outstanding;
+
+    arrearsClients.push({
+
+        name: loan.clientName || "Unknown Client",
+
+        balance: outstanding
+
+    });
 
     break;
 
@@ -639,6 +666,52 @@ if(totalLoansIssuedStat){
             arrears;
 
     }
+
+if(arrearsClientCount){
+
+    arrearsClientCount.textContent =
+        arrearsClients.length;
+
+}
+
+if(arrearsTotalAmount){
+
+    arrearsTotalAmount.textContent =
+        currency(arrearsAmount);
+
+}
+
+if(arrearsClientList){
+
+    arrearsClientList.innerHTML = "";
+
+    if(arrearsClients.length === 0){
+
+        arrearsClientList.innerHTML =
+            "<p>No clients in arrears.</p>";
+
+    }else{
+
+        arrearsClients.forEach(client=>{
+
+            arrearsClientList.innerHTML += `
+
+                <div class="today-card">
+
+                    <h4>${client.name}</h4>
+
+                    <p><strong>Outstanding:</strong>
+                    ${currency(client.balance)}</p>
+
+                </div>
+
+            `;
+
+        });
+
+    }
+
+}
 
 if(activeLoansStat){
 
