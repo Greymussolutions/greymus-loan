@@ -99,7 +99,6 @@ const collectionRateElement =
 const todayDueList =
     document.getElementById("todayDueList");
 
-
 // ==========================================
 // ARREARS DASHBOARD ELEMENTS
 // ==========================================
@@ -112,6 +111,7 @@ const arrearsTotalAmount =
 
 const arrearsClientList =
     document.getElementById("arrears-client-list");
+
 
 // ==========================================
 // MONEY FORMAT
@@ -292,10 +292,6 @@ function updateDashboard(){
 
     let arrears = 0;
 
-    let arrearsAmount = 0;
-
-    const arrearsClients = [];
-
     let completed = 0;
 
     let totalLoansIssued = 0;
@@ -310,15 +306,15 @@ function updateDashboard(){
 
     let collectedToday = 0;
 
-    let arrearsAmount = 0;
-
-    const arrearsClients = [];
-
     const clientsDueToday = [];
 
-    const incomeHistory = {};
+const arrearsClients = [];
 
-    const portfolioHistory = {};
+let totalArrearsAmount = 0;
+
+const incomeHistory = {};
+
+const portfolioHistory = {};
 
     const today = todayString();
 
@@ -389,36 +385,6 @@ const outstanding =
         loan.balance ??
         principal
     );
-
-let overdueWeeks = 0;
-
-let overdueAmount = 0;
-
-if (Array.isArray(loan.repaymentSchedule)) {
-
-    loan.repaymentSchedule.forEach(item => {
-
-        const due = Number(item.amount || 0);
-
-        const paid = Number(item.paidAmount || 0);
-
-        if (
-
-            item.dueDate < today &&
-
-            paid < due
-
-        ) {
-
-            overdueWeeks++;
-
-            overdueAmount += (due - paid);
-
-        }
-
-    });
-
-}
 
         // ==================================
         // PORTFOLIO HISTORY
@@ -501,22 +467,8 @@ if (Array.isArray(loan.repaymentSchedule)) {
 case "Arrears":
 
     arrears++;
-
     activeLoans++;
-
     currentPortfolio += outstanding;
-
-    arrearsAmount += overdueAmount;
-
-    arrearsClients.push({
-
-        client: loan.clientName || "Unknown Client",
-
-        weeks: overdueWeeks,
-
-        amount: overdueAmount
-
-    });
 
     break;
 
@@ -554,6 +506,30 @@ case "Completed":
         ){
 
             loan.repaymentSchedule.forEach(item=>{
+
+// ==================================
+// ARREARS CALCULATION
+// ==================================
+
+const due =
+    Number(item.amount || 0);
+
+const paid =
+    Number(item.paidAmount || 0);
+
+const balance =
+    Math.max(0, due - paid);
+
+if (item.dueDate < today && balance > 0) {
+
+    totalArrearsAmount += balance;
+
+    arrearsClients.push({
+        client: loan.clientName || "Unknown Client",
+        amount: balance
+    });
+
+}
 
                 if(item.dueDate !== today){
 
@@ -704,108 +680,6 @@ if(totalLoansIssuedStat){
             arrears;
 
     }
-
-const arrearsAmountElement =
-    document.getElementById("arrears-total-amount");
-
-if (arrearsAmountElement) {
-
-    arrearsAmountElement.textContent =
-        currency(arrearsAmount);
-
-}
-
-const arrearsClientCount =
-    document.getElementById("arrears-client-count");
-
-if (arrearsClientCount) {
-
-    arrearsClientCount.textContent =
-        arrearsClients.length;
-
-}
-
-const arrearsClientList =
-    document.getElementById("arrears-client-list");
-
-if (arrearsClientList) {
-
-    arrearsClientList.innerHTML = "";
-
-    if (arrearsClients.length === 0) {
-
-        arrearsClientList.innerHTML =
-            "<p>No clients in arrears.</p>";
-
-    } else {
-
-        arrearsClients.forEach(client => {
-
-            arrearsClientList.innerHTML += `
-
-                <div class="today-card">
-
-                    <h4>${client.client}</h4>
-
-                    <p><strong>Missed Installments:</strong> ${client.weeks}</p>
-
-                    <p><strong>Arrears:</strong> ${currency(client.amount)}</p>
-
-                </div>
-
-            `;
-
-        });
-
-    }
-
-}
-
-if(arrearsClientCount){
-
-    arrearsClientCount.textContent =
-        arrearsClients.length;
-
-}
-
-if(arrearsTotalAmount){
-
-    arrearsTotalAmount.textContent =
-        currency(arrearsAmount);
-
-}
-
-if(arrearsClientList){
-
-    arrearsClientList.innerHTML = "";
-
-    if(arrearsClients.length === 0){
-
-        arrearsClientList.innerHTML =
-            "<p>No clients in arrears.</p>";
-
-    }else{
-
-        arrearsClients.forEach(client=>{
-
-            arrearsClientList.innerHTML += `
-
-                <div class="today-card">
-
-                    <h4>${client.name}</h4>
-
-                    <p><strong>Outstanding:</strong>
-                    ${currency(client.balance)}</p>
-
-                </div>
-
-            `;
-
-        });
-
-    }
-
-}
 
 if(activeLoansStat){
 
