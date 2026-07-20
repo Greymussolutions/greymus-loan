@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
+// VERSION 4.0
 // PART 1 OF 8
 // ==========================================
 
@@ -26,6 +26,7 @@ let repayments = [];
 // DASHBOARD ELEMENTS
 // ==========================================
 
+// Portfolio
 const portfolioStat =
     document.getElementById("stat-portfolio");
 
@@ -38,32 +39,13 @@ const monthlyPortfolioStat =
 const previousPortfolioStat =
     document.getElementById("stat-previous-portfolio");
 
+// Clients
 const clientsStat =
     document.getElementById("stat-clients");
 
+// Loans
 const totalLoansIssuedStat =
     document.getElementById("stat-total-loans-issued");
-
-const revenueStat =
-    document.getElementById("stat-revenue");
-
-const totalIncomeStat =
-    document.getElementById("stat-total-income");
-
-const previousIncomeStat =
-    document.getElementById("stat-previous-income");
-
-const pendingStat =
-    document.getElementById("stat-pending");
-
-const approvedStat =
-    document.getElementById("stat-approved");
-
-const rejectedStat =
-    document.getElementById("stat-rejected");
-
-const arrearsStat =
-    document.getElementById("stat-arrears");
 
 const activeLoansStat =
     document.getElementById("stat-active-loans");
@@ -76,6 +58,30 @@ const historicalLoansStat =
 
 const repeatLoansStat =
     document.getElementById("stat-repeat-loans");
+
+// Income
+const revenueStat =
+    document.getElementById("stat-revenue");
+
+const totalIncomeStat =
+    document.getElementById("stat-total-income");
+
+const previousIncomeStat =
+    document.getElementById("stat-previous-income");
+
+// Status
+const pendingStat =
+    document.getElementById("stat-pending");
+
+const approvedStat =
+    document.getElementById("stat-approved");
+
+const rejectedStat =
+    document.getElementById("stat-rejected");
+
+const arrearsStat =
+    document.getElementById("stat-arrears");
+
 
 // ==========================================
 // TODAY'S COLLECTION ELEMENTS
@@ -99,8 +105,9 @@ const collectionRateElement =
 const todayDueList =
     document.getElementById("todayDueList");
 
+
 // ==========================================
-// ARREARS DASHBOARD ELEMENTS
+// ARREARS SECTION
 // ==========================================
 
 const arrearsClientCount =
@@ -157,24 +164,25 @@ function monthKey(date){
 }// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
+// VERSION 4.0
 // PART 2 OF 8
 // ==========================================
 
 
 // ==========================================
-// CLIENTS
+// FIRESTORE LISTENERS
 // ==========================================
 
+// CLIENTS
 onSnapshot(
 
-    collection(db,"clients"),
+    collection(db, "clients"),
 
-    snapshot=>{
+    snapshot => {
 
         clients = [];
 
-        snapshot.forEach(doc=>{
+        snapshot.forEach(doc => {
 
             clients.push({
 
@@ -186,13 +194,6 @@ onSnapshot(
 
         });
 
-        if(clientsStat){
-
-            clientsStat.textContent =
-                clients.length;
-
-        }
-
         updateDashboard();
 
     }
@@ -200,19 +201,16 @@ onSnapshot(
 );
 
 
-// ==========================================
 // LOANS
-// ==========================================
-
 onSnapshot(
 
-    collection(db,"loans"),
+    collection(db, "loans"),
 
-    snapshot=>{
+    snapshot => {
 
         loans = [];
 
-        snapshot.forEach(doc=>{
+        snapshot.forEach(doc => {
 
             loans.push({
 
@@ -231,20 +229,18 @@ onSnapshot(
 );
 
 
-// ==========================================
-// OPTIONAL REPAYMENTS COLLECTION
-// (Backward Compatibility)
-// ==========================================
+// REPAYMENTS
+// (Backward compatibility)
 
 onSnapshot(
 
-    collection(db,"repayments"),
+    collection(db, "repayments"),
 
-    snapshot=>{
+    snapshot => {
 
         repayments = [];
 
-        snapshot.forEach(doc=>{
+        snapshot.forEach(doc => {
 
             repayments.push({
 
@@ -265,7 +261,6 @@ onSnapshot(
 
 // ==========================================
 // UPDATE DASHBOARD
-// START
 // ==========================================
 
 function updateDashboard(){
@@ -292,11 +287,11 @@ function updateDashboard(){
 
     let arrears = 0;
 
-    let completed = 0;
+    let activeLoans = 0;
+
+    let completedLoans = 0;
 
     let totalLoansIssued = 0;
-
-    let activeLoans = 0;
 
     let historicalLoans = 0;
 
@@ -306,15 +301,11 @@ function updateDashboard(){
 
     let collectedToday = 0;
 
+    let arrearsAmount = 0;
+
+    const arrearsClients = [];
+
     const clientsDueToday = [];
-
-const arrearsClients = [];
-
-let totalArrearsAmount = 0;
-
-const incomeHistory = {};
-
-const portfolioHistory = {};
 
     const today = todayString();
 
@@ -322,10 +313,12 @@ const portfolioHistory = {};
 
     const currentMonth = now.getMonth();
 
-    const currentYear = now.getFullYear();// ==========================================
+    const currentYear = now.getFullYear();
+
+    const repeatTracker = {};// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
+// VERSION 4.0
 // PART 3 OF 8
 // ==========================================
 
@@ -334,12 +327,33 @@ const portfolioHistory = {};
 // LOOP THROUGH LOANS
 // ==========================================
 
-    loans.forEach(loan=>{
+    loans.forEach(loan => {
 
-totalLoansIssued++;
+        totalLoansIssued++;
 
         const status =
             loan.status || "Pending";
+
+        const principal =
+            Number(loan.amount || 0);
+
+        const processingFee =
+            Number(loan.processingFee || 0);
+
+        const totalRepayment =
+            Number(
+                loan.totalRepayment ||
+                principal
+            );
+
+        const amountPaid =
+            Number(loan.amountPaid || 0);
+
+        const outstanding =
+            Number(
+                loan.balance ??
+                principal
+            );
 
         const approvalDate =
             new Date(
@@ -348,61 +362,34 @@ totalLoansIssued++;
                 Date.now()
             );
 
-        const key =
+        const month =
             monthKey(approvalDate);
 
-        const principal =
-    Number(loan.amount || 0);
+        const interest =
+            Math.max(
+                0,
+                totalRepayment - principal
+            );
 
-const processingFee =
-    Number(loan.processingFee || 0);
+        const earnedInterest =
+            totalRepayment > 0
+            ? (amountPaid / totalRepayment) * interest
+            : 0;
 
-const totalRepayment =
-    Number(
-        loan.totalRepayment ||
-        principal
-    );
-
-const amountPaid =
-    Number(loan.amountPaid || 0);
-
-const totalInterest =
-    Math.max(
-        0,
-        totalRepayment - principal
-    );
-
-const interestEarned =
-    totalRepayment > 0
-        ? (amountPaid / totalRepayment) * totalInterest
-        : 0;
-
-const income =
-    processingFee + interestEarned;
-
-const outstanding =
-    Number(
-        loan.balance ??
-        principal
-    );
+        const income =
+            processingFee + earnedInterest;
 
         // ==================================
-        // PORTFOLIO HISTORY
+        // PORTFOLIO
         // ==================================
-
-        portfolioHistory[key] =
-            (portfolioHistory[key] || 0)
-            + principal;
 
         totalPortfolio += principal;
 
         if(
 
-            approvalDate.getMonth()
-                === currentMonth &&
+            approvalDate.getMonth() === currentMonth &&
 
-            approvalDate.getFullYear()
-                === currentYear
+            approvalDate.getFullYear() === currentYear
 
         ){
 
@@ -414,24 +401,17 @@ const outstanding =
 
         }
 
-
         // ==================================
-        // INCOME HISTORY
+        // INCOME
         // ==================================
-
-        incomeHistory[key] =
-            (incomeHistory[key] || 0)
-            + income;
 
         totalIncome += income;
 
         if(
 
-            approvalDate.getMonth()
-                === currentMonth &&
+            approvalDate.getMonth() === currentMonth &&
 
-            approvalDate.getFullYear()
-                === currentYear
+            approvalDate.getFullYear() === currentYear
 
         ){
 
@@ -443,10 +423,66 @@ const outstanding =
 
         }
 
+        // ==================================
+        // REPEAT CLIENTS
+        // ==================================
+
+        const clientId =
+            loan.clientId || loan.clientName;
+
+        repeatTracker[clientId] =
+            (repeatTracker[clientId] || 0) + 1;
 
         // ==================================
-        // LOAN STATUS COUNTS
+        // CALCULATE MISSED INSTALLMENTS
         // ==================================
+
+        let missedWeeks = 0;
+
+        let overdueAmount = 0;
+
+        if(Array.isArray(loan.repaymentSchedule)){
+
+            loan.repaymentSchedule.forEach(item=>{
+
+                const dueDate = new Date(
+                    item.dueDate
+                ).toISOString().split("T")[0];
+
+                const due =
+                    Number(item.amount || 0);
+
+                const paid =
+                    Number(item.paidAmount || 0);
+
+                if(
+
+                    dueDate < today &&
+
+                    paid < due
+
+                ){
+
+                    missedWeeks++;
+
+                    overdueAmount +=
+                        (due - paid);
+
+                }
+
+            });
+
+        }// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// VERSION 4.0
+// PART 4 OF 8
+// ==========================================
+
+
+// ==========================================
+// LOAN STATUS COUNTS
+// ==========================================
 
         switch(status){
 
@@ -458,35 +494,60 @@ const outstanding =
 
             case "Approved":
 
-    approved++;
-    activeLoans++;
-    currentPortfolio += outstanding;
+                approved++;
 
-    break;
+                activeLoans++;
 
-case "Arrears":
+                currentPortfolio += outstanding;
 
-    arrears++;
-    activeLoans++;
-    currentPortfolio += outstanding;
+                break;
 
-    break;
+            case "Arrears":
 
-case "Completed":
+                arrears++;
 
-    completed++;
-    historicalLoans++;
+                activeLoans++;
 
-    break;
+                currentPortfolio += outstanding;
+
+                if(missedWeeks > 0){
+
+                    arrearsAmount += overdueAmount;
+
+                    arrearsClients.push({
+
+                        client:
+                            loan.clientName || "Unknown Client",
+
+                        weeks:
+                            missedWeeks,
+
+                        amount:
+                            overdueAmount
+
+                    });
+
+                }
+
+                break;
+
+            case "Completed":
+
+                completedLoans++;
+
+                if(
+
+                    loan.loanType === "historical"
+
+                ){
+
+                    historicalLoans++;
+
+                }
+
+                break;
 
         }
-
-// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// dashboard.js
-// VERSION 3.0
-// PART 4 OF 8
-// ==========================================
 
 
 // ==========================================
@@ -506,30 +567,6 @@ case "Completed":
         ){
 
             loan.repaymentSchedule.forEach(item=>{
-
-// ==================================
-// ARREARS CALCULATION
-// ==================================
-
-const due =
-    Number(item.amount || 0);
-
-const paid =
-    Number(item.paidAmount || 0);
-
-const balance =
-    Math.max(0, due - paid);
-
-if (item.dueDate < today && balance > 0) {
-
-    totalArrearsAmount += balance;
-
-    arrearsClients.push({
-        client: loan.clientName || "Unknown Client",
-        amount: balance
-    });
-
-}
 
                 if(item.dueDate !== today){
 
@@ -556,8 +593,7 @@ if (item.dueDate < today && balance > 0) {
                 clientsDueToday.push({
 
                     client:
-                        loan.clientName ||
-                        "Unknown Client",
+                        loan.clientName || "Unknown Client",
 
                     due,
 
@@ -587,34 +623,33 @@ if (item.dueDate < today && balance > 0) {
 
 
 // ==========================================
-// UPDATE DASHBOARD CARDS
+// COUNT REPEAT CLIENTS
 // ==========================================
 
-if(clientsStat){
+    Object.values(repeatTracker).forEach(count=>{
 
-    clientsStat.textContent =
-        clients.length;
+        if(count > 1){
 
-}
+            repeatLoans++;
 
-if(totalLoansIssuedStat){
+        }
 
-    totalLoansIssuedStat.textContent =
-        totalLoansIssued;
+    });// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// dashboard.js
+// VERSION 4.0
+// PART 5 OF 8
+// ==========================================
 
-}
+
+// ==========================================
+// UPDATE DASHBOARD CARDS
+// ==========================================
 
     if(portfolioStat){
 
         portfolioStat.textContent =
             currency(currentPortfolio);
-
-    }
-
-    if(monthlyPortfolioStat){
-
-        monthlyPortfolioStat.textContent =
-            currency(monthlyPortfolio);
 
     }
 
@@ -625,10 +660,59 @@ if(totalLoansIssuedStat){
 
     }
 
+    if(monthlyPortfolioStat){
+
+        monthlyPortfolioStat.textContent =
+            currency(monthlyPortfolio);
+
+    }
+
     if(previousPortfolioStat){
 
         previousPortfolioStat.textContent =
             currency(previousPortfolio);
+
+    }
+
+    if(clientsStat){
+
+        clientsStat.textContent =
+            clients.length;
+
+    }
+
+    if(totalLoansIssuedStat){
+
+        totalLoansIssuedStat.textContent =
+            totalLoansIssued;
+
+    }
+
+    if(activeLoansStat){
+
+        activeLoansStat.textContent =
+            activeLoans;
+
+    }
+
+    if(completedLoansStat){
+
+        completedLoansStat.textContent =
+            completedLoans;
+
+    }
+
+    if(historicalLoansStat){
+
+        historicalLoansStat.textContent =
+            historicalLoans;
+
+    }
+
+    if(repeatLoansStat){
+
+        repeatLoansStat.textContent =
+            repeatLoans;
 
     }
 
@@ -681,39 +765,70 @@ if(totalLoansIssuedStat){
 
     }
 
-if(activeLoansStat){
-
-    activeLoansStat.textContent =
-        activeLoans;
-
-}
-
-if(completedLoansStat){
-
-    completedLoansStat.textContent =
-        completed;
-
-}
-
-if(historicalLoansStat){
-
-    historicalLoansStat.textContent =
-        historicalLoans;
-
-}
-
-if(repeatLoansStat){
-
-    repeatLoansStat.textContent =
-        repeatLoans;
-
-}
 
 // ==========================================
+// UPDATE ARREARS SECTION
+// ==========================================
+
+    if(arrearsClientCount){
+
+        arrearsClientCount.textContent =
+            arrearsClients.length;
+
+    }
+
+    if(arrearsTotalAmount){
+
+        arrearsTotalAmount.textContent =
+            currency(arrearsAmount);
+
+    }
+
+    if(arrearsClientList){
+
+        arrearsClientList.innerHTML = "";
+
+        if(arrearsClients.length === 0){
+
+            arrearsClientList.innerHTML = `
+
+                <p>No clients in arrears.</p>
+
+            `;
+
+        }else{
+
+            arrearsClients.forEach(client=>{
+
+                arrearsClientList.innerHTML += `
+
+                    <div class="today-card">
+
+                        <h4>${client.client}</h4>
+
+                        <p>
+                            <strong>Missed Installments:</strong>
+                            ${client.weeks}
+                        </p>
+
+                        <p>
+                            <strong>Arrears Amount:</strong>
+                            ${currency(client.amount)}
+                        </p>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+    }// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
-// PART 5 OF 8
+// VERSION 4.0
+// PART 6 OF 8
 // ==========================================
 
 
@@ -721,15 +836,13 @@ if(repeatLoansStat){
 // TODAY'S COLLECTION SUMMARY
 // ==========================================
 
-    const remaining =
+    const remaining = Math.max(
 
-        Math.max(
+        0,
 
-            0,
+        expectedToday - collectedToday
 
-            expectedToday - collectedToday
-
-        );
+    );
 
     const collectionRate =
 
@@ -803,7 +916,7 @@ if(repeatLoansStat){
 
                 <div class="empty-state">
 
-                    No repayments are due today.
+                    <p>No repayments due today.</p>
 
                 </div>
 
@@ -819,19 +932,23 @@ if(repeatLoansStat){
 
                         <h4>${client.client}</h4>
 
-                        <p><strong>Due:</strong>
+                        <p>
+                            <strong>Due:</strong>
                             ${currency(client.due)}
                         </p>
 
-                        <p><strong>Paid:</strong>
+                        <p>
+                            <strong>Paid:</strong>
                             ${currency(client.paid)}
                         </p>
 
-                        <p><strong>Balance:</strong>
+                        <p>
+                            <strong>Balance:</strong>
                             ${currency(client.balance)}
                         </p>
 
-                        <p><strong>Status:</strong>
+                        <p>
+                            <strong>Status:</strong>
                             ${client.status}
                         </p>
 
@@ -848,15 +965,16 @@ if(repeatLoansStat){
 }// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
-// PART 6 OF 8
+// VERSION 4.0
+// PART 7 OF 8
 // ==========================================
 
 
 // ==========================================
-// TOTAL OUTSTANDING PORTFOLIO
+// HELPER FUNCTIONS
 // ==========================================
 
+// Total Outstanding Portfolio
 function getTotalOutstandingBalance(){
 
     return loans.reduce((total, loan)=>{
@@ -890,10 +1008,7 @@ function getTotalOutstandingBalance(){
 }
 
 
-// ==========================================
-// COMPLETED LOANS
-// ==========================================
-
+// Completed Loans
 function getCompletedLoans(){
 
     return loans.filter(
@@ -905,10 +1020,7 @@ function getCompletedLoans(){
 }
 
 
-// ==========================================
-// TOTAL COLLECTED
-// ==========================================
-
+// Total Collected
 function getTotalCollected(){
 
     let total = 0;
@@ -931,129 +1043,12 @@ function getTotalCollected(){
 
     });
 
-    if(total === 0){
-
-        repayments.forEach(payment=>{
-
-            total += Number(
-
-                payment.amount ||
-
-                payment.amountPaid ||
-
-                0
-
-            );
-
-        });
-
-    }
-
     return total;
 
 }
 
 
-// ==========================================
-// TOTAL EXPECTED REPAYMENT
-// ==========================================
-
-function getTotalExpectedRepayment(){
-
-    return loans.reduce(
-
-        (sum, loan)=>
-
-            sum +
-
-            Number(
-
-                loan.totalRepayment ||
-
-                loan.amount ||
-
-                0
-
-            ),
-
-        0
-
-    );
-
-}
-
-
-// ==========================================
-// TOTAL PROCESSING FEES
-// ==========================================
-
-function getProcessingFees(){
-
-    return loans.reduce(
-
-        (sum, loan)=>
-
-            sum +
-
-            Number(
-
-                loan.processingFee || 0
-
-            ),
-
-        0
-
-    );
-
-}
-
-
-// ==========================================
-// TOTAL INTEREST
-// ==========================================
-
-function getInterestEarned(){
-
-    return loans.reduce((sum, loan)=>{
-
-        const principal =
-
-            Number(loan.amount || 0);
-
-        const totalRepayment =
-
-            Number(
-
-                loan.totalRepayment ||
-
-                principal
-
-            );
-
-        return sum +
-
-            Math.max(
-
-                0,
-
-                totalRepayment - principal
-
-            );
-
-    }, 0);
-
-}// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// dashboard.js
-// VERSION 3.0
-// PART 7 OF 8
-// ==========================================
-
-
-// ==========================================
-// AVERAGE LOAN AMOUNT
-// ==========================================
-
+// Average Loan Amount
 function getAverageLoanAmount(){
 
     if(loans.length === 0){
@@ -1068,11 +1063,7 @@ function getAverageLoanAmount(){
 
             sum +
 
-            Number(
-
-                loan.amount || 0
-
-            ),
+            Number(loan.amount || 0),
 
         0
 
@@ -1083,10 +1074,7 @@ function getAverageLoanAmount(){
 }
 
 
-// ==========================================
-// REFRESH DASHBOARD
-// ==========================================
-
+// Refresh Dashboard
 function refreshDashboard(){
 
     updateDashboard();
@@ -1094,10 +1082,7 @@ function refreshDashboard(){
 }
 
 
-// ==========================================
-// DASHBOARD SUMMARY
-// ==========================================
-
+// Dashboard Summary
 function dashboardSummary(){
 
     console.log("====================================");
@@ -1110,89 +1095,30 @@ function dashboardSummary(){
 
     console.log("Loans:", loans.length);
 
-    console.log("Approved:",
-        approvedStat?.textContent || 0);
+    console.log("Approved:", approvedStat?.textContent || 0);
 
-    console.log("Pending:",
-        pendingStat?.textContent || 0);
+    console.log("Arrears:", arrearsStat?.textContent || 0);
 
-    console.log("Rejected:",
-        rejectedStat?.textContent || 0);
+    console.log("Pending:", pendingStat?.textContent || 0);
 
-    console.log("Arrears:",
-        arrearsStat?.textContent || 0);
+    console.log("Completed:", completedLoansStat?.textContent || 0);
 
-    console.log(
-        "Current Portfolio:",
-        portfolioStat?.textContent || currency(0)
-    );
+    console.log("Outstanding:", portfolioStat?.textContent);
 
-    console.log(
-        "Monthly Portfolio:",
-        monthlyPortfolioStat?.textContent || currency(0)
-    );
+    console.log("Monthly Income:", revenueStat?.textContent);
 
-    console.log(
-        "Total Portfolio:",
-        totalPortfolioStat?.textContent || currency(0)
-    );
+    console.log("Total Income:", totalIncomeStat?.textContent);
 
-    console.log(
-        "Previous Portfolio:",
-        previousPortfolioStat?.textContent || currency(0)
-    );
+    console.log("Collected:", currency(getTotalCollected()));
 
-    console.log(
-        "Monthly Income:",
-        revenueStat?.textContent || currency(0)
-    );
-
-    console.log(
-        "Total Income:",
-        totalIncomeStat?.textContent || currency(0)
-    );
-
-    console.log(
-        "Previous Income:",
-        previousIncomeStat?.textContent || currency(0)
-    );
-
-    console.log(
-        "Collected:",
-        currency(getTotalCollected())
-    );
-
-    console.log(
-        "Expected Repayment:",
-        currency(getTotalExpectedRepayment())
-    );
-
-    console.log(
-        "Interest:",
-        currency(getInterestEarned())
-    );
-
-    console.log(
-        "Processing Fees:",
-        currency(getProcessingFees())
-    );
-
-    console.log(
-        "Average Loan:",
-        currency(getAverageLoanAmount())
-    );
-
-    console.log(
-        "Completed:",
-        getCompletedLoans()
-    );
+    console.log("Average Loan:", currency(getAverageLoanAmount()));
 
     console.log("====================================");
 
 }// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
+// VERSION 4.0
 // PART 8 OF 8
 // ==========================================
 
@@ -1278,12 +1204,6 @@ export{
 
     getTotalCollected,
 
-    getTotalExpectedRepayment,
-
-    getProcessingFees,
-
-    getInterestEarned,
-
     getAverageLoanAmount
 
 };
@@ -1293,19 +1213,29 @@ export{
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 3.0
+// VERSION 4.0
 //
-// ✔ Current Portfolio
+// ✔ Current Outstanding Portfolio
+// ✔ Total Portfolio Issued
 // ✔ Monthly Portfolio
 // ✔ Previous Portfolio
-// ✔ Total Portfolio
 // ✔ Monthly Income
 // ✔ Previous Income
 // ✔ Total Income
-// ✔ Income History (internal)
-// ✔ Portfolio History (internal)
-// ✔ Today's Collections
-// ✔ Dashboard Summary
+// ✔ Clients
+// ✔ Total Loans Issued
+// ✔ Active Loans
+// ✔ Completed Loans
+// ✔ Historical Loans
+// ✔ Repeat Clients
+// ✔ Pending Loans
+// ✔ Approved Loans
+// ✔ Rejected Loans
+// ✔ Arrears Count
+// ✔ Arrears Amount (Missed Installments Only)
+// ✔ Clients in Arrears List
+// ✔ Today's Collection
+// ✔ Today's Due List
 // ✔ Auto Refresh
 // ✔ Firestore Realtime Sync
 //
