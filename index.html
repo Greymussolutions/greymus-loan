@@ -190,6 +190,16 @@ DASHBOARD
 
                 </button>
 
+<button
+    class="tab-btn"
+    data-tab="history">
+
+    <span>📋</span>
+
+    <small>History</small>
+
+</button>
+
                 <button class="tab-btn" data-tab="settings">
     <span>⚙️</span>
     <small>Settings</small>
@@ -739,6 +749,72 @@ DASHBOARD
             </section>
 
 <!-- =========================
+HISTORY TAB
+========================= -->
+
+<section id="history-tab" class="tab-content hidden">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>Repayment History</h2>
+
+            <p>All loan repayments</p>
+
+        </div>
+
+    </div>
+
+    <div class="toolbar">
+
+        <input
+            type="text"
+            id="history-search"
+            placeholder="Search client...">
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Client</th>
+                    <th>Loan No.</th>
+                    <th>Amount Paid</th>
+                    <th>Balance</th>
+                    <th>Officer</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="history-table-body">
+
+                <tr>
+
+                    <td colspan="6" style="text-align:center">
+
+                        No repayments recorded.
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+<!-- =========================
 SETTINGS TAB
 ========================= -->
 
@@ -801,18 +877,6 @@ SETTINGS TAB
             </button>
 
         </div>
-
-<div class="settings-card">
-
-    <h3>Transaction History</h3>
-
-    <p>View all loan disbursements and repayments.</p>
-
-    <button id="transaction-history-btn">
-        View Transaction History
-    </button>
-
-</div>
 
         <div class="settings-card">
 
@@ -1582,6 +1646,16 @@ MOBILE NAVIGATION
 
     </button>
 
+<button
+    class="tab-btn"
+    data-tab="history">
+
+    <span>📋</span>
+
+    <small>History</small>
+
+</button>
+
     <button class="tab-btn" data-tab="settings">
     <span>⚙️</span>
     <small>Settings</small>
@@ -1715,96 +1789,6 @@ FOOTER
 <!-- Global Overlay -->
 
 <div id="global-overlay" class="hidden">
-
-<!-- =========================
-TRANSACTION HISTORY MODAL
-========================= -->
-
-<div id="transaction-history-modal" class="modal hidden">
-
-    <div class="modal-content large">
-
-        <div class="modal-header">
-
-            <div>
-
-                <h2>Transaction History</h2>
-
-                <p>Loan Disbursements & Repayments</p>
-
-            </div>
-
-            <button
-                type="button"
-                id="close-transaction-history"
-                class="modal-close-btn">
-
-                ✕
-
-            </button>
-
-        </div>
-
-        <div class="toolbar toolbar-wrap">
-
-            <input
-                type="text"
-                id="transaction-search"
-                placeholder="Search client or loan number">
-
-            <select id="transaction-filter">
-
-                <option value="ALL">All Transactions</option>
-                <option value="DISBURSEMENT">Loan Disbursements</option>
-                <option value="REPAYMENT">Loan Repayments</option>
-
-            </select>
-
-        </div>
-
-        <div class="table-wrapper">
-
-            <table id="transaction-history-table">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Date</th>
-                        <th>Transaction</th>
-                        <th>Client</th>
-                        <th>Loan No.</th>
-                        <th>Amount</th>
-                        <th>Officer</th>
-                        <th>Receipt</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="transaction-history-body">
-
-                    <tr>
-
-                        <td colspan="7" style="text-align:center">
-
-                            No transaction history available.
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-</div>
 
 <!-- =========================
 END OF APPLICATION
