@@ -1638,12 +1638,22 @@ const totalIncome =
             item.status = "Paid";
             item.paidDate = repaymentDate.value;
 
-item.paymentHistory ??= [];
+const paymentTimestamp = new Date();
 
 item.paymentHistory.push({
     amount: unpaid,
     date: repaymentDate.value,
-    notes: repaymentNotes.value || ""
+    time: paymentTimestamp.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }),
+    timestamp: paymentTimestamp.toISOString(),
+    notes: repaymentNotes.value || "",
+    officer:
+        localStorage.getItem("userName") ||
+        localStorage.getItem("userEmail") ||
+        "Unknown Officer"
 });
 
             remaining -= unpaid;
@@ -1656,10 +1666,22 @@ item.paymentHistory.push({
 
 item.paymentHistory ??= [];
 
+const paymentTimestamp = new Date();
+
 item.paymentHistory.push({
     amount: remaining,
     date: repaymentDate.value,
-    notes: repaymentNotes.value || ""
+    time: paymentTimestamp.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }),
+    timestamp: paymentTimestamp.toISOString(),
+    notes: repaymentNotes.value || "",
+    officer:
+        localStorage.getItem("userName") ||
+        localStorage.getItem("userEmail") ||
+        "Unknown Officer"
 });
 
             remaining = 0;
