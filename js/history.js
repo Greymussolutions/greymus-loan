@@ -1,9 +1,10 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // history.js
-// VERSION 3.0
-// PART 1 OF 4
+// VERSION 2.0
+// PART 1 OF 5
 // ==========================================
+
 
 import { db } from "./firebase.js";
 
@@ -14,18 +15,33 @@ import {
 
 
 // ==========================================
+// ELEMENTS
+// ==========================================
+
+const historyBtn =
+    document.getElementById("transaction-history-btn");
+
+const historyModal =
+    document.getElementById("transaction-history-modal");
+
+const closeHistoryBtn =
+    document.getElementById("close-transaction-history");
+
+const historyBody =
+    document.getElementById("transaction-history-body");
+
+const historySearch =
+    document.getElementById("transaction-search");
+
+const historyFilter =
+    document.getElementById("transaction-filter");
+
+
+// ==========================================
 // DATA
 // ==========================================
 
 let loans = [];
-
-let historyBtn;
-let historyModal;
-let closeHistoryBtn;
-let historyBody;
-let historySearch;
-let historyFilter;
-let exportHistoryBtn;
 
 
 // ==========================================
@@ -58,7 +74,7 @@ function formatDate(date){
 
     if(isNaN(d.getTime())){
 
-        return "-";
+        return date;
 
     }
 
@@ -75,18 +91,53 @@ function formatDate(date){
 
 
 // ==========================================
+// OPEN HISTORY MODAL
+// ==========================================
+
+historyBtn?.addEventListener("click",()=>{
+
+    historyModal?.classList.remove("hidden");
+
+    renderHistory();
+
+});
+
+
+// ==========================================
+// CLOSE HISTORY MODAL
+// ==========================================
+
+closeHistoryBtn?.addEventListener("click",()=>{
+
+    historyModal?.classList.add("hidden");
+
+});
+
+
+window.addEventListener("click",(e)=>{
+
+    if(e.target === historyModal){
+
+        historyModal.classList.add("hidden");
+
+    }
+
+});
+
+
+// ==========================================
 // LOAD LOANS
 // ==========================================
 
 onSnapshot(
 
-    collection(db, "loans"),
+    collection(db,"loans"),
 
-    (snapshot)=>{
+    snapshot=>{
 
         loans = [];
 
-        snapshot.forEach((doc)=>{
+        snapshot.forEach(doc=>{
 
             loans.push({
 
@@ -102,20 +153,33 @@ onSnapshot(
 
     }
 
-);
+);// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// history.js
+// VERSION 2.0
+// PART 2 OF 5
+// ==========================================
 
 
 // ==========================================
-// BUILD TRANSACTIONS
+// BUILD TRANSACTION LIST
 // ==========================================
 
 function getTransactions(){
 
-    const transactions = [];
+    let transactions = [];
 
-    loans.forEach((loan)=>{
+
+    loans.forEach(loan=>{
+
+
+        // ==================================
+        // LOAN DISBURSEMENT RECORD
+        // ==================================
 
         transactions.push({
+
+            id: loan.id,
 
             type: "Loan Disbursement",
 
@@ -131,147 +195,264 @@ function getTransactions(){
                 "",
 
             status:
-                loan.status || "Approved",
+                loan.status || "Pending",
 
             reference:
                 loan.loanNumber || "-"
 
         });
 
+
+
+        // ==================================
+        // MANUAL REPAYMENTS RECORD
+        // ==================================
+
         if(Array.isArray(loan.repayments)){
 
-            loan.repayments.forEach((payment)=>{
+
+            loan.repayments.forEach(payment=>{
+
 
                 transactions.push({
 
-                    type: "Loan Repayment",
+                    id:
+                        payment.id ||
+                        loan.id,
+
+
+                    type:
+                        "Loan Repayment",
+
 
                     clientName:
-                        loan.clientName || "Unknown Client",
+                        loan.clientName ||
+                        "Unknown Client",
+
 
                     amount:
                         Number(payment.amount) || 0,
+
 
                     date:
                         payment.date ||
                         payment.createdAt ||
                         "",
 
-                    status: "Completed",
+
+                    status:
+                        "Completed",
+
 
                     reference:
                         loan.loanNumber || "-"
 
+
                 });
+
+
+            });
+
+
+        }
+
+
+
+        // ==================================
+        // HISTORICAL PAYMENTS SUPPORT
+        // ==================================
+
+        if(
+            loan.amountPaid &&
+            Number(loan.amountPaid) > 0
+        ){
+
+            transactions.push({
+
+                id:
+                    loan.id + "-historical",
+
+
+                type:
+                    "Historical Payment",
+
+
+                clientName:
+                    loan.clientName ||
+                    "Unknown Client",
+
+
+                amount:
+                    Number(loan.amountPaid),
+
+
+                date:
+                    loan.approvalDate ||
+                    loan.createdAt ||
+                    "",
+
+
+                status:
+                    "Completed",
+
+
+                reference:
+                    loan.loanNumber || "-"
+
 
             });
 
         }
 
+
     });
+
+
 
     return transactions;
 
-}
-
-// ==========================================
+}// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // history.js
-// VERSION 3.0
-// PART 2 OF 4
+// VERSION 2.0
+// PART 3 OF 5
 // ==========================================
 
 
 // ==========================================
-// RENDER HISTORY
+// RENDER TRANSACTION HISTORY
 // ==========================================
 
 function renderHistory(){
 
+
     if(!historyBody) return;
+
+
 
     let transactions = getTransactions();
 
-    const search =
-        historySearch?.value
-        ?.toLowerCase()
-        .trim() || "";
 
-    const filter =
+
+    // ==================================
+    // SEARCH FILTER
+    // ==================================
+
+    const searchText =
+        historySearch?.value
+            ?.toLowerCase()
+            .trim() || "";
+
+
+
+    if(searchText){
+
+
+        transactions =
+            transactions.filter(transaction=>{
+
+
+                return (
+
+                    transaction.clientName
+                        .toLowerCase()
+                        .includes(searchText)
+
+                    ||
+
+                    transaction.type
+                        .toLowerCase()
+                        .includes(searchText)
+
+                    ||
+
+                    transaction.reference
+                        .toLowerCase()
+                        .includes(searchText)
+
+                );
+
+
+            });
+
+
+    }
+
+
+
+    // ==================================
+    // STATUS FILTER
+    // ==================================
+
+    const selectedFilter =
         historyFilter?.value || "all";
 
 
-    // SEARCH
 
-    if(search){
+    if(selectedFilter !== "all"){
 
-        transactions = transactions.filter((transaction)=>{
 
-            return (
+        transactions =
+            transactions.filter(transaction=>{
 
-                transaction.clientName
-                    .toLowerCase()
-                    .includes(search)
 
-                ||
+                return (
 
-                transaction.type
-                    .toLowerCase()
-                    .includes(search)
+                    transaction.type
+                        .toLowerCase()
+                        .replace(" ","-")
+                        === selectedFilter
 
-                ||
+                    ||
 
-                transaction.reference
-                    .toLowerCase()
-                    .includes(search)
+                    transaction.status
+                        .toLowerCase()
+                        === selectedFilter
 
-            );
+                );
 
-        });
+
+            });
+
 
     }
 
 
-    // FILTER
-
-    if(filter !== "all"){
-
-        transactions = transactions.filter((transaction)=>{
-
-            return (
-
-                transaction.type
-                    .toLowerCase()
-                    .replace(/\s+/g,"-")
-                    === filter
-
-            );
-
-        });
-
-    }
 
 
-    // SORT
+    // ==================================
+    // SORT NEWEST FIRST
+    // ==================================
 
     transactions.sort((a,b)=>{
 
-        return new Date(b.date) - new Date(a.date);
+
+        return new Date(b.date)
+            -
+            new Date(a.date);
+
 
     });
 
 
-    // EMPTY
+
+
+
+    // ==================================
+    // EMPTY STATE
+    // ==================================
 
     if(transactions.length === 0){
+
 
         historyBody.innerHTML = `
 
             <tr>
 
-                <td colspan="7" style="text-align:center">
+                <td colspan="7"
+                    style="text-align:center">
 
-                    No transaction history found.
+                    No transactions found
 
                 </td>
 
@@ -279,210 +460,242 @@ function renderHistory(){
 
         `;
 
+
         return;
+
 
     }
 
 
-    // TABLE
+
+
+
+    // ==================================
+    // DISPLAY TABLE
+    // ==================================
 
     historyBody.innerHTML = "";
 
-    transactions.forEach((transaction)=>{
+
+    transactions.forEach(transaction=>{
+
 
         historyBody.innerHTML += `
 
             <tr>
 
-                <td>${formatDate(transaction.date)}</td>
+                <td>
+                    ${transaction.type}
+                </td>
 
-                <td>${transaction.type}</td>
 
-                <td>${transaction.clientName}</td>
+                <td>
+                    ${transaction.clientName}
+                </td>
 
-                <td>${transaction.reference}</td>
 
-                <td>${currency(transaction.amount)}</td>
+                <td>
+                    ${currency(transaction.amount)}
+                </td>
 
-                <td>-</td>
 
-                <td>-</td>
+                <td>
+                    ${formatDate(transaction.date)}
+                </td>
+
+
+                <td>
+                    ${transaction.status}
+                </td>
+
+
+                <td>
+                    ${transaction.reference}
+                </td>
+
 
             </tr>
 
         `;
 
+
     });
 
-}
 
-// ==========================================
+}// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // history.js
-// VERSION 3.0
-// PART 3 OF 4
+// VERSION 2.0
+// PART 4 OF 5
 // ==========================================
 
 
 // ==========================================
-// EXPORT CSV
+// LIVE SEARCH LISTENER
+// ==========================================
+
+historySearch?.addEventListener(
+    "input",
+    ()=>{
+
+        renderHistory();
+
+    }
+);
+
+
+
+// ==========================================
+// FILTER LISTENER
+// ==========================================
+
+historyFilter?.addEventListener(
+    "change",
+    ()=>{
+
+        renderHistory();
+
+    }
+);
+
+
+
+// ==========================================
+// EXPORT TRANSACTIONS
 // ==========================================
 
 function exportHistory(){
 
-    const transactions = getTransactions();
+
+    const transactions =
+        getTransactions();
+
+
 
     if(transactions.length === 0){
 
-        alert("No transaction history available.");
+        alert(
+            "No transaction records available"
+        );
 
         return;
 
     }
 
-    let csv =
-        "Date,Transaction,Client,Loan Number,Amount,Status\n";
 
-    transactions.forEach((transaction)=>{
+
+    let csv =
+
+        "Type,Client,Amount,Date,Status,Reference\n";
+
+
+
+    transactions.forEach(transaction=>{
+
 
         csv +=
 
-            `"${formatDate(transaction.date)}",` +
+        `"${transaction.type}",` +
 
-            `"${transaction.type}",` +
+        `"${transaction.clientName}",` +
 
-            `"${transaction.clientName}",` +
+        `"${transaction.amount}",` +
 
-            `"${transaction.reference}",` +
+        `"${formatDate(transaction.date)}",` +
 
-            `"${transaction.amount}",` +
+        `"${transaction.status}",` +
 
-            `"${transaction.status}"\n";
+        `"${transaction.reference}"\n`;
+
 
     });
 
-    const blob = new Blob(
-        [csv],
-        {
-            type: "text/csv"
-        }
-    );
 
-    const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                "text/csv"
+            }
+        );
+
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+
+    const link =
+        document.createElement("a");
+
+
 
     link.href = url;
 
-    link.download = "greymus_transaction_history.csv";
+
+    link.download =
+        "greymus_transaction_history.csv";
+
+
 
     document.body.appendChild(link);
 
+
+
     link.click();
+
+
 
     document.body.removeChild(link);
 
+
+
     URL.revokeObjectURL(url);
 
-}
-
-
-// ==========================================
-// INITIALIZE HISTORY MODULE
-// ==========================================
-
-function initializeHistory(){
-
-    historyBtn =
-        document.getElementById("transaction-history-btn");
-
-    historyModal =
-        document.getElementById("transaction-history-modal");
-
-    closeHistoryBtn =
-        document.getElementById("close-transaction-history");
-
-    historyBody =
-        document.getElementById("transaction-history-body");
-
-    historySearch =
-        document.getElementById("transaction-search");
-
-    historyFilter =
-        document.getElementById("transaction-filter");
-
-    exportHistoryBtn =
-        document.getElementById("export-transaction-history");
-
-
-    historyBtn?.addEventListener("click", ()=>{
-
-        historyModal?.classList.remove("hidden");
-
-        renderHistory();
-
-    });
-
-
-    closeHistoryBtn?.addEventListener("click", ()=>{
-
-        historyModal?.classList.add("hidden");
-
-    });
-
-
-    historySearch?.addEventListener("input", renderHistory);
-
-    historyFilter?.addEventListener("change", renderHistory);
-
-    exportHistoryBtn?.addEventListener("click", exportHistory);
 
 }
 
-// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// history.js
-// VERSION 3.0
-// PART 4 OF 4
-// ==========================================
+
 
 
 // ==========================================
-// START MODULE
+// EXPORT BUTTON
 // ==========================================
 
-window.addEventListener("DOMContentLoaded", ()=>{
+const exportHistoryBtn =
+    document.getElementById(
+        "export-transaction-history"
+    );
 
-    initializeHistory();
-
-});
 
 
-// ==========================================
-// CLOSE WHEN CLICKING OUTSIDE
-// ==========================================
+exportHistoryBtn?.addEventListener(
+    "click",
+    ()=>{
 
-window.addEventListener("click",(event)=>{
-
-    if(
-        historyModal &&
-        event.target === historyModal
-    ){
-
-        historyModal.classList.add("hidden");
+        exportHistory();
 
     }
-
-});
+);// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// history.js
+// VERSION 2.0
+// PART 5 OF 5
+// ==========================================
 
 
 // ==========================================
-// REFRESH WHEN PAGE BECOMES ACTIVE
+// AUTO REFRESH SUPPORT
 // ==========================================
 
 document.addEventListener(
     "visibilitychange",
     ()=>{
+
 
         if(
             document.visibilityState === "visible"
@@ -492,10 +705,41 @@ document.addEventListener(
 
         }
 
+
     }
 );
 
 
+
 // ==========================================
-// END OF FILE
+// INITIAL LOAD CHECK
+// ==========================================
+
+if(historyBody){
+
+    renderHistory();
+
+}
+
+
+
+// ==========================================
+// END OF HISTORY MODULE
+// ==========================================
+
+
+// FEATURES INCLUDED:
+//
+// ✓ Real-time Firestore loan loading
+// ✓ Loan disbursement history
+// ✓ Manual repayment history
+// ✓ Historical payment support
+// ✓ Search transactions
+// ✓ Filter transactions
+// ✓ Sort newest first
+// ✓ KES currency formatting
+// ✓ Date formatting
+// ✓ CSV export
+// ✓ Modal open/close handling
+//
 // ==========================================
