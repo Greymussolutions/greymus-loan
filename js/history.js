@@ -139,7 +139,7 @@ function renderHistory(searchText = "") {
 
             <tr>
 
-                <td colspan="6" style="text-align:center">
+                <td colspan="7" style="text-align:center">
 
                     No repayments recorded.
 
@@ -163,7 +163,7 @@ function renderHistory(searchText = "") {
 
                 <td>${formatDate(item.paymentDate)}</td>
 
-<td>${formatTime(item.paymentDate)}</td>
+<td>${formatTime(item.time)}</td>
 
 <td>${item.clientName || "-"}</td>
 
