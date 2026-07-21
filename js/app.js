@@ -107,6 +107,14 @@ function openTab(tabName) {
         active.classList.remove("hidden");
     }
 
+history.pushState(
+    {
+        tab: tabName
+    },
+    "",
+    "#"+tabName
+);
+
     tabButtons.forEach(btn => {
 
         if (btn.dataset.tab === tabName) {
@@ -233,6 +241,43 @@ document.addEventListener("keydown", (e) => {
         document.querySelectorAll(".modal").forEach(modal => {
             modal.classList.add("hidden");
         });
+
+    }
+
+});
+
+// ======================================================
+// ANDROID BACK BUTTON SUPPORT
+// ======================================================
+
+window.addEventListener("popstate", () => {
+
+    // Close any open modal first
+    const openModal = document.querySelector(".modal:not(.hidden)");
+
+    if (openModal) {
+
+        openModal.classList.add("hidden");
+
+        history.pushState(
+            { tab: "dashboard" },
+            "",
+            "#dashboard"
+        );
+
+        return;
+
+    }
+
+    // Return to Dashboard if another tab is open
+    const activeTab = document.querySelector(".tab-btn.active");
+
+    if (
+        activeTab &&
+        activeTab.dataset.tab !== "dashboard"
+    ) {
+
+        openTab("dashboard");
 
     }
 
