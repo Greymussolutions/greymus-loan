@@ -62,6 +62,34 @@ function formatDate(value) {
 
 }
 
+function formatTime(value) {
+
+    if (!value) return "-";
+
+    try {
+
+        if (value.toDate) {
+
+            return value.toDate().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+        }
+
+        return new Date(value).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+    } catch {
+
+        return "-";
+
+    }
+
+}
+
 // ==========================================
 // LOAD REPAYMENTS
 // ==========================================
@@ -135,7 +163,9 @@ function renderHistory(searchText = "") {
 
                 <td>${formatDate(item.paymentDate)}</td>
 
-                <td>${item.clientName || "-"}</td>
+<td>${formatTime(item.paymentDate)}</td>
+
+<td>${item.clientName || "-"}</td>
 
                 <td>${item.loanNumber || "-"}</td>
 
