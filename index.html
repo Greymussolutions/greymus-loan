@@ -29,15 +29,13 @@
 
     <!-- JavaScript Modules -->
 
-    <script type="module" src="js/firebase.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/clients.js"></script>
-    <script type="module" src="js/loans.js"></script>
-    <script type="module" src="js/settings.js"></script>
-    <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/app.js"></script>
+<script type="module" src="js/clients.js"></script>
+<script type="module" src="js/loans.js"></script>
+<script type="module" src="js/history.js"></script>
+<script type="module" src="js/settings.js"></script>
+<script type="module" src="js/ui.js"></script>
+<script type="module" src="js/app.js"></script>
 
 </head>
 
@@ -1747,20 +1745,28 @@ TRANSACTION HISTORY MODAL
 
         <div class="toolbar toolbar-wrap">
 
-            <input
-                type="text"
-                id="transaction-search"
-                placeholder="Search client or loan number">
+    <input
+        type="text"
+        id="transaction-search"
+        placeholder="Search client or loan number">
 
-            <select id="transaction-filter">
+    <select id="transaction-filter">
 
-                <option value="ALL">All Transactions</option>
-                <option value="DISBURSEMENT">Loan Disbursements</option>
-                <option value="REPAYMENT">Loan Repayments</option>
+        <option value="all">All Transactions</option>
+        <option value="loan-disbursement">Loan Disbursements</option>
+        <option value="loan-repayment">Loan Repayments</option>
 
-            </select>
+    </select>
 
-        </div>
+    <button
+        id="export-transaction-history"
+        class="primary-btn">
+
+        Export CSV
+
+    </button>
+
+</div>
 
         <div class="table-wrapper">
 
