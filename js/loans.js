@@ -1737,6 +1737,40 @@ if (
             }
         );
 
+await addDoc(collection(db, "repayments"), {
+
+    loanId: loan.id,
+
+    loanNumber: loan.loanNumber || "-",
+
+    clientId: loan.clientId,
+
+    clientName: loan.clientName,
+
+    amount: payment,
+
+    balance: balance,
+
+    paymentDate: repaymentDate.value,
+
+    paymentTime: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }),
+
+    paymentTimestamp: new Date().toISOString(),
+
+    officer:
+        localStorage.getItem("userName") ||
+        localStorage.getItem("userEmail") ||
+        "Unknown Officer",
+
+    notes: repaymentNotes.value || "",
+
+    createdAt: serverTimestamp()
+
+});
         repaymentModal.classList.add("hidden");
 
         repaymentForm.reset();
