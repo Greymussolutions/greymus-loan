@@ -77,7 +77,13 @@ footer?.classList.remove("hidden");
             loggedUser.textContent = user.email;
         }
 
-        openTab("dashboard");
+        history.replaceState(
+    { tab: "dashboard" },
+    "",
+    "#dashboard"
+);
+
+openTab("dashboard");
 
     } else {
 
@@ -107,13 +113,15 @@ function openTab(tabName) {
         active.classList.remove("hidden");
     }
 
-history.pushState(
-    {
-        tab: tabName
-    },
-    "",
-    "#"+tabName
-);
+if (location.hash !== "#" + tabName) {
+
+    history.pushState(
+        { tab: tabName },
+        "",
+        "#" + tabName
+    );
+
+}
 
     tabButtons.forEach(btn => {
 
