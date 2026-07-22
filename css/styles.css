@@ -4689,20 +4689,16 @@ SETTINGS PAGE SPACING
     }
 
     /* Company name */
-    .topbar h1{
-        display:block;
-        font-size:2rem;
-        line-height:1.2;
-        margin:0 0 8px;
-        word-break:break-word;
-    }
+    .topbar h1,
+.topbar p{
+    display:none !important;
+}
 
-    /* Company slogan */
-    .topbar p{
-        display:block;
-        margin:0 0 6px;
-        font-size:1rem;
-    }
+.topbar-logo{
+    width:70px;
+    height:70px;
+    object-fit:contain;
+}
 
     /* Logged in user */
     #logged-user{
