@@ -4645,81 +4645,54 @@ SETTINGS PAGE SPACING
 }
 
 /* ==========================================
-   TOPBAR LOGO
+   GREYMUS HEADER
 ========================================== */
 
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#fff;
+}
+
+.topbar-left{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
 .topbar-logo{
-    width:50px;
-    height:50px;
+    width:60px;
+    height:60px;
     object-fit:contain;
+}
+
+.topbar-left h1{
+    display:block !important;
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    color:#111827;
+}
+
+.topbar-left p{
+    display:none;
 }
 
 @media (max-width:768px){
 
-    .topbar-left{
-        display:flex;
-        align-items:center;
-    }
-
-    .topbar h1,
-    .topbar p{
-        display:none;
-    }
-
-}
-
-/* ==========================================
-   MOBILE TOP BAR FIX
-   ========================================== */
-@media (max-width: 768px) {
-
-    /* Top bar */
     .topbar{
-        display:flex;
-        justify-content:space-between;
-        align-items:flex-start;
-        gap:12px;
-        padding:20px;
+        padding:16px;
     }
 
-    /* Left side (logo, title and username) */
-    .topbar > div:first-child{
-        flex:1;
-        min-width:0;
+    .topbar-logo{
+        width:52px;
+        height:52px;
     }
 
-    /* Company name */
-    .topbar h1,
-.topbar p{
-    display:none !important;
-}
-
-.topbar-logo{
-    width:70px;
-    height:70px;
-    object-fit:contain;
-}
-
-    /* Logged in user */
-    #logged-user{
-        display:block;
-        font-size:1rem;
-        font-weight:600;
-        margin-top:6px;
-    }
-
-    /* Notification button */
-    .topbar-actions{
-        display:flex;
-        align-items:flex-start;
-        justify-content:center;
-        flex-shrink:0;
-    }
-
-    .notification-btn{
-        width:56px;
-        height:56px;
-        border-radius:16px;
+    .topbar-left h1{
+        font-size:18px;
+        line-height:1.3;
     }
 }
 
