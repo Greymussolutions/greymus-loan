@@ -163,7 +163,7 @@ function renderHistory(searchText = "") {
 
                 <td>${formatDate(item.paymentDate)}</td>
 
-<td>${formatTime(item.time)}</td>
+<td>${item.paymentTime || formatTime(item.paymentTimestamp)}</td>
 
 <td>${item.clientName || "-"}</td>
 
