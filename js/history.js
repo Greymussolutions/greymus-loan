@@ -133,6 +133,9 @@ function renderHistory(searchText = "") {
 
     });
 
+filtered.sort((a, b) => {
+    return new Date(b.paymentTimestamp) - new Date(a.paymentTimestamp);
+});
     if (filtered.length === 0) {
 
         historyBody.innerHTML = `
