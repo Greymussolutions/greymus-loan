@@ -193,6 +193,28 @@ function today(){
 
 }
 
+function generateLoanNumber() {
+
+    const year = new Date().getFullYear();
+    const yearCode = String(year).slice(-3);
+
+    const loansThisYear = loans.filter(loan => {
+
+        const approvalYear = new Date(
+            loan.approvalDate || loan.createdAt?.toDate?.() || Date.now()
+        ).getFullYear();
+
+        return approvalYear === year;
+
+    });
+
+    const sequence = String(loansThisYear.length + 1)
+        .padStart(2, "0");
+
+    return `GML/${sequence}/${yearCode}`;
+
+}
+
 // ==========================================
 // ROUND REPAYMENT TO NEAREST 5
 // ==========================================
@@ -709,7 +731,7 @@ if (loanForm) {
 
     clientName: client.name,
 
-    loanNumber: "LN-" + Date.now(),
+    loanNumber: generateLoanNumber(),
 
     loanType: loanType?.value || "new",
 
@@ -761,6 +783,61 @@ if (loanForm) {
     updatedAt: serverTimestamp()
 
 };
+
+// ==========================================
+// BLOCK NEW LOAN IF CLIENT HAS OUTSTANDING BALANCE
+// ==========================================
+
+const blockedLoan = loans.find(loan =>
+    loan.clientId === client.id &&
+    loan.id !== loanId?.value &&
+    (
+        Number(loan.balance || 0) > 0 ||
+        loan.status === "Arrears"
+    )
+);
+
+if (blockedLoan) {
+
+    const continuePayment = confirm(
+        `Cannot save loan.\n\n` +
+        `Client has an outstanding balance of ${currency(blockedLoan.balance)}.\n\n` +
+        `Loan No: ${blockedLoan.loanNumber}\n\n` +
+        `Press OK to continue to repayment.\n` +
+        `Press Cancel to close.`
+    );
+
+    if (continuePayment) {
+
+        repaymentLoanId.value = blockedLoan.id;
+
+        repaymentClient.value = blockedLoan.clientName;
+
+        repaymentBalance.value = currency(blockedLoan.balance);
+
+        const weeklyRepayment =
+            document.getElementById("repayment-weekly");
+
+        if (weeklyRepayment) {
+
+            weeklyRepayment.value =
+                currency(blockedLoan.weeklyPayment);
+
+        }
+
+        repaymentAmount.value = "";
+
+        repaymentNotes.value = "";
+
+        repaymentDate.value = today();
+
+        repaymentModal.classList.remove("hidden");
+
+    }
+
+    return;
+
+}
              
             step = "loanData created";
 
