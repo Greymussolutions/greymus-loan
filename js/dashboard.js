@@ -144,9 +144,17 @@ function currency(value){
 
 function todayString(){
 
-    return new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date();
+
+    const year = today.getFullYear();
+
+    const month = String(today.getMonth() + 1)
+        .padStart(2, "0");
+
+    const day = String(today.getDate())
+        .padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 
 }
 
@@ -362,9 +370,6 @@ function updateDashboard(){
                 Date.now()
             );
 
-        const month =
-            monthKey(approvalDate);
-
         const interest =
             Math.max(
                 0,
@@ -445,12 +450,17 @@ function updateDashboard(){
 
             loan.repaymentSchedule.forEach(item=>{
 
-                const dueDate = new Date(
-                    item.dueDate
-                ).toISOString().split("T")[0];
+                const dueDateObj = new Date(item.dueDate);
 
-                const due =
-                    Number(item.amount || 0);
+const dueDate =
+    `${dueDateObj.getFullYear()}-${
+        String(dueDateObj.getMonth() + 1).padStart(2, "0")
+    }-${
+        String(dueDateObj.getDate()).padStart(2, "0")
+    }`;
+
+const due =
+    Number(item.amount || 0);
 
                 const paid =
                     Number(item.paidAmount || 0);
@@ -568,11 +578,20 @@ function updateDashboard(){
 
             loan.repaymentSchedule.forEach(item=>{
 
-                if(item.dueDate !== today){
+                const dueDateObj = new Date(item.dueDate);
 
-                    return;
+const dueDate =
+    `${dueDateObj.getFullYear()}-${
+        String(dueDateObj.getMonth() + 1).padStart(2, "0")
+    }-${
+        String(dueDateObj.getDate()).padStart(2, "0")
+    }`;
 
-                }
+if (dueDate !== today) {
+
+    return;
+
+}
 
                 const due =
                     Number(item.amount || 0);
