@@ -134,75 +134,50 @@ DASHBOARD
 <section id="dashboard-section"
          class="hidden">
 
+<div id="sidebar-overlay"></div>
+
+<nav id="sidebar">
+
+    <div class="brand">
+
+        <img
+            src="IMG-20260707-WA0009.jpg"
+            class="brand-logo"
+            alt="Greymus Logo">
+
+        <h2>GREYMUS</h2>
+
+    </div>
+
+    <div class="sidebar-menu">
+
+        <button class="tab-btn active" data-tab="dashboard">
+            🏠 Dashboard
+        </button>
+
+        <button class="tab-btn" data-tab="clients">
+            👥 Clients
+        </button>
+
+        <button class="tab-btn" data-tab="loans">
+            💰 Loans
+        </button>
+
+        <button class="tab-btn" data-tab="history">
+            📋 History
+        </button>
+
+    </div>
+
+</nav>
+
     <div class="dashboard-layout">
 
         <!-- =========================
         SIDEBAR
         ========================= -->
 
-        <aside class="sidebar">
-
-            <div class="brand">
-
-    <img
-        src="IMG-20260707-WA0009.jpg"
-        class="brand-logo"
-        alt="Greymus Logo">
-
-    <h2>GREYMUS VENTURES LOANS LIMITED</h2>
-
-</div>
-
-            <nav class="sidebar-menu">
-
-                <button
-                    class="tab-btn active"
-                    data-tab="dashboard">
-
-                    <span>🏠</span>
-
-                    <small>Dashboard</small>
-
-                </button>
-
-                <button
-                    class="tab-btn"
-                    data-tab="clients">
-
-                    <span>👥</span>
-
-                    <small>Clients</small>
-
-                </button>
-
-                <button
-                    class="tab-btn"
-                    data-tab="loans">
-
-                    <span>💰</span>
-
-                    <small>Loans</small>
-
-                </button>
-
-<button
-    class="tab-btn"
-    data-tab="history">
-
-    <span>📋</span>
-
-    <small>History</small>
-
-</button>
-
-                <button class="tab-btn" data-tab="settings">
-    <span>⚙️</span>
-    <small>Settings</small>
-</button>
-
-            </nav>
-
-        </aside>
+        
 
         <!-- =========================
         MAIN CONTENT
@@ -222,22 +197,28 @@ MOBILE HEADER
 
     <div class="topbar-left">
 
-    <img
-        src="IMG-20260707-WA0009.jpg"
-        class="topbar-logo"
-        alt="Greymus Logo">
+        <button id="menu-toggle" class="menu-btn">
+            ☰
+        </button>
 
-    <h1>GREYMUS VENTURES LOANS LIMITED</h1>
+        <img
+            src="IMG-20260707-WA0009.jpg"
+            class="topbar-logo"
+            alt="Greymus Logo">
 
-</div>
+        <h1>GREYMUS VENTURES LOANS LIMITED</h1>
 
-<div class="topbar-actions">
+    </div>
 
-    <button class="notification-btn" id="notification-btn">🔔</button>
+    <div class="topbar-actions">
 
-    <p id="logged-user"></p>
+        <button class="notification-btn" id="notification-btn">
+            🔔
+        </button>
 
-</div>
+        <p id="logged-user"></p>
+
+    </div>
 
 </header>
 
@@ -1621,55 +1602,6 @@ SETTINGS TAB
 <!-- =========================
 MOBILE NAVIGATION
 ========================= -->
-
-<nav class="mobile-nav">
-
-    <button
-        class="tab-btn active"
-        data-tab="dashboard">
-
-        <span>🏠</span>
-
-        <small>Dashboard</small>
-
-    </button>
-
-    <button
-        class="tab-btn"
-        data-tab="clients">
-
-        <span>👥</span>
-
-        <small>Clients</small>
-
-    </button>
-
-    <button
-        class="tab-btn"
-        data-tab="loans">
-
-        <span>💰</span>
-
-        <small>Loans</small>
-
-    </button>
-
-<button
-    class="tab-btn"
-    data-tab="history">
-
-    <span>📋</span>
-
-    <small>History</small>
-
-</button>
-
-    <button class="tab-btn" data-tab="settings">
-    <span>⚙️</span>
-    <small>Settings</small>
-</button>
-
-</nav>
 
 <!-- =========================
 PROFILE SETTINGS MODAL
