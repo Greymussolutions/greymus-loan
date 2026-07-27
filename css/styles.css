@@ -4762,3 +4762,122 @@ SETTINGS PAGE SPACING
         font-size:18px;
     }
 }
+
+/* =====================================================
+   LOGIN PAGE FINAL OVERRIDE
+===================================================== */
+
+.center-page{
+    min-height:100dvh !important;
+    display:flex !important;
+    justify-content:center !important;
+    align-items:center !important;
+    padding:20px !important;
+    background:linear-gradient(180deg,#1d4ed8,#2563eb) !important;
+    overflow:hidden;
+}
+
+.login-card{
+    width:100% !important;
+    max-width:430px !important;
+    background:#ffffff !important;
+    border-radius:36px !important;
+    padding:45px 30px !important;
+    box-shadow:0 20px 50px rgba(0,0,0,.15) !important;
+}
+
+.logo-area{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    margin-bottom:30px !important;
+}
+
+.login-logo{
+    width:200px !important;
+    height:auto !important;
+    margin:0 auto 25px !important;
+}
+
+.logo-area h2,
+.login-card h2{
+    color:#0f172a !important;
+    font-size:48px !important;
+    font-weight:800 !important;
+    line-height:1.1 !important;
+    text-align:center !important;
+    margin:0 0 10px !important;
+    opacity:1 !important;
+}
+
+.logo-area p,
+.login-card p{
+    color:#64748b !important;
+    font-size:20px !important;
+    font-weight:500 !important;
+    text-align:center !important;
+    margin:0 0 35px !important;
+    opacity:1 !important;
+}
+
+.login-card label{
+    color:#374151 !important;
+    font-weight:700 !important;
+    margin-bottom:8px !important;
+}
+
+.login-card input{
+    height:65px !important;
+    background:#0f172a !important;
+    color:#ffffff !important;
+    border:none !important;
+    border-radius:18px !important;
+    padding:0 20px !important;
+    font-size:17px !important;
+    margin-bottom:20px !important;
+    box-shadow:none !important;
+}
+
+.login-card input::placeholder{
+    color:#cbd5e1 !important;
+}
+
+#login-btn{
+    width:100% !important;
+    height:65px !important;
+    border:none !important;
+    border-radius:18px !important;
+    background:#2563eb !important;
+    color:#ffffff !important;
+    font-size:22px !important;
+    font-weight:700 !important;
+}
+
+#login-btn:hover{
+    background:#1d4ed8 !important;
+}
+
+@media (max-width:768px){
+
+    .center-page{
+        padding:16px !important;
+    }
+
+    .login-card{
+        padding:35px 24px !important;
+    }
+
+    .login-logo{
+        width:180px !important;
+    }
+
+    .logo-area h2,
+    .login-card h2{
+        font-size:40px !important;
+    }
+
+    .logo-area p,
+    .login-card p{
+        font-size:18px !important;
+    }
+}
