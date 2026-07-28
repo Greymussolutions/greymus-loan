@@ -216,6 +216,44 @@ function generateLoanNumber() {
 }
 
 // ==========================================
+// HISTORY LOGGER
+// ==========================================
+
+async function logHistory(action, category, details = {}) {
+
+    try {
+
+        await addDoc(collection(db, "history"), {
+
+            action,
+
+            category,
+
+            details,
+
+            officer:
+                localStorage.getItem("userName") ||
+                localStorage.getItem("userEmail") ||
+                "Unknown Officer",
+
+            officerEmail:
+                localStorage.getItem("userEmail") || "",
+
+            createdAt: serverTimestamp(),
+
+            timestamp: new Date().toISOString()
+
+        });
+
+    } catch (error) {
+
+        console.error("History Log Error:", error);
+
+    }
+
+}
+
+// ==========================================
 // ROUND REPAYMENT TO NEAREST 5
 // ==========================================
 
@@ -862,6 +900,17 @@ if (blockedLoan) {
 
                 );
 
+await logHistory(
+    "Loan Updated",
+    "Loan",
+    {
+        loanId: loanData.loanNumber,
+        client: loanData.clientName,
+        amount: loanData.amount,
+        balance: loanData.balance
+    }
+);
+
                 alert("Loan updated successfully.");
 
             } else {
@@ -875,6 +924,17 @@ if (blockedLoan) {
                     loanData
 
                 );
+
+await logHistory(
+    "Loan Created",
+    "Loan",
+    {
+        loanId: loanData.loanNumber,
+        client: loanData.clientName,
+        amount: loanData.amount,
+        balance: loanData.balance
+    }
+);
 
                 alert("Loan created successfully.");
 
@@ -1264,6 +1324,16 @@ document.querySelectorAll(".approve-loan").forEach(button => {
                 }
             );
 
+await logHistory(
+    "Loan Approved",
+    "Loan",
+    {
+        loanId: loan.loanNumber,
+        client: loan.clientName,
+        amount: loan.amount
+    }
+);
+
             alert("Loan approved successfully.");
 
         } catch (error) {
@@ -1321,6 +1391,16 @@ document.querySelectorAll(".delete-loan").forEach(button=>{
                 doc(db,"loans",loan.id)
 
             );
+
+await logHistory(
+    "Loan Deleted",
+    "Loan",
+    {
+        loanId: loan.loanNumber,
+        client: loan.clientName,
+        amount: loan.amount
+    }
+);
 
             alert("Loan deleted successfully.");
 
@@ -1558,11 +1638,24 @@ function renderRepaymentSchedule(loan){
 
                 <td>
 
-                    ${
-                        item.paidDate || "-"
-                    }
+    ${item.paidDate || "-"}
 
-                </td>
+    ${
+        isAdmin() &&
+        item.paymentHistory?.length
+            ? `
+            <br>
+            <button
+                class="delete-payment"
+                data-loan="${loan.id}"
+                data-week="${item.week}">
+                🗑️ Delete
+            </button>
+            `
+            : ""
+    }
+
+</td>
 
             `;
 
@@ -1576,6 +1669,141 @@ function renderRepaymentSchedule(loan){
 
 }
 
+// ==========================================
+// DELETE REPAYMENT (ADMIN ONLY)
+// ==========================================
+
+document.addEventListener("click", async (e) => {
+
+    if (!e.target.classList.contains("delete-payment")) return;
+
+    if (!isAdmin()) {
+        alert("Only the Administrator can delete repayments.");
+        return;
+    }
+
+    const loan = loans.find(
+        l => l.id === e.target.dataset.loan
+    );
+
+    if (!loan) {
+        alert("Loan not found.");
+        return;
+    }
+
+    const week = Number(e.target.dataset.week);
+
+    const installment = loan.repaymentSchedule.find(
+        item => item.week === week
+    );
+
+    if (!installment || !installment.paymentHistory?.length) {
+        alert("Repayment not found.");
+        return;
+    }
+
+    const payment = installment.paymentHistory.pop();
+
+    if (
+        !confirm(
+            `Delete repayment of ${currency(payment.amount)}?`
+        )
+    ) {
+        installment.paymentHistory.push(payment);
+        return;
+    }
+
+    installment.paidAmount -= payment.amount;
+
+    if (installment.paidAmount < 0) {
+        installment.paidAmount = 0;
+    }
+
+    installment.remainingAmount =
+        installment.amount - installment.paidAmount;
+
+    installment.paid =
+        installment.paidAmount >= installment.amount;
+
+    installment.status =
+        installment.paid
+            ? "Paid"
+            : installment.paidAmount > 0
+                ? "Partial"
+                : "Pending";
+
+    installment.paidDate =
+        installment.paid
+            ? installment.paidDate
+            : null;
+
+    const balance =
+        Number(loan.balance) + payment.amount;
+
+    const amountPaid =
+        Number(loan.amountPaid || 0) - payment.amount;
+
+    const next =
+        loan.repaymentSchedule.find(
+            item => !item.paid
+        );
+
+    let status = "Approved";
+
+    if (balance >= loan.totalRepayment) {
+        status = "Approved";
+    }
+
+    if (
+        next &&
+        next.dueDate < today()
+    ) {
+        status = "Arrears";
+    }
+
+    try {
+
+        await updateDoc(
+            doc(db, "loans", loan.id),
+            {
+                balance,
+                amountPaid,
+                repaymentSchedule: loan.repaymentSchedule,
+                nextRepaymentDate:
+                    next ? next.dueDate : "-",
+                remainingInstallments:
+                    loan.repaymentSchedule.filter(
+                        x => !x.paid
+                    ).length,
+                status,
+                updatedAt: serverTimestamp()
+            }
+        );
+
+        renderRepaymentSchedule(loan);
+
+await logHistory(
+    "Repayment Deleted",
+    "Repayment",
+    {
+        loanId: loan.loanNumber,
+        client: loan.clientName,
+        amount: payment.amount,
+        balance: balance
+    }
+);
+
+        alert("Repayment deleted successfully.");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Failed to delete repayment.");
+
+    }
+
+});
 
 // ==========================================
 // CLOSE SCHEDULE
@@ -1642,124 +1870,207 @@ function getNextRepayment(schedule=[]){
 // RECEIVE REPAYMENT
 // ==========================================
 
+let repaymentSaving = false;
+
 repaymentForm?.addEventListener("submit", async (e) => {
 
     e.preventDefault();
+
+    if (repaymentSaving) {
+        return;
+    }
 
     const loan = loans.find(
         l => l.id === repaymentLoanId.value
     );
 
     if (!loan) {
+
         alert("Loan not found.");
+
         return;
+
     }
 
-    const payment = Number(repaymentAmount.value);
-
-if (payment > loan.balance) {
-
-    alert("Payment cannot exceed the outstanding balance.");
-
-    return;
-
-}
+    const payment =
+        Number(repaymentAmount.value);
 
     if (payment <= 0) {
+
         alert("Enter a valid repayment amount.");
+
         return;
+
     }
 
-    let balance = Number(loan.balance);
-    let amountPaid = Number(loan.amountPaid || 0);
+    if (payment > loan.balance) {
+
+        alert(
+            "Payment cannot exceed the outstanding balance."
+        );
+
+        return;
+
+    }
+
+    if (
+        !confirm(
+            `Confirm repayment of ${currency(payment)}?`
+        )
+    ) {
+
+        return;
+
+    }
+
+    repaymentSaving = true;
+
+    const saveButton =
+        repaymentForm.querySelector(
+            'button[type="submit"]'
+        );
+
+    const originalText =
+        saveButton?.innerHTML ||
+        "Save Repayment";
+
+    if (saveButton) {
+
+        saveButton.disabled = true;
+
+        saveButton.innerHTML =
+            "⏳ Recording Repayment...";
+
+    }
+
+    let balance =
+        Number(loan.balance);
+
+    let amountPaid =
+        Number(loan.amountPaid || 0);
 
     balance -= payment;
 
-if (balance < 0) {
+    if (balance < 0) {
 
-    balance = 0;
+        balance = 0;
 
-}
+    }
 
     amountPaid += payment;
 
-const totalInterest =
-    Number(loan.totalRepayment) - Number(loan.amount);
+    const totalInterest =
+        Number(loan.totalRepayment) -
+        Number(loan.amount);
 
-const interestRatio =
-    totalInterest / Number(loan.totalRepayment);
+    const interestRatio =
+        totalInterest /
+        Number(loan.totalRepayment);
 
-const incomeEarned =
-    payment * interestRatio;
+    const incomeEarned =
+        payment * interestRatio;
 
-const totalIncome =
-    Number(loan.totalIncome || 0) + incomeEarned;
+    const totalIncome =
+        Number(loan.totalIncome || 0) +
+        incomeEarned;
 
-    const schedule = [...loan.repaymentSchedule];
+    const schedule =
+        [...loan.repaymentSchedule];
 
-    let remaining = payment;
-
-    for (const item of schedule) {
+    let remaining = payment;    for (const item of schedule) {
 
         if (remaining <= 0) break;
 
         if (item.paid) continue;
 
-        const unpaid = item.amount - item.paidAmount;
+        const unpaid =
+            item.amount - item.paidAmount;
+
+        const paymentTimestamp =
+            new Date();
+
+        item.paymentHistory ??= [];
 
         if (remaining >= unpaid) {
 
             item.paidAmount += unpaid;
+
             item.remainingAmount = 0;
+
             item.paid = true;
+
             item.status = "Paid";
-            item.paidDate = repaymentDate.value;
 
-const paymentTimestamp = new Date();
+            item.paidDate =
+                repaymentDate.value;
 
-item.paymentHistory.push({
-    amount: unpaid,
-    date: repaymentDate.value,
-    time: paymentTimestamp.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-    }),
-    timestamp: paymentTimestamp.toISOString(),
-    notes: repaymentNotes.value || "",
-    officer:
-        localStorage.getItem("userName") ||
-        localStorage.getItem("userEmail") ||
-        "Unknown Officer"
-});
+            item.paymentHistory.push({
+
+                amount: unpaid,
+
+                date: repaymentDate.value,
+
+                time: paymentTimestamp.toLocaleTimeString([], {
+
+                    hour: "2-digit",
+
+                    minute: "2-digit",
+
+                    second: "2-digit"
+
+                }),
+
+                timestamp:
+                    paymentTimestamp.toISOString(),
+
+                notes:
+                    repaymentNotes.value || "",
+
+                officer:
+                    localStorage.getItem("userName") ||
+                    localStorage.getItem("userEmail") ||
+                    "Unknown Officer"
+
+            });
 
             remaining -= unpaid;
 
         } else {
 
             item.paidAmount += remaining;
+
             item.remainingAmount -= remaining;
+
             item.status = "Partial";
 
-item.paymentHistory ??= [];
+            item.paymentHistory.push({
 
-const paymentTimestamp = new Date();
+                amount: remaining,
 
-item.paymentHistory.push({
-    amount: remaining,
-    date: repaymentDate.value,
-    time: paymentTimestamp.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-    }),
-    timestamp: paymentTimestamp.toISOString(),
-    notes: repaymentNotes.value || "",
-    officer:
-        localStorage.getItem("userName") ||
-        localStorage.getItem("userEmail") ||
-        "Unknown Officer"
-});
+                date: repaymentDate.value,
+
+                time: paymentTimestamp.toLocaleTimeString([], {
+
+                    hour: "2-digit",
+
+                    minute: "2-digit",
+
+                    second: "2-digit"
+
+                }),
+
+                timestamp:
+                    paymentTimestamp.toISOString(),
+
+                notes:
+                    repaymentNotes.value || "",
+
+                officer:
+                    localStorage.getItem("userName") ||
+                    localStorage.getItem("userEmail") ||
+                    "Unknown Officer"
+
+            });
 
             remaining = 0;
 
@@ -1767,31 +2078,31 @@ item.paymentHistory.push({
 
     }
 
-    const next = schedule.find(x => !x.paid);
+    const next =
+        schedule.find(x => !x.paid);
 
     let status = "Approved";
 
-const todayDate = today();
+    const todayDate = today();
 
-if (
-    next &&
-    next.dueDate < todayDate
-) {
+    if (
+        next &&
+        next.dueDate < todayDate
+    ) {
 
-    status = "Arrears";
-
-}
-
-    if (balance <= 0) {
-
-        status = "Completed";
-        balance = 0;
+        status = "Arrears";
 
     }
 
-    try {
+    if (balance <= 0) {
 
-        await updateDoc(
+        balance = 0;
+
+        status = "Completed";
+
+    }
+
+    try {        await updateDoc(
             doc(db, "loans", loan.id),
             {
 
@@ -1803,62 +2114,102 @@ if (
 
                 repaymentSchedule: schedule,
 
-                nextRepaymentDate: next ? next.dueDate : "-",
+                nextRepaymentDate:
+                    next ? next.dueDate : "-",
 
-                remainingInstallments: schedule.filter(x => !x.paid).length,
+                remainingInstallments:
+                    schedule.filter(x => !x.paid).length,
 
                 status,
 
-                updatedAt: serverTimestamp()
+                updatedAt:
+                    serverTimestamp()
 
             }
         );
 
-await addDoc(collection(db, "repayments"), {
+        await addDoc(
+            collection(db, "repayments"),
+            {
 
-    loanId: loan.id,
+                loanId: loan.id,
 
-    loanNumber: loan.loanNumber || "-",
+                loanNumber:
+                    loan.loanNumber || "-",
 
-    clientId: loan.clientId,
+                clientId:
+                    loan.clientId,
 
-    clientName: loan.clientName,
+                clientName:
+                    loan.clientName,
 
-    amount: payment,
+                amount: payment,
 
-    balance: balance,
+                balance,
 
-    paymentDate: repaymentDate.value,
+                paymentDate:
+                    repaymentDate.value,
 
-    paymentTime: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-    }),
+                paymentTime:
+                    new Date().toLocaleTimeString([], {
 
-    paymentTimestamp: new Date().toISOString(),
+                        hour: "2-digit",
 
-    officer:
-        localStorage.getItem("userName") ||
-        localStorage.getItem("userEmail") ||
-        "Unknown Officer",
+                        minute: "2-digit",
 
-    notes: repaymentNotes.value || "",
+                        second: "2-digit"
 
-    createdAt: serverTimestamp()
+                    }),
 
-});
+                paymentTimestamp:
+                    new Date().toISOString(),
+
+                officer:
+                    localStorage.getItem("userName") ||
+                    localStorage.getItem("userEmail") ||
+                    "Unknown Officer",
+
+                notes:
+                    repaymentNotes.value || "",
+
+                createdAt:
+                    serverTimestamp()
+
+            }
+        );
+
         repaymentModal.classList.add("hidden");
 
         repaymentForm.reset();
 
-        alert("Repayment recorded successfully.");
+await logHistory(
+    "Repayment Recorded",
+    "Repayment",
+    {
+        loanId: loan.loanNumber,
+        client: loan.clientName,
+        amount: payment,
+        balance: balance
+    }
+);
 
-    } catch (error) {
+        alert("✅ Repayment recorded successfully.");    } catch (error) {
 
         console.error(error);
 
         alert("Failed to record repayment.");
+
+    } finally {
+
+        repaymentSaving = false;
+
+        if (saveButton) {
+
+            saveButton.disabled = false;
+
+            saveButton.innerHTML = originalText;
+
+        }
 
     }
 
