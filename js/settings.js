@@ -172,7 +172,23 @@ const toast =
     document.getElementById("toast");
 
 const settingsTab =
-    document.getElementById("settings-tab");// ==========================================
+    document.getElementById("settings-tab");
+
+// ---------- Activity Log ----------
+
+const activityLogBtn =
+    document.getElementById("activity-log-btn");
+
+const activityLogModal =
+    document.getElementById("activity-log-modal");
+
+const closeActivityLog =
+    document.getElementById("close-activity-log");
+
+const activityLogBody =
+    document.getElementById("activity-log-body");
+
+// ==========================================
 // PART 3 OF 20
 // TOAST & HELPER FUNCTIONS
 // ==========================================
@@ -1653,4 +1669,53 @@ setInterval(() => {
     }
 
 }, 60000);
+
+// ==========================================
+// PART 16 OF 20
+// ACTIVITY LOG MODAL
+// ==========================================
+
+// Open
+
+activityLogBtn?.addEventListener("click", () => {
+
+    activityLogModal?.classList.remove("hidden");
+
+});
+
+// Close Button
+
+closeActivityLog?.addEventListener("click", () => {
+
+    activityLogModal?.classList.add("hidden");
+
+});
+
+// Click Outside
+
+activityLogModal?.addEventListener("click", (e) => {
+
+    if (e.target === activityLogModal) {
+
+        activityLogModal.classList.add("hidden");
+
+    }
+
+});
+
+// Escape Key
+
+document.addEventListener("keydown", (e) => {
+
+    if (
+        e.key === "Escape" &&
+        activityLogModal &&
+        !activityLogModal.classList.contains("hidden")
+    ) {
+
+        activityLogModal.classList.add("hidden");
+
+    }
+
+});
 
