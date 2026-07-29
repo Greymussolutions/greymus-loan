@@ -689,36 +689,74 @@ MOBILE HEADER
 
                 <div class="toolbar toolbar-wrap">
 
-                    <input
-                        type="text"
-                        id="loan-search"
-                        placeholder="Search loans...">
+    <input
+        type="text"
+        id="loan-search"
+        placeholder="Search loans...">
 
-                    <select id="loan-filter">
+    <select id="loan-filter">
 
-                        <option value="ALL">
-                            All Status
-                        </option>
+        <option value="ALL">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Active">Active</option>
+        <option value="Arrears">Arrears</option>
+        <option value="Completed">Completed</option>
+        <option value="Rejected">Rejected</option>
 
-                        <option value="Pending">
-                            Pending
-                        </option>
+    </select>
 
-                        <option value="Approved">
-                            Approved
-                        </option>
+</div>
 
-                        <option value="Rejected">
-                            Rejected
-                        </option>
+<div class="toolbar toolbar-wrap">
 
-                        <option value="Arrears">
-                            Arrears
-                        </option>
+    <label>
 
-                    </select>
+        <input
+            type="radio"
+            name="loan-date-filter"
+            value="month"
+            checked>
 
-                </div>
+        Full Month
+
+    </label>
+
+    <label>
+
+        <input
+            type="radio"
+            name="loan-date-filter"
+            value="range">
+
+        Date Range
+
+    </label>
+
+</div>
+
+<div
+    id="month-filter-box"
+    class="toolbar">
+
+    <input
+        type="month"
+        id="loan-month">
+
+</div>
+
+<div
+    id="range-filter-box"
+    class="toolbar hidden">
+
+    <input
+        type="date"
+        id="loan-date-from">
+
+    <input
+        type="date"
+        id="loan-date-to">
+
+</div>
 
                 <div class="table-wrapper">
 
@@ -750,6 +788,54 @@ MOBILE HEADER
                         </tbody>
 
                     </table>
+
+<div id="loan-summary-totals" class="loan-summary-totals">
+
+    <h3>Loan Totals</h3>
+
+    <p>
+        <strong>Total Amount:</strong>
+        <span id="total-loan-amount">
+            KES 0
+        </span>
+    </p>
+
+    <p>
+        <strong>Active:</strong>
+        <span id="active-loan-total">
+            KES 0
+        </span>
+    </p>
+
+    <p>
+        <strong>Completed:</strong>
+        <span id="completed-loan-total">
+            KES 0
+        </span>
+    </p>
+
+    <p>
+        <strong>Arrears:</strong>
+        <span id="arrears-loan-total">
+            KES 0
+        </span>
+    </p>
+
+    <p>
+        <strong>Pending:</strong>
+        <span id="pending-loan-total">
+            KES 0
+        </span>
+    </p>
+
+    <p>
+        <strong>Rejected:</strong>
+        <span id="rejected-loan-total">
+            KES 0
+        </span>
+    </p>
+
+</div>
 
                 </div>
 
