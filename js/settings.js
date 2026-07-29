@@ -15,6 +15,14 @@ import {
     EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+import {
+    collection,
+    query,
+    orderBy,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { db } from "./firebase.js";
 console.log("=================================");
 console.log("GREYMUS SETTINGS MODULE LOADED");
 console.log("Version 3.0");
@@ -1716,6 +1724,61 @@ document.addEventListener("keydown", (e) => {
         activityLogModal.classList.add("hidden");
 
     }
+
+});
+
+// ==========================================
+// PART 17 OF 20
+// LOAD ACTIVITY LOG
+// ==========================================
+
+const activityQuery = query(
+    collection(db, "activityLog"),
+    orderBy("timestamp", "desc")
+);
+
+onSnapshot(activityQuery, (snapshot) => {
+
+    if (!activityLogBody) return;
+
+    if (snapshot.empty) {
+
+        activityLogBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align:center">
+                    No activity recorded.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    activityLogBody.innerHTML = "";
+
+    snapshot.forEach((doc) => {
+
+        const item = doc.data();
+
+        const date = item.timestamp
+            ? item.timestamp.toDate().toLocaleDateString()
+            : "-";
+
+        const time = item.timestamp
+            ? item.timestamp.toDate().toLocaleTimeString()
+            : "-";
+
+        activityLogBody.innerHTML += `
+            <tr>
+                <td>${date}</td>
+                <td>${time}</td>
+                <td>${item.officer || "-"}</td>
+                <td>${item.action || "-"}</td>
+                <td>${item.details || "-"}</td>
+            </tr>
+        `;
+
+    });
 
 });
 
