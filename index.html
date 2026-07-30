@@ -220,118 +220,97 @@ MOBILE HEADER
 
             </div>  
 
-            <!-- =========================  
-            TODAY'S COLLECTION  
-            ========================= -->  
+            <!-- =========================
+TODAY'S COLLECTION
+========================= --><section class="today-collection"><div class="section-header">
 
-            <section class="today-collection">  
+    <div>
 
-                <div class="section-header">  
+        <h2>Today's Collection</h2>
 
-                    <div>  
+        <p>Daily repayment performance</p>
 
-                        <h2>Today's Collection</h2>  
+    </div>
 
-                        <p>Daily repayment performance</p>  
+</div>
 
-                    </div>  
 
-                </div>  
+<!-- =========================
+TODAY'S COLLECTION SUMMARY
+========================= -->
 
-                <div class="today-summary-grid">  
+<div class="today-summary-grid">
 
-                    <div class="stat-card">  
+    <div class="stat-card">
 
-                        <span>Clients Due Today</span>  
+        <span>Expected</span>
 
-                        <h3 id="clientsDueToday">  
-                            0  
-                        </h3>  
+        <h3 id="expectedCollection">
+            KES 0
+        </h3>
 
-                    </div>  
+    </div>
 
-                    <div class="stat-card">  
 
-                        <span>Expected</span>  
+    <div class="stat-card">
 
-                        <h3 id="expectedCollection">  
-                            KES 0  
-                        </h3>  
+        <span>Collected</span>
 
-                    </div>  
+        <h3 id="collectedToday">
+            KES 0
+        </h3>
 
-                    <div class="stat-card">  
+    </div>
 
-                        <span>Collected</span>  
 
-                        <h3 id="collectedToday">  
-                            KES 0  
-                        </h3>  
+    <div class="stat-card">
 
-                    </div>  
+        <span>Remaining</span>
 
-                    <div class="stat-card">  
+        <h3 id="remainingCollection">
+            KES 0
+        </h3>
 
-                        <span>Remaining</span>  
+    </div>
 
-                        <h3 id="remainingCollection">  
-                            KES 0  
-                        </h3>  
 
-                    </div>  
+    <div class="stat-card success">
 
-                    <div class="stat-card success">  
+        <span>Collection Rate</span>
 
-                        <span>Collection Rate</span>  
+        <h3 id="collectionRate">
+            0%
+        </h3>
 
-                        <h3 id="collectionRate">  
-                            0%  
-                        </h3>  
+    </div>
 
-                    </div>  
+</div>
 
-                </div>  
 
-                <div class="section-header">  
-
-                    <div>  
-
-                        <h2>Clients Due Today</h2>  
-
-                    </div>  
-
-                </div>  
-
-                <div id="todayDueList"  
-                     class="today-due-list">  
-
-                    <div class="empty-state">  
-
-                        <p>No repayments due today.</p>  
-
-                    </div>  
-
-                </div>  
-
-            </section>
+<!-- =========================
+EXPANDABLE CLIENTS DUE TODAY
+========================= -->
 
 <div class="stat-card expandable-card">
 
     <div class="expandable-header"
-         id="loan-summary-toggle">
+         id="today-due-toggle">
 
         <div>
 
-            <span>Total Loans Issued</span>
+            <span>Clients Due Today</span>
 
-            <h3 id="stat-total-loans-issued">0</h3>
+            <h3 id="clientsDueToday">
+                0
+            </h3>
 
         </div>
 
         <button
             type="button"
-            id="loan-summary-btn"
-            class="expand-btn">
+            id="today-due-btn"
+            class="expand-btn"
+            aria-label="Expand clients due today">
 
             ▼
 
@@ -339,35 +318,26 @@ MOBILE HEADER
 
     </div>
 
-    <div id="loan-summary-content"
+
+    <div id="today-due-content"
          class="hidden">
 
-        <div class="summary-row">
-            <span>Active Loans</span>
-            <strong id="stat-active-loans">0</strong>
-        </div>
+        <div id="todayDueList"
+             class="today-due-list">
 
-        <div class="summary-row">
-            <span>Completed Loans</span>
-            <strong id="stat-completed-loans">0</strong>
-        </div>
+            <div class="empty-state">
 
-        <div class="summary-row">
-            <span>Repeat Loans</span>
-            <strong id="stat-repeat-loans">0</strong>
-        </div>
+                <p>No repayments due today.</p>
 
-        <hr>
-
-        <div id="loan-summary-list">
-
-            <p>No loans available.</p>
+            </div>
 
         </div>
 
     </div>
 
 </div>
+
+</section>
 
 <!-- =========================  
             DASHBOARD STATISTICS  
