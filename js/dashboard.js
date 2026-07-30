@@ -39,6 +39,12 @@ const monthlyPortfolioStat =
 const previousPortfolioStat =
     document.getElementById("stat-previous-portfolio");
 
+const outstandingPrincipalStat =
+    document.getElementById("stat-outstanding-principal");
+
+const outstandingInterestStat =
+    document.getElementById("stat-outstanding-interest");
+
 // Clients
 const clientsStat =
     document.getElementById("stat-clients");
@@ -275,6 +281,10 @@ function updateDashboard(){
 
     let currentPortfolio = 0;
 
+    let outstandingPrincipal = 0;
+
+    let outstandingInterest = 0;
+
     let totalPortfolio = 0;
 
     let monthlyPortfolio = 0;
@@ -363,6 +373,27 @@ function updateDashboard(){
                 principal
             );
 
+// ==================================
+// OUTSTANDING PRINCIPAL / INTEREST
+// ==================================
+
+let remainingPrincipal = 0;
+
+let remainingInterest = 0;
+
+if (totalRepayment > 0 && outstanding > 0) {
+
+    const principalRatio =
+        principal / totalRepayment;
+
+    remainingPrincipal =
+        outstanding * principalRatio;
+
+    remainingInterest =
+        outstanding - remainingPrincipal;
+
+}
+
         const approvalDate =
             new Date(
                 loan.approvalDate ||
@@ -387,6 +418,26 @@ function updateDashboard(){
         // ==================================
         // PORTFOLIO
         // ==================================
+
+// ==================================
+// OUTSTANDING PRINCIPAL / INTEREST TOTALS
+// ==================================
+
+if (
+
+    status === "Approved" ||
+
+    status === "Arrears"
+
+) {
+
+    outstandingPrincipal +=
+        remainingPrincipal;
+
+    outstandingInterest +=
+        remainingInterest;
+
+}
 
         totalPortfolio += principal;
 
@@ -685,6 +736,20 @@ if (dueDate !== today) {
             currency(monthlyPortfolio);
 
     }
+
+if(outstandingPrincipalStat){
+
+    outstandingPrincipalStat.textContent =
+        currency(outstandingPrincipal);
+
+}
+
+if(outstandingInterestStat){
+
+    outstandingInterestStat.textContent =
+        currency(outstandingInterest);
+
+}
 
     if(previousPortfolioStat){
 
@@ -1218,6 +1283,64 @@ if (
                 : "▲";
 
     });
+
+}
+
+// ==========================================
+// EXPANDABLE OUTSTANDING PORTFOLIO
+// ==========================================
+
+const portfolioSummaryButton =
+    document.getElementById(
+        "portfolio-summary-btn"
+    );
+
+const portfolioSummaryContent =
+    document.getElementById(
+        "portfolio-summary-content"
+    );
+
+
+if (
+    portfolioSummaryButton &&
+    portfolioSummaryContent
+) {
+
+    // Start collapsed
+    portfolioSummaryContent.classList.add(
+        "hidden"
+    );
+
+
+    portfolioSummaryButton.addEventListener(
+        "click",
+        (event) => {
+
+            event.stopPropagation();
+
+            portfolioSummaryContent
+                .classList.toggle("hidden");
+
+
+            const isHidden =
+                portfolioSummaryContent
+                    .classList
+                    .contains("hidden");
+
+
+            portfolioSummaryButton.textContent =
+                isHidden ? "▼" : "▲";
+
+
+            portfolioSummaryButton.setAttribute(
+                "aria-label",
+                isHidden
+                    ? "Expand outstanding portfolio"
+                    : "Collapse outstanding portfolio"
+            );
+
+        }
+    );
 
 }
 
