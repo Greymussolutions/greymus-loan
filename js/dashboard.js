@@ -1188,6 +1188,31 @@ document
 
 
 // ==========================================
+// EXPANDABLE TOTAL LOANS CARD
+// ==========================================
+
+const expandLoansBtn =
+    document.getElementById("expand-loans-btn");
+
+const loanSummaryContent =
+    document.getElementById("loan-summary-content");
+
+if (expandLoansBtn && loanSummaryContent) {
+
+    // Start collapsed
+    loanSummaryContent.classList.add("hidden");
+
+    expandLoansBtn.addEventListener("click", () => {
+
+        loanSummaryContent.classList.toggle("hidden");
+
+        expandLoansBtn.classList.toggle("open");
+
+    });
+
+}
+
+// ==========================================
 // AUTO REFRESH
 // ==========================================
 
