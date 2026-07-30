@@ -1191,22 +1191,31 @@ document
 // EXPANDABLE TOTAL LOANS CARD
 // ==========================================
 
-const expandLoansBtn =
-    document.getElementById("expand-loans-btn");
+const summaryToggle =
+    document.getElementById("loan-summary-toggle");
 
 const loanSummaryContent =
     document.getElementById("loan-summary-content");
 
-if (expandLoansBtn && loanSummaryContent) {
+const summaryButton =
+    document.getElementById("loan-summary-btn");
 
-    // Start collapsed
+if (
+    summaryToggle &&
+    loanSummaryContent &&
+    summaryButton
+) {
+
     loanSummaryContent.classList.add("hidden");
 
-    expandLoansBtn.addEventListener("click", () => {
+    summaryToggle.addEventListener("click", () => {
 
         loanSummaryContent.classList.toggle("hidden");
 
-        expandLoansBtn.classList.toggle("open");
+        summaryButton.textContent =
+            loanSummaryContent.classList.contains("hidden")
+                ? "▼"
+                : "▲";
 
     });
 
