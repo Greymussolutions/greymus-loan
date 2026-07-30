@@ -198,27 +198,75 @@ MOBILE HEADER
             HERO CARD  
             ========================= -->  
 
-            <div class="hero-card">  
+            <div class="hero-card">
 
-                <div class="hero-content">  
+    <div class="hero-content">
 
-                    <p>Current Outstanding Portfolio</p>  
+        <div class="hero-title-row">
 
-                    <h2 id="stat-portfolio">  
-                        KES 0  
-                    </h2>  
+            <div>
 
-                    <small id="stat-monthly-portfolio">  
-                        This Month Portfolio: KES 0  
-                    </small>  
+                <p>Current Outstanding Portfolio</p>
 
-                </div>  
+                <h2 id="stat-portfolio">
+                    KES 0
+                </h2>
 
-                <div class="hero-icon">  
-                    💼  
-                </div>  
+            </div>
 
-            </div>  
+            <button
+                type="button"
+                id="portfolio-summary-btn"
+                class="expand-btn hero-expand-btn"
+                aria-label="Expand outstanding portfolio">
+
+                ▼
+
+            </button>
+
+        </div>
+
+        <small id="stat-monthly-portfolio">
+            This Month Portfolio: KES 0
+        </small>
+
+        <div
+            id="portfolio-summary-content"
+            class="portfolio-summary-content hidden">
+
+            <div class="portfolio-breakdown">
+
+                <div class="portfolio-breakdown-row">
+
+                    <span>Outstanding Principal</span>
+
+                    <strong id="stat-outstanding-principal">
+                        KES 0
+                    </strong>
+
+                </div>
+
+                <div class="portfolio-breakdown-row">
+
+                    <span>Outstanding Interest</span>
+
+                    <strong id="stat-outstanding-interest">
+                        KES 0
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="hero-icon">
+        💼
+    </div>
+
+</div>
 
             <!-- =========================
 TODAY'S COLLECTION
