@@ -44,7 +44,7 @@ const loginForm =
     document.getElementById("login-form");
 
 const logoutBtn =
-    document.getElementById("mobile-logout-btn");
+    document.getElementById("logout-btn");
 
 const emailInput =
     document.getElementById("email");
