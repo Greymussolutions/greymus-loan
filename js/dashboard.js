@@ -1222,6 +1222,49 @@ if (
 }
 
 // ==========================================
+// EXPANDABLE CLIENTS DUE TODAY
+// ==========================================
+
+const todayDueToggle =
+document.getElementById("today-due-toggle");
+
+const todayDueContent =
+document.getElementById("today-due-content");
+
+const todayDueButton =
+document.getElementById("today-due-btn");
+
+if (
+todayDueToggle &&
+todayDueContent &&
+todayDueButton
+) {
+
+// Start collapsed
+todayDueContent.classList.add("hidden");
+
+todayDueToggle.addEventListener("click", () => {
+
+    todayDueContent.classList.toggle("hidden");
+
+    const isHidden =
+        todayDueContent.classList.contains("hidden");
+
+    todayDueButton.textContent =
+        isHidden ? "▼" : "▲";
+
+    todayDueButton.setAttribute(
+        "aria-label",
+        isHidden
+            ? "Expand clients due today"
+            : "Collapse clients due today"
+    );
+
+});
+
+}
+
+// ==========================================
 // AUTO REFRESH
 // ==========================================
 
