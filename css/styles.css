@@ -4817,3 +4817,44 @@ SETTINGS PAGE SPACING
         font-size:18px;
     }
 }
+
+/* ==========================================
+   OUTSTANDING PORTFOLIO EXPANDABLE
+========================================== */
+
+.hero-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hero-expand-btn {
+    flex-shrink: 0;
+}
+
+.portfolio-summary-content {
+    margin-top: 12px;
+}
+
+.portfolio-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.portfolio-breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    font-size: 0.85rem;
+}
+
+.portfolio-breakdown-row span {
+    opacity: 0.8;
+}
+
+.portfolio-breakdown-row strong {
+    white-space: nowrap;
+}
