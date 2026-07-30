@@ -943,67 +943,39 @@ if (dueDate !== today) {
 
         }else{
 
-            clientsDueToday.forEach(client => {
+            clientsDueToday.forEach(client=>{
 
-const percentage = client.due > 0
-    ? Math.min(
-        100,
-        Math.round((client.paid / client.due) * 100)
-    )
-    : 0;
+                todayDueList.innerHTML += `
 
-let progressClass = "collection-low";
+                    <div class="today-card">
 
-if (percentage >= 80) {
-    progressClass = "collection-high";
-} else if (percentage >= 50) {
-    progressClass = "collection-medium";
-}
+                        <h4>${client.client}</h4>
 
-todayDueList.innerHTML += `
+                        <p>
+                            <strong>Due:</strong>
+                            ${currency(client.due)}
+                        </p>
 
-    <div class="today-card">
+                        <p>
+                            <strong>Paid:</strong>
+                            ${currency(client.paid)}
+                        </p>
 
-        <h4>${client.client}</h4>
+                        <p>
+                            <strong>Balance:</strong>
+                            ${currency(client.balance)}
+                        </p>
 
-        <div class="collection-row">
+                        <p>
+                            <strong>Status:</strong>
+                            ${client.status}
+                        </p>
 
-            <span>Collection</span>
+                    </div>
 
-            <strong>
-                ${currency(client.paid)} / ${currency(client.due)}
-            </strong>
+                `;
 
-        </div>
-
-        <div class="collection-progress">
-
-            <div
-                class="collection-progress-fill ${progressClass}"
-                style="width: ${percentage}%;">
-            </div>
-
-            <span class="collection-progress-percentage">
-                ${percentage}%
-            </span>
-
-        </div>
-
-        <div class="collection-total-row">
-
-            <span>Total Collected</span>
-
-            <strong>
-                ${currency(client.paid)}
-            </strong>
-
-        </div>
-
-    </div>
-
-`;
-
-});
+            });
 
         }
 
