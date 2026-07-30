@@ -943,39 +943,67 @@ if (dueDate !== today) {
 
         }else{
 
-            clientsDueToday.forEach(client=>{
+            clientsDueToday.forEach(client => {
 
-                todayDueList.innerHTML += `
+const percentage = client.due > 0
+    ? Math.min(
+        100,
+        Math.round((client.paid / client.due) * 100)
+    )
+    : 0;
 
-                    <div class="today-card">
+let progressClass = "collection-low";
 
-                        <h4>${client.client}</h4>
+if (percentage >= 80) {
+    progressClass = "collection-high";
+} else if (percentage >= 50) {
+    progressClass = "collection-medium";
+}
 
-                        <p>
-                            <strong>Due:</strong>
-                            ${currency(client.due)}
-                        </p>
+todayDueList.innerHTML += `
 
-                        <p>
-                            <strong>Paid:</strong>
-                            ${currency(client.paid)}
-                        </p>
+    <div class="today-card">
 
-                        <p>
-                            <strong>Balance:</strong>
-                            ${currency(client.balance)}
-                        </p>
+        <h4>${client.client}</h4>
 
-                        <p>
-                            <strong>Status:</strong>
-                            ${client.status}
-                        </p>
+        <div class="collection-row">
 
-                    </div>
+            <span>Collection</span>
 
-                `;
+            <strong>
+                ${currency(client.paid)} / ${currency(client.due)}
+            </strong>
 
-            });
+        </div>
+
+        <div class="collection-progress">
+
+            <div
+                class="collection-progress-fill ${progressClass}"
+                style="width: ${percentage}%;">
+            </div>
+
+            <span class="collection-progress-percentage">
+                ${percentage}%
+            </span>
+
+        </div>
+
+        <div class="collection-total-row">
+
+            <span>Total Collected</span>
+
+            <strong>
+                ${currency(client.paid)}
+            </strong>
+
+        </div>
+
+    </div>
+
+`;
+
+});
 
         }
 
