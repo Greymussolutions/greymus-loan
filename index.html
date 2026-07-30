@@ -1788,6 +1788,297 @@ PROFILE SETTINGS MODAL
 
 </div>  
 
+<!-- =========================
+ACCOUNT SECURITY MODAL
+========================= -->
+
+<div id="security-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Change Password</h2>
+
+                <p>Update your account password securely.</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn close-security">
+
+                ✕
+
+            </button>
+
+        </div>
+
+
+        <form id="security-form">
+
+            <div class="form-group">
+
+                <label>Current Password</label>
+
+                <input
+                    type="password"
+                    id="current-password"
+                    placeholder="Enter current password"
+                    autocomplete="current-password"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>New Password</label>
+
+                <input
+                    type="password"
+                    id="new-password"
+                    placeholder="Enter new password"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Confirm New Password</label>
+
+                <input
+                    type="password"
+                    id="confirm-password"
+                    placeholder="Confirm new password"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required>
+
+            </div>
+
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Change Password
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="secondary-btn close-security">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
+ADD USER MODAL
+========================= -->
+
+<div id="add-user-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Add User</h2>
+
+                <p>Create a new Greymus system user.</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn close-add-user">
+
+                ✕
+
+            </button>
+
+        </div>
+
+
+        <form id="add-user-form">
+
+            <div class="form-group">
+
+                <label>Full Name</label>
+
+                <input
+                    type="text"
+                    id="new-user-name"
+                    placeholder="Enter full name"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Email Address</label>
+
+                <input
+                    type="email"
+                    id="new-user-email"
+                    placeholder="Enter email address"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Temporary Password</label>
+
+                <input
+                    type="password"
+                    id="new-user-password"
+                    placeholder="Enter temporary password"
+                    minlength="6"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>User Role</label>
+
+                <select id="new-user-role" required>
+
+                    <option value="Officer">
+                        Officer
+                    </option>
+
+                    <option value="Administrator">
+                        Administrator
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="modal-buttons">
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Create User
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="secondary-btn close-add-user">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
+MANAGE USERS MODAL
+========================= -->
+
+<div id="manage-users-modal" class="modal hidden">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>Manage Users</h2>
+
+                <p>View and manage Greymus system users.</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close-btn close-manage-users">
+
+                ✕
+
+            </button>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table id="users-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="users-table-body">
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            style="text-align:center">
+
+                            No users found.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- =========================  
 FLOATING ACTION BUTTON  
 ========================= --> 
