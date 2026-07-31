@@ -1919,7 +1919,7 @@ document.addEventListener("keydown", (e) => {
 // ==========================================
 
 const activityQuery = query(
-    collection(db, "activityLog"),
+    collection(db, "activityLogs"),
     orderBy("timestamp", "desc")
 );
 
