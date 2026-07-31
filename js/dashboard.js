@@ -291,6 +291,8 @@ function updateDashboard(){
 
     let previousPortfolio = 0;
 
+    let previousMonthsPortfolio = {};
+
     let monthlyIncome = 0;
 
     let totalIncome = 0;
@@ -443,19 +445,41 @@ if (
 
         if(
 
-            approvalDate.getMonth() === currentMonth &&
+    approvalDate.getMonth() === currentMonth &&
 
-            approvalDate.getFullYear() === currentYear
+    approvalDate.getFullYear() === currentYear
 
-        ){
+){
 
-            monthlyPortfolio += principal;
+    monthlyPortfolio += principal;
 
-        }else{
+}else{
 
-            previousPortfolio += principal;
+    previousPortfolio += principal;
 
-        }
+
+    const monthName =
+        approvalDate.toLocaleString(
+            "en-US",
+            {
+                month: "long"
+            }
+        );
+
+
+    const year =
+        approvalDate.getFullYear();
+
+
+    const key =
+        `${monthName} ${year}`;
+
+
+    previousMonthsPortfolio[key] =
+        (previousMonthsPortfolio[key] || 0)
+        + principal;
+
+}
 
         // ==================================
         // INCOME
@@ -757,6 +781,38 @@ if(outstandingInterestStat){
             currency(previousPortfolio);
 
     }
+
+const previousMonthsList =
+    document.getElementById(
+        "previous-months-portfolio-list"
+    );
+
+
+if(previousMonthsList){
+
+    previousMonthsList.innerHTML = "";
+
+
+    Object.entries(previousMonthsPortfolio)
+    .forEach(([month, amount]) => {
+
+        previousMonthsList.innerHTML += `
+
+            <div class="today-card">
+
+                <h4>${month} Portfolio</h4>
+
+                <p>
+                    ${currency(amount)}
+                </p>
+
+            </div>
+
+        `;
+
+    });
+
+}
 
     if(clientsStat){
 
@@ -1386,6 +1442,50 @@ todayDueToggle.addEventListener("click", () => {
 });
 
 }
+
+// ==========================================
+// PREVIOUS MONTHS PORTFOLIO CLICK
+// ==========================================
+
+const previousPortfolioCard =
+    document.getElementById(
+        "previous-portfolio-card"
+    );
+
+const previousPortfolioModal =
+    document.getElementById(
+        "previous-months-portfolio-modal"
+    );
+
+
+const closePreviousPortfolio =
+    document.getElementById(
+        "close-previous-portfolio"
+    );
+
+
+previousPortfolioCard?.addEventListener(
+    "click",
+    () => {
+
+        previousPortfolioModal
+        ?.classList
+        .remove("hidden");
+
+    }
+);
+
+
+closePreviousPortfolio?.addEventListener(
+    "click",
+    () => {
+
+        previousPortfolioModal
+        ?.classList
+        .add("hidden");
+
+    }
+);
 
 // ==========================================
 // AUTO REFRESH
