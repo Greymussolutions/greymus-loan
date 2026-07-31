@@ -1,18 +1,17 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // history.js
-// VERSION 1.0
-// PART 1 OF 4
+// VERSION 1.1
+// FIXED REPAYMENT HISTORY LOADING
 // ==========================================
 
 import { db } from "./firebase.js";
 
 import {
     collection,
-    onSnapshot,
-    query,
-    orderBy
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 // ==========================================
 // ELEMENTS
@@ -24,11 +23,13 @@ const historyBody =
 const historySearch =
     document.getElementById("history-search");
 
+
 // ==========================================
 // DATA
 // ==========================================
 
 let repayments = [];
+
 
 // ==========================================
 // FORMATTERS
@@ -36,9 +37,11 @@ let repayments = [];
 
 function formatMoney(amount) {
 
-    return "KES " + Number(amount || 0).toLocaleString();
+    return "KES " +
+        Number(amount || 0).toLocaleString();
 
 }
+
 
 function formatDate(value) {
 
@@ -46,13 +49,21 @@ function formatDate(value) {
 
     try {
 
-        if (value.toDate) {
+        if (value?.toDate) {
 
             return value.toDate().toLocaleDateString();
 
         }
 
-        return new Date(value).toLocaleDateString();
+        const date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+
+            return String(value);
+
+        }
+
+        return date.toLocaleDateString();
 
     } catch {
 
@@ -62,24 +73,43 @@ function formatDate(value) {
 
 }
 
+
 function formatTime(value) {
 
     if (!value) return "-";
 
     try {
 
-        if (value.toDate) {
+        if (value?.toDate) {
 
             return value.toDate().toLocaleTimeString([], {
+
                 hour: "2-digit",
-                minute: "2-digit"
+
+                minute: "2-digit",
+
+                second: "2-digit"
+
             });
 
         }
 
-        return new Date(value).toLocaleTimeString([], {
+        const date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+
+            return String(value);
+
+        }
+
+        return date.toLocaleTimeString([], {
+
             hour: "2-digit",
-            minute: "2-digit"
+
+            minute: "2-digit",
+
+            second: "2-digit"
+
         });
 
     } catch {
@@ -90,25 +120,70 @@ function formatTime(value) {
 
 }
 
+
 // ==========================================
 // LOAD REPAYMENTS
 // ==========================================
 
-const repaymentsQuery = query(
+onSnapshot(
+
     collection(db, "repayments"),
-    orderBy("paymentDate", "desc")
+
+    (snapshot) => {
+
+        repayments = snapshot.docs.map(docSnap => ({
+
+            id: docSnap.id,
+
+            ...docSnap.data()
+
+        }));
+
+        console.log(
+            "Repayments loaded:",
+            repayments
+        );
+
+        renderHistory(
+            historySearch
+                ? historySearch.value
+                : ""
+        );
+
+    },
+
+    (error) => {
+
+        console.error(
+            "Failed to load repayment history:",
+            error
+        );
+
+        if (historyBody) {
+
+            historyBody.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        style="text-align:center;"
+                    >
+
+                        Unable to load repayment history.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+
+    }
+
 );
 
-onSnapshot(repaymentsQuery, (snapshot) => {
-
-    repayments = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    }));
-
-    renderHistory();
-
-});
 
 // ==========================================
 // RENDER HISTORY
@@ -118,31 +193,75 @@ function renderHistory(searchText = "") {
 
     if (!historyBody) return;
 
-    const keyword = searchText.toLowerCase().trim();
+    const keyword =
+        searchText
+            .toLowerCase()
+            .trim();
 
-    const filtered = repayments.filter(item => {
 
-        const client =
-            (item.clientName || "").toLowerCase();
+    // ======================================
+    // FILTER
+    // ======================================
 
-        const loan =
-            (item.loanNumber || "").toLowerCase();
+    const filtered =
+        repayments.filter(item => {
 
-        return client.includes(keyword) ||
-               loan.includes(keyword);
+            const client =
+                String(item.clientName || "")
+                    .toLowerCase();
+
+            const loan =
+                String(item.loanNumber || "")
+                    .toLowerCase();
+
+            return (
+                client.includes(keyword) ||
+                loan.includes(keyword)
+            );
+
+        });
+
+
+    // ======================================
+    // SORT
+    // LATEST REPAYMENT FIRST
+    // ======================================
+
+    filtered.sort((a, b) => {
+
+        const dateA =
+            new Date(
+                a.paymentTimestamp ||
+                a.paymentDate ||
+                0
+            ).getTime();
+
+        const dateB =
+            new Date(
+                b.paymentTimestamp ||
+                b.paymentDate ||
+                0
+            ).getTime();
+
+        return dateB - dateA;
 
     });
 
-filtered.sort((a, b) => {
-    return new Date(b.paymentTimestamp) - new Date(a.paymentTimestamp);
-});
+
+    // ======================================
+    // EMPTY
+    // ======================================
+
     if (filtered.length === 0) {
 
         historyBody.innerHTML = `
 
             <tr>
 
-                <td colspan="7" style="text-align:center">
+                <td
+                    colspan="7"
+                    style="text-align:center;"
+                >
 
                     No repayments recorded.
 
@@ -156,35 +275,62 @@ filtered.sort((a, b) => {
 
     }
 
+
+    // ======================================
+    // DISPLAY
+    // ======================================
+
     historyBody.innerHTML = "";
+
 
     filtered.forEach(item => {
 
-        historyBody.innerHTML += `
+        const row =
+            document.createElement("tr");
 
-            <tr>
 
-                <td>${formatDate(item.paymentDate)}</td>
+        row.innerHTML = `
 
-<td>${item.paymentTime || formatTime(item.paymentTimestamp)}</td>
+            <td>
+                ${formatDate(item.paymentDate)}
+            </td>
 
-<td>${item.clientName || "-"}</td>
+            <td>
+                ${
+                    item.paymentTime ||
+                    formatTime(item.paymentTimestamp)
+                }
+            </td>
 
-                <td>${item.loanNumber || "-"}</td>
+            <td>
+                ${item.clientName || "-"}
+            </td>
 
-                <td>${formatMoney(item.amount)}</td>
+            <td>
+                ${item.loanNumber || "-"}
+            </td>
 
-                <td>${formatMoney(item.balance)}</td>
+            <td>
+                ${formatMoney(item.amount)}
+            </td>
 
-                <td>${item.officer || "-"}</td>
+            <td>
+                ${formatMoney(item.balance)}
+            </td>
 
-            </tr>
+            <td>
+                ${item.officer || "-"}
+            </td>
 
         `;
+
+
+        historyBody.appendChild(row);
 
     });
 
 }
+
 
 // ==========================================
 // SEARCH
@@ -192,13 +338,19 @@ filtered.sort((a, b) => {
 
 if (historySearch) {
 
-    historySearch.addEventListener("input", (e) => {
+    historySearch.addEventListener(
+        "input",
+        (e) => {
 
-        renderHistory(e.target.value);
+            renderHistory(
+                e.target.value
+            );
 
-    });
+        }
+    );
 
 }
+
 
 // ==========================================
 // REFRESH HISTORY
@@ -207,28 +359,39 @@ if (historySearch) {
 export function refreshHistory() {
 
     renderHistory(
-        historySearch ? historySearch.value : ""
+
+        historySearch
+            ? historySearch.value
+            : ""
+
     );
 
 }
 
+
 // ==========================================
-// INITIALIZE HISTORY
+// INITIALIZE
 // ==========================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    if (!historyBody) return;
+        if (!historyBody) return;
 
-    renderHistory();
+        renderHistory();
 
-});
+    }
+);
+
 
 // ==========================================
 // GLOBAL ACCESS
 // ==========================================
 
-window.refreshRepaymentHistory = refreshHistory;
+window.refreshRepaymentHistory =
+    refreshHistory;
+
 
 // ==========================================
 // END OF FILE
