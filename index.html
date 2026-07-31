@@ -474,15 +474,47 @@ TOTAL LOANS SUMMARY
 
                 </div>  
 
-                <div class="stat-card">  
+                <div class="stat-card clickable-card" id="previous-portfolio-card">
 
-                    <span>Previous Months Portfolio</span>  
+    <span>Previous Months Portfolio</span>
 
-                    <h3 id="stat-previous-portfolio">  
-                        KES 0  
-                    </h3>  
+    <h3 id="stat-previous-portfolio">
+        KES 0
+    </h3>
 
-                </div>  
+    <small>
+        Click to view monthly portfolio
+    </small>
+
+</div>
+
+
+<div id="previous-months-portfolio-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>Previous Months Portfolio</h2>
+
+            <button
+                type="button"
+                id="close-previous-portfolio">
+                ✕
+            </button>
+
+        </div>
+
+
+        <div id="previous-months-portfolio-list">
+
+            <p>No previous months records.</p>
+
+        </div>
+
+    </div>
+
+</div>
 
                 <div class="stat-card">  
 
