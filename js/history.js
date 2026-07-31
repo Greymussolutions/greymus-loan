@@ -161,24 +161,32 @@ onSnapshot(
 
         if (historyBody) {
 
-            historyBody.innerHTML = `
+    historyBody.innerHTML = `
 
-                <tr>
+        <tr>
 
-                    <td
-                        colspan="7"
-                        style="text-align:center;"
-                    >
+            <td
+                colspan="7"
+                style="text-align:center;"
+            >
 
-                        Unable to load repayment history.
+                Unable to load repayment history.
 
-                    </td>
+                <br><br>
 
-                </tr>
+                ${error.code || "Unknown error"}
 
-            `;
+                <br>
 
-        }
+                ${error.message || "No error message"}
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
 
     }
 
