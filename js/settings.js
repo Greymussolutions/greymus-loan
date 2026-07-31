@@ -19,7 +19,13 @@ import {
     collection,
     query,
     orderBy,
-    onSnapshot
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    getDocs,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { db } from "./firebase.js";
@@ -854,16 +860,24 @@ window.logoutUser = logoutUser;// ==========================================
 // OPEN ADD USER MODAL
 // ==========================================
 
-addUserBtn?.addEventListener(
-    "click",
-    () => {
+addUserBtn?.addEventListener("click", () => {
 
-        addUserForm?.reset();
+    if (!isAdmin()) {
 
-        addUserModal?.classList.remove("hidden");
+        showToast(
+            "Only the Administrator can add users.",
+            "error"
+        );
+
+        return;
 
     }
-);
+
+    addUserForm?.reset();
+
+    addUserModal?.classList.remove("hidden");
+
+});
 
 
 // ==========================================
@@ -981,35 +995,29 @@ addUserForm?.addEventListener(
 
         try {
 
-            // ==================================
-            // USER CREATION
-            // ==================================
-            // Firebase Admin SDK or Cloud Function
-            // integration will be connected here.
+            await addDoc(
+    collection(db, "Users"),
+    {
+        name,
+        email,
+        role,
+        status: "Active",
+        createdAt: serverTimestamp(),
+        createdBy:
+            auth.currentUser?.email || "Unknown"
+    }
+);
 
-            console.log("Creating user...");
+showToast(
+    "User saved successfully.",
+    "success"
+);
 
-            console.table({
+addUserForm.reset();
 
-                name,
+closeAddUserModal();
 
-                email,
-
-                role
-
-            });
-
-            showToast(
-
-                "User created successfully.",
-
-                "success"
-
-            );
-
-            addUserForm.reset();
-
-            closeAddUserModal();
+loadUsers();
 
         }
         catch (error) {
@@ -1095,23 +1103,201 @@ function loadUsers() {
 
     if (!usersTableBody) return;
 
-    usersTableBody.innerHTML = `
+    const usersRef =
+        collection(db, "Users");
 
-        <tr>
+    onSnapshot(usersRef, (snapshot) => {
 
-            <td colspan="5"
-                style="text-align:center">
+        if (snapshot.empty) {
 
-                User management will be connected
-                to Firebase in the next version.
+            usersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center">
+                        No users found.
+                    </td>
+                </tr>
+            `;
 
-            </td>
+            return;
 
-        </tr>
+        }
 
-    `;
+        usersTableBody.innerHTML = "";
+
+        snapshot.forEach((userDoc) => {
+
+            const user = userDoc.data();
+
+            usersTableBody.innerHTML += `
+                <tr>
+                    <td>${user.name || "-"}</td>
+                    <td>${user.email || "-"}</td>
+                    <td>${user.role || "Officer"}</td>
+                    <td>${user.status || "Active"}</td>
+                    <td>
+                        <button
+                            class="edit-user-btn"
+                            data-id="${userDoc.id}">
+                            Edit
+                        </button>
+
+                        <button
+                            class="delete-user-btn"
+                            data-id="${userDoc.id}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+        });
+
+    });
 
 }
+
+// ==========================================
+// DELETE USER
+// ==========================================
+
+document.addEventListener("click", async (e) => {
+
+    if (!e.target.classList.contains("delete-user-btn")) {
+
+        return;
+
+    }
+
+    if (!isAdmin()) {
+
+        showToast(
+            "Only the Administrator can delete users.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    const userId =
+        e.target.dataset.id;
+
+    const confirmed = confirm(
+        "Delete this user?"
+    );
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+    try {
+
+        await deleteDoc(
+            doc(db, "Users", userId)
+        );
+
+        showToast(
+            "User deleted successfully.",
+            "success"
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Unable to delete user.",
+            "error"
+        );
+
+    }
+
+});
+
+// ==========================================
+// EDIT USER
+// ==========================================
+
+document.addEventListener("click", async (e) => {
+
+    if (!e.target.classList.contains("edit-user-btn")) {
+
+        return;
+
+    }
+
+    if (!isAdmin()) {
+
+        showToast(
+            "Only the Administrator can edit users.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    const userId = e.target.dataset.id;
+
+    const row = e.target.closest("tr");
+
+    const currentName = row.children[0].textContent.trim();
+    const currentRole = row.children[2].textContent.trim();
+    const currentStatus = row.children[3].textContent.trim();
+
+    const newName = prompt(
+        "User Name:",
+        currentName
+    );
+
+    if (newName === null) return;
+
+    const newRole = prompt(
+        "Role (Admin or Officer):",
+        currentRole
+    );
+
+    if (newRole === null) return;
+
+    const newStatus = prompt(
+        "Status (Active or Disabled):",
+        currentStatus
+    );
+
+    if (newStatus === null) return;
+
+    try {
+
+        await updateDoc(
+            doc(db, "Users", userId),
+            {
+                name: newName.trim(),
+                role: newRole.trim(),
+                status: newStatus.trim()
+            }
+        );
+
+        showToast(
+            "User updated successfully.",
+            "success"
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Unable to update user.",
+            "error"
+        );
+
+    }
+
+});
 
 
 // ==========================================
