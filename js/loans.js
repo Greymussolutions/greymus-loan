@@ -53,6 +53,12 @@ const loanSearch =
 const loanFilter =
     document.getElementById("loan-filter");
 
+const loanMonthFilter =
+    document.getElementById("loan-month-filter");
+
+const loanYearFilter =
+    document.getElementById("loan-year-filter");
+
 const loanId =
     document.getElementById("loan-id");
 
@@ -588,6 +594,8 @@ console.log("Loan loaded:", loan);
 
 console.log("Loans array:", loans);
 
+populateYearFilter();
+
             filterLoans();
 
         },
@@ -1105,6 +1113,42 @@ list.sort((a, b) => {
 // SEARCH & FILTER
 // ==========================================
 
+function populateYearFilter() {
+
+    if (!loanYearFilter) return;
+
+    const years = [
+        ...new Set(
+            loans.map(loan => {
+
+                const date =
+                    loan.approvalDate
+                        ? new Date(loan.approvalDate)
+                        : loan.createdAt?.toDate
+                            ? loan.createdAt.toDate()
+                            : new Date();
+
+                return date.getFullYear();
+
+            })
+        )
+    ].sort((a, b) => b - a);
+
+    loanYearFilter.innerHTML =
+        `<option value="ALL">All</option>`;
+
+    years.forEach(year => {
+
+        loanYearFilter.innerHTML += `
+            <option value="${year}">
+                ${year}
+            </option>
+        `;
+
+    });
+
+}
+
 function filterLoans(){
 
     let filtered = [...loans];
@@ -1116,6 +1160,12 @@ function filterLoans(){
 
     const status =
         loanFilter?.value || "ALL";
+
+const month =
+    loanMonthFilter?.value || "ALL";
+
+const year =
+    loanYearFilter?.value || "ALL";
 
     if(keyword){
 
@@ -1145,13 +1195,50 @@ function filterLoans(){
 
     }
 
+if (month !== "ALL" || year !== "ALL") {
+
+    filtered = filtered.filter(loan => {
+
+        const date =
+            loan.approvalDate
+                ? new Date(loan.approvalDate)
+                : loan.createdAt?.toDate
+                    ? loan.createdAt.toDate()
+                    : new Date();
+
+        const monthMatch =
+            month === "ALL" ||
+            date.getMonth() === Number(month);
+
+        const yearMatch =
+            year === "ALL" ||
+            date.getFullYear() === Number(year);
+
+        return monthMatch && yearMatch;
+
+    });
+
+}
+
     renderLoans(filtered);
 
 }
 
 loanSearch?.addEventListener("input", filterLoans);
 
-loanFilter?.addEventListener("change", filterLoans);// ==========================================
+loanFilter?.addEventListener("change", filterLoans);
+
+loanMonthFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+loanYearFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+// ==========================================
 // PART 6 OF 8
 // LOAN ACTIONS
 // ==========================================
