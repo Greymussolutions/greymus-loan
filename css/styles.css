@@ -403,87 +403,236 @@ textarea{
 =========================== */
 
 .center-page{
+    position:relative;
     min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    padding:20px;
-    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+    padding:24px;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at top left,#60a5fa 0%,transparent 35%),
+        radial-gradient(circle at bottom right,#1d4ed8 0%,transparent 40%),
+        linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb);
+}
+
+.center-page::before{
+    content:"";
+    position:absolute;
+    width:520px;
+    height:520px;
+    border-radius:50%;
+    background:rgba(255,255,255,.08);
+    top:-180px;
+    right:-180px;
+    filter:blur(10px);
+}
+
+.center-page::after{
+    content:"";
+    position:absolute;
+    width:420px;
+    height:420px;
+    border-radius:50%;
+    background:rgba(255,255,255,.06);
+    bottom:-160px;
+    left:-160px;
+    filter:blur(8px);
 }
 
 .login-card{
+    position:relative;
+    z-index:2;
     width:100%;
-    max-width:430px;
-    background:#fff;
-    border-radius:24px;
-    padding:40px 32px;
-    box-shadow:var(--shadow);
+    max-width:460px;
+    padding:46px 38px;
+    border-radius:30px;
+    background:rgba(255,255,255,.97);
+    backdrop-filter:blur(18px);
+    box-shadow:
+        0 25px 60px rgba(15,23,42,.25);
+animation:
+    loginEnter .6s ease-out,
+    loginFloat 6s ease-in-out .6s infinite;
+
+@keyframes loginEnter{
+
+    from{
+        opacity:0;
+        transform:translateY(40px) scale(.96);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+}
+
+
+@keyframes loginFloat{
+
+    0%{
+        transform:translateY(0);
+    }
+
+    50%{
+        transform:translateY(-8px);
+    }
+
+    100%{
+        transform:translateY(0);
+    }
+
+}
+
+.login-card::before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    border-radius:32px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.35),
+            rgba(255,255,255,0)
+        );
+    z-index:-1;
+    filter:blur(18px);
+    opacity:.8;
 }
 
 .logo-area{
     display:flex;
     flex-direction:column;
     align-items:center;
-    margin-bottom:30px;
+    margin-bottom:34px;
 }
 
 .login-logo{
-    width:180px;
+    width:170px;
     height:auto;
-    margin-bottom:20px;
+    object-fit:contain;
+    margin-bottom:18px;
+    animation:logoFloat 4s ease-in-out infinite;
 }
 
+@keyframes logoFloat{
+
+    0%{
+        transform:translateY(0);
+    }
+
+    50%{
+        transform:translateY(-6px);
+    }
+
+    100%{
+        transform:translateY(0);
+    }
+
+}
+
+
 .login-card h2{
-    font-size:36px;
-    font-weight:700;
-    color:#111827;
+    font-size:38px;
+    font-weight:800;
+    color:#0f172a;
     text-align:center;
     margin-bottom:8px;
+    letter-spacing:-1px;
 }
 
 .login-card p{
-    font-size:20px;
-    color:#4b5563;
+    font-size:17px;
+    color:#64748b;
     text-align:center;
-    margin-bottom:30px;
+    margin-bottom:34px;
 }
 
 .login-card label{
     display:block;
-    font-size:15px;
-    font-weight:700;
-    color:#374151;
     margin-bottom:8px;
+    font-size:14px;
+    font-weight:700;
+    color:#334155;
 }
 
 .login-card input{
-    height:58px;
-    margin-bottom:22px;
-    border-radius:14px;
+    width:100%;
+    height:60px;
+    margin-bottom:20px;
+    padding:0 18px;
+    border:1px solid #dbeafe;
+    border-radius:16px;
+    background:#f8fafc;
+    color:#111827;
     font-size:16px;
+    transition:
+    border-color .25s,
+    box-shadow .25s,
+    background .25s,
+    transform .25s;
+}
+
+.login-card input:hover{
+    background:#ffffff;
+    border-color:#93c5fd;
+    transform:translateY(-2px);
+}
+
+.login-card input:focus{
+    background:#fff;
+    border-color:#2563eb;
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+}
+
+.login-card input::placeholder{
+    color:#94a3b8;
 }
 
 #login-btn{
     width:100%;
-    height:58px;
-    border-radius:14px;
-    background:#2563eb;
+    height:60px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
     color:#fff;
-    font-size:20px;
+    font-size:18px;
     font-weight:700;
+    transition:.25s;
 }
-
-
 
 #login-btn:hover{
-
-
-    background:var(--primary-dark);
-
-
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:
+        0 18px 35px rgba(37,99,235,.35);
 }
 
+#login-btn:active{
+    transform:translateY(0) scale(.98);
+}
 
+@media (max-width:768px){
+
+    .login-card{
+        padding:36px 24px;
+        border-radius:24px;
+    }
+
+    .login-logo{
+        width:145px;
+    }
+
+    .login-card h2{
+        font-size:32px;
+    }
+
+    .login-card p{
+        font-size:16px;
+    }
+
+}
 
 /* ===========================
    DASHBOARD STRUCTURE
