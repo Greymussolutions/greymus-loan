@@ -669,22 +669,27 @@ if (dueDate !== today) {
 }
 
                 const due =
-                    Number(item.amount || 0);
+    Number(item.amount || 0);
 
-                const paid =
-                    Number(item.paidAmount || 0);
+const paid =
+    Number(item.paidAmount || 0);
 
-                const balance =
-                    Math.max(
-                        0,
-                        due - paid
-                    );
+// Skip installments that are already fully paid
+if (paid >= due) {
+    return;
+}
 
-                expectedToday += due;
+const balance =
+    Math.max(
+        0,
+        due - paid
+    );
 
-                collectedToday += paid;
+expectedToday += due;
 
-                clientsDueToday.push({
+collectedToday += paid;
+
+clientsDueToday.push({
 
                     client:
                         loan.clientName || "Unknown Client",
