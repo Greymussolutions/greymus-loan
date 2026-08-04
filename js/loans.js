@@ -1596,6 +1596,9 @@ if (!nextRepayment) {
 
         nextRepaymentDate: nextRepayment || "-",
 
+        remainingInstallments:
+            schedule.filter(item => !item.paid).length,
+
         updatedAt: serverTimestamp()
 
     }
