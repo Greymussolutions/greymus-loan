@@ -1555,13 +1555,21 @@ async function checkOverdueLoans(){
 
         }
 
-        let status = "Approved";
+        let status;
 
-        if(arrears){
+if (!nextRepayment) {
 
-            status = "Arrears";
+    status = "Completed";
 
-        }
+} else if (arrears) {
+
+    status = "Arrears";
+
+} else {
+
+    status = "Approved";
+
+}
 
         // Skip unnecessary Firestore updates
 
@@ -1578,19 +1586,21 @@ async function checkOverdueLoans(){
 
             await updateDoc(
 
-                doc(db,"loans",loan.id),
+    doc(db,"loans",loan.id),
 
-                {
+    {
 
-                    status: status,
+        status: status,
 
-                    nextRepaymentDate: nextRepayment,
+        completed: !nextRepayment,
 
-                    updatedAt: serverTimestamp()
+        nextRepaymentDate: nextRepayment || "-",
 
-                }
+        updatedAt: serverTimestamp()
 
-            );
+    }
+
+);
 
         }
 
@@ -2189,31 +2199,36 @@ repaymentForm?.addEventListener("submit", async (e) => {
 
     }
 
-    try {        await updateDoc(
-            doc(db, "loans", loan.id),
-            {
+    try { 
+      
+ await updateDoc(
+  
+  doc(db, "loans", loan.id),
+    {
 
-                balance,
+        balance,
 
-                amountPaid,
+        amountPaid,
 
-                totalIncome,
+        totalIncome,
 
-                repaymentSchedule: schedule,
+        repaymentSchedule: schedule,
 
-                nextRepaymentDate:
-                    next ? next.dueDate : "-",
+        nextRepaymentDate:
+            next ? next.dueDate : "-",
 
-                remainingInstallments:
-                    schedule.filter(x => !x.paid).length,
+        remainingInstallments:
+            schedule.filter(x => !x.paid).length,
 
-                status,
+        status,
 
-                updatedAt:
-                    serverTimestamp()
+        completed: balance <= 0,
 
-            }
-        );
+        updatedAt:
+            serverTimestamp()
+
+    }
+);
 
         await addDoc(
             collection(db, "repayments"),
