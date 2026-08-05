@@ -20,6 +20,7 @@ import {
 let loans = [];
 let clients = [];
 let repayments = [];
+let expenses = [];
 
 
 // ==========================================
@@ -74,6 +75,13 @@ const totalIncomeStat =
 
 const previousIncomeStat =
     document.getElementById("stat-previous-income");
+
+// ==========================================
+// ACCOUNT BALANCE
+// ==========================================
+
+const accountBalanceStat =
+    document.getElementById("stat-account-balance");
 
 // Status
 const pendingStat =
@@ -175,7 +183,21 @@ function monthKey(date){
             .padStart(2, "0")
     );
 
-}// ==========================================
+}
+
+// ==========================================
+// OPENING ACCOUNT BALANCE
+// ==========================================
+
+function getOpeningBalance(){
+
+    return Number(
+        localStorage.getItem("greymusOpeningBalance") || 0
+    );
+
+}
+
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 4.0
@@ -272,6 +294,36 @@ onSnapshot(
 
 );
 
+// ==========================================
+// EXPENSES
+// ==========================================
+
+onSnapshot(
+
+    collection(db, "expenses"),
+
+    snapshot => {
+
+        expenses = [];
+
+        snapshot.forEach(doc => {
+
+            expenses.push({
+
+                id: doc.id,
+
+                ...doc.data()
+
+            });
+
+        });
+
+        updateDashboard();
+
+    }
+
+);
+
 
 // ==========================================
 // UPDATE DASHBOARD
@@ -317,6 +369,8 @@ function updateDashboard(){
 
     let repeatLoans = 0;
 
+    let totalExpenses = 0;
+
     let expectedToday = 0;
 
     let collectedToday = 0;
@@ -356,6 +410,21 @@ function updateDashboard(){
 
         const principal =
             Number(loan.amount || 0);
+
+// ==========================================
+// CASH OUT — LOAN DISBURSEMENTS
+// ==========================================
+
+if (
+    status === "Approved" ||
+    status === "Arrears" ||
+    status === "Completed"
+) {
+
+    totalDisbursed += principal;
+
+}
+
 
         const processingFee =
             Number(loan.processingFee || 0);
@@ -733,7 +802,62 @@ clientsDueToday.push({
 
         }
 
-    });// ==========================================
+    });
+
+// ==========================================
+// TOTAL EXPENSES
+// ==========================================
+
+totalExpenses = expenses.reduce(
+
+    (total, expense) => {
+
+        return total +
+            Number(expense.amount || 0);
+
+    },
+
+    0
+
+);
+
+// ==========================================
+// TOTAL REPAYMENTS — CASH IN
+// ==========================================
+
+let totalCashIn = 0;
+
+loans.forEach(loan => {
+
+    if (!Array.isArray(loan.repaymentSchedule)) {
+        return;
+    }
+
+    loan.repaymentSchedule.forEach(item => {
+
+        totalCashIn += Number(
+            item.paidAmount || 0
+        );
+
+    });
+
+});
+
+// ==========================================
+// ACCOUNT BALANCE
+// ==========================================
+
+const openingBalance =
+    getOpeningBalance();
+
+const accountBalance =
+    openingBalance +
+    totalCashIn -
+    totalDisbursed -
+    totalExpenses;
+
+
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 4.0
@@ -881,6 +1005,17 @@ if(previousMonthsList){
             currency(previousIncome);
 
     }
+
+// ==========================================
+// UPDATE ACCOUNT BALANCE
+// ==========================================
+
+if(accountBalanceStat){
+
+    accountBalanceStat.textContent =
+        currency(accountBalance);
+
+}
 
     if(pendingStat){
 
@@ -1107,7 +1242,9 @@ if(previousMonthsList){
 
     }
 
-}// ==========================================
+}
+
+// ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
 // VERSION 4.0
