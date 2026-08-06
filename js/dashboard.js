@@ -713,7 +713,7 @@ clientsDueToday.push({
 
         }
 
- });
+});
 
 // ==========================================
 // COUNT REPEAT CLIENTS
