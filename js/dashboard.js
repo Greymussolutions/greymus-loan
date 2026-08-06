@@ -674,11 +674,6 @@ if (dueDate !== today) {
 const paid =
     Number(item.paidAmount || 0);
 
-// Skip installments that are already fully paid
-if (paid >= due) {
-    return;
-}
-
 const balance =
     Math.max(
         0,
