@@ -461,15 +461,45 @@ TOTAL LOANS SUMMARY
 
             </div>    
 
-            <div class="stat-card">    
+            <div class="stat-card clickable-card" id="previous-income-card">
 
-                <span>Previous Months Income</span>    
+    <span>Previous Months Income</span>
 
-                <h3 id="stat-previous-income">    
-                    KES 0    
-                </h3>    
+    <h3 id="stat-previous-income">
+        KES 0
+    </h3>
 
-            </div>    
+    <small>
+        Click to view monthly income
+    </small>
+
+</div>
+
+<div id="previous-months-income-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>Previous Months Income</h2>
+
+            <button
+                type="button"
+                id="close-previous-income">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="previous-months-income-list">
+
+            <p>No previous months income records.</p>
+
+        </div>
+
+    </div>
+
+</div>
 
             <div class="stat-card">    
 
