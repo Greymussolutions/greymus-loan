@@ -514,7 +514,7 @@ if (
 
             monthlyIncome += income;
 
-        }}else{
+        }else{
 
     previousIncome += income;
 
@@ -1567,21 +1567,6 @@ closePreviousPortfolio?.addEventListener(
 // ==========================================
 // PREVIOUS MONTHS INCOME CLICK
 // ==========================================
-
-const previousIncomeCard =
-    document.getElementById(
-        "previous-income-card"
-    );
-
-const previousIncomeModal =
-    document.getElementById(
-        "previous-months-income-modal"
-    );
-
-const closePreviousIncome =
-    document.getElementById(
-        "close-previous-income"
-    );
 
 previousIncomeCard?.addEventListener(
     "click",
