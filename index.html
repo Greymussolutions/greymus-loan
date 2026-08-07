@@ -6,7 +6,70 @@ content="width=device-width, initial-scale=1.0">
       href="https://fonts.gstatic.com"    
       crossorigin>    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"    
       rel="stylesheet">    <!-- Main Styles -->    <link rel="stylesheet"    
-      href="css/styles.css">    <!-- JavaScript Modules -->    <script type="module" src="js/firebase.js"></script>  <script type="module" src="js/utils.js"></script>  <script type="module" src="js/ui.js"></script>  <script type="module" src="js/auth.js"></script>  <script type="module" src="js/dashboard.js"></script>  <script type="module" src="js/clients.js"></script>  <script type="module" src="js/loans.js"></script>  <script type="module" src="js/history.js"></script>  <script type="module" src="js/settings.js"></script>  <script type="module" src="js/app.js"></script>  </head>  <body>  <!-- APP STARTUP LOGO SCREEN -->  <div id="startup-logo">  <img src="IMG-20260707-WA0009.jpg"    
+      href="css/styles.css">    <!-- JavaScript Modules -->    <script type="module" src="js/firebase.js"></script>  <script type="module" src="js/utils.js"></script>  <script type="module" src="js/ui.js"></script>  <script type="module" src="js/auth.js"></script>  <script type="module" src="js/dashboard.js"></script>  <script type="module" src="js/clients.js"></script>  <script type="module" src="js/loans.js"></script>  <script type="module" src="js/history.js"></script>  <script type="module" src="js/settings.js"></script>  <script type="module" src="js/app.js"></script>  
+<style id="greymus-page-navigation">
+/* Greymus full-page navigation */
+.page-view {
+    display: none;
+    min-height: 100%;
+    animation: greymusPageIn .16s ease;
+}
+.page-view.active {
+    display: block;
+}
+@keyframes greymusPageIn {
+    from { opacity: .96; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Detail/form screens opened from cards/buttons */
+.greymus-full-page {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    overflow-y: auto;
+    background: var(--bg, #f7f8fa);
+    padding: 18px;
+}
+.greymus-full-page.hidden {
+    display: none !important;
+}
+.greymus-page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.greymus-back-btn {
+    border: 0;
+    border-radius: 12px;
+    min-width: 44px;
+    height: 44px;
+    cursor: pointer;
+    font-size: 20px;
+    background: var(--card, #fff);
+    color: var(--text, #111);
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+.greymus-page-header h2 {
+    margin: 0;
+}
+@media (max-width: 768px) {
+    .mobile-nav {
+        transition: transform .22s ease, opacity .22s ease;
+    }
+    .mobile-nav.greymus-nav-hidden {
+        transform: translateY(110%);
+        opacity: 0;
+        pointer-events: none;
+    }
+    .main-content {
+        padding-bottom: 92px;
+    }
+}
+</style>
+
+</head>  <body>  <!-- APP STARTUP LOGO SCREEN -->  <div id="startup-logo">  <img src="IMG-20260707-WA0009.jpg"    
      alt="Greymus Logo">  </div>  <!-- =========================    
 GLOBAL LOADER    
 ========================= -->  <div id="loading-overlay" class="hidden">  <div class="spinner"></div>    <p>Loading...</p>  </div>  <!-- Toast Notifications -->  <div id="toast"></div>  <!-- =========================    
@@ -392,17 +455,13 @@ TOTAL LOANS SUMMARY
 
             </div>    
 
-            <div class="stat-card clickable-card" id="previous-portfolio-card">  
-
-<span>Previous Months Portfolio</span>  
+              
 
 <h3 id="stat-previous-portfolio">  
     KES 0  
 </h3>  
 
-<small>  
-    Click to view monthly portfolio  
-</small>
+<!-- Removed hint. Card remains clickable. -->
 
 </div>  <div id="previous-months-portfolio-modal" class="modal hidden">  <div class="modal-content">  
 
@@ -461,17 +520,13 @@ TOTAL LOANS SUMMARY
 
             </div>    
 
-            <div class="stat-card clickable-card" id="previous-income-card">
-
-    <span>Previous Months Income</span>
+            
 
     <h3 id="stat-previous-income">
         KES 0
     </h3>
 
-    <small>
-        Click to view monthly income
-    </small>
+    <!-- Removed hint. Card remains clickable. -->
 
 </div>
 
@@ -2087,4 +2142,112 @@ ACTIVITY LOG MODAL
 
 </div>
 
-</div>  </div>  </body>  </html>
+</div>  </div>  
+<script id="greymus-page-navigation-script">
+(() => {
+    const MAIN_TABS = ["dashboard", "clients", "loans", "history", "settings"];
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function tabElement(name) {
+        return document.getElementById(name + "-tab");
+    }
+
+    function setMainTab(name, push = false) {
+        if (!MAIN_TABS.includes(name)) name = "dashboard";
+
+        document.querySelectorAll(".tab-content").forEach(el => {
+            el.classList.add("hidden");
+            el.classList.remove("page-view", "active");
+        });
+
+        const target = tabElement(name);
+        if (target) {
+            target.classList.remove("hidden");
+            target.classList.add("page-view", "active");
+        }
+
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.tab === name);
+        });
+
+        if (push && location.hash !== "#" + name) {
+            history.pushState({ greymusTab: name }, "", "#" + name);
+        }
+
+        window.scrollTo({ top: 0, behavior: "auto" });
+    }
+
+    function currentTab() {
+        const hash = location.hash.replace("#", "");
+        return MAIN_TABS.includes(hash) ? hash : "dashboard";
+    }
+
+    function handleNavigation() {
+        setMainTab(currentTab(), false);
+    }
+
+    // Keep the existing tab buttons functional while making them history-aware.
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tab = btn.dataset.tab;
+            if (MAIN_TABS.includes(tab)) setMainTab(tab, true);
+        });
+    });
+
+    window.addEventListener("popstate", () => {
+        const openModal = document.querySelector(".modal:not(.hidden)");
+        if (openModal) {
+            openModal.classList.add("hidden");
+            return;
+        }
+        handleNavigation();
+    });
+
+    window.addEventListener("hashchange", handleNavigation);
+
+    // Android/mobile-friendly bottom navigation auto-hide.
+    function updateMobileNav() {
+        const nav = document.querySelector(".mobile-nav");
+        if (!nav || window.innerWidth > 768) return;
+
+        const y = window.scrollY;
+        const diff = y - lastScrollY;
+
+        if (Math.abs(diff) >= 6) {
+            if (diff > 0 && y > 70) {
+                nav.classList.add("greymus-nav-hidden");
+            } else if (diff < 0) {
+                nav.classList.remove("greymus-nav-hidden");
+            }
+            lastScrollY = y;
+        }
+
+        ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+        if (!ticking) {
+            window.requestAnimationFrame(updateMobileNav);
+            ticking = true;
+        }
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+        const nav = document.querySelector(".mobile-nav");
+        if (nav && window.innerWidth > 768) {
+            nav.classList.remove("greymus-nav-hidden");
+        }
+    });
+
+    // Prevent the first Back press from leaving the app when a non-dashboard
+    // main tab is the current screen.
+    if (!history.state || !history.state.greymusTab) {
+        history.replaceState({ greymusTab: currentTab() }, "", location.href);
+    }
+
+    handleNavigation();
+})();
+</script>
+
+</body>  </html>
