@@ -314,6 +314,8 @@ function updateDashboard(){
 
     let previousIncome = 0;
 
+    let previousMonthsIncome = {};
+
     let pending = 0;
 
     let approved = 0;
@@ -512,11 +514,29 @@ if (
 
             monthlyIncome += income;
 
-        }else{
+        }}else{
 
-            previousIncome += income;
+    previousIncome += income;
 
-        }
+    const monthName =
+        approvalDate.toLocaleString(
+            "en-US",
+            {
+                month: "long"
+            }
+        );
+
+    const year =
+        approvalDate.getFullYear();
+
+    const key =
+        `${monthName} ${year}`;
+
+    previousMonthsIncome[key] =
+        (previousMonthsIncome[key] || 0)
+        + income;
+
+}
 
         // ==================================
         // REPEAT CLIENTS
@@ -890,6 +910,49 @@ if(previousMonthsList){
             currency(previousIncome);
 
     }
+
+const previousIncomeList =
+    document.getElementById(
+        "previous-months-income-list"
+    );
+
+if(previousIncomeList){
+
+    previousIncomeList.innerHTML = "";
+
+    Object.entries(previousMonthsIncome)
+.sort((a, b) => {
+
+    return new Date(b[0]) - new Date(a[0]);
+
+})
+.forEach(([month, amount]) => {
+
+        previousIncomeList.innerHTML += `
+
+            <div class="today-card">
+
+                <h4>${month} Income</h4>
+
+                <p>
+                    ${currency(amount)}
+                </p>
+
+            </div>
+
+        `;
+
+    });
+
+    if(Object.keys(previousMonthsIncome).length === 0){
+
+        previousIncomeList.innerHTML = `
+            <p>No previous months income records.</p>
+        `;
+
+    }
+
+}
 
     if(pendingStat){
 
