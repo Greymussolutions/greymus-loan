@@ -1,28 +1,46 @@
+// =====================================================
+// GREYMUS LOAN FINANCIAL HUB
 // js/ui.js
+// VERSION 2.0
+//
+// UI SYSTEM
+// • Tab navigation
+// • Browser/Android back-button support
+// • Modal control
+// • Notifications
+// • Toast messages
+// • Loading overlay
+// • Confirmation modal
+// • Expandable cards
+// =====================================================
 
+
+// =====================================================
 // TAB NAVIGATION
+// =====================================================
 
 const tabButtons =
     document.querySelectorAll(".tab-btn");
-
-data-tab="settings"
 
 const tabContents =
     document.querySelectorAll(".tab-content");
 
 
-function showTab(tabName) {
+// Track the currently displayed tab
+let currentTab = null;
 
 
-    tabContents.forEach(
-        tab => {
+// Prevent duplicate history entries
+let isNavigatingFromHistory = false;
 
-            tab.classList.add(
-                "hidden"
-            );
 
-        }
-    );
+// =====================================================
+// SHOW TAB
+// =====================================================
+
+function showTab(tabName, addToHistory = true) {
+
+    if (!tabName) return;
 
 
     const activeTab =
@@ -31,159 +49,423 @@ function showTab(tabName) {
         );
 
 
-    if (activeTab) {
+    // If the requested tab does not exist,
+    // do nothing.
+    if (!activeTab) return;
 
-        activeTab.classList.remove(
-            "hidden"
+
+    // Hide every tab
+    tabContents.forEach(tab => {
+
+        tab.classList.add("hidden");
+
+    });
+
+
+    // Show requested tab
+    activeTab.classList.remove("hidden");
+
+
+    // Update navigation buttons
+    tabButtons.forEach(button => {
+
+        if (
+            button.dataset.tab === tabName
+        ) {
+
+            button.classList.add("active");
+
+            button.setAttribute(
+                "aria-current",
+                "page"
+            );
+
+        } else {
+
+            button.classList.remove("active");
+
+            button.removeAttribute(
+                "aria-current"
+            );
+
+        }
+
+    });
+
+
+    // Remember current tab
+    const previousTab = currentTab;
+
+    currentTab = tabName;
+
+
+    // Browser / Android back-button support
+    //
+    // Only create a new history entry when
+    // the user actually navigates to another tab.
+    if (
+        addToHistory &&
+        !isNavigatingFromHistory &&
+        previousTab !== tabName
+    ) {
+
+        history.pushState(
+            {
+                tab: tabName
+            },
+            "",
+            `#${tabName}`
         );
 
     }
 
 
-
-    tabButtons.forEach(
-        button => {
-
-
-            if (
-                button.dataset.tab === tabName
-            ) {
-
-                button.classList.add(
-                    "active"
-                );
-
-
-            } else {
-
-
-                button.classList.remove(
-                    "active"
-                );
-
-
-            }
-
-
-        }
-    );
-
+    // Return to top when opening a new page/tab
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
 }
 
 
+// =====================================================
 // TAB CLICK EVENTS
+// =====================================================
 
-tabButtons.forEach(
-    button => {
+tabButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        event => {
+
+            event.preventDefault();
+
+            const tabName =
+                button.dataset.tab;
+
+            if (!tabName) return;
+
+            showTab(tabName);
+
+        }
+    );
+
+});
 
 
-        button.addEventListener(
-            "click",
-            () => {
+// =====================================================
+// BROWSER / ANDROID BACK BUTTON
+// =====================================================
+
+window.addEventListener(
+    "popstate",
+    event => {
+
+        isNavigatingFromHistory = true;
 
 
-                showTab(
-                    button.dataset.tab
-                );
+        const historyTab =
+            event.state?.tab;
 
 
-            }
-        );
+        // If history contains a tab,
+        // return to that tab.
+        if (historyTab) {
 
+            showTab(
+                historyTab,
+                false
+            );
+
+        } else {
+
+            // If there is no tab in history,
+            // return to dashboard.
+            showTab(
+                "dashboard",
+                false
+            );
+
+        }
+
+
+        isNavigatingFromHistory = false;
 
     }
 );
 
 
+// =====================================================
+// INITIAL TAB
+// =====================================================
+
+function initializeTabs() {
+
+    const hash =
+        window.location.hash
+        .replace("#", "")
+        .trim();
+
+
+    // Open tab from URL hash if valid
+    if (
+        hash &&
+        document.getElementById(
+            `${hash}-tab`
+        )
+    ) {
+
+        showTab(
+            hash,
+            false
+        );
+
+        return;
+
+    }
+
+
+    // Otherwise dashboard
+    if (
+        document.getElementById(
+            "dashboard-tab"
+        )
+    ) {
+
+        showTab(
+            "dashboard",
+            false
+        );
+
+    }
+
+}
+
+
+// =====================================================
 // MODAL CONTROL
+// =====================================================
 
 const modals =
     document.querySelectorAll(".modal");
 
 
-function closeAllModals(){
+// =====================================================
+// CLOSE ALL MODALS
+// =====================================================
+
+function closeAllModals() {
+
+    modals.forEach(modal => {
+
+        modal.classList.add(
+            "hidden"
+        );
+
+    });
 
 
-    modals.forEach(
-        modal => {
+    // Clear confirmation callback
+    confirmCallback = null;
 
 
-            modal.classList.add(
-                "hidden"
-            );
-
-
-        }
-    );
-
+    // Restore body scrolling
+    document.body.style.overflow = "";
 
 }
 
 
+// =====================================================
+// CLOSE INDIVIDUAL MODAL
+// =====================================================
+
+function closeModal(modal) {
+
+    if (!modal) return;
+
+
+    modal.classList.add(
+        "hidden"
+    );
+
+
+    // If no other modal is visible,
+    // restore body scrolling.
+    const visibleModal =
+        document.querySelector(
+            ".modal:not(.hidden)"
+        );
+
+
+    if (!visibleModal) {
+
+        document.body.style.overflow = "";
+
+    }
+
+}
+
+
+// =====================================================
+// OPEN MODAL
+// =====================================================
+
+function openModal(modal) {
+
+    if (!modal) return;
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+
+    // Prevent background scrolling
+    document.body.style.overflow = "hidden";
+
+}
+
+
+// =====================================================
 // CLOSE BUTTONS
+// =====================================================
 
 document
-.querySelectorAll(".modal-close-btn")
-.forEach(
-    button => {
-
+    .querySelectorAll(".modal-close-btn")
+    .forEach(button => {
 
         button.addEventListener(
             "click",
-            closeAllModals
-        );
+            () => {
+
+                const modal =
+                    button.closest(".modal");
 
 
-    }
-);
+                if (modal) {
 
+                    closeModal(modal);
 
-document
-.querySelectorAll(".secondary-btn")
-.forEach(
-    button => {
-
-
-        button.addEventListener(
-            "click",
-            closeAllModals
-        );
-
-
-    }
-);
-
-
-// CLICK OUTSIDE MODAL CLOSE
-
-modals.forEach(
-    modal => {
-
-
-        modal.addEventListener(
-            "click",
-            (event)=>{
-
-
-                if(
-                    event.target === modal
-                ){
+                } else {
 
                     closeAllModals();
 
                 }
 
+            }
+        );
+
+    });
+
+
+// =====================================================
+// SECONDARY BUTTONS
+// =====================================================
+//
+// Only close a modal when the secondary button
+// is actually inside a modal.
+//
+// This prevents unrelated secondary buttons
+// elsewhere in the application from accidentally
+// closing every modal.
+
+document
+    .querySelectorAll(
+        ".modal .secondary-btn"
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const modal =
+                    button.closest(".modal");
+
+
+                if (modal) {
+
+                    closeModal(modal);
+
+                }
 
             }
         );
 
+    });
+
+
+// =====================================================
+// CLICK OUTSIDE MODAL TO CLOSE
+// =====================================================
+
+modals.forEach(modal => {
+
+    modal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target === modal
+            ) {
+
+                closeModal(modal);
+
+            }
+
+        }
+    );
+
+});
+
+
+// =====================================================
+// ESCAPE KEY
+// =====================================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key !== "Escape"
+        ) {
+
+            return;
+
+        }
+
+
+        const visibleModal =
+            document.querySelector(
+                ".modal:not(.hidden)"
+            );
+
+
+        if (visibleModal) {
+
+            closeModal(
+                visibleModal
+            );
+
+            return;
+
+        }
+
+
+        // Close notification panel
+        notificationPanel?.classList.add(
+            "hidden"
+        );
 
     }
 );
 
 
+// =====================================================
 // NOTIFICATION PANEL
+// =====================================================
 
 const notificationBtn =
     document.getElementById(
@@ -203,15 +485,16 @@ const closeNotifications =
     );
 
 
-
-if(notificationBtn){
+// Open / close notification panel
+if (notificationBtn) {
 
     notificationBtn.addEventListener(
         "click",
-        ()=>{
+        event => {
 
-            notificationPanel
-            ?.classList.toggle(
+            event.stopPropagation();
+
+            notificationPanel?.classList.toggle(
                 "hidden"
             );
 
@@ -221,15 +504,14 @@ if(notificationBtn){
 }
 
 
-
-if(closeNotifications){
+// Close notifications button
+if (closeNotifications) {
 
     closeNotifications.addEventListener(
         "click",
-        ()=>{
+        () => {
 
-            notificationPanel
-            ?.classList.add(
+            notificationPanel?.classList.add(
                 "hidden"
             );
 
@@ -239,10 +521,56 @@ if(closeNotifications){
 }
 
 
+// Click outside notification panel
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !notificationPanel ||
+            notificationPanel.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            notificationPanel.contains(
+                event.target
+            ) ||
+            notificationBtn?.contains(
+                event.target
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        notificationPanel.classList.add(
+            "hidden"
+        );
+
+    }
+);
+
+
+// =====================================================
 // TOAST SYSTEM
+// =====================================================
 
-function showToast(message, type = "success") {
+let toastTimer = null;
 
+
+function showToast(
+    message,
+    type = "success"
+) {
 
     const toast =
         document.getElementById(
@@ -250,61 +578,65 @@ function showToast(message, type = "success") {
         );
 
 
-    if(!toast) return;
+    if (!toast) return;
+
+
+    // Clear previous timer
+    if (toastTimer) {
+
+        clearTimeout(
+            toastTimer
+        );
+
+    }
 
 
     toast.textContent =
         message;
 
 
+    // Reset classes
     toast.className =
-        `toast ${type}`;
+        "toast";
 
 
+    // Add message type
+    if (type) {
+
+        toast.classList.add(
+            type
+        );
+
+    }
+
+
+    // Show
     toast.classList.add(
         "show"
     );
 
 
-    setTimeout(
-        ()=>{
+    // Hide after 3 seconds
+    toastTimer =
+        setTimeout(
+            () => {
 
+                toast.classList.remove(
+                    "show"
+                );
 
-            toast.classList.remove(
-                "show"
-            );
-
-
-        },
-        3000
-    );
-
+            },
+            3000
+        );
 
 }
 
 
+// =====================================================
 // LOADING OVERLAY
+// =====================================================
 
-function showLoading(){
-
-
-    const loader =
-        document.getElementById(
-            "loading-overlay"
-        );
-
-
-    loader?.classList.remove(
-        "hidden"
-    );
-
-
-}
-
-
-
-function hideLoading(){
-
+function showLoading() {
 
     const loader =
         document.getElementById(
@@ -312,15 +644,45 @@ function hideLoading(){
         );
 
 
-    loader?.classList.add(
+    if (!loader) return;
+
+
+    loader.classList.remove(
         "hidden"
     );
 
 
+    document.body.style.overflow =
+        "hidden";
+
 }
 
 
+function hideLoading() {
+
+    const loader =
+        document.getElementById(
+            "loading-overlay"
+        );
+
+
+    if (!loader) return;
+
+
+    loader.classList.add(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
+}
+
+
+// =====================================================
 // CONFIRMATION MODAL
+// =====================================================
 
 let confirmCallback = null;
 
@@ -328,8 +690,7 @@ let confirmCallback = null;
 function confirmAction(
     message,
     callback
-){
-
+) {
 
     const modal =
         document.getElementById(
@@ -343,25 +704,47 @@ function confirmAction(
         );
 
 
-    if(!modal) return;
+    if (!modal) {
+
+        // Fallback if confirmation modal
+        // does not exist.
+        if (
+            typeof callback === "function"
+        ) {
+
+            callback();
+
+        }
+
+        return;
+
+    }
 
 
-    text.textContent =
-        message;
+    if (text) {
+
+        text.textContent =
+            message;
+
+    }
 
 
     confirmCallback =
-        callback;
+        typeof callback === "function"
+            ? callback
+            : null;
 
 
-    modal.classList.remove(
-        "hidden"
+    openModal(
+        modal
     );
-
 
 }
 
 
+// =====================================================
+// CONFIRM YES
+// =====================================================
 
 const confirmYes =
     document.getElementById(
@@ -369,74 +752,217 @@ const confirmYes =
     );
 
 
+if (confirmYes) {
+
+    confirmYes.addEventListener(
+        "click",
+        () => {
+
+            const callback =
+                confirmCallback;
+
+
+            confirmCallback =
+                null;
+
+
+            closeAllModals();
+
+
+            if (
+                typeof callback === "function"
+            ) {
+
+                callback();
+
+            }
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// CONFIRM NO
+// =====================================================
+
 const confirmNo =
     document.getElementById(
         "confirm-no"
     );
 
 
+if (confirmNo) {
 
-if(confirmYes){
+    confirmNo.addEventListener(
+        "click",
+        () => {
 
+            confirmCallback =
+                null;
 
-confirmYes.addEventListener(
-"click",
-()=>{
+            closeAllModals();
 
-
-if(confirmCallback){
-
-    confirmCallback();
-
-}
-
-
-confirmCallback=null;
-
-closeAllModals();
-
-
-});
+        }
+    );
 
 }
 
 
+// =====================================================
+// EXPANDABLE TOTAL LOANS CARD
+// =====================================================
 
-if(confirmNo){
+document
+    .querySelectorAll(
+        ".expand-btn"
+    )
+    .forEach(button => {
 
+        button.addEventListener(
+            "click",
+            event => {
 
-confirmNo.addEventListener(
-"click",
-()=>{
-
-
-confirmCallback=null;
-
-closeAllModals();
-
-
-});
-
-
-}
+                event.stopPropagation();
 
 
-// DEFAULT TAB
+                const contentId =
+                    button.dataset.target;
 
-if (document.getElementById("dashboard-tab")) {
 
-    showTab("dashboard");
+                // Default target used by the
+                // existing Total Loans card.
+                const targetId =
+                    contentId ||
+                    "loan-summary-content";
 
-}
 
+                const content =
+                    document.getElementById(
+                        targetId
+                    );
+
+
+                if (!content) return;
+
+
+                const isHidden =
+                    content.classList.contains(
+                        "hidden"
+                    );
+
+
+                if (isHidden) {
+
+                    content.classList.remove(
+                        "hidden"
+                    );
+
+                    button.classList.add(
+                        "open"
+                    );
+
+                    button.setAttribute(
+                        "aria-expanded",
+                        "true"
+                    );
+
+                } else {
+
+                    content.classList.add(
+                        "hidden"
+                    );
+
+                    button.classList.remove(
+                        "open"
+                    );
+
+                    button.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+
+// =====================================================
+// EXPANDABLE HEADER SUPPORT
+// =====================================================
+
+document
+    .querySelectorAll(
+        ".expandable-header"
+    )
+    .forEach(header => {
+
+        header.addEventListener(
+            "click",
+            event => {
+
+                // Do not trigger twice when
+                // the actual button was clicked.
+                if (
+                    event.target.closest(
+                        ".expand-btn"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const button =
+                    header.querySelector(
+                        ".expand-btn"
+                    );
+
+
+                if (button) {
+
+                    button.click();
+
+                }
+
+            }
+        );
+
+    });
+
+
+// =====================================================
+// INITIALIZE UI
+// =====================================================
+
+initializeTabs();
+
+
+// =====================================================
 // EXPORTS
+// =====================================================
 
 export {
 
     showTab,
+
     showToast,
+
     showLoading,
+
     hideLoading,
-    confirmAction
+
+    confirmAction,
+
+    closeAllModals,
+
+    closeModal,
+
+    openModal
 
 };
