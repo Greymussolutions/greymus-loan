@@ -1,7 +1,7 @@
 // ======================================================
 // GREYMUS LOAN FINANCIAL HUB
 // app.js
-// VERSION 2.0
+// VERSION 3.0
 //
 // APP CONTROLLER
 // • Firebase authentication
@@ -9,12 +9,13 @@
 // • Startup logo
 // • Settings menu
 // • Mobile navigation visibility
+// • Mobile navigation auto-hide on scroll
 // • Logout
 // • Global modal closing
-// • Android back-button integration
+// • Android back-button support
 //
 // NOTE:
-// Tab navigation and browser history are handled by ui.js.
+// Tab navigation and tab history are handled by ui.js.
 // ======================================================
 
 import { auth } from "./firebase.js";
@@ -34,18 +35,15 @@ const loginSection =
         "login-section"
     );
 
-
 const dashboardSection =
     document.getElementById(
         "dashboard-section"
     );
 
-
 const loggedUser =
     document.getElementById(
         "logged-user"
     );
-
 
 const startupLogo =
     document.getElementById(
@@ -62,18 +60,15 @@ const settingsBtn =
         "settings-btn"
     );
 
-
 const settingsBtnMobile =
     document.getElementById(
         "settings-btn-mobile"
     );
 
-
 const settingsMenu =
     document.getElementById(
         "settings-menu"
     );
-
 
 const closeSettings =
     document.getElementById(
@@ -90,18 +85,15 @@ const mobileLogoutBtn =
         "mobile-logout-btn"
     );
 
-
 const mobileNav =
     document.querySelector(
         ".mobile-nav"
     );
 
-
 const fab =
     document.getElementById(
         "fab-new-loan"
     );
-
 
 const footer =
     document.querySelector(
@@ -119,7 +111,6 @@ function setHidden(
 ) {
 
     if (!element) return;
-
 
     if (hidden) {
 
@@ -153,7 +144,7 @@ function showAuthenticatedApp(
     );
 
 
-    // Show dashboard/application
+    // Show application
     setHidden(
         dashboardSection,
         false
@@ -167,7 +158,7 @@ function showAuthenticatedApp(
     );
 
 
-    // Show floating action button
+    // Show FAB
     setHidden(
         fab,
         false
@@ -190,8 +181,7 @@ function showAuthenticatedApp(
     }
 
 
-    // Close settings if it happened
-    // to be open before authentication
+    // Close settings
     closeSettingsMenu();
 
 }
@@ -252,7 +242,7 @@ onAuthStateChanged(
     auth,
     user => {
 
-        // Startup logo has completed
+        // Startup logo completed
         if (startupLogo) {
 
             startupLogo.style.display =
@@ -268,11 +258,8 @@ onAuthStateChanged(
             );
 
 
-            // Return application to dashboard
-            // after authentication.
-            //
-            // replaceState prevents the login
-            // page from remaining in history.
+            // Start authenticated user
+            // at Dashboard.
             history.replaceState(
                 {
                     tab: "dashboard"
@@ -280,22 +267,6 @@ onAuthStateChanged(
                 "",
                 "#dashboard"
             );
-
-
-            // ui.js owns showTab().
-            //
-            // Use the global function if available.
-            if (
-                typeof window.showTab ===
-                "function"
-            ) {
-
-                window.showTab(
-                    "dashboard",
-                    false
-                );
-
-            }
 
         } else {
 
@@ -379,7 +350,7 @@ if (settingsBtnMobile) {
 }
 
 
-// Close settings button
+// Close settings
 if (closeSettings) {
 
     closeSettings.addEventListener(
@@ -396,7 +367,7 @@ if (closeSettings) {
 }
 
 
-// Click outside settings menu
+// Click outside settings
 if (settingsMenu) {
 
     settingsMenu.addEventListener(
@@ -439,9 +410,6 @@ async function logoutUser() {
             error
         );
 
-
-        // Keep a simple fallback message
-        // if the logout fails.
         alert(
             error?.message ||
             "Unable to log out. Please try again."
@@ -467,10 +435,8 @@ if (mobileLogoutBtn) {
 // GLOBAL MODAL CLOSING
 // ======================================================
 //
-// Some modules may create modals after app.js
-// has loaded. Event delegation therefore makes
-// closing more reliable than binding only to
-// existing buttons.
+// Event delegation allows this to work even when
+// modules create modals dynamically.
 
 document.addEventListener(
     "click",
@@ -566,7 +532,7 @@ document.addEventListener(
         closeSettingsMenu();
 
 
-        // Close visible modal
+        // Close modal
         const openModal =
             document.querySelector(
                 ".modal:not(.hidden)"
@@ -579,14 +545,13 @@ document.addEventListener(
                 "hidden"
             );
 
-
             document.body.style.overflow =
                 "";
 
         }
 
 
-        // Close notification panel
+        // Close notifications
         const notificationPanel =
             document.getElementById(
                 "notification-panel"
@@ -602,24 +567,19 @@ document.addEventListener(
 
 
 // ======================================================
-// ANDROID BACK BUTTON
+// ANDROID BACK BUTTON SUPPORT
 // ======================================================
 //
-// IMPORTANT:
-// ui.js is responsible for tab history.
+// ui.js controls tab history.
 //
-// app.js only handles UI overlays here.
-// If a modal/settings panel is open, Android Back
-// closes that overlay first.
-//
-// If nothing is open, ui.js receives the normal
-// browser popstate event and handles tab navigation.
+// app.js only closes overlays that are open.
+// ======================================================
 
 window.addEventListener(
     "popstate",
     () => {
 
-        // Settings menu
+        // Close settings if open
         if (
             settingsMenu &&
             !settingsMenu.classList.contains(
@@ -634,7 +594,7 @@ window.addEventListener(
         }
 
 
-        // Modal
+        // Close modal if open
         const openModal =
             document.querySelector(
                 ".modal:not(.hidden)"
@@ -647,7 +607,6 @@ window.addEventListener(
                 "hidden"
             );
 
-
             document.body.style.overflow =
                 "";
 
@@ -656,7 +615,7 @@ window.addEventListener(
         }
 
 
-        // Notification panel
+        // Close notification panel
         const notificationPanel =
             document.getElementById(
                 "notification-panel"
@@ -678,11 +637,141 @@ window.addEventListener(
 
         }
 
-        // Tab navigation is intentionally
-        // NOT handled here.
-        //
-        // ui.js handles the browser history
-        // and tab switching.
+    }
+);
+
+
+// ======================================================
+// MOBILE BOTTOM NAVIGATION
+// AUTO-HIDE WHEN SCROLLING DOWN
+// SHOW WHEN SCROLLING UP
+// ======================================================
+
+let lastScrollPosition = 0;
+
+let scrollTicking = false;
+
+
+function handleMobileNavigationScroll() {
+
+    if (!mobileNav) return;
+
+
+    // Only apply on mobile-sized screens
+    if (
+        window.innerWidth > 768
+    ) {
+
+        mobileNav.classList.remove(
+            "nav-hidden"
+        );
+
+        return;
+
+    }
+
+
+    const currentScroll =
+        window.scrollY ||
+        window.pageYOffset ||
+        0;
+
+
+    // Always show navigation near the top
+    if (currentScroll <= 20) {
+
+        mobileNav.classList.remove(
+            "nav-hidden"
+        );
+
+        lastScrollPosition =
+            currentScroll;
+
+        return;
+
+    }
+
+
+    // Scrolling down
+    if (
+        currentScroll >
+        lastScrollPosition
+    ) {
+
+        mobileNav.classList.add(
+            "nav-hidden"
+        );
+
+    }
+
+    // Scrolling up
+    else if (
+        currentScroll <
+        lastScrollPosition
+    ) {
+
+        mobileNav.classList.remove(
+            "nav-hidden"
+        );
+
+    }
+
+
+    lastScrollPosition =
+        currentScroll;
+
+}
+
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        if (!scrollTicking) {
+
+            window.requestAnimationFrame(
+                () => {
+
+                    handleMobileNavigationScroll();
+
+                    scrollTicking =
+                        false;
+
+                }
+            );
+
+            scrollTicking =
+                true;
+
+        }
+
+    },
+    {
+        passive: true
+    }
+);
+
+
+// ======================================================
+// RESET MOBILE NAVIGATION ON RESIZE
+// ======================================================
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (!mobileNav) return;
+
+
+        if (
+            window.innerWidth > 768
+        ) {
+
+            mobileNav.classList.remove(
+                "nav-hidden"
+            );
+
+        }
 
     }
 );
@@ -691,9 +780,6 @@ window.addEventListener(
 // ======================================================
 // PAGE VISIBILITY SAFETY
 // ======================================================
-//
-// Prevent the application from becoming scroll-locked
-// if a modal/settings panel was closed by another module.
 
 document.addEventListener(
     "visibilitychange",
