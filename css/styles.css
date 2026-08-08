@@ -1,4681 +1,195 @@
 /* =====================================================
    GREYMUS LOAN FINANCIAL HUB
    styles.css
-   Version 1.4 Clean Stable
+   VERSION 1.5
+   CLEAN STABLE MASTER FILE
 
-   PART 1
-   Reset • Variables • Global System
+   Complete CSS
+   Reset • Layout • Dashboard • Forms • Modals
+   Responsive • Mobile Navigation • Dark Mode
+   Startup Screen • Expandable Cards • Mobile UX
 ===================================================== */
 
 
-/* ===========================
+/* =====================================================
    RESET
-=========================== */
+===================================================== */
 
 *,
 *::before,
-*::after{
-
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-
-html{
-
-    scroll-behavior:smooth;
-    width:100%;
-    overflow-x:hidden;
-
+html {
+    scroll-behavior: smooth;
+    width: 100%;
+    overflow-x: hidden;
 }
 
-
-body{
-
-    font-family:"Inter",Arial,sans-serif;
-
-    background:#f5f7fb;
-
-    color:#1f2937;
-
-    min-height:100vh;
-
-    line-height:1.5;
-
-    overflow-x:hidden;
-
+body {
+    font-family: "Inter", Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    overflow-x: hidden;
 }
 
-
-/* ===========================
-   ROOT VARIABLES
-=========================== */
-
-:root{
-
-
-    /* Brand */
-
-    --primary:#2563eb;
-
-    --primary-dark:#1d4ed8;
-
-
-    /* Status */
-
-    --success:#16a34a;
-
-    --warning:#f59e0b;
-
-    --danger:#dc2626;
-
-
-    /* Colors */
-
-    --white:#ffffff;
-
-    --black:#111827;
-
-
-    /* Background */
-
-    --background:#f5f7fb;
-
-
-    /* Text */
-
-    --text:#1f2937;
-
-    --text-light:#6b7280;
-
-
-    /* Border */
-
-    --border:#e5e7eb;
-
-
-    /* Radius */
-
-    --radius-sm:10px;
-
-    --radius-md:14px;
-
-    --radius-lg:20px;
-
-
-    /* Shadow */
-
-    --shadow:
-
-    0 10px 30px rgba(15,23,42,.08);
-
-
-    /* Transition */
-
-    --transition:.25s ease;
-
-
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
 }
 
-
-/* ===========================
-   GLOBAL ELEMENTS
-=========================== */
-
-
-img{
-
-    max-width:100%;
-
-    height:auto;
-
-    display:block;
-
+a {
+    color: inherit;
+    text-decoration: none;
 }
 
-
-a{
-
-    color:inherit;
-
-    text-decoration:none;
-
+button {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: var(--transition);
 }
-
-
-button{
-
-    border:none;
-
-    outline:none;
-
-    cursor:pointer;
-
-    font-family:inherit;
-
-    transition:var(--transition);
-
-}
-
 
 input,
 select,
-textarea{
-
-    width:100%;
-
-    font-family:inherit;
-
-    font-size:15px;
-
-    padding:12px 14px;
-
-    border-radius:var(--radius-sm);
-
-    border:1px solid var(--border);
-
-    background:var(--white);
-
-    color:var(--text);
-
-    outline:none;
-
-    transition:var(--transition);
-
+textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+    transition: var(--transition);
 }
-
-
 
 input:focus,
 select:focus,
-textarea:focus{
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+textarea {
+    resize: vertical;
+}
 
 
-    border-color:var(--primary);
+/* =====================================================
+   ROOT VARIABLES
+===================================================== */
 
+:root {
 
-    box-shadow:
+    /* Brand */
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
 
-    0 0 0 4px rgba(37,99,235,.12);
+    /* Status */
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
 
+    /* Colors */
+    --white: #ffffff;
+    --black: #111827;
+
+    /* Background */
+    --background: #f5f7fb;
+    --surface: #ffffff;
+
+    /* Text */
+    --text: #1f2937;
+    --text-light: #6b7280;
+
+    /* Border */
+    --border: #e5e7eb;
+
+    /* Radius */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    /* Shadow */
+    --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+
+    /* Transition */
+    --transition: .25s ease;
 
 }
 
 
-textarea{
-
-    resize:vertical;
-
-}
-
-
-/* ===========================
+/* =====================================================
    UTILITY CLASSES
-=========================== */
-
-
-.hidden{
-
-    display:none !important;
-
-}
-
-
-.text-center{
-
-    text-align:center;
-
-}
-
-
-.flex{
-
-    display:flex;
-
-}
-
-
-.flex-center{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-}
-
-
-/* ===========================
-   LOADING OVERLAY
-=========================== */
-
-
-#loading-overlay{
-
-
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(255,255,255,.85);
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    flex-direction:column;
-
-    gap:16px;
-
-    z-index:5000;
-
-
-}
-
-
-
-.spinner{
-
-
-    width:52px;
-
-    height:52px;
-
-
-    border-radius:50%;
-
-
-    border:5px solid #dbeafe;
-
-
-    border-top-color:var(--primary);
-
-
-    animation:
-
-    spin .9s linear infinite;
-
-
-}
-
-
-
-@keyframes spin{
-
-
-    from{
-
-        transform:rotate(0deg);
-
-    }
-
-
-    to{
-
-        transform:rotate(360deg);
-
-    }
-
-
-}
-
-
-/* ===========================
-   TOAST MESSAGE
-=========================== */
-
-
-#toast{
-
-
-    position:fixed;
-
-
-    top:20px;
-
-    right:20px;
-
-
-    min-width:240px;
-
-
-    padding:14px 18px;
-
-
-    border-radius:12px;
-
-
-    background:#111827;
-
-
-    color:#fff;
-
-
-    opacity:0;
-
-
-    pointer-events:none;
-
-
-    transform:translateY(-20px);
-
-
-    transition:.3s;
-
-
-    z-index:6000;
-
-
-}
-
-
-
-#toast.show{
-
-
-    opacity:1;
-
-
-    transform:translateY(0);
-
-
-}
-
-
-/* =====================================================
-   END OF PART 1
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 2
-   Login • Layout • Sidebar • Topbar
 ===================================================== */
 
-
-/* ===========================
-LOGIN PAGE
-=========================== */
-
-.center-page{
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:20px;
-background:linear-gradient(135deg,#2563eb,#1d4ed8);
-}
-
-.login-card{
-width:100%;
-max-width:430px;
-background:#fff;
-border-radius:24px;
-padding:40px 32px;
-box-shadow:var(--shadow);
-}
-
-.logo-area{
-display:flex;
-flex-direction:column;
-align-items:center;
-margin-bottom:30px;
-}
-
-.login-logo{
-width:180px;
-height:auto;
-margin-bottom:20px;
-}
-
-.login-card h2{
-font-size:36px;
-font-weight:700;
-color:#111827;
-text-align:center;
-margin-bottom:8px;
-}
-
-.login-card p{
-font-size:20px;
-color:#4b5563;
-text-align:center;
-margin-bottom:30px;
-}
-
-.login-card label{
-display:block;
-font-size:15px;
-font-weight:700;
-color:#374151;
-margin-bottom:8px;
-}
-
-.login-card input{
-height:58px;
-margin-bottom:22px;
-border-radius:14px;
-font-size:16px;
-}
-
-#login-btn{
-width:100%;
-height:58px;
-border-radius:14px;
-background:#2563eb;
-color:#fff;
-font-size:20px;
-font-weight:700;
-}
-
-#login-btn:hover{
-
-background:var(--primary-dark);
-
-}
-
-/* ===========================
-   DASHBOARD STRUCTURE
-=========================== */
-
-
-.dashboard-layout{
-
-
-    display:flex;
-
-
-    min-height:100vh;
-
-
-}
-
-
-
-/* ===========================
-   SIDEBAR
-=========================== */
-
-
-.sidebar{
-
-
-    width:250px;
-
-
-    position:fixed;
-
-
-    left:0;
-
-    top:0;
-
-    bottom:0;
-
-
-    background:#111827;
-
-
-    color:#fff;
-
-
-    padding:24px 18px;
-
-
-    display:flex;
-
-
-    flex-direction:column;
-
-
-    overflow-y:auto;
-
-
-    z-index:3000;
-
-
-}
-
-
-
-
-.brand{
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:14px;
-
-
-    margin-bottom:35px;
-
-
-}
-
-
-
-.brand-logo{
-
-
-    width:55px;
-
-
-    height:55px;
-
-
-    border-radius:50%;
-
-
-    background:var(--primary);
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    font-size:24px;
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.brand h2{
-
-
-    font-size:22px;
-
-
-}
-
-
-
-.brand p{
-
-
-    font-size:13px;
-
-
-    color:#cbd5e1;
-
-
-}
-
-
-
-/* ===========================
-   SIDEBAR MENU
-=========================== */
-
-
-.sidebar-menu{
-
-
-    display:flex;
-
-
-    flex-direction:column;
-
-
-    gap:10px;
-
-
-}
-
-
-
-.sidebar-menu .tab-btn{
-
-
-    width:100%;
-
-
-    min-height:52px;
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:14px;
-
-
-    padding:14px;
-
-
-    border-radius:12px;
-
-
-    background:transparent;
-
-
-    color:#fff;
-
-
-    text-align:left;
-
-
-}
-
-
-
-.sidebar-menu .tab-btn span{
-
-
-    font-size:22px;
-
-
-}
-
-
-
-.sidebar-menu .tab-btn small{
-
-
-    font-size:15px;
-
-
-}
-
-
-
-.sidebar-menu .tab-btn:hover{
-
-
-    background:rgba(255,255,255,.08);
-
-
-    transform:translateX(4px);
-
-
-}
-
-
-
-.sidebar-menu .tab-btn.active{
-
-
-    background:var(--primary);
-
-
-}
-
-
-
-/* ===========================
-   MAIN CONTENT
-=========================== */
-
-
-.main-content{
-
-
-    flex:1;
-
-
-    margin-left:250px;
-
-
-    padding:28px;
-
-
-    min-width:0;
-
-
-}
-
-/* ==========================================
-   MOBILE HEADER
-========================================== */
-
-.mobile-header{
-
-    display:none;
-
-    align-items:center;
-
-    justify-content:space-between;
-
-    background:#ffffff;
-
-    padding:12px 18px;
-
-    border-bottom:1px solid #e5e7eb;
-
-    position:sticky;
-
-    top:0;
-
-    z-index:1000;
-
-}
-
-.mobile-brand{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:12px;
-
-}
-
-.mobile-logo{
-
-    width:42px;
-
-    height:42px;
-
-    border-radius:50%;
-
-    object-fit:cover;
-
-}
-
-.mobile-brand-text h2{
-
-    margin:0;
-
-    font-size:18px;
-
-    font-weight:700;
-
-}
-
-.mobile-brand-text p{
-
-    margin:2px 0 0;
-
-    font-size:12px;
-
-    color:#666;
-
-}
-
-@media (max-width:768px){
-
-    .mobile-header{
-
-        display:flex;
-
-    }
-
-    .topbar{
-
-        display:none;
-
-    }
-
-}
-
-/* ===========================
-   TOP BAR
-=========================== */
-
-
-.topbar{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    align-items:center;
-
-
-    gap:20px;
-
-
-    margin-bottom:28px;
-
-
-    padding:18px 24px;
-
-
-    background:#fff;
-
-
-    border-radius:18px;
-
-
-    border:1px solid var(--border);
-
-
-    box-shadow:var(--shadow);
-
-
-}
-
-
-
-.topbar-left h1,
-.topbar h1{
-
-
-    font-size:30px;
-
-
-    font-weight:700;
-
-
-    color:var(--black);
-
-
-}
-
-
-
-.topbar-left p,
-.topbar p{
-
-
-    color:var(--text-light);
-
-
-    margin-top:5px;
-
-
-}
-
-
-
-.topbar-actions{
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:14px;
-
-
-}
-
-
-
-/* ===========================
-   NOTIFICATION BUTTON
-=========================== */
-
-
-.notification-btn{
-
-
-    width:48px;
-
-
-    height:48px;
-
-
-    border-radius:14px;
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    font-size:20px;
-
-
-}
-
-
-
-.notification-btn:hover{
-
-
-    background:var(--primary);
-
-
-    color:#fff;
-
-
-}
-
-
-
-/* ===========================
-   USER PROFILE
-=========================== */
-
-
-.user-profile{
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:12px;
-
-
-    padding:8px 14px;
-
-
-    border-radius:14px;
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-}
-
-
-
-.user-avatar{
-
-
-    width:42px;
-
-
-    height:42px;
-
-
-    border-radius:50%;
-
-
-    background:var(--primary);
-
-
-    color:#fff;
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.user-details strong{
-
-
-    display:block;
-
-
-    font-size:14px;
-
-
-}
-
-
-
-.user-details small{
-
-
-    color:var(--text-light);
-
-
-}
-
-
-/* =====================================================
-   END OF PART 2
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 3
-   Dashboard Cards • Quick Actions • Tables
-===================================================== */
-
-
-/* ===========================
-   DASHBOARD CONTAINER
-=========================== */
-
-
-#dashboard-tab{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:24px;
-
-}
-
-
-/* ===========================
-   HERO / PORTFOLIO CARD
-=========================== */
-
-
-.hero-card{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:20px;
-
-    padding:30px;
-
-    min-height:160px;
-
-    border-radius:22px;
-
-    background:
-
-    linear-gradient(
-        135deg,
-        #0f4c81,
-        #2563eb
-    );
-
-    color:#fff;
-
-    box-shadow:var(--shadow);
-
-
-}
-
-
-
-.hero-card p{
-
-    font-size:15px;
-
-    opacity:.9;
-
-}
-
-
-
-.hero-card h2{
-
-    margin-top:8px;
-
-    font-size:42px;
-
-    font-weight:700;
-
-}
-
-
-
-.hero-icon{
-
-    width:90px;
-
-    height:90px;
-
-    border-radius:22px;
-
-
-    background:
-
-    rgba(255,255,255,.15);
-
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-
-    font-size:42px;
-
-
-    flex-shrink:0;
-
-}
-
-
-
-/* ===========================
-   STATISTICS GRID
-=========================== */
-
-
-.stats-grid{
-
-
-    display:grid;
-
-
-    grid-template-columns:
-
-    repeat(4,minmax(0,1fr));
-
-
-    gap:18px;
-
-
-}
-
-
-
-/* ===========================
-   STAT CARD
-=========================== */
-
-
-.stat-card{
-
-
-    position:relative;
-
-
-    overflow:hidden;
-
-
-    background:#fff;
-
-
-    border-radius:18px;
-
-
-    padding:22px;
-
-
-    min-height:125px;
-
-
-    border:1px solid var(--border);
-
-
-    box-shadow:0 8px 20px rgba(0,0,0,.05);
-
-
-    display:flex;
-
-
-    flex-direction:column;
-
-
-    justify-content:center;
-
-
-    transition:var(--transition);
-
-
-}
-
-
-
-.stat-card:hover{
-
-
-    transform:translateY(-5px);
-
-
-}
-
-
-
-.stat-card::before{
-
-
-    content:"";
-
-
-    position:absolute;
-
-
-    top:0;
-
-
-    left:0;
-
-
-    width:100%;
-
-
-    height:4px;
-
-
-    background:var(--primary);
-
-
-}
-
-
-
-.stat-card span{
-
-
-    color:var(--text-light);
-
-
-    font-size:14px;
-
-
-    margin-bottom:10px;
-
-
-}
-
-
-
-.stat-card h3{
-
-
-    font-size:30px;
-
-
-    color:var(--black);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-/* CARD COLORS */
-
-
-.stat-card.success::before{
-
-    background:var(--success);
-
-}
-
-
-.stat-card.warning::before{
-
-    background:var(--warning);
-
-}
-
-
-.stat-card.danger::before{
-
-    background:var(--danger);
-
-}
-
-
-.stat-card.info::before{
-
-    background:var(--primary);
-
-}
-
-
-
-/* ===========================
-   QUICK ACTIONS
-=========================== */
-
-
-.quick-actions{
-
-
-    margin-top:10px;
-
-
-}
-
-
-
-.quick-grid{
-
-
-    display:grid;
-
-
-    grid-template-columns:
-
-    repeat(4,minmax(0,1fr));
-
-
-    gap:18px;
-
-
-}
-
-
-
-.action-card{
-
-
-    background:#fff;
-
-
-    border:1px solid var(--border);
-
-
-    border-radius:18px;
-
-
-    padding:20px;
-
-
-    min-height:110px;
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:16px;
-
-
-    transition:var(--transition);
-
-
-}
-
-
-
-.action-card:hover{
-
-
-    transform:translateY(-5px);
-
-
-    box-shadow:var(--shadow);
-
-
-}
-
-
-
-.action-icon{
-
-
-    width:56px;
-
-
-    height:56px;
-
-
-    border-radius:16px;
-
-
-    background:#eff6ff;
-
-
-    color:var(--primary);
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    font-size:24px;
-
-
-    flex-shrink:0;
-
-
-}
-
-
-
-.action-card h3{
-
-
-    font-size:17px;
-
-
-    margin-bottom:4px;
-
-
-}
-
-
-
-.action-card p{
-
-
-    font-size:13px;
-
-
-    color:var(--text-light);
-
-
-}
-
-
-
-/* ===========================
-   SECTION HEADER
-=========================== */
-
-
-.section-header{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    align-items:center;
-
-
-    gap:15px;
-
-
-    margin-bottom:18px;
-
-
-}
-
-
-
-.section-header h2{
-
-
-    font-size:26px;
-
-
-    color:var(--black);
-
-
-}
-
-
-
-.section-header p{
-
-
-    color:var(--text-light);
-
-
-}
-
-
-
-/* ===========================
-   TOOLBAR
-=========================== */
-
-
-.toolbar{
-
-
-    display:flex;
-
-
-    flex-wrap:wrap;
-
-
-    align-items:center;
-
-
-    gap:14px;
-
-
-    background:#fff;
-
-
-    padding:18px;
-
-
-    border-radius:18px;
-
-
-    border:1px solid var(--border);
-
-
-    margin-bottom:24px;
-
-
-}
-
-
-
-.toolbar input{
-
-
-    flex:1;
-
-
-    min-width:220px;
-
-
-}
-
-
-
-.toolbar select{
-
-
-    min-width:180px;
-
-
-}
-
-
-
-/* ===========================
-   TABLE CONTAINER
-=========================== */
-
-
-.table-wrapper{
-
-
-    width:100%;
-
-
-    overflow-x:auto;
-
-
-    background:#fff;
-
-
-    border-radius:20px;
-
-
-    border:1px solid var(--border);
-
-
-    box-shadow:var(--shadow);
-
-
-    -webkit-overflow-scrolling:touch;
-
-
-}
-
-
-
-/* ===========================
-   TABLE
-=========================== */
-
-
-table{
-
-
-    width:100%;
-
-
-    min-width:1000px;
-
-
-    border-collapse:separate;
-
-
-    border-spacing:0;
-
-
-}
-
-
-
-thead{
-
-
-    background:#f8fafc;
-
-
-}
-
-
-
-thead th{
-
-
-    padding:18px 20px;
-
-
-    font-size:13px;
-
-
-    text-transform:uppercase;
-
-
-    letter-spacing:.05em;
-
-
-    color:#64748b;
-
-
-    border-bottom:1px solid var(--border);
-
-
-    text-align:left;
-
-
-}
-
-
-
-tbody td{
-
-
-    padding:18px 20px;
-
-
-    font-size:14px;
-
-
-    color:var(--text);
-
-
-    border-bottom:1px solid #edf2f7;
-
-
-}
-
-
-
-tbody tr{
-
-
-    transition:.25s;
-
-
-}
-
-
-
-tbody tr:hover{
-
-
-    background:#eff6ff;
-
-
-}
-
-
-
-/* ===========================
-   TABLE TEXT HELPERS
-=========================== */
-
-
-.customer-name{
-
-
-    font-weight:600;
-
-
-}
-
-
-
-.loan-number{
-
-
-    color:var(--primary);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.amount{
-
-
-    color:var(--success);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.balance{
-
-
-    color:var(--danger);
-
-
-    font-weight:700;
-
-
-}
-
-
-/* =====================================================
-   END OF PART 3
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 4
-   Status • Buttons • Modals • Forms
-===================================================== */
-
-
-/* ===========================
-   STATUS BADGES
-=========================== */
-
-
-.status{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    min-width:95px;
-
-    padding:7px 14px;
-
-    border-radius:999px;
-
-    font-size:12px;
-
-    font-weight:700;
-
-}
-
-
-
-/* Pending */
-
-.status.pending{
-
-    background:#fef3c7;
-
-    color:#92400e;
-
-}
-
-
-
-/* Approved */
-
-.status.approved{
-
-    background:#dcfce7;
-
-    color:#166534;
-
-}
-
-
-
-/* Completed */
-
-.status.completed{
-
-    background:#dbeafe;
-
-    color:#1d4ed8;
-
-}
-
-
-
-/* Arrears */
-
-.status.arrears{
-
-    background:#fee2e2;
-
-    color:#b91c1c;
-
-}
-
-
-
-/* Rejected */
-
-.status.rejected{
-
-    background:#fce7f3;
-
-    color:#be185d;
-
-}
-
-
-
-/* ===========================
-   TABLE ACTION BUTTONS
-=========================== */
-
-
-.loan-actions{
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    gap:10px;
-
-
-    flex-wrap:wrap;
-
-
-}
-
-
-
-.btn-icon{
-
-
-    width:40px;
-
-
-    height:40px;
-
-
-    border-radius:12px;
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-    transition:var(--transition);
-
-
-}
-
-
-
-.btn-icon:hover{
-
-
-    transform:translateY(-2px);
-
-
-    box-shadow:0 8px 18px rgba(0,0,0,.08);
-
-
-}
-
-
-
-.btn-view{
-
-    color:var(--primary);
-
-}
-
-
-.btn-edit{
-
-    color:var(--warning);
-
-}
-
-
-.btn-success{
-
-    color:var(--success);
-
-}
-
-
-.btn-delete{
-
-    color:var(--danger);
-
-}
-
-
-
-/* ===========================
-   MODAL SYSTEM
-=========================== */
-
-
-.modal{
-
-
-    position:fixed;
-
-
-    inset:0;
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    padding:20px;
-
-
-    background:rgba(15,23,42,.45);
-
-
-    backdrop-filter:blur(8px);
-
-
-    z-index:4000;
-
-
-    overflow-y:auto;
-
-
-}
-
-
-
-.modal-content{
-
-
-    width:100%;
-
-
-    max-width:760px;
-
-
-    max-height:90vh;
-
-
-    overflow-y:auto;
-
-
-    background:#fff;
-
-
-    border-radius:24px;
-
-
-    padding:30px;
-
-
-    border:1px solid var(--border);
-
-
-    box-shadow:
-
-    0 25px 60px rgba(15,23,42,.18);
-
-
-}
-
-
-
-/* ===========================
-   MODAL HEADER
-=========================== */
-
-
-.modal-header{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    align-items:center;
-
-
-    gap:15px;
-
-
-    padding-bottom:18px;
-
-
-    margin-bottom:28px;
-
-
-    border-bottom:1px solid var(--border);
-
-
-}
-
-
-
-.modal-header h2{
-
-
-    font-size:28px;
-
-
-    color:var(--black);
-
-
-}
-
-
-
-.modal-header p{
-
-
-    color:var(--text-light);
-
-
-}
-
-
-
-.modal-close-btn{
-
-
-    width:44px;
-
-
-    height:44px;
-
-
-    border-radius:12px;
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-    font-size:20px;
-
-
-}
-
-
-
-.modal-close-btn:hover{
-
-
-    background:var(--primary);
-
-
-    color:#fff;
-
-
-}
-
-
-
-/* ===========================
-   FORM GRID
-=========================== */
-
-
-.form-grid{
-
-
-    display:grid;
-
-
-    grid-template-columns:
-
-    repeat(2,minmax(0,1fr));
-
-
-    gap:22px;
-
-
-}
-
-
-
-.form-group{
-
-
-    display:flex;
-
-
-    flex-direction:column;
-
-
-    gap:8px;
-
-
-}
-
-
-
-.form-group label{
-
-
-    font-size:13px;
-
-
-    font-weight:700;
-
-
-    color:#475569;
-
-
-    text-transform:uppercase;
-
-
-    letter-spacing:.04em;
-
-
-}
-
-
-
-.form-group input,
-.form-group select,
-.form-group textarea{
-
-
-    width:100%;
-
-
-    height:52px;
-
-
-    border-radius:14px;
-
-
-    border:1px solid #dbe2ea;
-
-
-    padding:0 16px;
-
-
-}
-
-
-
-.form-group textarea{
-
-
-    height:auto;
-
-
-    min-height:120px;
-
-
-    padding-top:14px;
-
-
-}
-
-
-
-/* ===========================
-   MODAL BUTTONS
-=========================== */
-
-
-.modal-buttons{
-
-
-    display:flex;
-
-
-    justify-content:flex-end;
-
-
-    gap:14px;
-
-
-    margin-top:30px;
-
-
-}
-
-
-
-.primary-btn,
-.secondary-btn{
-
-
-    height:52px;
-
-
-    min-width:170px;
-
-
-    padding:0 24px;
-
-
-    border-radius:14px;
-
-
-    font-weight:600;
-
-
-}
-
-
-
-.primary-btn{
-
-
-    background:linear-gradient(
-
-    135deg,
-
-    #2563eb,
-
-    #1d4ed8
-
-    );
-
-
-    color:#fff;
-
-
-}
-
-
-
-.primary-btn:hover{
-
-
-    background:var(--primary-dark);
-
-
-}
-
-
-
-.secondary-btn{
-
-
-    background:#f3f4f6;
-
-
-    color:var(--text);
-
-
-    border:1px solid var(--border);
-
-
-}
-
-
-
-.secondary-btn:hover{
-
-
-    background:#e5e7eb;
-
-
-}
-
-
-
-/* ===========================
-   LOAN SUMMARY CARD
-=========================== */
-
-
-.loan-summary-card{
-
-
-    margin-top:22px;
-
-
-    padding:20px;
-
-
-    border-radius:16px;
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-}
-
-
-
-.loan-summary-card h3{
-
-
-    margin-bottom:16px;
-
-
-}
-
-
-
-.summary-row{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    gap:20px;
-
-
-    padding:10px 0;
-
-
-    border-bottom:1px solid #edf2f7;
-
-
-}
-
-
-
-.summary-row:last-child{
-
-
-    border-bottom:none;
-
-
-}
-
-
-
-.summary-row strong{
-
-
-    color:var(--primary);
-
-
-}
-
-
-/* =====================================================
-   END OF PART 4
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 5
-   Repayment • Notifications • Settings • FAB • Footer
-===================================================== */
-
-
-/* ===========================
-   REPAYMENT MODAL
-=========================== */
-
-
-#repayment-modal .modal-content{
-
-
-    width:95%;
-
-
-    max-width:800px;
-
-
-    max-height:90vh;
-
-
-    overflow-y:auto;
-
-
-}
-
-
-
-/* Repayment Details */
-
-
-.repayment-summary{
-
-
-    background:#f8fafc;
-
-
-    border:1px solid var(--border);
-
-
-    border-radius:16px;
-
-
-    padding:20px;
-
-
-    margin-bottom:20px;
-
-
-}
-
-
-
-.repayment-summary h3{
-
-
-    margin-bottom:15px;
-
-
-}
-
-
-
-.repayment-row{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    gap:20px;
-
-
-    padding:10px 0;
-
-
-    border-bottom:1px solid var(--border);
-
-
-}
-
-
-
-.repayment-row:last-child{
-
-
-    border-bottom:none;
-
-
-}
-
-
-
-/* ===========================
-   NOTIFICATION PANEL
-=========================== */
-
-
-.notification-panel{
-
-
-    position:fixed;
-
-
-    top:80px;
-
-
-    right:20px;
-
-
-    width:360px;
-
-
-    max-height:500px;
-
-
-    background:#fff;
-
-
-    border-radius:18px;
-
-
-    box-shadow:var(--shadow);
-
-
-    border:1px solid var(--border);
-
-
-    overflow:hidden;
-
-
-    z-index:3500;
-
-
-}
-
-
-
-.notification-header{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    align-items:center;
-
-
-    padding:18px;
-
-
-    border-bottom:1px solid var(--border);
-
-
-}
-
-
-
-.notification-header h3{
-
-
-    font-size:18px;
-
-
-}
-
-
-
-.notification-list{
-
-
-    max-height:420px;
-
-
-    overflow-y:auto;
-
-
-}
-
-
-
-.notification-item{
-
-
-    padding:15px 18px;
-
-
-    border-bottom:1px solid var(--border);
-
-
-}
-
-
-
-.notification-item:hover{
-
-
-    background:#f8fafc;
-
-
-}
-
-
-
-.empty-state{
-
-
-    padding:40px 20px;
-
-
-    text-align:center;
-
-
-    color:var(--text-light);
-
-
-}
-
-
-
-/* ===========================
-   SETTINGS PANEL
-=========================== */
-
-
-.settings-menu{
-
-
-    position:fixed;
-
-
-    inset:0;
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    background:rgba(0,0,0,.4);
-
-
-    z-index:4500;
-
-
-}
-
-
-
-.settings-card{
-
-
-    width:100%;
-
-
-    max-width:400px;
-
-
-    background:#fff;
-
-
-    border-radius:20px;
-
-
-    padding:24px;
-
-
-    box-shadow:var(--shadow);
-
-
-}
-
-
-
-.settings-card h3{
-
-
-    margin-bottom:20px;
-
-
-}
-
-
-
-.settings-section{
-
-
-    margin-bottom:20px;
-
-
-}
-
-
-
-.settings-section h4{
-
-
-    margin-bottom:10px;
-
-
-    font-size:15px;
-
-
-}
-
-
-
-.settings-card button{
-
-
-    width:100%;
-
-
-    padding:12px;
-
-
-    margin-bottom:10px;
-
-
-    border-radius:10px;
-
-
+.hidden {
+    display: none !important;
 }
-
-
-
-#mobile-logout-btn{
 
-
-    background:var(--danger);
-
-
-    color:#fff;
-
-
+.text-center {
+    text-align: center;
 }
-
-
-
-/* ===========================
-   FLOATING ACTION BUTTON
-=========================== */
-
 
-.fab{
-    position: fixed;
-    right: 20px;
-    bottom: 100px;      /* Above the mobile navigation */
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    z-index: 10001;     /* Higher than the navigation */
+.flex {
     display: flex;
-    align-items: center;
+}
+
+.flex-center {
+    display: flex;
     justify-content: center;
-}
-
-
-
-.fab:hover{
-
-
-    background:var(--primary-dark);
-
-
-    transform:scale(1.08);
-
-
-}
-
-
-
-/* Hide desktop FAB */
-
-
-@media(min-width:769px){
-
-
-    .fab{
-
-
-        display:none;
-
-
-    }
-
-
-}
-
-
-
-/* ===========================
-   FOOTER
-=========================== */
-
-
-.app-footer{
-
-
-    display:flex;
-
-
-    justify-content:space-between;
-
-
-    align-items:center;
-
-
-    gap:15px;
-
-
-    flex-wrap:wrap;
-
-
-    margin-top:40px;
-
-
-    padding:20px 0;
-
-
-    border-top:1px solid var(--border);
-
-
-    color:var(--text-light);
-
-
-    font-size:14px;
-
-
-}
-
-
-
-/* ===========================
-   MOBILE NAVIGATION
-=========================== */
-
-
-.mobile-nav{
-
-
-    display:none;
-
-
-}
-
-
-
-@media(max-width:768px){
-
-
-
-    .fab{
-
-
-        display:flex;
-
-
-        right:20px;
-
-
-        bottom:80px;
-
-
-    }
-
-
-
-    .notification-panel{
-
-
-        left:10px;
-
-
-        right:10px;
-
-
-        width:auto;
-
-
-        max-width:none;
-
-
-        top:70px;
-
-
-    }
-
-
-
-    .app-footer{
-
-
-        flex-direction:column;
-
-
-        text-align:center;
-
-
-    }
-
-
-
-}
-
-.mobile-nav{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    height:80px;
-    z-index:9999;
-    background:#fff;
-    border-top:1px solid #ddd;
+    align-items: center;
 }
 
 
 /* =====================================================
-   END OF PART 5
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 6
-   Responsive System
+   LOADING OVERLAY
 ===================================================== */
 
-
-/* ===========================
-   LARGE DESKTOP
-=========================== */
-
-
-@media (min-width:1400px){
-
-
-    .main-content{
-
-
-        padding:40px 50px;
-
-
-    }
-
-
-
-    .stats-grid{
-
-
-        grid-template-columns:
-
-        repeat(4,1fr);
-
-
-    }
-
-
-
-    .quick-grid{
-
-
-        grid-template-columns:
-
-        repeat(4,1fr);
-
-
-    }
-
-
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, .85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 5000;
 }
 
-
-
-/* ===========================
-   TABLET LANDSCAPE
-=========================== */
-
-
-@media (max-width:1200px){
-
-
-
-    .sidebar{
-
-
-        width:220px;
-
-
-    }
-
-
-
-    .main-content{
-
-
-        margin-left:220px;
-
-
-        padding:24px;
-
-
-    }
-
-
-
-    .stats-grid{
-
-
-        grid-template-columns:
-
-        repeat(2,1fr);
-
-
-    }
-
-
-
-    .quick-grid{
-
-
-        grid-template-columns:
-
-        repeat(2,1fr);
-
-
-    }
-
-
-
-    .hero-card h2{
-
-
-        font-size:34px;
-
-
-    }
-
-
-
+.spinner {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 5px solid #dbeafe;
+    border-top-color: var(--primary);
+    animation: spin .9s linear infinite;
 }
 
-
-
-/* ===========================
-   MOBILE
-=========================== */
-
-
-@media (max-width:768px){
-
-
-
-    /* Sidebar hidden */
-
-
-    .sidebar{
-
-
-        display:none;
-
-
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
     }
 
-
-
-
-    .main-content{
-
-
-        margin-left:0;
-
-
-        width:100%;
-
-
-        padding:18px;
-
-
-        padding-bottom:100px;
-
-
+    to {
+        transform: rotate(360deg);
     }
-
-
-
-
-    /* Topbar */
-
-
-    .topbar{
-
-
-        flex-direction:column;
-
-
-        align-items:flex-start;
-
-
-        gap:15px;
-
-
-    }
-
-
-
-    .topbar-actions{
-
-
-        width:100%;
-
-
-        justify-content:flex-start;
-
-
-        flex-wrap:wrap;
-
-
-    }
-
-
-
-
-    /* Hero */
-
-
-    .hero-card{
-
-
-        flex-direction:column;
-
-
-        align-items:flex-start;
-
-
-        padding:24px;
-
-
-    }
-
-
-
-    .hero-card h2{
-
-
-        font-size:30px;
-
-
-    }
-
-
-
-    .hero-icon{
-
-
-        width:70px;
-
-
-        height:70px;
-
-
-        font-size:34px;
-
-
-    }
-
-
-
-
-
-    /* Dashboard Cards */
-
-
-    .stats-grid{
-
-
-        grid-template-columns:
-
-        repeat(2,1fr);
-
-
-        gap:14px;
-
-
-    }
-
-
-
-    .stat-card{
-
-
-        min-height:120px;
-
-
-        padding:18px;
-
-
-    }
-
-
-
-    .stat-card h3{
-
-
-        font-size:24px;
-
-
-    }
-
-
-
-
-    /* Quick Actions */
-
-
-    .quick-grid{
-
-
-        grid-template-columns:
-
-        1fr;
-
-
-    }
-
-
-
-
-
-    /* Forms */
-
-
-    .form-grid{
-
-
-        grid-template-columns:
-
-        1fr;
-
-
-    }
-
-
-
-
-
-    /* Modal */
-
-
-    .modal{
-
-
-        padding:15px;
-
-
-    }
-
-
-
-    .modal-content{
-
-
-        padding:22px;
-
-
-        border-radius:18px;
-
-
-    }
-
-
-
-    .modal-buttons{
-
-
-        flex-direction:column;
-
-
-    }
-
-
-
-    .modal-buttons button{
-
-
-        width:100%;
-
-
-    }
-
-
-
-
-
-    /* Toolbar */
-
-
-    .toolbar{
-
-
-        flex-direction:column;
-
-
-        align-items:stretch;
-
-
-    }
-
-
-
-    .toolbar input,
-    .toolbar select,
-    .toolbar button{
-
-
-        width:100%;
-
-
-    }
-
-
-
-
-
-    /* Mobile Navigation */
-
-
-    .mobile-nav{
-
-
-        display:flex;
-
-
-        position:fixed;
-
-
-        left:0;
-
-
-        right:0;
-
-
-        bottom:0;
-
-
-        height:75px;
-
-
-        background:#fff;
-
-
-        border-top:1px solid var(--border);
-
-
-        justify-content:space-around;
-
-
-        align-items:center;
-
-
-        box-shadow:
-
-        0 -5px 15px rgba(0,0,0,.08);
-
-
-        z-index:3000;
-
-
-    }
-
-
-
-    .mobile-nav .tab-btn{
-
-
-        flex:1;
-
-
-        height:100%;
-
-
-        background:none;
-
-
-        color:var(--text);
-
-
-        display:flex;
-
-
-        flex-direction:column;
-
-
-        align-items:center;
-
-
-        justify-content:center;
-
-
-        gap:4px;
-
-
-    }
-
-
-
-    .mobile-nav .tab-btn.active{
-
-
-        color:var(--primary);
-
-
-        font-weight:600;
-
-
-    }
-
-
-
-}
-
-
-
-/* ===========================
-   SMALL PHONES
-=========================== */
-
-
-@media (max-width:480px){
-
-
-
-    .main-content{
-
-
-        padding:15px;
-
-
-    }
-
-
-
-
-    .topbar h1{
-
-
-        font-size:24px;
-
-
-    }
-
-
-
-
-    .hero-card{
-
-
-        padding:20px;
-
-
-    }
-
-
-
-
-    .hero-card h2{
-
-
-        font-size:26px;
-
-
-    }
-
-
-
-
-    .stats-grid{
-
-
-        grid-template-columns:
-
-        1fr;
-
-
-    }
-
-
-
-
-    .login-card{
-
-
-        padding:30px 20px;
-
-
-    }
-
-
-
-
-    .logo-circle{
-
-
-        width:65px;
-
-
-        height:65px;
-
-
-        font-size:28px;
-
-
-    }
-
-
-
-
-    .section-header{
-
-
-        flex-direction:column;
-
-
-        align-items:flex-start;
-
-
-    }
-
-
-
-
-    .btn-icon{
-
-
-        width:36px;
-
-
-        height:36px;
-
-
-    }
-
-
 }
 
 
 /* =====================================================
-   END OF PART 6
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 7
-   Dark Mode • Accessibility • UI Polish
+   STARTUP LOGO SCREEN
 ===================================================== */
-
-
-/* ===========================
-   DARK MODE VARIABLES
-=========================== */
-
-
-html[data-theme="dark"]{
-
-
-    --white:#1f2937;
-
-
-    --black:#f9fafb;
-
-
-    --background:#111827;
-
-
-    --text:#f9fafb;
-
-
-    --text-light:#cbd5e1;
-
-
-    --border:#374151;
-
-
-}
-
-
-
-/* ===========================
-   BODY
-=========================== */
-
-
-html[data-theme="dark"] body{
-
-
-    background:#111827;
-
-
-    color:#f9fafb;
-
-
-}
-
-
-
-/* ===========================
-   CARDS
-=========================== */
-
-
-html[data-theme="dark"] .stat-card,
-html[data-theme="dark"] .action-card,
-html[data-theme="dark"] .topbar,
-html[data-theme="dark"] .table-wrapper,
-html[data-theme="dark"] .modal-content,
-html[data-theme="dark"] .settings-card,
-html[data-theme="dark"] .notification-panel{
-
-
-    background:#1f2937;
-
-
-    border-color:#374151;
-
-
-    color:#f9fafb;
-
-
-}
-
-
-
-/* ===========================
-   HEADINGS
-=========================== */
-
-
-html[data-theme="dark"] h1,
-html[data-theme="dark"] h2,
-html[data-theme="dark"] h3,
-html[data-theme="dark"] h4{
-
-
-    color:#f9fafb;
-
-
-}
-
-
-
-/* ===========================
-   TEXT
-=========================== */
-
-
-html[data-theme="dark"] p,
-html[data-theme="dark"] span{
-
-
-    color:#cbd5e1;
-
-
-}
-
-
-
-/* ===========================
-   INPUTS
-=========================== */
-
-
-html[data-theme="dark"] input,
-html[data-theme="dark"] select,
-html[data-theme="dark"] textarea{
-
-
-    background:#111827;
-
-
-    color:#f9fafb;
-
-
-    border-color:#374151;
-
-
-}
-
-
-
-html[data-theme="dark"] input::placeholder{
-
-
-    color:#94a3b8;
-
-
-}
-
-
-
-/* ===========================
-   TABLES
-=========================== */
-
-
-html[data-theme="dark"] table{
-
-
-    background:#1f2937;
-
-
-}
-
-
-
-html[data-theme="dark"] thead{
-
-
-    background:#111827;
-
-
-}
-
-
-
-html[data-theme="dark"] th{
-
-
-    color:#e5e7eb;
-
-
-    border-color:#374151;
-
-
-}
-
-
-
-html[data-theme="dark"] td{
-
-
-    color:#f9fafb;
-
-
-    border-color:#374151;
-
-
-}
-
-
-
-html[data-theme="dark"] tbody tr:hover{
-
-
-    background:#334155;
-
-
-}
-
-
-
-/* ===========================
-   BUTTONS
-=========================== */
-
-
-html[data-theme="dark"] .secondary-btn{
-
-
-    background:#374151;
-
-
-    color:#f9fafb;
-
-
-    border-color:#4b5563;
-
-
-}
-
-
-
-html[data-theme="dark"] .notification-btn{
-
-
-    background:#1f2937;
-
-
-    color:#f9fafb;
-
-
-    border-color:#374151;
-
-
-}
-
-
-
-/* ===========================
-   MOBILE NAV
-=========================== */
-
-
-html[data-theme="dark"] .mobile-nav{
-
-
-    background:#1f2937;
-
-
-    border-color:#374151;
-
-
-}
-
-
-
-html[data-theme="dark"] .mobile-nav .tab-btn{
-
-
-    color:#f9fafb;
-
-
-}
-
-
-
-html[data-theme="dark"] .mobile-nav .tab-btn.active{
-
-
-    color:#60a5fa;
-
-
-}
-
-
-
-/* ===========================
-   MODAL OVERLAY
-=========================== */
-
-
-html[data-theme="dark"] .modal{
-
-
-    background:rgba(0,0,0,.65);
-
-
-}
-
-
-
-/* ===========================
-   SETTINGS
-=========================== */
-
-
-#theme-select{
-
-
-    margin-top:8px;
-
-
-}
-
-
-
-/* ===========================
-   ACCESSIBILITY
-=========================== */
-
-
-button:focus,
-input:focus,
-select:focus,
-textarea:focus{
-
-
-    outline:2px solid rgba(37,99,235,.35);
-
-
-    outline-offset:2px;
-
-
-}
-
-
-
-/* ===========================
-   SMOOTH SCROLL AREAS
-=========================== */
-
-
-.table-wrapper,
-.sidebar,
-.notification-list,
-.modal-content{
-
-
-    scroll-behavior:smooth;
-
-
-}
-
-
-
-/* ===========================
-   DISABLED ELEMENTS
-=========================== */
-
-
-button:disabled{
-
-
-    opacity:.6;
-
-
-    cursor:not-allowed;
-
-
-}
-
-
-
-/* ===========================
-   PROFESSIONAL TOUCHES
-=========================== */
-
-
-.card-shadow{
-
-
-    box-shadow:var(--shadow);
-
-
-}
-
-
-
-.rounded{
-
-
-    border-radius:var(--radius-lg);
-
-
-}
-
-
-
-/* ===========================
-   PRINT CLEANUP
-=========================== */
-
-
-@media print{
-
-
-    .sidebar,
-    .mobile-nav,
-    .fab,
-    .notification-btn{
-
-
-        display:none !important;
-
-
-    }
-
-
-
-    .main-content{
-
-
-        margin:0;
-
-
-        padding:0;
-
-
-    }
-
-
-
-}
-
-
-/* =====================================================
-   END OF PART 7
-===================================================== *//* =====================================================
-   GREYMUS LOAN FINANCIAL HUB
-   Version 1.4 Clean Stable
-
-   PART 8
-   Final Fixes • Tables • Repayments • Final Overrides
-===================================================== */
-
-
-/* ===========================
-   TABLE MOBILE SUPPORT
-=========================== */
-
-
-.table-wrapper{
-
-
-    overflow-x:auto;
-
-
-    -webkit-overflow-scrolling:touch;
-
-
-}
-
-
-
-table{
-
-
-    white-space:nowrap;
-
-
-}
-
-
-
-/* Keep important columns readable */
-
-
-td,
-th{
-
-
-    vertical-align:middle;
-
-
-}
-
-
-
-/* ===========================
-   LOAN ACTION RESPONSIVE
-=========================== */
-
-
-.loan-actions{
-
-
-    display:flex;
-
-
-    align-items:center;
-
-
-    gap:8px;
-
-
-    flex-wrap:wrap;
-
-
-}
-
-
-
-.loan-actions button{
-
-
-    flex-shrink:0;
-
-
-}
-
-
-
-/* ===========================
-   REPAYMENT SCHEDULE
-=========================== */
-
-
-.repayment-table{
-
-
-    width:100%;
-
-
-    border-radius:16px;
-
-
-    overflow:hidden;
-
-
-}
-
-
-
-.repayment-table th{
-
-
-    background:#f8fafc;
-
-
-}
-
-
-
-.repayment-table td{
-
-
-    padding:14px;
-
-
-}
-
-
-
-/* Payment status */
-
-
-.payment-paid{
-
-
-    color:var(--success);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.payment-pending{
-
-
-    color:var(--warning);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-.payment-late{
-
-
-    color:var(--danger);
-
-
-    font-weight:700;
-
-
-}
-
-
-
-/* ===========================
-   EMPTY STATES
-=========================== */
-
-
-.empty-state{
-
-
-    display:flex;
-
-
-    flex-direction:column;
-
-
-    justify-content:center;
-
-
-    align-items:center;
-
-
-    min-height:200px;
-
-
-    color:var(--text-light);
-
-
-}
-
-
-
-.empty-state span{
-
-
-    font-size:42px;
-
-
-    margin-bottom:12px;
-
-
-}
-
-
-
-/* ===========================
-   LOAN SUMMARY IMPROVEMENT
-=========================== */
-
-
-.loan-summary-card{
-
-
-    box-shadow:
-
-    0 8px 20px rgba(0,0,0,.04);
-
-
-}
-
-
-
-.summary-row strong{
-
-
-    font-weight:700;
-
-
-}
-
-
-
-/* ===========================
-   LARGE SCREEN OPTIMIZATION
-=========================== */
-
-
-@media(min-width:1600px){
-
-
-
-    .main-content{
-
-
-        max-width:1500px;
-
-
-    }
-
-
-
-    .hero-card{
-
-
-        min-height:180px;
-
-
-    }
-
-
-
-    .hero-card h2{
-
-
-        font-size:48px;
-
-
-    }
-
-
-}
-
-
-
-/* ===========================
-   TABLET
-=========================== */
-
-
-@media(max-width:1024px){
-
-
-
-    .table-wrapper{
-
-
-        border-radius:14px;
-
-
-    }
-
-
-
-    table{
-
-
-        min-width:850px;
-
-
-    }
-
-
-
-}
-
-
-
-/* ===========================
-   MOBILE FINAL OVERRIDE
-=========================== */
-
-
-@media(max-width:768px){
-
-
-
-    .table-wrapper{
-
-
-        margin-left:-2px;
-
-
-        margin-right:-2px;
-
-
-    }
-
-
-
-    table{
-
-
-        min-width:750px;
-
-
-    }
-
-
-
-
-    .loan-actions{
-
-
-        justify-content:flex-start;
-
-
-    }
-
-
-
-
-    .summary-row{
-
-
-        flex-direction:column;
-
-
-        gap:5px;
-
-
-    }
-
-
-
-
-    .repayment-table{
-
-
-        min-width:650px;
-
-
-    }
-
-
-
-}
-
-
-
-/* ===========================
-   VERY SMALL PHONES
-=========================== */
-
-
-@media(max-width:380px){
-
-
-
-    .main-content{
-
-
-        padding:12px;
-
-
-    }
-
-
-
-    .stat-card{
-
-
-        padding:14px;
-
-
-    }
-
-
-
-    .stat-card h3{
-
-
-        font-size:22px;
-
-
-    }
-
-
-
-}
-
-
-
-/* ===========================
-   FINAL SECURITY OVERRIDES
-=========================== */
-
-
-/* Prevent accidental overflow */
-
-
-.dashboard-layout,
-.main-content,
-.modal-content{
-
-
-    max-width:100%;
-
-
-}
-
-
-
-/* Ensure hidden works everywhere */
-
-
-.hidden{
-
-
-    display:none !important;
-
-
-}
-
-
-
-/* Smooth animations */
-
-
-*{
-
-
-    -webkit-tap-highlight-color:transparent;
-
-
-}
-
-/* ===========================
-   COMPANY LOGO
-=========================== */
-
-.brand-logo{
-    width:60px;
-    height:60px;
-    object-fit:contain;
-    border-radius:12px;
-    background:#fff;
-    padding:4px;
-}
-
-.login-logo{
-    width:180px;
-    height:auto;
-    object-fit:contain;
-    display:block;
-    margin:0 auto 20px;
-}
-
-/* =========================
-SETTINGS PAGE
-========================= */
-
-.settings-page{
-    display:grid;
-    gap:20px;
-}
-
-.settings-card{
-    background:var(--surface);
-    border-radius:16px;
-    padding:24px;
-    box-shadow:0 8px 20px rgba(0,0,0,.08);
-}
-
-.settings-card h3{
-    margin-bottom:15px;
-}
-
-.settings-card button,
-.settings-card select{
-    width:100%;
-    margin-top:10px;
-}
-
-.danger-btn{
-    background:#d32f2f;
-    color:#fff;
-}
-
-/* =========================
-SETTINGS PAGE SPACING
-========================= */
-
-.settings-page{
-    display:grid;
-    gap:20px;
-    padding-bottom:140px;
-}
-
-.settings-card:last-child{
-    margin-bottom:40px;
-}
-
-/* ==========================================
-   MOBILE HEADER - SHOW LOGO ONLY
-========================================== */
-
-@media (max-width:768px){
-
-    /* Hide the brand text */
-    .brand h2,
-    .brand p{
-        display:none;
-    }
-
-    /* Center the logo */
-    .brand{
-        justify-content:center;
-        margin-bottom:20px;
-    }
-
-    /* Hide dashboard title in the topbar */
-    .topbar-left h1,
-    .topbar-left p{
-        display:none;
-    }
-
-    /* Center the topbar content */
-    .topbar{
-        justify-content:center;
-    }
-
-}
-
-/* ==========================================
-   EXPANDABLE TOTAL LOANS CARD
-========================================== */
-
-.expandable-card{
-    min-height:auto;
-}
-
-.expandable-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    cursor:pointer;
-    gap:15px;
-}
-
-.expand-btn{
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    border:none;
-    background:#eff6ff;
-    color:var(--primary);
-    font-size:18px;
-    font-weight:700;
-    transition:.3s;
-}
-
-.expand-btn:hover{
-    background:var(--primary);
-    color:#fff;
-}
-
-.expand-btn.open{
-    transform:rotate(180deg);
-}
-
-#loan-summary-content{
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px solid var(--border);
-}
-
-#loan-summary-content .summary-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px 0;
-    border-bottom:1px solid #edf2f7;
-}
-
-#loan-summary-content .summary-row:last-child{
-    border-bottom:none;
-}
-
-/* =====================================================
-   END OF VERSION 1.4 CLEAN STABLE CSS
-===================================================== */
-
-/* ==========================================
-   APP STARTUP LOGO SCREEN
-========================================== */
 
 #startup-logo {
     position: fixed;
@@ -4684,6 +198,8 @@ SETTINGS PAGE SPACING
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    gap: 18px;
     z-index: 99999;
 }
 
@@ -4693,128 +209,439 @@ SETTINGS PAGE SPACING
     object-fit: contain;
 }
 
-/* ==========================================
-   GREYMUS HEADER
-========================================== */
 
-.topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:#fff;
+/* =====================================================
+   TOAST
+===================================================== */
+
+#toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 240px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #111827;
+    color: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+    transition: .3s;
+    z-index: 6000;
 }
 
-.topbar-left{
-    display:flex;
-    align-items:center;
-    gap:15px;
+#toast.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-.topbar-logo{
-    width:60px;
-    height:60px;
-    object-fit:contain;
+
+/* =====================================================
+   LOGIN PAGE
+===================================================== */
+
+.center-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
-.topbar-left h1{
-    display:block !important;
-    margin:0;
-    font-size:24px;
-    font-weight:700;
-    color:#111827;
+.login-card {
+    width: 100%;
+    max-width: 430px;
+    background: #fff;
+    border-radius: 38px;
+    padding: 45px 35px;
+    box-shadow: var(--shadow);
 }
 
-.topbar-left p{
-    display:none;
+.logo-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
 }
 
-@media (max-width:768px){
-
-    .topbar{
-        padding:16px;
-    }
-
-    .topbar-logo{
-        width:52px;
-        height:52px;
-    }
-
-    .topbar-left h1{
-        font-size:18px;
-        line-height:1.3;
-    }
+.login-logo {
+    width: 220px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 25px;
 }
 
-/* ===========================
-   LOGIN PAGE FINAL OVERRIDE
-=========================== */
-
-.login-card h2{
-    color:#0f172a !important;
-    font-size:52px;
-    font-weight:800;
-    line-height:1.1;
-    letter-spacing:-1px;
-    text-align:center;
-    margin:18px 0 10px;
+.login-card h2 {
+    color: #0f172a !important;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-align: center;
+    margin: 18px 0 10px;
 }
 
-.login-card p{
-    color:#64748b !important;
-    font-size:22px;
-    font-weight:500;
-    text-align:center;
-    margin-bottom:35px;
+.login-card p {
+    color: #64748b !important;
+    font-size: 22px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 35px;
 }
 
-.login-logo{
-    width:220px !important;
-    margin:0 auto 25px;
+.login-card label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
 }
 
-.login-card{
-    border-radius:38px;
-    padding:45px 35px;
+.login-card input {
+    height: 70px;
+    margin-bottom: 22px;
+    border-radius: 20px;
+    background: #0f172a;
+    color: #fff;
+    border: none;
+    font-size: 18px;
 }
 
-.login-card input{
-    height:70px;
-    border-radius:20px;
-    background:#0f172a;
-    color:#fff;
-    border:none;
-    font-size:18px;
+.login-card input::placeholder {
+    color: #cbd5e1;
 }
 
-.login-card input::placeholder{
-    color:#cbd5e1;
+#login-btn {
+    width: 100%;
+    height: 70px;
+    border-radius: 20px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
 }
 
-#login-btn{
-    height:70px;
-    border-radius:20px;
-    font-size:22px;
-    font-weight:700;
+#login-btn:hover {
+    background: var(--primary-dark);
 }
 
-@media (max-width:768px){
 
-    .login-logo{
-        width:200px !important;
-    }
+/* =====================================================
+   DASHBOARD STRUCTURE
+===================================================== */
 
-    .login-card h2{
-        font-size:46px;
-    }
-
-    .login-card p{
-        font-size:18px;
-    }
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
 }
 
-/* ==========================================
-   OUTSTANDING PORTFOLIO EXPANDABLE
-========================================== */
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.sidebar {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: #111827;
+    color: #fff;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 3000;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 35px;
+}
+
+.brand-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #fff;
+    padding: 4px;
+}
+
+.brand h2 {
+    font-size: 22px;
+}
+
+.brand p {
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+
+/* =====================================================
+   SIDEBAR MENU
+===================================================== */
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-menu .tab-btn {
+    width: 100%;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 12px;
+    background: transparent;
+    color: #fff;
+    text-align: left;
+}
+
+.sidebar-menu .tab-btn span {
+    font-size: 22px;
+}
+
+.sidebar-menu .tab-btn small {
+    font-size: 15px;
+}
+
+.sidebar-menu .tab-btn:hover {
+    background: rgba(255, 255, 255, .08);
+    transform: translateX(4px);
+}
+
+.sidebar-menu .tab-btn.active {
+    background: var(--primary);
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 28px;
+    min-width: 0;
+}
+
+
+/* =====================================================
+   MOBILE HEADER
+===================================================== */
+
+.mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mobile-brand-text h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.mobile-brand-text p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
+
+/* =====================================================
+   TOP BAR
+===================================================== */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+    padding: 18px 24px;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.topbar-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.topbar-left h1,
+.topbar h1 {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+    margin: 0;
+}
+
+.topbar-left p,
+.topbar p {
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+
+/* =====================================================
+   NOTIFICATION BUTTON
+===================================================== */
+
+.notification-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+
+.notification-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+
+/* =====================================================
+   USER PROFILE
+===================================================== */
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+}
+
+.user-details strong {
+    display: block;
+    font-size: 14px;
+}
+
+.user-details small {
+    color: var(--text-light);
+}
+
+
+/* =====================================================
+   DASHBOARD CONTAINER
+===================================================== */
+
+#dashboard-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* =====================================================
+   HERO / OUTSTANDING PORTFOLIO
+===================================================== */
+
+.hero-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    min-height: 160px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #0f4c81, #2563eb);
+    color: #fff;
+    box-shadow: var(--shadow);
+}
+
+.hero-card p {
+    font-size: 15px;
+    opacity: .9;
+}
+
+.hero-card h2 {
+    margin-top: 8px;
+    font-size: 42px;
+    font-weight: 700;
+}
+
+.hero-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    flex-shrink: 0;
+}
+
+
+/* =====================================================
+   EXPANDABLE PORTFOLIO
+===================================================== */
 
 .hero-title-row {
     display: flex;
@@ -4842,13 +669,1490 @@ SETTINGS PAGE SPACING
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    font-size: 0.85rem;
+    font-size: .85rem;
 }
 
 .portfolio-breakdown-row span {
-    opacity: 0.8;
+    opacity: .8;
 }
 
 .portfolio-breakdown-row strong {
     white-space: nowrap;
 }
+
+
+/* =====================================================
+   STATISTICS GRID
+===================================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+
+/* =====================================================
+   STAT CARD
+===================================================== */
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+    min-height: 125px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--primary);
+}
+
+.stat-card span {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.stat-card h3 {
+    font-size: 30px;
+    color: var(--black);
+    font-weight: 700;
+}
+
+.stat-card.success::before {
+    background: var(--success);
+}
+
+.stat-card.warning::before {
+    background: var(--warning);
+}
+
+.stat-card.danger::before {
+    background: var(--danger);
+}
+
+.stat-card.info::before {
+    background: var(--primary);
+}
+
+
+/* =====================================================
+   EXPANDABLE TOTAL LOANS CARD
+===================================================== */
+
+.expandable-card {
+    min-height: auto;
+}
+
+.expandable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    gap: 15px;
+}
+
+.expand-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #eff6ff;
+    color: var(--primary);
+    font-size: 18px;
+    font-weight: 700;
+    transition: .3s;
+}
+
+.expand-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.expand-btn.open {
+    transform: rotate(180deg);
+}
+
+#loan-summary-content {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+#loan-summary-content .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+#loan-summary-content .summary-row:last-child {
+    border-bottom: none;
+}
+
+
+/* =====================================================
+   QUICK ACTIONS
+===================================================== */
+
+.quick-actions {
+    margin-top: 10px;
+}
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.action-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.action-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #eff6ff;
+    color: var(--primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.action-card h3 {
+    font-size: 17px;
+    margin-bottom: 4px;
+}
+
+.action-card p {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+
+/* =====================================================
+   SECTION HEADER
+===================================================== */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.section-header h2 {
+    font-size: 26px;
+    color: var(--black);
+}
+
+.section-header p {
+    color: var(--text-light);
+}
+
+
+/* =====================================================
+   TOOLBAR
+===================================================== */
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.toolbar input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.toolbar select {
+    min-width: 180px;
+}
+
+
+/* =====================================================
+   TABLES
+===================================================== */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+table {
+    width: 100%;
+    min-width: 1000px;
+    border-collapse: separate;
+    border-spacing: 0;
+    white-space: nowrap;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+thead th {
+    padding: 18px 20px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #64748b;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+tbody td {
+    padding: 18px 20px;
+    font-size: 14px;
+    color: var(--text);
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+tbody tr {
+    transition: .25s;
+}
+
+tbody tr:hover {
+    background: #eff6ff;
+}
+
+
+/* =====================================================
+   TABLE TEXT HELPERS
+===================================================== */
+
+.customer-name {
+    font-weight: 600;
+}
+
+.loan-number {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.amount {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.balance {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   STATUS BADGES
+===================================================== */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status.approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status.completed {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status.arrears {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status.rejected {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+
+/* =====================================================
+   LOAN ACTION BUTTONS
+===================================================== */
+
+.loan-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.loan-actions button {
+    flex-shrink: 0;
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+}
+
+.btn-view {
+    color: var(--primary);
+}
+
+.btn-edit {
+    color: var(--warning);
+}
+
+.btn-success {
+    color: var(--success);
+}
+
+.btn-delete {
+    color: var(--danger);
+}
+
+
+/* =====================================================
+   MODAL SYSTEM
+===================================================== */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(8px);
+    z-index: 4000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, .18);
+}
+
+
+/* =====================================================
+   MODAL HEADER
+===================================================== */
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    font-size: 28px;
+    color: var(--black);
+}
+
+.modal-header p {
+    color: var(--text-light);
+}
+
+.modal-close-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    font-size: 20px;
+}
+
+.modal-close-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+
+/* =====================================================
+   FORM GRID
+===================================================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    min-height: 52px;
+    border-radius: 14px;
+    border: 1px solid #dbe2ea;
+    padding: 0 16px;
+}
+
+.form-group textarea {
+    height: auto;
+    min-height: 120px;
+    padding-top: 14px;
+}
+
+
+/* =====================================================
+   MODAL BUTTONS
+===================================================== */
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    margin-top: 30px;
+}
+
+.primary-btn,
+.secondary-btn {
+    height: 52px;
+    min-width: 170px;
+    padding: 0 24px;
+    border-radius: 14px;
+    font-weight: 600;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+}
+
+.primary-btn:hover {
+    background: var(--primary-dark);
+}
+
+.secondary-btn {
+    background: #f3f4f6;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.secondary-btn:hover {
+    background: #e5e7eb;
+}
+
+
+/* =====================================================
+   LOAN SUMMARY
+===================================================== */
+
+.loan-summary-card {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .04);
+}
+
+.loan-summary-card h3 {
+    margin-bottom: 16px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row strong {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   REPAYMENT MODAL
+===================================================== */
+
+#repayment-modal .modal-content {
+    width: 95%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.repayment-summary {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.repayment-summary h3 {
+    margin-bottom: 15px;
+}
+
+.repayment-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.repayment-row:last-child {
+    border-bottom: none;
+}
+
+
+/* =====================================================
+   REPAYMENT SCHEDULE
+===================================================== */
+
+.repayment-table {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.repayment-table th {
+    background: #f8fafc;
+}
+
+.repayment-table td {
+    padding: 14px;
+}
+
+.payment-paid {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.payment-pending {
+    color: var(--warning);
+    font-weight: 700;
+}
+
+.payment-late {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   NOTIFICATION PANEL
+===================================================== */
+
+.notification-panel {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 360px;
+    max-height: 500px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 3500;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.notification-header h3 {
+    font-size: 18px;
+}
+
+.notification-list {
+    max-height: 420px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+.notification-item {
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.notification-item:hover {
+    background: #f8fafc;
+}
+
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-light);
+}
+
+.empty-state span {
+    font-size: 42px;
+    margin-bottom: 12px;
+}
+
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+.settings-page {
+    display: grid;
+    gap: 20px;
+    padding-bottom: 140px;
+}
+
+.settings-card {
+    width: 100%;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.settings-card h3 {
+    margin-bottom: 15px;
+}
+
+.settings-card button,
+.settings-card select {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-section h4 {
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.settings-card:last-child {
+    margin-bottom: 40px;
+}
+
+#theme-select {
+    margin-top: 8px;
+}
+
+.danger-btn {
+    background: #d32f2f;
+    color: #fff;
+}
+
+#mobile-logout-btn {
+    background: var(--danger);
+    color: #fff;
+}
+
+
+/* =====================================================
+   FLOATING ACTION BUTTON
+===================================================== */
+
+.fab {
+    position: fixed;
+    right: 20px;
+    bottom: 100px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab:hover {
+    background: var(--primary-dark);
+    transform: scale(1.08);
+}
+
+@media (min-width: 769px) {
+    .fab {
+        display: none;
+    }
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.app-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+
+/* =====================================================
+   MOBILE NAVIGATION
+===================================================== */
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 75px;
+        background: #fff;
+        border-top: 1px solid var(--border);
+        justify-content: space-around;
+        align-items: center;
+        box-shadow: 0 -5px 15px rgba(0, 0, 0, .08);
+        z-index: 9999;
+
+        /* Mobile scroll-hide support */
+        transform: translateY(0);
+        transition: transform .25s ease;
+        will-change: transform;
+    }
+
+    .mobile-nav.nav-hidden {
+        transform: translateY(100%);
+    }
+
+    .mobile-nav .tab-btn {
+        flex: 1;
+        height: 100%;
+        background: none;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .mobile-nav .tab-btn.active {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .notification-panel {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        top: 70px;
+    }
+
+    .app-footer {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+
+/* =====================================================
+   LARGE DESKTOP
+===================================================== */
+
+@media (min-width: 1400px) {
+
+    .main-content {
+        padding: 40px 50px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .quick-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
+/* =====================================================
+   EXTRA LARGE SCREEN
+===================================================== */
+
+@media (min-width: 1600px) {
+
+    .main-content {
+        max-width: 1500px;
+    }
+
+    .hero-card {
+        min-height: 180px;
+    }
+
+    .hero-card h2 {
+        font-size: 48px;
+    }
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1200px) {
+
+    .sidebar {
+        width: 220px;
+    }
+
+    .main-content {
+        margin-left: 220px;
+        padding: 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero-card h2 {
+        font-size: 34px;
+    }
+}
+
+@media (max-width: 1024px) {
+
+    .table-wrapper {
+        border-radius: 14px;
+    }
+
+    table {
+        min-width: 850px;
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    /* Sidebar */
+    .sidebar {
+        display: none;
+    }
+
+    /* Mobile header */
+    .mobile-header {
+        display: flex;
+    }
+
+    /* Main content */
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 18px;
+        padding-bottom: 100px;
+    }
+
+    /* Desktop topbar hidden on mobile */
+    .topbar {
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .topbar-left {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .topbar-logo {
+        width: 52px;
+        height: 52px;
+    }
+
+    .topbar-left h1 {
+        font-size: 18px;
+        line-height: 1.3;
+    }
+
+    .topbar-left p {
+        display: none;
+    }
+
+    .topbar-actions {
+        display: none;
+    }
+
+    /* Hide sidebar brand text if sidebar is shown */
+    .brand h2,
+    .brand p {
+        display: none;
+    }
+
+    .brand {
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    /* Hero */
+    .hero-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 24px;
+    }
+
+    .hero-card h2 {
+        font-size: 30px;
+    }
+
+    .hero-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 34px;
+    }
+
+    /* Statistics */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .stat-card {
+        min-height: 120px;
+        padding: 18px;
+    }
+
+    .stat-card h3 {
+        font-size: 24px;
+    }
+
+    /* Quick actions */
+    .quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Forms */
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Modal */
+    .modal {
+        padding: 15px;
+    }
+
+    .modal-content {
+        padding: 22px;
+        border-radius: 18px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar input,
+    .toolbar select,
+    .toolbar button {
+        width: 100%;
+    }
+
+    /* Tables */
+    .table-wrapper {
+        margin-left: -2px;
+        margin-right: -2px;
+    }
+
+    table {
+        min-width: 750px;
+    }
+
+    .loan-actions {
+        justify-content: flex-start;
+    }
+
+    .summary-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .repayment-table {
+        min-width: 650px;
+    }
+
+    /* Settings */
+    .settings-page {
+        padding-bottom: 140px;
+    }
+
+    /* Login */
+    .login-logo {
+        width: 200px !important;
+    }
+
+    .login-card h2 {
+        font-size: 46px;
+    }
+
+    .login-card p {
+        font-size: 18px;
+    }
+}
+
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media (max-width: 480px) {
+
+    .main-content {
+        padding: 15px;
+        padding-bottom: 100px;
+    }
+
+    .topbar h1 {
+        font-size: 24px;
+    }
+
+    .hero-card {
+        padding: 20px;
+    }
+
+    .hero-card h2 {
+        font-size: 26px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .login-card {
+        padding: 30px 20px;
+    }
+
+    .login-logo {
+        width: 190px !important;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .portfolio-breakdown-row {
+        font-size: .8rem;
+    }
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 380px) {
+
+    .main-content {
+        padding: 12px;
+        padding-bottom: 100px;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-card h3 {
+        font-size: 22px;
+    }
+
+    .login-card h2 {
+        font-size: 40px;
+    }
+}
+
+
+/* =====================================================
+   DARK MODE
+===================================================== */
+
+html[data-theme="dark"] {
+
+    --white: #1f2937;
+    --black: #f9fafb;
+    --background: #111827;
+    --surface: #1f2937;
+    --text: #f9fafb;
+    --text-light: #cbd5e1;
+    --border: #374151;
+}
+
+html[data-theme="dark"] body {
+    background: #111827;
+    color: #f9fafb;
+}
+
+html[data-theme="dark"] .center-page {
+    background: linear-gradient(135deg, #111827, #1f2937);
+}
+
+html[data-theme="dark"] .login-card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .action-card,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .table-wrapper,
+html[data-theme="dark"] .modal-content,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .notification-panel,
+html[data-theme="dark"] .toolbar {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+}
+
+html[data-theme="dark"] .login-card h2,
+html[data-theme="dark"] .section-header h2,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4 {
+    color: #f9fafb !important;
+}
+
+html[data-theme="dark"] .login-card p,
+html[data-theme="dark"] p {
+    color: #cbd5e1;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background: #111827;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] input::placeholder {
+    color: #94a3b8;
+}
+
+html[data-theme="dark"] thead {
+    background: #111827;
+}
+
+html[data-theme="dark"] th {
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] td {
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] tbody tr:hover {
+    background: #334155;
+}
+
+html[data-theme="dark"] .secondary-btn {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+html[data-theme="dark"] .notification-btn {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] .notification-item:hover {
+    background: #374151;
+}
+
+html[data-theme="dark"] .loan-summary-card,
+html[data-theme="dark"] .repayment-summary {
+    background: #111827;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] .mobile-nav {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+html[data-theme="dark"] .mobile-nav .tab-btn {
+    color: #f9fafb;
+}
+
+html[data-theme="dark"] .mobile-nav .tab-btn.active {
+    color: #60a5fa;
+}
+
+html[data-theme="dark"] .modal {
+    background: rgba(0, 0, 0, .65);
+}
+
+html[data-theme="dark"] .mobile-header {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+}
+
+html[data-theme="dark"] .mobile-brand-text h2 {
+    color: #f9fafb;
+}
+
+html[data-theme="dark"] .mobile-brand-text p {
+    color: #cbd5e1;
+}
+
+html[data-theme="dark"] #startup-logo {
+    background: #111827;
+}
+
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid rgba(37, 99, 235, .35);
+    outline-offset: 2px;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+
+/* =====================================================
+   SMOOTH SCROLL AREAS
+===================================================== */
+
+.table-wrapper,
+.sidebar,
+.notification-list,
+.modal-content {
+    scroll-behavior: smooth;
+}
+
+
+/* =====================================================
+   PROFESSIONAL TOUCHES
+===================================================== */
+
+.card-shadow {
+    box-shadow: var(--shadow);
+}
+
+.rounded {
+    border-radius: var(--radius-lg);
+}
+
+
+/* =====================================================
+   SECURITY / OVERFLOW
+===================================================== */
+
+.dashboard-layout,
+.main-content,
+.modal-content {
+    max-width: 100%;
+}
+
+.hidden {
+    display: none !important;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* =====================================================
+   PRINT
+===================================================== */
+
+@media print {
+
+    .sidebar,
+    .mobile-nav,
+    .fab,
+    .notification-btn,
+    .mobile-header {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+
+/* =====================================================
+   MOBILE NAVIGATION SCROLL BEHAVIOUR
+
+   The CSS class .nav-hidden is controlled by ui.js/app.js.
+   When scrolling down, the navigation can slide away.
+   When scrolling up, it returns.
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .mobile-nav {
+        transform: translateY(0);
+    }
+
+    .mobile-nav.nav-hidden {
+        transform: translateY(100%);
+    }
+
+}
+
+
+/* =====================================================
+   END OF styles.css VERSION 1.5
+===================================================== */
