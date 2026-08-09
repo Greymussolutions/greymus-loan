@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // settings.js
-// VERSION 3.1
+// VERSION 3.2
 // FULL REPLACEMENT FILE
 // ==========================================
 
@@ -28,7 +28,7 @@ import {
 
 console.log("=================================");
 console.log("GREYMUS SETTINGS MODULE LOADED");
-console.log("Version 3.1");
+console.log("Version 3.2");
 console.log("=================================");
 
 
@@ -42,7 +42,6 @@ const STORAGE = {
     USER_PHONE: "userPhone",
     USER_ROLE: "userRole",
 
-    // Theme
     THEME: "appTheme",
 
     DEFAULT_INTEREST: "defaultInterest",
@@ -58,6 +57,7 @@ const STORAGE = {
 
 const ADMIN_EMAIL =
     "gayisi0901@gmail.com";
+
 
 function isAdmin() {
 
@@ -353,15 +353,23 @@ function saveProfile() {
     dark
     system
 
-    The selected value is saved in:
+    Saved in:
 
     localStorage:
     appTheme
 
-    The actual theme applied to the page is:
+    Theme is applied to:
 
-    <html data-theme="light">
     <html data-theme="dark">
+
+    AND
+
+    <body class="dark-theme">
+
+    The body class is important because
+    styles.css uses:
+
+    body.dark-theme
 */
 
 
@@ -416,7 +424,7 @@ function applyTheme(theme) {
     let actualTheme = theme;
 
 
-    // System follows the phone/browser theme
+    // System follows phone/browser theme
 
     if (theme === "system") {
 
@@ -426,7 +434,9 @@ function applyTheme(theme) {
     }
 
 
-    // Apply to HTML element
+    // ======================================
+    // APPLY TO HTML
+    // ======================================
 
     document.documentElement.setAttribute(
         "data-theme",
@@ -434,25 +444,67 @@ function applyTheme(theme) {
     );
 
 
-    // Also keep a direct theme marker
-
     document.documentElement.dataset.theme =
         actualTheme;
 
 
-    // Apply class as an additional fallback
+    // ======================================
+    // APPLY HTML THEME CLASS
+    // ======================================
 
     document.documentElement.classList.remove(
         "theme-light",
         "theme-dark"
     );
 
+
     document.documentElement.classList.add(
         `theme-${actualTheme}`
     );
 
 
-    // Update color-scheme for browser controls
+    // ======================================
+    // APPLY BODY THEME CLASS
+    // ======================================
+    //
+    // THIS FIXES THE DARK THEME ISSUE.
+    //
+    // styles.css uses:
+    //
+    // body.dark-theme
+    //
+    // so the class must be placed on BODY.
+    //
+
+    if (document.body) {
+
+        document.body.classList.remove(
+            "dark-theme",
+            "light-theme"
+        );
+
+
+        if (actualTheme === "dark") {
+
+            document.body.classList.add(
+                "dark-theme"
+            );
+
+        }
+        else {
+
+            document.body.classList.add(
+                "light-theme"
+            );
+
+        }
+
+    }
+
+
+    // ======================================
+    // BROWSER COLOR SCHEME
+    // ======================================
 
     document.documentElement.style.colorScheme =
         actualTheme;
@@ -633,8 +685,6 @@ else if (
     typeof systemThemeMedia.addListener ===
         "function"
 ) {
-
-    // Older browser support
 
     systemThemeMedia.addListener(
         handleSystemThemeChange
@@ -2231,8 +2281,6 @@ document.addEventListener(
         ) {
 
             loadProfile();
-
-            // Re-apply theme
 
             loadTheme();
 
