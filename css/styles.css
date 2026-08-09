@@ -1,7 +1,6 @@
 /* ==========================================
    GREYMUS LOAN FINANCIAL HUB
    styles.css
-   DARK/LIGHT THEME COMPLETE FIX
    ========================================== */
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -9,14 +8,14 @@
 html,body{
     width:100%;
     min-height:100%;
-    font-family:"Inter",Arial,sans-serif;
+    font-family:"Inter",Arial,sans-serif
 }
 
 body{
     background:#f1f5f9;
     color:#1e293b;
     overflow-x:hidden;
-    transition:background .2s ease,color .2s ease;
+    transition:background .2s ease,color .2s ease
 }
 
 button,input,select,textarea{font-family:inherit}
@@ -35,13 +34,13 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:99999;
+    z-index:99999
 }
 
 #startup-logo img{
     width:150px;
     height:150px;
-    object-fit:contain;
+    object-fit:contain
 }
 
 #loading-overlay{
@@ -54,7 +53,7 @@ button{cursor:pointer}
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    color:#fff;
+    color:#fff
 }
 
 .spinner{
@@ -63,12 +62,12 @@ button{cursor:pointer}
     border:4px solid rgba(255,255,255,.25);
     border-top-color:#38bdf8;
     border-radius:50%;
-    animation:spin .8s linear infinite;
+    animation:spin .8s linear infinite
 }
 
 #loading-overlay p{
     margin-top:12px;
-    font-size:14px;
+    font-size:14px
 }
 
 @keyframes spin{
@@ -87,7 +86,7 @@ button{cursor:pointer}
     box-shadow:0 10px 30px rgba(0,0,0,.25);
     z-index:100000;
     display:none;
-    font-size:14px;
+    font-size:14px
 }
 
 #toast.show{display:block}
@@ -100,13 +99,11 @@ button{cursor:pointer}
 #login-section{
     width:100%;
     min-height:100vh;
-    background:
-        radial-gradient(circle at top left,rgba(56,189,248,.12),transparent 35%),
-        #eef3f8;
+    background:radial-gradient(circle at top left,rgba(56,189,248,.12),transparent 35%),#eef3f8;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:25px;
+    padding:25px
 }
 
 .center-page{min-height:100vh}
@@ -120,7 +117,7 @@ button{cursor:pointer}
     overflow:hidden;
     display:flex;
     position:relative;
-    box-shadow:0 20px 60px rgba(15,23,42,.15);
+    box-shadow:0 20px 60px rgba(15,23,42,.15)
 }
 
 .form-section{
@@ -130,7 +127,7 @@ button{cursor:pointer}
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    z-index:2;
+    z-index:2
 }
 
 .logo-area{text-align:center}
@@ -139,14 +136,14 @@ button{cursor:pointer}
     width:60px;
     height:60px;
     object-fit:contain;
-    margin-bottom:10px;
+    margin-bottom:10px
 }
 
 .logo-text{
     font-size:22px;
     font-weight:800;
     letter-spacing:1.5px;
-    color:#0d233a;
+    color:#0d233a
 }
 
 .logo-subtext{
@@ -157,7 +154,7 @@ button{cursor:pointer}
     letter-spacing:3px;
     color:#555;
     border-top:1px solid #ccc;
-    border-bottom:1px solid #ccc;
+    border-bottom:1px solid #ccc
 }
 
 .welcome-back{margin-top:-20px}
@@ -165,26 +162,26 @@ button{cursor:pointer}
 .welcome-back h2{
     color:#1a1a1a;
     font-size:24px;
-    margin-bottom:5px;
+    margin-bottom:5px
 }
 
 .welcome-back>p{
     color:#666;
     font-size:13px;
-    margin-bottom:25px;
+    margin-bottom:25px
 }
 
 .input-field-wrapper{
     position:relative;
     display:flex;
-    align-items:center;
+    align-items:center
 }
 
 .input-field-wrapper i{
     position:absolute;
     left:15px;
     color:#777;
-    z-index:1;
+    z-index:1
 }
 
 .input-field-wrapper input{
@@ -193,12 +190,12 @@ button{cursor:pointer}
     border:1px solid #e1e8ed;
     border-radius:8px;
     outline:none;
-    background:#fafbfc;
+    background:#fafbfc
 }
 
 .input-field-wrapper input:focus{
     border-color:#38bdf8;
-    box-shadow:0 0 0 3px rgba(56,189,248,.12);
+    box-shadow:0 0 0 3px rgba(56,189,248,.12)
 }
 
 #login-btn{
@@ -213,7 +210,7 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
+    gap:8px
 }
 
 .features-footer{
@@ -224,13 +221,13 @@ button{cursor:pointer}
     padding-top:15px;
     border-top:1px solid #eee;
     color:#555;
-    font-size:12px;
+    font-size:12px
 }
 
 .feature-item{
     display:flex;
     align-items:center;
-    gap:5px;
+    gap:5px
 }
 
 .feature-item i{color:#0a2540}
@@ -244,12 +241,12 @@ button{cursor:pointer}
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    clip-path:polygon(15% 0,100% 0,100% 100%,0 100%);
+    clip-path:polygon(15% 0,100% 0,100% 100%,0 100%)
 }
 
 .visual-content h1{
     font-size:32px;
-    line-height:1.2;
+    line-height:1.2
 }
 
 .visual-content h1 span{color:#38bdf8}
@@ -259,7 +256,7 @@ button{cursor:pointer}
     margin-top:10px;
     color:#94a3b8;
     font-size:13px;
-    line-height:1.5;
+    line-height:1.5
 }
 
 .brand-badge{
@@ -270,24 +267,24 @@ button{cursor:pointer}
     align-items:center;
     gap:12px;
     background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.1)
 }
 
 .brand-badge>i{
     color:#38bdf8;
-    font-size:22px;
+    font-size:22px
 }
 
 .brand-badge-text h4{font-size:13px}
 
 .brand-badge-text p{
     color:#94a3b8;
-    font-size:11px;
+    font-size:11px
 }
 
 .brand-badge-text p span{
     color:#cbd5e1;
-    font-style:italic;
+    font-style:italic
 }
 
 
@@ -297,12 +294,12 @@ button{cursor:pointer}
 
 #dashboard-section{
     min-height:100vh;
-    width:100%;
+    width:100%
 }
 
 .dashboard-layout{
     min-height:100vh;
-    display:flex;
+    display:flex
 }
 
 .sidebar{
@@ -315,33 +312,33 @@ button{cursor:pointer}
     left:0;
     top:0;
     bottom:0;
-    z-index:1000;
+    z-index:1000
 }
 
 .brand{
     padding:25px 15px;
     text-align:center;
-    border-bottom:1px solid rgba(255,255,255,.08);
+    border-bottom:1px solid rgba(255,255,255,.08)
 }
 
 .brand-logo{
     width:58px;
     height:58px;
     object-fit:contain;
-    margin-bottom:8px;
+    margin-bottom:8px
 }
 
 .brand h2{
     font-size:11px;
     line-height:1.4;
-    letter-spacing:.5px;
+    letter-spacing:.5px
 }
 
 .sidebar-menu{padding:15px 10px}
 
 .tab-btn{
     border:none;
-    background:transparent;
+    background:transparent
 }
 
 .sidebar .tab-btn{
@@ -354,7 +351,7 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     gap:12px;
-    text-align:left;
+    text-align:left
 }
 
 .sidebar .tab-btn span{font-size:20px}
@@ -363,14 +360,14 @@ button{cursor:pointer}
 .sidebar .tab-btn:hover,
 .sidebar .tab-btn.active{
     background:#162840;
-    color:#fff;
+    color:#fff
 }
 
 .main-content{
     width:calc(100% - 230px);
     margin-left:230px;
     min-width:0;
-    padding-bottom:70px;
+    padding-bottom:70px
 }
 
 
@@ -388,20 +385,20 @@ button{cursor:pointer}
     justify-content:space-between;
     position:sticky;
     top:0;
-    z-index:900;
+    z-index:900
 }
 
 .topbar-left{
     min-width:0;
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:10px
 }
 
 .topbar-logo{
     width:38px;
     height:38px;
-    object-fit:contain;
+    object-fit:contain
 }
 
 .topbar h1{
@@ -409,13 +406,13 @@ button{cursor:pointer}
     color:#0f172a;
     white-space:nowrap;
     overflow:hidden;
-    text-overflow:ellipsis;
+    text-overflow:ellipsis
 }
 
 .topbar-actions{
     display:flex;
     align-items:center;
-    gap:15px;
+    gap:15px
 }
 
 .notification-btn{
@@ -424,12 +421,12 @@ button{cursor:pointer}
     border:none;
     border-radius:50%;
     background:#f1f5f9;
-    font-size:18px;
+    font-size:18px
 }
 
 #logged-user{
     font-size:13px;
-    font-weight:600;
+    font-weight:600
 }
 
 
@@ -439,25 +436,25 @@ button{cursor:pointer}
 
 .tab-content{
     padding:25px;
-    min-width:0;
+    min-width:0
 }
 
 .section-header{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:18px;
+    margin-bottom:18px
 }
 
 .section-header h2{
     font-size:22px;
-    color:#0f172a;
+    color:#0f172a
 }
 
 .section-header p{
     margin-top:4px;
     color:#64748b;
-    font-size:13px;
+    font-size:13px
 }
 
 
@@ -474,7 +471,7 @@ button{cursor:pointer}
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:25px;
+    margin-bottom:25px
 }
 
 .hero-content{min-width:0}
@@ -482,17 +479,17 @@ button{cursor:pointer}
 .hero-title-row{
     display:flex;
     align-items:center;
-    gap:20px;
+    gap:20px
 }
 
 .hero-card p{
     color:#b8c7d9;
-    font-size:13px;
+    font-size:13px
 }
 
 .hero-card h2{
     margin-top:6px;
-    font-size:32px;
+    font-size:32px
 }
 
 .hero-card small{color:#94a3b8}
@@ -504,12 +501,12 @@ button{cursor:pointer}
     border:none;
     border-radius:50%;
     background:#e2e8f0;
-    color:#0f172a;
+    color:#0f172a
 }
 
 .hero-expand-btn{
     background:rgba(255,255,255,.12);
-    color:#fff;
+    color:#fff
 }
 
 .portfolio-summary-content{margin-top:18px}
@@ -520,7 +517,7 @@ button{cursor:pointer}
     display:flex;
     justify-content:space-between;
     gap:20px;
-    padding:7px 0;
+    padding:7px 0
 }
 
 
@@ -533,7 +530,7 @@ button{cursor:pointer}
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
     gap:15px;
-    margin-bottom:20px;
+    margin-bottom:20px
 }
 
 .stat-card{
@@ -542,24 +539,24 @@ button{cursor:pointer}
     background:#fff;
     border:1px solid #e2e8f0;
     border-radius:14px;
-    box-shadow:0 3px 12px rgba(15,23,42,.04);
+    box-shadow:0 3px 12px rgba(15,23,42,.04)
 }
 
 .stat-card>span{
     display:block;
     color:#64748b;
     font-size:12px;
-    margin-bottom:8px;
+    margin-bottom:8px
 }
 
 .stat-card h3{
     color:#0f172a;
-    font-size:21px;
+    font-size:21px
 }
 
 .stat-card small{
     color:#94a3b8;
-    font-size:11px;
+    font-size:11px
 }
 
 .stat-card.success{border-left:4px solid #22c55e}
@@ -567,12 +564,12 @@ button{cursor:pointer}
 
 .clickable-card{
     cursor:pointer;
-    transition:transform .2s ease,box-shadow .2s ease;
+    transition:transform .2s ease,box-shadow .2s ease
 }
 
 .clickable-card:hover{
     transform:translateY(-2px);
-    box-shadow:0 8px 20px rgba(15,23,42,.1);
+    box-shadow:0 8px 20px rgba(15,23,42,.1)
 }
 
 .expandable-card{margin-bottom:20px}
@@ -582,41 +579,41 @@ button{cursor:pointer}
     align-items:center;
     justify-content:space-between;
     gap:15px;
-    cursor:pointer;
+    cursor:pointer
 }
 
 .expandable-header span{
     color:#64748b;
-    font-size:12px;
+    font-size:12px
 }
 
 .expandable-header h3{
     margin-top:6px;
-    font-size:22px;
+    font-size:22px
 }
 
 .loan-summary-stats{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:15px;
-    margin-top:18px;
+    margin-top:18px
 }
 
 .summary-stat{
     padding:15px;
     border-radius:10px;
-    background:#f8fafc;
+    background:#f8fafc
 }
 
 .summary-stat span{
     display:block;
     color:#64748b;
-    font-size:12px;
+    font-size:12px
 }
 
 .summary-stat strong{
     display:block;
-    margin-top:6px;
+    margin-top:6px
 }
 
 
@@ -630,11 +627,11 @@ button{cursor:pointer}
 .empty-state{
     padding:25px;
     text-align:center;
-    color:#64748b;
+    color:#64748b
 }
 
 .today-summary-grid{
-    grid-template-columns:repeat(4,minmax(0,1fr));
+    grid-template-columns:repeat(4,minmax(0,1fr))
 }
 
 .arrears-section{margin-top:25px}
@@ -643,7 +640,7 @@ button{cursor:pointer}
     padding:20px;
     border-radius:14px;
     background:#fff;
-    border:1px solid #e2e8f0;
+    border:1px solid #e2e8f0
 }
 
 .arrears-card p{margin-bottom:10px}
@@ -651,7 +648,7 @@ button{cursor:pointer}
 .arrears-card hr{
     border:none;
     border-top:1px solid #e2e8f0;
-    margin:15px 0;
+    margin:15px 0
 }
 
 
@@ -664,7 +661,7 @@ button{cursor:pointer}
 .quick-grid{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:15px;
+    gap:15px
 }
 
 .action-card{
@@ -675,7 +672,7 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     gap:15px;
-    text-align:left;
+    text-align:left
 }
 
 .action-card:hover{background:#f8fafc}
@@ -688,17 +685,17 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:23px;
+    font-size:23px
 }
 
 .action-card h3{
     font-size:15px;
-    margin-bottom:4px;
+    margin-bottom:4px
 }
 
 .action-card p{
     color:#64748b;
-    font-size:12px;
+    font-size:12px
 }
 
 
@@ -711,7 +708,7 @@ button{cursor:pointer}
     display:flex;
     align-items:center;
     gap:10px;
-    margin-bottom:18px;
+    margin-bottom:18px
 }
 
 .toolbar input,
@@ -723,16 +720,15 @@ button{cursor:pointer}
     border-radius:8px;
     outline:none;
     background:#fff;
-    color:#1e293b;
+    color:#1e293b
 }
 
 .toolbar input{flex:1}
-
 .toolbar select{min-width:140px}
 
 .toolbar input:focus,
 .toolbar select:focus{
-    border-color:#38bdf8;
+    border-color:#38bdf8
 }
 
 .toolbar-wrap{flex-wrap:wrap}
@@ -749,19 +745,19 @@ button{cursor:pointer}
     overflow-y:visible;
     background:#fff;
     border:1px solid #dce4ed;
-    border-radius:10px;
+    border-radius:10px
 }
 
 .table-wrapper table{
     width:100%;
     max-width:100%;
     border-collapse:collapse;
-    table-layout:fixed;
+    table-layout:fixed
 }
 
 .table-wrapper thead{
     background:#0d172b;
-    color:#cbd5e1;
+    color:#cbd5e1
 }
 
 .table-wrapper th{
@@ -772,7 +768,7 @@ button{cursor:pointer}
     line-height:1.25;
     white-space:normal;
     overflow-wrap:anywhere;
-    word-break:break-word;
+    word-break:break-word
 }
 
 .table-wrapper td{
@@ -783,7 +779,7 @@ button{cursor:pointer}
     vertical-align:middle;
     white-space:normal;
     overflow-wrap:anywhere;
-    word-break:break-word;
+    word-break:break-word
 }
 
 .table-wrapper tbody tr:nth-child(even){background:#f8fafc}
@@ -870,7 +866,7 @@ button{cursor:pointer}
     padding:6px 7px;
     border-radius:6px;
     border:none;
-    font-size:11px;
+    font-size:11px
 }
 
 
@@ -885,26 +881,26 @@ button{cursor:pointer}
     padding:9px 15px;
     border-radius:8px;
     font-size:13px;
-    border:none;
+    border:none
 }
 
 .primary-btn{
     background:#0b2948;
-    color:#fff;
+    color:#fff
 }
 
 .primary-btn:hover{background:#123c63}
 
 .secondary-btn{
     background:#e2e8f0;
-    color:#1e293b;
+    color:#1e293b
 }
 
 .secondary-btn:hover{background:#cbd5e1}
 
 .danger-btn{
     background:#dc2626;
-    color:#fff;
+    color:#fff
 }
 
 .danger-btn:hover{background:#b91c1c}
@@ -924,7 +920,7 @@ button{cursor:pointer}
     align-items:center;
     justify-content:center;
     padding:20px;
-    overflow-y:auto;
+    overflow-y:auto
 }
 
 .modal-content{
@@ -935,7 +931,7 @@ button{cursor:pointer}
     background:#fff;
     border-radius:14px;
     padding:22px;
-    box-shadow:0 20px 50px rgba(0,0,0,.25);
+    box-shadow:0 20px 50px rgba(0,0,0,.25)
 }
 
 .modal-content.large{max-width:1000px}
@@ -945,18 +941,18 @@ button{cursor:pointer}
     align-items:flex-start;
     justify-content:space-between;
     gap:15px;
-    margin-bottom:20px;
+    margin-bottom:20px
 }
 
 .modal-header h2{
     color:#0f172a;
-    font-size:20px;
+    font-size:20px
 }
 
 .modal-header p{
     margin-top:5px;
     color:#64748b;
-    font-size:12px;
+    font-size:12px
 }
 
 .modal-header button,
@@ -968,7 +964,7 @@ button{cursor:pointer}
     border-radius:8px;
     background:#f1f5f9;
     color:#334155;
-    font-size:17px;
+    font-size:17px
 }
 
 .modal-header button:hover{background:#e2e8f0}
@@ -976,7 +972,7 @@ button{cursor:pointer}
 .form-grid{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:15px;
+    gap:15px
 }
 
 .form-group{margin-bottom:15px}
@@ -986,7 +982,7 @@ button{cursor:pointer}
     margin-bottom:7px;
     color:#334155;
     font-size:12px;
-    font-weight:600;
+    font-weight:600
 }
 
 .form-group input,
@@ -999,7 +995,7 @@ button{cursor:pointer}
     outline:none;
     background:#fff;
     color:#1e293b;
-    font-size:13px;
+    font-size:13px
 }
 
 .form-group textarea{resize:vertical}
@@ -1008,14 +1004,14 @@ button{cursor:pointer}
 .form-group select:focus,
 .form-group textarea:focus{
     border-color:#38bdf8;
-    box-shadow:0 0 0 3px rgba(56,189,248,.1);
+    box-shadow:0 0 0 3px rgba(56,189,248,.1)
 }
 
 .modal-buttons{
     display:flex;
     justify-content:flex-end;
     gap:10px;
-    margin-top:20px;
+    margin-top:20px
 }
 
 .loan-summary-card{
@@ -1023,12 +1019,12 @@ button{cursor:pointer}
     margin-top:8px;
     border-radius:10px;
     background:#f8fafc;
-    border:1px solid #e2e8f0;
+    border:1px solid #e2e8f0
 }
 
 .loan-summary-card h3{
     margin-bottom:12px;
-    font-size:15px;
+    font-size:15px
 }
 
 .summary-row{
@@ -1037,19 +1033,19 @@ button{cursor:pointer}
     gap:20px;
     padding:7px 0;
     border-bottom:1px solid #e2e8f0;
-    font-size:13px;
+    font-size:13px
 }
 
 .summary-row:last-child{border-bottom:none}
 
 .confirmation-modal{
     max-width:430px;
-    text-align:center;
+    text-align:center
 }
 
 .confirm-icon{
     font-size:45px;
-    margin-bottom:12px;
+    margin-bottom:12px
 }
 
 .confirmation-modal h2{margin-bottom:8px}
@@ -1064,26 +1060,26 @@ button{cursor:pointer}
 .settings-page{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:18px;
+    gap:18px
 }
 
 .settings-card{
     padding:20px;
     border-radius:14px;
     background:#fff;
-    border:1px solid #e2e8f0;
+    border:1px solid #e2e8f0
 }
 
 .settings-card h3{
     margin-bottom:15px;
-    color:#0f172a;
+    color:#0f172a
 }
 
 .settings-card label{
     display:block;
     margin-bottom:7px;
     color:#64748b;
-    font-size:12px;
+    font-size:12px
 }
 
 .settings-card select{
@@ -1092,7 +1088,7 @@ button{cursor:pointer}
     border:1px solid #dbe3ec;
     border-radius:8px;
     padding:0 10px;
-    margin-bottom:10px;
+    margin-bottom:10px
 }
 
 .settings-card button{
@@ -1101,7 +1097,7 @@ button{cursor:pointer}
     padding:9px 14px;
     border:none;
     border-radius:8px;
-    background:#e2e8f0;
+    background:#e2e8f0
 }
 
 .settings-card button:hover{background:#cbd5e1}
@@ -1123,7 +1119,7 @@ button{cursor:pointer}
     box-shadow:0 15px 40px rgba(15,23,42,.2);
     border:1px solid #e2e8f0;
     z-index:4500;
-    overflow:hidden;
+    overflow:hidden
 }
 
 .notification-header{
@@ -1131,24 +1127,24 @@ button{cursor:pointer}
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom:1px solid #e2e8f0;
+    border-bottom:1px solid #e2e8f0
 }
 
 .notification-header button{
     border:none;
     background:transparent;
-    font-size:18px;
+    font-size:18px
 }
 
 .notification-list{
     max-height:430px;
     overflow-y:auto;
-    padding:10px;
+    padding:10px
 }
 
 
 /* ==========================================
-   MOBILE NAV / FAB
+   MOBILE NAVIGATION + FAB
    ========================================== */
 
 .mobile-nav{display:none}
@@ -1164,12 +1160,12 @@ button{cursor:pointer}
     background:#0b2948;
     color:#fff;
     box-shadow:0 8px 25px rgba(0,0,0,.25);
-    z-index:1200;
+    z-index:1200
 }
 
 .fab::before{
     content:"+";
-    font-size:28px;
+    font-size:28px
 }
 
 
@@ -1191,7 +1187,7 @@ button{cursor:pointer}
     justify-content:space-between;
     color:#64748b;
     font-size:10px;
-    z-index:800;
+    z-index:800
 }
 
 .footer-left strong{color:#334155}
@@ -1205,24 +1201,24 @@ button{cursor:pointer}
     position:fixed;
     inset:0;
     background:rgba(0,0,0,.45);
-    z-index:4000;
+    z-index:4000
 }
 
 .schedule-summary{
     padding:15px;
     margin-bottom:18px;
     border-radius:10px;
-    background:#f8fafc;
+    background:#f8fafc
 }
 
 .schedule-summary p{
     margin-bottom:8px;
-    font-size:13px;
+    font-size:13px
 }
 
 #schedule-table{
     width:100%;
-    border-collapse:collapse;
+    border-collapse:collapse
 }
 
 #schedule-table th,
@@ -1230,24 +1226,24 @@ button{cursor:pointer}
     padding:10px;
     border-bottom:1px solid #e2e8f0;
     font-size:12px;
-    text-align:left;
+    text-align:left
 }
 
 #schedule-table th{
     background:#0d172b;
-    color:#cbd5e1;
+    color:#cbd5e1
 }
 
 .activity-log-modal{max-width:1000px}
 
 .table-responsive{
     width:100%;
-    overflow-x:auto;
+    overflow-x:auto
 }
 
 .table-responsive table{
     width:100%;
-    border-collapse:collapse;
+    border-collapse:collapse
 }
 
 .table-responsive th,
@@ -1255,408 +1251,229 @@ button{cursor:pointer}
     padding:10px;
     border-bottom:1px solid #e2e8f0;
     font-size:12px;
-    text-align:left;
+    text-align:left
 }
 
 .table-responsive th{
     background:#0d172b;
-    color:#cbd5e1;
+    color:#cbd5e1
 }
 
 
-/* =========================================================
+/* ==========================================
    DARK THEME
-   ========================================================= */
+   ========================================== */
 
-/* Main application background */
-body.dark-theme,
-body.dark-theme #dashboard-section,
-body.dark-theme .dashboard-layout,
-body.dark-theme .main-content,
-body.dark-theme .tab-content{
+body.dark-theme{
     background:#0b1220;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
-/* Top bar */
+body.dark-theme #dashboard-section{
+    background:#0b1220
+}
+
+body.dark-theme .main-content{
+    background:#0b1220
+}
+
+body.dark-theme .topbar,
+body.dark-theme .stat-card,
+body.dark-theme .table-wrapper,
+body.dark-theme .settings-card,
+body.dark-theme .action-card,
+body.dark-theme .arrears-card,
+body.dark-theme .modal-content,
+body.dark-theme .notification-panel{
+    background:#172235;
+    color:#e2e8f0;
+    border-color:#29384d
+}
+
 body.dark-theme .topbar{
-    background:#101a2b;
-    color:#e2e8f0;
-    border-bottom-color:#29384d;
+    border-bottom-color:#29384d
 }
 
-body.dark-theme .topbar h1{
-    color:#f8fafc;
+body.dark-theme .topbar h1,
+body.dark-theme .section-header h2,
+body.dark-theme .stat-card h3,
+body.dark-theme .settings-card h3,
+body.dark-theme .modal-header h2{
+    color:#f8fafc
 }
 
-body.dark-theme #logged-user{
-    color:#dbe7f5;
+body.dark-theme .section-header p,
+body.dark-theme .stat-card>span,
+body.dark-theme .stat-card small,
+body.dark-theme .settings-card label,
+body.dark-theme .modal-header p{
+    color:#94a3b8
 }
 
 body.dark-theme .notification-btn{
     background:#243247;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
-
-/* Sidebar */
-body.dark-theme .sidebar{
-    background:#081321;
-    color:#f8fafc;
+body.dark-theme .table-wrapper td{
+    color:#d5deea;
+    border-color:#29384d
 }
 
-body.dark-theme .brand{
-    border-bottom-color:rgba(255,255,255,.08);
+body.dark-theme .table-wrapper tbody tr:nth-child(even){
+    background:#1b293d
 }
 
-body.dark-theme .sidebar .tab-btn{
-    color:#9fb0c4;
+body.dark-theme .table-wrapper tbody tr:hover{
+    background:#24354d
 }
 
-body.dark-theme .sidebar .tab-btn:hover,
-body.dark-theme .sidebar .tab-btn.active{
-    background:#162840;
-    color:#fff;
+body.dark-theme .form-group input,
+body.dark-theme .form-group select,
+body.dark-theme .form-group textarea,
+body.dark-theme .toolbar input,
+body.dark-theme .toolbar select,
+body.dark-theme .settings-card select{
+    background:#111c2e;
+    border-color:#334155;
+    color:#e2e8f0
 }
 
-
-/* Section headings */
-body.dark-theme .section-header h2,
-body.dark-theme .section-header h3,
-body.dark-theme .section-header strong,
-body.dark-theme .expandable-header h3{
-    color:#f8fafc;
-}
-
-body.dark-theme .section-header p,
-body.dark-theme .expandable-header span,
-body.dark-theme .empty-state{
-    color:#94a3b8;
-}
-
-
-/* Cards */
-body.dark-theme .stat-card,
-body.dark-theme .arrears-card,
-body.dark-theme .action-card,
-body.dark-theme .settings-card,
-body.dark-theme .table-wrapper,
-body.dark-theme .notification-panel{
-    background:#172235;
-    color:#e2e8f0;
-    border-color:#29384d;
-    box-shadow:0 3px 12px rgba(0,0,0,.15);
-}
-
-body.dark-theme .stat-card>span,
-body.dark-theme .stat-card small,
-body.dark-theme .action-card p,
-body.dark-theme .settings-card label{
-    color:#94a3b8;
-}
-
-body.dark-theme .stat-card h3,
-body.dark-theme .action-card h3,
-body.dark-theme .settings-card h3{
-    color:#f8fafc;
-}
-
-body.dark-theme .action-icon{
-    background:#20344d;
-    color:#dbeafe;
-}
-
-body.dark-theme .action-card:hover{
-    background:#1d2c42;
-}
-
-body.dark-theme .clickable-card:hover{
-    box-shadow:0 8px 25px rgba(0,0,0,.3);
-}
-
-
-/* Summary cards */
-body.dark-theme .summary-stat,
 body.dark-theme .loan-summary-card,
+body.dark-theme .summary-stat,
 body.dark-theme .schedule-summary{
     background:#111c2e;
     border-color:#334155;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
 body.dark-theme .summary-stat span{
-    color:#94a3b8;
-}
-
-body.dark-theme .summary-stat strong{
-    color:#f8fafc;
-}
-
-body.dark-theme .summary-row{
-    border-color:#29384d;
-    color:#d5deea;
-}
-
-body.dark-theme .arrears-card hr{
-    border-top-color:#29384d;
+    color:#94a3b8
 }
 
 body.dark-theme .expand-btn{
     background:#243247;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
-
-/* Tables */
-body.dark-theme .table-wrapper{
-    background:#172235;
-    border-color:#29384d;
-}
-
-body.dark-theme .table-wrapper thead,
-body.dark-theme #schedule-table th,
-body.dark-theme .table-responsive th{
-    background:#0c1727;
-    color:#dbe7f5;
-}
-
-body.dark-theme .table-wrapper td,
-body.dark-theme #schedule-table td,
-body.dark-theme .table-responsive td{
-    color:#d5deea;
-    border-color:#29384d;
-}
-
-body.dark-theme .table-wrapper tbody tr:nth-child(even){
-    background:#1b293d;
-}
-
-body.dark-theme .table-wrapper tbody tr:hover{
-    background:#24354d;
-}
-
-body.dark-theme #schedule-table th,
-body.dark-theme #schedule-table td,
-body.dark-theme .table-responsive th,
-body.dark-theme .table-responsive td{
-    border-color:#29384d;
-}
-
-
-/* Forms / search / selects */
-body.dark-theme .toolbar input,
-body.dark-theme .toolbar select,
-body.dark-theme .form-group input,
-body.dark-theme .form-group select,
-body.dark-theme .form-group textarea,
-body.dark-theme .settings-card select,
-body.dark-theme .input-field-wrapper input{
-    background:#111c2e;
-    border-color:#334155;
-    color:#e2e8f0;
-}
-
-body.dark-theme .toolbar input::placeholder,
-body.dark-theme .form-group input::placeholder,
-body.dark-theme .form-group textarea::placeholder,
-body.dark-theme .input-field-wrapper input::placeholder{
-    color:#718096;
-}
-
-body.dark-theme .form-group label{
-    color:#cbd5e1;
-}
-
-body.dark-theme .input-field-wrapper i{
-    color:#94a3b8;
-}
-
-body.dark-theme .toolbar input:focus,
-body.dark-theme .toolbar select:focus,
-body.dark-theme .form-group input:focus,
-body.dark-theme .form-group select:focus,
-body.dark-theme .form-group textarea:focus,
-body.dark-theme .input-field-wrapper input:focus{
-    border-color:#38bdf8;
-}
-
-
-/* Native select options */
-body.dark-theme select option{
-    background:#111c2e;
-    color:#e2e8f0;
-}
-
-
-/* Buttons */
 body.dark-theme .secondary-btn{
     background:#29384d;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
 body.dark-theme .secondary-btn:hover{
-    background:#34465e;
+    background:#34465e
 }
 
-body.dark-theme .settings-card button{
-    background:#29384d;
-    color:#e2e8f0;
+body.dark-theme .action-card:hover{
+    background:#1d2c42
 }
 
-body.dark-theme .settings-card button:hover{
-    background:#34465e;
-}
-
-body.dark-theme .primary-btn{
-    background:#123c63;
-    color:#fff;
-}
-
-body.dark-theme .primary-btn:hover{
-    background:#185080;
-}
-
-
-/* Modals */
 body.dark-theme .modal{
-    background:rgba(0,0,0,.78);
-}
-
-body.dark-theme .modal-content{
-    background:#172235;
-    color:#e2e8f0;
-    border:1px solid #29384d;
-}
-
-body.dark-theme .modal-header h2{
-    color:#f8fafc;
-}
-
-body.dark-theme .modal-header p{
-    color:#94a3b8;
+    background:rgba(0,0,0,.72)
 }
 
 body.dark-theme .modal-header button,
 body.dark-theme .modal-close-btn{
     background:#243247;
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
 body.dark-theme .modal-header button:hover,
 body.dark-theme .modal-close-btn:hover{
-    background:#304159;
+    background:#304159
+}
+
+body.dark-theme .summary-row{
+    border-color:#29384d;
+    color:#d5deea
 }
 
 body.dark-theme .confirmation-modal p{
-    color:#94a3b8;
-}
-
-
-/* Notifications */
-body.dark-theme .notification-panel{
-    background:#172235;
-    border-color:#29384d;
-    color:#e2e8f0;
+    color:#94a3b8
 }
 
 body.dark-theme .notification-header{
-    border-bottom-color:#29384d;
+    border-color:#29384d
 }
 
 body.dark-theme .notification-header button{
-    color:#cbd5e1;
+    color:#cbd5e1
 }
 
 body.dark-theme .notification-list{
-    color:#e2e8f0;
+    color:#e2e8f0
 }
 
-
-/* Footer */
 body.dark-theme .app-footer{
     background:#111b2d;
     border-top-color:#26354a;
-    color:#94a3b8;
+    color:#94a3b8
 }
 
 body.dark-theme .footer-left strong{
-    color:#dbe7f5;
+    color:#dbe7f5
 }
 
-
-/* Mobile navigation */
 body.dark-theme .mobile-nav{
     background:#0d1b2d;
-    border-top-color:#26354a;
-    box-shadow:0 -5px 20px rgba(0,0,0,.35);
+    border-top-color:#26354a
 }
 
 body.dark-theme .mobile-nav .tab-btn{
-    color:#8fa1b7;
+    color:#8fa1b7
 }
 
 body.dark-theme .mobile-nav .tab-btn.active{
-    color:#38bdf8;
+    color:#38bdf8
 }
 
-
-/* FAB */
 body.dark-theme .fab{
     background:#0a2947;
-    color:#fff;
-    box-shadow:0 8px 25px rgba(0,0,0,.45);
+    box-shadow:0 8px 25px rgba(0,0,0,.45)
 }
 
+body.dark-theme .stat-card.success{
+    border-left-color:#22c55e
+}
 
-/* Global overlay */
-body.dark-theme #global-overlay{
-    background:rgba(0,0,0,.65);
+body.dark-theme .stat-card.danger{
+    border-left-color:#ef4444
 }
 
 
 /* ==========================================
-   DARK LOGIN PAGE
+   RESPONSIVE
    ========================================== */
 
-body.dark-theme #login-section{
-    background:
-        radial-gradient(circle at top left,rgba(56,189,248,.08),transparent 35%),
-        #07111f;
-}
+@media(max-width:1100px){
 
-body.dark-theme .login-container{
-    background:#111c2e;
-    box-shadow:0 20px 60px rgba(0,0,0,.45);
-}
+    .sidebar{
+        width:190px;
+        min-width:190px
+    }
 
-body.dark-theme .form-section{
-    background:#111c2e;
-}
+    .main-content{
+        width:calc(100% - 190px);
+        margin-left:190px
+    }
 
-body.dark-theme .logo-text{
-    color:#f8fafc;
-}
+    .app-footer{left:190px}
 
-body.dark-theme .logo-subtext{
-    color:#94a3b8;
-    border-color:#334155;
-}
+    .stats-grid,
+    .today-summary-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
 
-body.dark-theme .welcome-back h2{
-    color:#f8fafc;
-}
+    .table-wrapper th{
+        font-size:10px;
+        padding:10px 5px
+    }
 
-body.dark-theme .welcome-back>p{
-    color:#94a3b8;
-}
-
-body.dark-theme .features-footer{
-    border-top-color:#29384d;
-    color:#94a3b8;
-}
-
-body.dark-theme .feature-item i{
-    color:#38bdf8;
+    .table-wrapper td{
+        font-size:10px;
+        padding:10px 5px
+    }
 }
 
 
@@ -1664,48 +1481,17 @@ body.dark-theme .feature-item i{
    MOBILE
    ========================================== */
 
-@media(max-width:1100px){
-
-    .sidebar{
-        width:190px;
-        min-width:190px;
-    }
-
-    .main-content{
-        width:calc(100% - 190px);
-        margin-left:190px;
-    }
-
-    .app-footer{left:190px}
-
-    .stats-grid,
-    .today-summary-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-    }
-
-    .table-wrapper th{
-        font-size:10px;
-        padding:10px 5px;
-    }
-
-    .table-wrapper td{
-        font-size:10px;
-        padding:10px 5px;
-    }
-}
-
-
 @media(max-width:768px){
 
     body{
-        padding-bottom:65px;
+        padding-bottom:65px
     }
 
     #login-section{
         min-height:100dvh;
         padding:14px;
         align-items:flex-start;
-        overflow-y:auto;
+        overflow-y:auto
     }
 
     .login-container{
@@ -1714,19 +1500,19 @@ body.dark-theme .feature-item i{
         min-height:0;
         margin:8px auto;
         flex-direction:column;
-        border-radius:18px;
+        border-radius:18px
     }
 
     .form-section{
         width:100%;
         flex:none;
         padding:28px 22px 22px;
-        gap:22px;
+        gap:22px
     }
 
     .login-logo{
         width:58px;
-        height:58px;
+        height:58px
     }
 
     .logo-text{font-size:21px}
@@ -1737,7 +1523,7 @@ body.dark-theme .feature-item i{
 
     .input-field-wrapper input{
         min-height:48px;
-        font-size:16px;
+        font-size:16px
     }
 
     #login-btn{min-height:50px}
@@ -1748,7 +1534,7 @@ body.dark-theme .feature-item i{
         min-height:190px;
         margin-left:0;
         padding:27px 22px;
-        clip-path:none;
+        clip-path:none
     }
 
     .visual-content h1{font-size:27px}
@@ -1762,22 +1548,22 @@ body.dark-theme .feature-item i{
     .main-content{
         width:100%;
         margin-left:0;
-        padding-bottom:70px;
+        padding-bottom:70px
     }
 
     .topbar{
         height:62px;
-        padding:0 12px;
+        padding:0 12px
     }
 
     .topbar-logo{
         width:35px;
-        height:35px;
+        height:35px
     }
 
     .topbar h1{
         font-size:12px;
-        max-width:180px;
+        max-width:180px
     }
 
     .topbar-actions{gap:7px}
@@ -1787,11 +1573,11 @@ body.dark-theme .feature-item i{
         overflow:hidden;
         white-space:nowrap;
         text-overflow:ellipsis;
-        font-size:10px;
+        font-size:10px
     }
 
     .tab-content{
-        padding:15px 10px 20px;
+        padding:15px 10px 20px
     }
 
     .section-header h2{font-size:19px}
@@ -1801,7 +1587,7 @@ body.dark-theme .feature-item i{
         min-height:145px;
         padding:18px;
         margin-bottom:18px;
-        border-radius:14px;
+        border-radius:14px
     }
 
     .hero-card h2{font-size:25px}
@@ -1810,21 +1596,25 @@ body.dark-theme .feature-item i{
     .stats-grid,
     .today-summary-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
-        gap:9px;
+        gap:9px
     }
 
     .stat-card{
         padding:14px;
-        border-radius:11px;
+        border-radius:11px
     }
 
     .stat-card h3{font-size:17px}
     .stat-card>span{font-size:10px}
     .stat-card small{font-size:9px}
 
-    .loan-summary-stats{grid-template-columns:1fr}
+    .loan-summary-stats{
+        grid-template-columns:1fr
+    }
 
-    .quick-grid{grid-template-columns:1fr}
+    .quick-grid{
+        grid-template-columns:1fr
+    }
 
     .action-card{padding:15px}
 
@@ -1832,13 +1622,13 @@ body.dark-theme .feature-item i{
 
     .toolbar input{
         width:100%;
-        flex:1 1 100%;
+        flex:1 1 100%
     }
 
     .toolbar select{
         flex:1;
         min-width:0;
-        width:100%;
+        width:100%
     }
 
     .table-wrapper{
@@ -1847,14 +1637,14 @@ body.dark-theme .feature-item i{
         overflow-x:auto!important;
         overflow-y:hidden;
         -webkit-overflow-scrolling:touch;
-        border-radius:8px;
+        border-radius:8px
     }
 
     .table-wrapper table{
         width:max-content!important;
         min-width:900px;
         max-width:none!important;
-        table-layout:auto!important;
+        table-layout:auto!important
     }
 
     .table-wrapper th{
@@ -1862,7 +1652,7 @@ body.dark-theme .feature-item i{
         font-size:12px;
         white-space:nowrap;
         overflow:visible;
-        word-break:normal;
+        word-break:normal
     }
 
     .table-wrapper td{
@@ -1872,42 +1662,47 @@ body.dark-theme .feature-item i{
         min-width:100px;
         overflow:visible;
         word-break:normal;
-        overflow-wrap:normal;
+        overflow-wrap:normal
     }
 
     #clients-table{
-        min-width:850px!important;
+        min-width:850px!important
     }
 
     #clients-table th,
     #clients-table td{
-        white-space:nowrap;
+        white-space:nowrap
     }
 
     #clients-table th:nth-child(2),
     #clients-table td:nth-child(2){
         min-width:170px;
-        white-space:normal;
+        white-space:normal
     }
 
     #loans-table{
-        min-width:1450px!important;
+        min-width:1450px!important
     }
 
     #loans-table th,
     #loans-table td{
-        white-space:nowrap;
+        white-space:nowrap
     }
 
     #loans-table th:nth-child(3),
     #loans-table td:nth-child(3){
         min-width:150px;
-        white-space:normal;
+        white-space:normal
     }
 
     #history-tab .table-wrapper table{
-        min-width:750px!important;
+        min-width:750px!important
     }
+
+
+    /* ==========================================
+       MOBILE BOTTOM NAVIGATION
+       ========================================== */
 
     .mobile-nav{
         position:fixed;
@@ -1921,7 +1716,7 @@ body.dark-theme .feature-item i{
         background:#16263b;
         border-top:1px solid rgba(255,255,255,.08);
         z-index:3000;
-        box-shadow:0 -5px 20px rgba(0,0,0,.15);
+        box-shadow:0 -5px 20px rgba(0,0,0,.15)
     }
 
     .mobile-nav .tab-btn{
@@ -1932,31 +1727,51 @@ body.dark-theme .feature-item i{
         align-items:center;
         justify-content:center;
         gap:3px;
-        color:#94a3b8;
+        color:#94a3b8
     }
 
     .mobile-nav .tab-btn span{
         font-size:21px;
-        line-height:1;
+        line-height:1
     }
 
-    .mobile-nav .tab-btn small{font-size:9px}
+    .mobile-nav .tab-btn small{
+        font-size:9px
+    }
 
-    .mobile-nav .tab-btn.active{color:#38bdf8}
+    .mobile-nav .tab-btn.active{
+        color:#38bdf8
+    }
+
+
+    /* ==========================================
+       MOBILE FAB
+       FIX: KEEP FAB ABOVE NAVIGATION
+       ========================================== */
 
     .fab{
         right:15px;
-        bottom:80px;
+        bottom:88px;
         width:52px;
         height:52px;
+        z-index:2500
     }
+
+    .mobile-nav{
+        z-index:3000
+    }
+
+
+    /* ==========================================
+       MOBILE FOOTER / MODALS
+       ========================================== */
 
     .app-footer{display:none}
 
     .modal{
         padding:10px;
         align-items:flex-start;
-        padding-top:20px;
+        padding-top:20px
     }
 
     .modal-content{
@@ -1964,20 +1779,20 @@ body.dark-theme .feature-item i{
         max-width:100%;
         max-height:calc(100dvh - 35px);
         border-radius:13px;
-        padding:17px;
+        padding:17px
     }
 
     .modal-content.large{width:100%}
 
     .form-grid{
         grid-template-columns:1fr;
-        gap:0;
+        gap:0
     }
 
     .modal-header h2{font-size:18px}
 
     .modal-buttons{
-        flex-direction:column;
+        flex-direction:column
     }
 
     .modal-buttons button{width:100%}
@@ -1985,66 +1800,58 @@ body.dark-theme .feature-item i{
     .notification-panel{
         top:67px;
         right:10px;
-        width:calc(100vw - 20px);
+        width:calc(100vw - 20px)
     }
 
     .settings-page{
         grid-template-columns:1fr;
-        gap:12px;
+        gap:12px
     }
 
     .settings-card{padding:16px}
 
     .schedule-summary{font-size:12px}
 
-    #schedule-table{min-width:650px}
+    #schedule-table{
+        min-width:650px
+    }
 
-
-    /* Mobile dark theme reinforcement */
-
+    /* Mobile dark theme */
     body.dark-theme .topbar{
-        background:#101a2b;
+        background:#101a2b
     }
 
     body.dark-theme .tab-content{
-        background:#0b1220;
+        background:#0b1220
     }
 
     body.dark-theme .stat-card,
     body.dark-theme .arrears-card,
     body.dark-theme .action-card{
-        background:#111b2d;
-    }
-
-    body.dark-theme .settings-card{
-        background:#111b2d;
-    }
-
-    body.dark-theme .table-wrapper{
-        background:#111b2d;
-    }
-
-    body.dark-theme .modal-content{
-        background:#172235;
+        background:#111b2d
     }
 }
 
+
+/* ==========================================
+   SMALL PHONES
+   ========================================== */
 
 @media(max-width:380px){
 
     .tab-content{
         padding-left:7px;
-        padding-right:7px;
+        padding-right:7px
     }
 
     .topbar h1{
         max-width:140px;
-        font-size:10px;
+        font-size:10px
     }
 
     .stats-grid,
     .today-summary-grid{
-        gap:7px;
+        gap:7px
     }
 
     .stat-card{padding:11px}
@@ -2063,22 +1870,34 @@ body.dark-theme .feature-item i{
 }
 
 
+/* ==========================================
+   LANDSCAPE MOBILE
+   ========================================== */
+
 @media(max-width:768px) and (orientation:landscape){
 
-    .mobile-nav{height:55px}
+    .mobile-nav{
+        height:55px
+    }
 
-    .main-content{padding-bottom:60px}
+    .main-content{
+        padding-bottom:60px
+    }
 
     .modal{
         align-items:flex-start;
-        padding-top:10px;
+        padding-top:10px
     }
 
     .modal-content{
-        max-height:calc(100dvh - 20px);
+        max-height:calc(100dvh - 20px)
     }
 }
 
+
+/* ==========================================
+   LARGE SCREENS
+   ========================================== */
 
 @media(min-width:1400px){
 
@@ -2089,62 +1908,70 @@ body.dark-theme .feature-item i{
 }
 
 
+/* ==========================================
+   DESKTOP TABLES
+   ========================================== */
+
 @media(min-width:769px){
 
     .table-wrapper{
         overflow-x:hidden!important;
         width:100%!important;
-        max-width:100%!important;
+        max-width:100%!important
     }
 
     .table-wrapper table{
         width:100%!important;
         max-width:100%!important;
-        table-layout:fixed!important;
+        table-layout:fixed!important
     }
 
     .table-wrapper th,
     .table-wrapper td{
         max-width:0;
         overflow-wrap:anywhere;
-        word-break:break-word;
+        word-break:break-word
     }
 
     #clients-table,
     #loans-table{
         width:100%!important;
-        max-width:100%!important;
+        max-width:100%!important
     }
 
     .table-wrapper td button{
         white-space:normal;
-        max-width:100%;
+        max-width:100%
     }
 }
 
+
+/* ==========================================
+   MOBILE TABLES
+   ========================================== */
 
 @media(max-width:768px){
 
     .table-wrapper{
         overflow-x:auto!important;
-        overflow-y:hidden!important;
+        overflow-y:hidden!important
     }
 
     .table-wrapper table{
         width:max-content!important;
         max-width:none!important;
-        table-layout:auto!important;
+        table-layout:auto!important
     }
 
     #clients-table{
-        min-width:850px!important;
+        min-width:850px!important
     }
 
     #loans-table{
-        min-width:1450px!important;
+        min-width:1450px!important
     }
 
     #history-tab .table-wrapper table{
-        min-width:750px!important;
+        min-width:750px!important
     }
 }
