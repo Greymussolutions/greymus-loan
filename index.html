@@ -8,6 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet"
@@ -20,24 +21,10 @@
 
     <link rel="stylesheet" href="css/styles.css">
 
-    <script type="module" src="js/firebase.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/clients.js"></script>
-    <script type="module" src="js/loans.js"></script>
-    <script type="module" src="js/history.js"></script>
-    <script type="module" src="js/settings.js"></script>
-    <script type="module" src="js/app.js"></script>
-
     <!-- =========================================================
          MOBILE LOGIN FIX
          ========================================================= -->
     <style>
-        /* =====================================================
-           LOGIN BASE
-           ===================================================== */
 
         #login-section {
             width: 100%;
@@ -1273,24 +1260,12 @@
                         >
 
                         <select id="loan-filter">
-                            <option value="ALL">
-                                All Status
-                            </option>
-                            <option value="Pending">
-                                Pending
-                            </option>
-                            <option value="Approved">
-                                Approved
-                            </option>
-                            <option value="Rejected">
-                                Rejected
-                            </option>
-                            <option value="Arrears">
-                                Arrears
-                            </option>
-                            <option value="Completed">
-                                Completed
-                            </option>
+                            <option value="ALL">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Arrears">Arrears</option>
+                            <option value="Completed">Completed</option>
                         </select>
 
                         <select id="loan-month-filter">
@@ -1430,17 +1405,9 @@
 
                             <select id="theme-select">
 
-                                <option value="system">
-                                    System Default
-                                </option>
-
-                                <option value="light">
-                                    Light Theme
-                                </option>
-
-                                <option value="dark">
-                                    Dark Theme
-                                </option>
+                                <option value="system">System Default</option>
+                                <option value="light">Light Theme</option>
+                                <option value="dark">Dark Theme</option>
 
                             </select>
 
@@ -1517,6 +1484,7 @@
                                 <h2 id="client-modal-title">
                                     New Client
                                 </h2>
+
                                 <p>
                                     Register a new borrower
                                 </p>
@@ -1533,10 +1501,7 @@
 
                         <form id="client-form">
 
-                            <input
-                                type="hidden"
-                                id="client-id"
-                            >
+                            <input type="hidden" id="client-id">
 
                             <div class="form-grid">
 
@@ -1664,9 +1629,7 @@
 
                             <p>
                                 <strong>Total Loans:</strong>
-                                <span id="history-total-loans">
-                                    0
-                                </span>
+                                <span id="history-total-loans">0</span>
                             </p>
 
                             <p>
@@ -1721,6 +1684,7 @@
                                 <h2 id="loan-modal-title">
                                     New Loan
                                 </h2>
+
                                 <p>
                                     Create or edit a loan
                                 </p>
@@ -1737,10 +1701,7 @@
 
                         <form id="loan-form">
 
-                            <input
-                                type="hidden"
-                                id="loan-id"
-                            >
+                            <input type="hidden" id="loan-id">
 
                             <div class="form-grid">
 
@@ -1960,19 +1921,14 @@
                 </div>
 
                 <!-- REPAYMENT MODAL -->
-                <div
-                    id="repayment-modal"
-                    class="modal hidden"
-                >
+                <div id="repayment-modal" class="modal hidden">
 
                     <div class="modal-content">
 
                         <div class="modal-header">
 
                             <div>
-                                <h2>
-                                    Loan Repayment
-                                </h2>
+                                <h2>Loan Repayment</h2>
 
                                 <p>
                                     Receive a repayment
@@ -2008,6 +1964,7 @@
                                 <label>
                                     Outstanding Balance
                                 </label>
+
                                 <input
                                     type="text"
                                     id="repayment-balance"
@@ -2019,6 +1976,7 @@
                                 <label>
                                     Weekly Repayment
                                 </label>
+
                                 <input
                                     type="text"
                                     id="repayment-weekly"
@@ -2028,6 +1986,7 @@
 
                             <div class="form-group">
                                 <label>Amount Paid</label>
+
                                 <input
                                     type="number"
                                     id="repayment-amount"
@@ -2038,6 +1997,7 @@
 
                             <div class="form-group">
                                 <label>Payment Date</label>
+
                                 <input
                                     type="date"
                                     id="repayment-date"
@@ -2047,6 +2007,7 @@
 
                             <div class="form-group">
                                 <label>Remarks</label>
+
                                 <textarea
                                     id="repayment-notes"
                                     rows="3"
@@ -2078,10 +2039,7 @@
                 </div>
 
                 <!-- CONFIRMATION MODAL -->
-                <div
-                    id="confirm-modal"
-                    class="modal hidden"
-                >
+                <div id="confirm-modal" class="modal hidden">
 
                     <div class="modal-content confirmation-modal">
 
@@ -2089,9 +2047,7 @@
                             ⚠️
                         </div>
 
-                        <h2>
-                            Confirmation
-                        </h2>
+                        <h2>Confirmation</h2>
 
                         <p id="confirm-message">
                             Are you sure you want to continue?
@@ -2129,9 +2085,7 @@
 
                     <div class="notification-header">
 
-                        <h3>
-                            Notifications
-                        </h3>
+                        <h3>Notifications</h3>
 
                         <button
                             id="close-notifications"
@@ -2149,9 +2103,7 @@
 
                         <div class="empty-state">
 
-                            <h3>
-                                No Notifications
-                            </h3>
+                            <h3>No Notifications</h3>
 
                             <p>
                                 You're all caught up.
@@ -2217,19 +2169,14 @@
     </nav>
 
     <!-- PROFILE SETTINGS MODAL -->
-    <div
-        id="profile-modal"
-        class="modal hidden"
-    >
+    <div id="profile-modal" class="modal hidden">
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>
-                        Profile Settings
-                    </h2>
+                    <h2>Profile Settings</h2>
 
                     <p>
                         Update your account information.
@@ -2249,6 +2196,7 @@
 
                 <div class="form-group">
                     <label>Full Name</label>
+
                     <input
                         type="text"
                         id="profile-name"
@@ -2258,6 +2206,7 @@
 
                 <div class="form-group">
                     <label>Email Address</label>
+
                     <input
                         type="email"
                         id="profile-email"
@@ -2267,6 +2216,7 @@
 
                 <div class="form-group">
                     <label>Phone Number</label>
+
                     <input
                         type="tel"
                         id="profile-phone"
@@ -2299,19 +2249,14 @@
     </div>
 
     <!-- ACCOUNT SECURITY MODAL -->
-    <div
-        id="security-modal"
-        class="modal hidden"
-    >
+    <div id="security-modal" class="modal hidden">
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>
-                        Change Password
-                    </h2>
+                    <h2>Change Password</h2>
 
                     <p>
                         Update your account password securely.
@@ -2404,19 +2349,14 @@
     </div>
 
     <!-- ADD USER MODAL -->
-    <div
-        id="add-user-modal"
-        class="modal hidden"
-    >
+    <div id="add-user-modal" class="modal hidden">
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>
-                        Add User
-                    </h2>
+                    <h2>Add User</h2>
 
                     <p>
                         Create a new Greymus system user.
@@ -2436,9 +2376,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        Full Name
-                    </label>
+                    <label>Full Name</label>
 
                     <input
                         type="text"
@@ -2451,9 +2389,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        Email Address
-                    </label>
+                    <label>Email Address</label>
 
                     <input
                         type="email"
@@ -2482,9 +2418,7 @@
 
                 <div class="form-group">
 
-                    <label>
-                        User Role
-                    </label>
+                    <label>User Role</label>
 
                     <select id="new-user-role" required>
 
@@ -2525,19 +2459,14 @@
     </div>
 
     <!-- MANAGE USERS MODAL -->
-    <div
-        id="manage-users-modal"
-        class="modal hidden"
-    >
+    <div id="manage-users-modal" class="modal hidden">
 
         <div class="modal-content large">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>
-                        Manage Users
-                    </h2>
+                    <h2>Manage Users</h2>
 
                     <p>
                         View and manage Greymus system users.
@@ -2620,16 +2549,10 @@
     </footer>
 
     <!-- GLOBAL OVERLAY -->
-    <div
-        id="global-overlay"
-        class="hidden"
-    ></div>
+    <div id="global-overlay" class="hidden"></div>
 
     <!-- REPAYMENT SCHEDULE MODAL -->
-    <div
-        id="schedule-modal"
-        class="modal hidden"
-    >
+    <div id="schedule-modal" class="modal hidden">
 
         <div class="modal-content large">
 
@@ -2652,6 +2575,7 @@
 
                 <p>
                     <strong>Client:</strong>
+
                     <span id="schedule-client">
                         -
                     </span>
@@ -2694,10 +2618,7 @@
     </div>
 
     <!-- ACTIVITY LOG MODAL -->
-    <div
-        id="activity-log-modal"
-        class="modal hidden"
-    >
+    <div id="activity-log-modal" class="modal hidden">
 
         <div class="modal-content activity-log-modal">
 
@@ -2751,6 +2672,22 @@
         </div>
 
     </div>
+
+    <!-- =========================================================
+         APPLICATION MODULES
+         Loaded AFTER the complete HTML is available.
+         ========================================================= -->
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/clients.js"></script>
+    <script type="module" src="js/loans.js"></script>
+    <script type="module" src="js/history.js"></script>
+    <script type="module" src="js/settings.js"></script>
+    <script type="module" src="js/app.js"></script>
 
 </body>
 </html>
