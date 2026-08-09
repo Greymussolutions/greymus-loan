@@ -1,9 +1,10 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.0
+// VERSION 6.1
 //
 // ✔ Click loan row -> FULL LOAN DETAILS PAGE
+// ✔ FULL-SCREEN DETAILS PAGE
 // ✔ NO expanding row
 // ✔ Mobile-friendly loan details
 // ✔ Back button returns to Loans
@@ -1154,7 +1155,7 @@ function renderLoans(list) {
 
 
         // ==========================================
-        // ENTIRE ROW OPENS NEW PAGE
+        // ENTIRE ROW OPENS FULL-SCREEN PAGE
         // ==========================================
 
         row.addEventListener(
@@ -1175,7 +1176,7 @@ function renderLoans(list) {
 
 
 // ==========================================
-// GET / CREATE DETAILS PAGE
+// GET / CREATE FULL-SCREEN DETAILS PAGE
 // ==========================================
 
 function getLoanDetailsPage() {
@@ -1198,30 +1199,31 @@ function getLoanDetailsPage() {
         "loan-details-page hidden";
 
 
-    const loansTable =
-        document.getElementById(
-            "loans-table"
-        );
+    // ==========================================
+    // IMPORTANT
+    // ==========================================
+    // The details page is appended directly to
+    // BODY.
+    //
+    // It is NOT appended below #loans-table.
+    // ==========================================
+
+    document.body.appendChild(page);
 
 
-    if (loansTable?.parentElement) {
+    // ==========================================
+    // FULL-SCREEN PAGE BEHAVIOUR
+    // ==========================================
 
-        loansTable.parentElement
-            .appendChild(page);
-
-    } else if (
-        loansTableBody?.parentElement
-    ) {
-
-        loansTableBody.parentElement
-            .parentElement
-            ?.appendChild(page);
-
-    } else {
-
-        document.body.appendChild(page);
-
-    }
+    page.style.position = "fixed";
+    page.style.inset = "0";
+    page.style.width = "100%";
+    page.style.height = "100%";
+    page.style.zIndex = "9999";
+    page.style.background =
+        "var(--background, #f1f5f9)";
+    page.style.overflowY = "auto";
+    page.style.overflowX = "hidden";
 
 
     return page;
@@ -1263,7 +1265,10 @@ function openLoanDetailsPage(id) {
     if (!page) return;
 
 
-    // Hide loans table
+    // ==========================================
+    // HIDE ENTIRE LOANS LIST PAGE
+    // ==========================================
+
     const loansTable =
         document.getElementById(
             "loans-table"
@@ -1277,9 +1282,33 @@ function openLoanDetailsPage(id) {
     }
 
 
-    // Hide common filter/search area
+    // ==========================================
+    // HIDE MAIN LOANS PANEL IF PRESENT
+    // ==========================================
+
+    const loansPanel =
+        document.getElementById(
+            "loans-panel"
+        );
+
+    if (loansPanel) {
+
+        loansPanel.classList.add(
+            "loan-list-hidden"
+        );
+    }
+
+
+    // ==========================================
+    // HIDE COMMON FILTER / SEARCH AREA
+    // ==========================================
+
     hideLoanListControls();
 
+
+    // ==========================================
+    // RENDER DETAILS
+    // ==========================================
 
     renderLoanDetailsPage(
         loan
@@ -1291,13 +1320,20 @@ function openLoanDetailsPage(id) {
     );
 
 
+    // ==========================================
+    // SCROLL DETAILS PAGE TO TOP
+    // ==========================================
+
     window.scrollTo({
         top: 0,
         behavior: "instant"
     });
 
 
-    // Browser history entry
+    // ==========================================
+    // BROWSER HISTORY ENTRY
+    // ==========================================
+
     if (
         !history.state ||
         history.state.loanDetails !== id
@@ -1402,6 +1438,10 @@ function closeLoanDetailsPage(
     }
 
 
+    // ==========================================
+    // RESTORE LOANS TABLE
+    // ==========================================
+
     const loansTable =
         document.getElementById(
             "loans-table"
@@ -1416,11 +1456,41 @@ function closeLoanDetailsPage(
     }
 
 
+    // ==========================================
+    // RESTORE MAIN LOANS PANEL
+    // ==========================================
+
+    const loansPanel =
+        document.getElementById(
+            "loans-panel"
+        );
+
+
+    if (loansPanel) {
+
+        loansPanel.classList.remove(
+            "loan-list-hidden"
+        );
+    }
+
+
+    // ==========================================
+    // RESTORE FILTERS / SEARCH
+    // ==========================================
+
     showLoanListControls();
 
 
+    // ==========================================
+    // REFRESH LOAN LIST
+    // ==========================================
+
     filterLoans();
 
+
+    // ==========================================
+    // REMOVE DETAILS HISTORY ENTRY
+    // ==========================================
 
     if (!skipHistory) {
 
@@ -4366,5 +4436,5 @@ export {
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.0
+// VERSION 6.1
 // ==========================================
