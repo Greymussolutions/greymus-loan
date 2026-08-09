@@ -4740,6 +4740,404 @@ export {
 
 };
 
+// ==========================================
+// GREYMUS LOAN FINANCIAL HUB
+// FAB ADD REPAYMENT
+// VERSION 5.1
+//
+// ✔ Floating + menu can open Add Repayment
+// ✔ User first selects the loan
+// ✔ Only loans with outstanding balances appear
+// ✔ Selecting a loan fills client/balance/weekly repayment
+// ✔ Uses the existing repayment form and save logic
+// ==========================================
+
+function setupFabAddRepayment() {
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    "#fab-add-repayment, " +
+                    "#fab-repayment, " +
+                    '[data-action="add-repayment"]'
+                );
+
+            if (!button) return;
+
+            openFabRepaymentSelector();
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// OPEN ADD REPAYMENT FROM FAB
+// ==========================================
+
+function openFabRepaymentSelector() {
+
+    const modal =
+        document.getElementById(
+            "repayment-modal"
+        );
+
+    const form =
+        document.getElementById(
+            "repayment-form"
+        );
+
+    if (!modal || !form) {
+
+        alert(
+            "Repayment form is unavailable."
+        );
+
+        return;
+
+    }
+
+
+    let selector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    if (!selector) {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "fab-repayment-loan-selector";
+
+        wrapper.innerHTML = `
+
+            <label
+                for="fab-repayment-loan-select"
+            >
+                Select Loan
+            </label>
+
+            <select
+                id="fab-repayment-loan-select"
+                required
+            >
+
+                <option value="">
+                    Select a loan
+                </option>
+
+            </select>
+
+        `;
+
+        form.insertBefore(
+            wrapper,
+            form.firstElementChild
+        );
+
+        selector =
+            document.getElementById(
+                "fab-repayment-loan-select"
+            );
+
+
+        selector.addEventListener(
+            "change",
+            () => {
+
+                fillRepaymentFromSelectedLoan(
+                    selector.value
+                );
+
+            }
+        );
+
+    }
+
+
+    // ==========================================
+    // REFRESH LOAN LIST
+    // ==========================================
+
+    selector.innerHTML = `
+
+        <option value="">
+            Select a loan
+        </option>
+
+    `;
+
+
+    const outstandingLoans =
+        loans
+            .filter(
+                loan =>
+                    Number(
+                        loan.balance || 0
+                    ) > 0
+                    &&
+                    loan.status !==
+                    "Completed"
+            )
+            .sort(
+                (a, b) =>
+                    (
+                        a.clientName || ""
+                    ).localeCompare(
+                        b.clientName || ""
+                    )
+            );
+
+
+    outstandingLoans.forEach(
+        loan => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                loan.id;
+
+            option.textContent =
+                `${loan.clientName || "Unknown Client"} — ` +
+                `${loan.loanNumber || loan.id} — ` +
+                `Balance ${currency(
+                    loan.balance
+                )}`;
+
+            selector.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    if (
+        outstandingLoans.length ===
+        0
+    ) {
+
+        alert(
+            "There are no loans with an outstanding balance."
+        );
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // RESET FORM
+    // ==========================================
+
+    selector.value = "";
+
+
+    const repaymentLoanId =
+        document.getElementById(
+            "repayment-loan-id"
+        );
+
+    const repaymentClient =
+        document.getElementById(
+            "repayment-client"
+        );
+
+    const repaymentBalance =
+        document.getElementById(
+            "repayment-balance"
+        );
+
+    const repaymentWeekly =
+        document.getElementById(
+            "repayment-weekly"
+        );
+
+    const repaymentAmount =
+        document.getElementById(
+            "repayment-amount"
+        );
+
+    const repaymentNotes =
+        document.getElementById(
+            "repayment-notes"
+        );
+
+    const repaymentDate =
+        document.getElementById(
+            "repayment-date"
+        );
+
+
+    if (repaymentLoanId)
+        repaymentLoanId.value = "";
+
+
+    if (repaymentClient)
+        repaymentClient.value = "";
+
+
+    if (repaymentBalance)
+        repaymentBalance.value = "";
+
+
+    if (repaymentWeekly)
+        repaymentWeekly.value = "";
+
+
+    if (repaymentAmount)
+        repaymentAmount.value = "";
+
+
+    if (repaymentNotes)
+        repaymentNotes.value = "";
+
+
+    if (repaymentDate)
+        repaymentDate.value =
+            today();
+
+
+    // ==========================================
+    // OPEN EXISTING REPAYMENT MODAL
+    // ==========================================
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+// ==========================================
+// FILL REPAYMENT FORM
+// ==========================================
+
+function fillRepaymentFromSelectedLoan(
+    id
+) {
+
+    const loan =
+        loans.find(
+            item =>
+                item.id === id
+        );
+
+
+    const repaymentLoanId =
+        document.getElementById(
+            "repayment-loan-id"
+        );
+
+    const repaymentClient =
+        document.getElementById(
+            "repayment-client"
+        );
+
+    const repaymentBalance =
+        document.getElementById(
+            "repayment-balance"
+        );
+
+    const repaymentWeekly =
+        document.getElementById(
+            "repayment-weekly"
+        );
+
+    const repaymentAmount =
+        document.getElementById(
+            "repayment-amount"
+        );
+
+    const repaymentNotes =
+        document.getElementById(
+            "repayment-notes"
+        );
+
+    const repaymentDate =
+        document.getElementById(
+            "repayment-date"
+        );
+
+
+    if (!loan) {
+
+        if (repaymentLoanId)
+            repaymentLoanId.value = "";
+
+        if (repaymentClient)
+            repaymentClient.value = "";
+
+        if (repaymentBalance)
+            repaymentBalance.value = "";
+
+        if (repaymentWeekly)
+            repaymentWeekly.value = "";
+
+        return;
+
+    }
+
+
+    if (repaymentLoanId)
+        repaymentLoanId.value =
+            loan.id;
+
+
+    if (repaymentClient)
+        repaymentClient.value =
+            loan.clientName || "";
+
+
+    if (repaymentBalance)
+        repaymentBalance.value =
+            currency(
+                loan.balance
+            );
+
+
+    if (repaymentWeekly)
+        repaymentWeekly.value =
+            currency(
+                loan.weeklyPayment
+            );
+
+
+    if (repaymentAmount)
+        repaymentAmount.value = "";
+
+
+    if (repaymentNotes)
+        repaymentNotes.value = "";
+
+
+    if (repaymentDate)
+        repaymentDate.value =
+            today();
+
+}
+
+
+// ==========================================
+// INITIALIZE
+// ==========================================
+
+setupFabAddRepayment();
+
+
+// ==========================================
+// END OF FAB ADD REPAYMENT
+// ==========================================
 
 // ==========================================
 // END OF FILE
