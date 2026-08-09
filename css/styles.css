@@ -1304,10 +1304,16 @@ button{
     display:none
 }
 
+
+/*
+   DESKTOP FAB
+   ------------------------------------------
+   Keeps the FAB on the right side.
+*/
+
 .fab{
     position:fixed;
     right:25px;
-    left:auto;
     bottom:80px;
     width:58px;
     height:58px;
@@ -1316,9 +1322,9 @@ button{
     background:#0b2948;
     color:#fff;
     box-shadow:0 8px 25px rgba(0,0,0,.25);
-    z-index:3500;
+    z-index:2500;
 
-    /* Hide any existing text/icons inside the button */
+    /* Hide any original button text */
     font-size:0;
 
     display:flex;
@@ -1326,17 +1332,14 @@ button{
     justify-content:center
 }
 
-/* Always render exactly ONE plus */
+/*
+   ONE single plus sign.
+*/
 .fab::before{
     content:"+";
-    display:block;
     font-size:32px;
     line-height:1;
     font-weight:300
-}
-
-.fab>*{
-    display:none!important
 }
 
 
@@ -1437,6 +1440,11 @@ button{
 
 /* ==========================================
    DARK THEME
+   Supports:
+   - body.dark-theme
+   - html.dark-theme
+   - body[data-theme="dark"]
+   - html[data-theme="dark"]
    ========================================== */
 
 html.dark-theme,
@@ -1855,6 +1863,7 @@ body[data-theme="dark"] .stat-card.danger{
 
 /* ==========================================
    SYSTEM DARK MODE
+   Used when Settings = System
    ========================================== */
 
 @media(prefers-color-scheme:dark){
@@ -1937,6 +1946,12 @@ body[data-theme="dark"] .stat-card.danger{
     html[data-theme="system"] .mobile-nav .tab-btn.active,
     body[data-theme="system"] .mobile-nav .tab-btn.active{
         color:#38bdf8
+    }
+
+    html[data-theme="system"] .fab,
+    body[data-theme="system"] .fab{
+        background:#0a2947;
+        box-shadow:0 8px 25px rgba(0,0,0,.45)
     }
 }
 
@@ -2288,42 +2303,61 @@ body[data-theme="dark"] .stat-card.danger{
     /* ==========================================
        MOBILE FAB
        
-       FAB is positioned at the far right,
-       directly above the SETTINGS tab.
-
-       It does NOT sit over the navigation.
-       It does NOT cover SETTINGS.
-       It displays exactly ONE +.
+       FAB POSITION:
+       - Far right
+       - Directly above SETTINGS
+       - Never covers the bottom navigation
+       - ONE plus sign
        ========================================== */
 
     .fab{
         position:fixed;
+
+        /*
+           The Settings tab is the far-right tab.
+           Place the FAB at the far right as well.
+        */
+        right:14px;
         left:auto;
-        right:18px;
-        bottom:80px;
+
+        /*
+           Navigation height = 65px.
+           FAB bottom = 73px.
+           This leaves an 8px gap above the navigation.
+        */
+        bottom:73px;
+
         width:52px;
         height:52px;
+
         transform:none;
-        z-index:3500;
+
+        z-index:2500;
+
+        /*
+           Hide any original + text inside the button.
+        */
         font-size:0;
+
         display:flex;
         align-items:center;
         justify-content:center
     }
 
+    /*
+       Show ONLY one +.
+    */
     .fab::before{
         content:"+";
-        display:block;
         font-size:31px;
         line-height:1;
         font-weight:300
     }
 
-    /* Prevent any HTML icon/text from creating another + */
-    .fab>*{
-        display:none!important
-    }
-
+    /*
+       Keep navigation above the FAB if there is
+       ever any accidental overlap.
+    */
     .mobile-nav{
         z-index:3000
     }
@@ -2446,10 +2480,15 @@ body[data-theme="dark"] .stat-card.danger{
         font-size:8px
     }
 
-    /* Keep FAB above the shorter navigation */
+    /*
+       Small phone:
+       Navigation is 62px high.
+       Keep FAB 8px above it.
+    */
     .fab{
-        right:16px;
-        bottom:76px;
+        right:12px;
+        left:auto;
+        bottom:70px;
         width:50px;
         height:50px;
         transform:none
@@ -2457,7 +2496,9 @@ body[data-theme="dark"] .stat-card.danger{
 
     .fab::before{
         content:"+";
-        font-size:30px
+        font-size:30px;
+        line-height:1;
+        font-weight:300
     }
 }
 
@@ -2476,10 +2517,24 @@ body[data-theme="dark"] .stat-card.danger{
         padding-bottom:60px
     }
 
+    /*
+       Landscape navigation is 55px high.
+       FAB sits 8px above it.
+    */
     .fab{
-        right:18px;
-        bottom:68px;
+        right:14px;
+        left:auto;
+        bottom:63px;
+        width:50px;
+        height:50px;
         transform:none
+    }
+
+    .fab::before{
+        content:"+";
+        font-size:30px;
+        line-height:1;
+        font-weight:300
     }
 
     .modal{
