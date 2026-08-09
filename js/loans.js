@@ -1,11 +1,13 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 5.0
+// VERSION 5.2
 //
 // ✔ Clean loans table — NO ACTION BUTTONS
 // ✔ Entire loan row is clickable
-// ✔ Click row to open loan details
+// ✔ Clicking row opens FULL LOAN DETAILS PAGE
+// ✔ NO expanding row
+// ✔ Android/browser Back button supported
 // ✔ Loan details contain ALL actions
 // ✔ Receive Repayment
 // ✔ Edit Loan
@@ -22,6 +24,7 @@
 // ✔ Firestore realtime sync
 // ✔ Search & filters
 // ✔ History logging
+// ✔ FAB Add Repayment
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -193,6 +196,17 @@ let clients = [];
 // ==========================================
 
 let selectedLoanId = null;
+
+
+// ==========================================
+// LOAN DETAILS PAGE STATE
+// ==========================================
+
+let loanDetailsPage = null;
+
+let loanDetailsPageOpen = false;
+
+let loanDetailsHistoryState = false;
 
 
 // ==========================================
@@ -750,12 +764,12 @@ function loadLoans() {
 
             filterLoans();
 
-            /*
-             * If the selected loan still exists,
-             * refresh its details.
-             */
 
-            if (selectedLoanId) {
+            // ==========================================
+            // REFRESH OPEN LOAN DETAILS PAGE
+            // ==========================================
+
+            if (selectedLoanId && loanDetailsPageOpen) {
 
                 const selectedLoan =
                     loans.find(
@@ -766,7 +780,7 @@ function loadLoans() {
 
                 if (selectedLoan) {
 
-                    renderLoanDetails(
+                    renderLoanDetailsPage(
                         selectedLoan
                     );
 
@@ -1311,8 +1325,11 @@ if (loanForm) {
 // ==========================================
 //
 // IMPORTANT:
-// There are NO ACTION BUTTONS in this table.
-// The entire row is clickable.
+//
+// The row NO LONGER expands.
+//
+// Clicking the entire row opens the
+// loan details as a separate full page.
 // ==========================================
 
 function renderLoans(list) {
@@ -1320,6 +1337,7 @@ function renderLoans(list) {
     if (!loansTableBody) return;
 
     loansTableBody.innerHTML = "";
+
 
     // ==========================================
     // SORT LATEST FIRST
@@ -1394,9 +1412,14 @@ function renderLoans(list) {
                 loan.id;
 
 
+            // ==========================================
+            // VISUAL SELECTED STATE
+            // ==========================================
+
             if (
                 loan.id ===
-                selectedLoanId
+                selectedLoanId &&
+                loanDetailsPageOpen
             ) {
 
                 row.classList.add(
@@ -1510,7 +1533,7 @@ function renderLoans(list) {
                 "click",
                 () => {
 
-                    toggleLoanDetails(
+                    openLoanDetailsPage(
                         loan.id
                     );
 
@@ -1525,313 +1548,394 @@ function renderLoans(list) {
         }
     );
 
+}
 
-    // ==========================================
-    // INSERT DETAILS AFTER TABLE
-    // ==========================================
 
-    renderSelectedLoanDetails();
+// ==========================================
+// CREATE LOAN DETAILS FULL PAGE
+// ==========================================
+//
+// This replaces the previous expanding
+// details container.
+//
+// The page is created dynamically so
+// index.html does not need another
+// loan-details element.
+// ==========================================
+
+function getLoanDetailsPage() {
+
+    if (loanDetailsPage) {
+
+        return loanDetailsPage;
+
+    }
+
+
+    loanDetailsPage =
+        document.createElement("div");
+
+
+    loanDetailsPage.id =
+        "loan-details-page";
+
+
+    loanDetailsPage.className =
+        "loan-details-page hidden";
+
+
+    loanDetailsPage.innerHTML = `
+
+        <div class="loan-details-page-inner">
+
+            <div
+                id="loan-details-page-content"
+                class="loan-details-page-content"
+            ></div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        loanDetailsPage
+    );
+
+
+    return loanDetailsPage;
 
 }
 
 
 // ==========================================
-// CREATE / GET LOAN DETAILS CONTAINER
+// HIDE LOANS LIST
 // ==========================================
 
-function getLoanDetailsContainer() {
+function hideLoansList() {
+
+    const possibleContainers = [
+
+        document.getElementById(
+            "loans-panel"
+        ),
+
+        document.getElementById(
+            "loans-section"
+        ),
+
+        document.getElementById(
+            "loans-page"
+        ),
+
+        document.getElementById(
+            "loans-container"
+        )
+
+    ];
+
 
     let container =
-        document.getElementById(
-            "loan-details-container"
+        possibleContainers.find(
+            element =>
+                element
         );
+
+
+    if (!container) {
+
+        if (
+            loansTableBody?.closest(
+                "section"
+            )
+        ) {
+
+            container =
+                loansTableBody.closest(
+                    "section"
+                );
+
+        }
+
+    }
+
+
+    if (!container) {
+
+        if (
+            loansTableBody?.parentElement
+        ) {
+
+            container =
+                loansTableBody.parentElement;
+
+        }
+
+    }
+
 
     if (container) {
 
-        return container;
+        container.dataset.loanListHidden =
+            "true";
+
+        container.classList.add(
+            "loan-list-page-hidden"
+        );
+
+        container.style.display =
+            "none";
 
     }
-
-
-    /*
-     * Create the container automatically.
-     *
-     * This means index.html does not need
-     * another loan-details element.
-     */
-
-    container =
-        document.createElement("div");
-
-    container.id =
-        "loan-details-container";
-
-    container.className =
-        "loan-details-container hidden";
-
-
-    /*
-     * Put the details directly after
-     * the loans table.
-     */
-
-    const table =
-        document.getElementById(
-            "loans-table"
-        );
-
-    if (table?.parentElement) {
-
-        table.parentElement.insertBefore(
-            container,
-            table.nextSibling
-        );
-
-    } else if (
-        loansTableBody?.parentElement
-    ) {
-
-        loansTableBody.parentElement
-            .parentElement
-            ?.insertAdjacentElement(
-                "afterend",
-                container
-            );
-
-    } else {
-
-        document.body.appendChild(
-            container
-        );
-
-    }
-
-
-    return container;
 
 }
 
 
 // ==========================================
-// TOGGLE LOAN DETAILS
+// SHOW LOANS LIST
 // ==========================================
 
-function toggleLoanDetails(id) {
+function showLoansList() {
 
-    if (
-        selectedLoanId === id
-    ) {
-
-        closeLoanDetails();
-
-        return;
-
-    }
+    const containers =
+        document.querySelectorAll(
+            '[data-loan-list-hidden="true"]'
+        );
 
 
-    selectedLoanId = id;
+    containers.forEach(
+        container => {
 
-    renderLoans(
-        [...getFilteredLoans()]
+            container.classList.remove(
+                "loan-list-page-hidden"
+            );
+
+            container.style.display =
+                "";
+
+            container.removeAttribute(
+                "data-loan-list-hidden"
+            );
+
+        }
     );
 
 }
 
 
 // ==========================================
-// GET CURRENT FILTERED LOANS
+// OPEN LOAN DETAILS PAGE
 // ==========================================
 
-function getFilteredLoans() {
-
-    let filtered =
-        [...loans];
-
-
-    const keyword =
-        loanSearch?.value
-            ?.trim()
-            .toLowerCase() ||
-        "";
-
-
-    const status =
-        loanFilter?.value ||
-        "ALL";
-
-
-    const month =
-        loanMonthFilter?.value ||
-        "ALL";
-
-
-    const year =
-        loanYearFilter?.value ||
-        "ALL";
-
-
-    if (keyword) {
-
-        filtered =
-            filtered.filter(
-                loan =>
-
-                    (
-                        loan.clientName ||
-                        ""
-                    )
-                        .toLowerCase()
-                        .includes(
-                            keyword
-                        )
-
-                    ||
-
-                    String(
-                        loan.id
-                    )
-                        .toLowerCase()
-                        .includes(
-                            keyword
-                        )
-
-                    ||
-
-                    String(
-                        loan.loanNumber ||
-                        ""
-                    )
-                        .toLowerCase()
-                        .includes(
-                            keyword
-                        )
-
-            );
-
-    }
-
-
-    if (
-        status !==
-        "ALL"
-    ) {
-
-        filtered =
-            filtered.filter(
-                loan =>
-                    loan.status ===
-                    status
-            );
-
-    }
-
-
-    if (
-        month !== "ALL" ||
-        year !== "ALL"
-    ) {
-
-        filtered =
-            filtered.filter(
-                loan => {
-
-                    const date =
-                        loan.approvalDate
-                            ? new Date(
-                                loan.approvalDate
-                            )
-                            : loan.createdAt?.toDate
-                                ? loan.createdAt.toDate()
-                                : new Date();
-
-
-                    const monthMatch =
-                        month === "ALL" ||
-                        date.getMonth() ===
-                        Number(month);
-
-
-                    const yearMatch =
-                        year === "ALL" ||
-                        date.getFullYear() ===
-                        Number(year);
-
-
-                    return (
-                        monthMatch &&
-                        yearMatch
-                    );
-
-                }
-            );
-
-    }
-
-
-    return filtered;
-
-}
-
-
-// ==========================================
-// RENDER SELECTED LOAN DETAILS
-// ==========================================
-
-function renderSelectedLoanDetails() {
-
-    const container =
-        getLoanDetailsContainer();
-
-    if (!container) return;
-
-
-    if (!selectedLoanId) {
-
-        container.classList.add(
-            "hidden"
-        );
-
-        container.innerHTML = "";
-
-        return;
-
-    }
-
+function openLoanDetailsPage(
+    id,
+    useHistory = true
+) {
 
     const loan =
         loans.find(
             item =>
-                item.id ===
-                selectedLoanId
+                item.id === id
         );
 
 
     if (!loan) {
 
-        closeLoanDetails();
+        alert(
+            "Loan not found."
+        );
 
         return;
 
     }
 
 
-    renderLoanDetails(
+    selectedLoanId =
+        id;
+
+
+    loanDetailsPageOpen =
+        true;
+
+
+    hideLoansList();
+
+
+    const page =
+        getLoanDetailsPage();
+
+
+    page.classList.remove(
+        "hidden"
+    );
+
+
+    page.classList.add(
+        "active"
+    );
+
+
+    document.body.classList.add(
+        "loan-details-page-open"
+    );
+
+
+    renderLoanDetailsPage(
         loan
     );
+
+
+    // ==========================================
+    // BROWSER / ANDROID BACK BUTTON
+    // ==========================================
+
+    if (
+        useHistory &&
+        !loanDetailsHistoryState
+    ) {
+
+        history.pushState(
+            {
+                greymusLoanDetails:
+                    true,
+
+                loanId:
+                    id
+
+            },
+            "",
+            window.location.href
+        );
+
+
+        loanDetailsHistoryState =
+            true;
+
+    }
 
 }
 
 
 // ==========================================
-// RENDER LOAN DETAILS
+// CLOSE LOAN DETAILS PAGE
 // ==========================================
 
-function renderLoanDetails(loan) {
+function closeLoanDetails(
+    fromPopState = false
+) {
 
-    const container =
-        getLoanDetailsContainer();
+    loanDetailsPageOpen =
+        false;
 
-    if (!container) return;
+
+    selectedLoanId =
+        null;
+
+
+    const page =
+        document.getElementById(
+            "loan-details-page"
+        );
+
+
+    if (page) {
+
+        page.classList.remove(
+            "active"
+        );
+
+        page.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    document.body.classList.remove(
+        "loan-details-page-open"
+    );
+
+
+    showLoansList();
+
+
+    if (
+        !fromPopState &&
+        loanDetailsHistoryState
+    ) {
+
+        loanDetailsHistoryState =
+            false;
+
+
+        if (
+            history.state?.greymusLoanDetails
+        ) {
+
+            history.back();
+
+        }
+
+    } else {
+
+        loanDetailsHistoryState =
+            false;
+
+    }
+
+
+    filterLoans();
+
+}
+
+
+// ==========================================
+// ANDROID / BROWSER BACK BUTTON
+// ==========================================
+
+window.addEventListener(
+    "popstate",
+    event => {
+
+        if (
+            loanDetailsPageOpen
+        ) {
+
+            closeLoanDetails(
+                true
+            );
+
+            return;
+
+        }
+
+
+        loanDetailsHistoryState =
+            false;
+
+    }
+);
+
+
+// ==========================================
+// RENDER FULL LOAN DETAILS PAGE
+// ==========================================
+
+function renderLoanDetailsPage(
+    loan
+) {
+
+    const page =
+        getLoanDetailsPage();
+
+
+    const content =
+        page.querySelector(
+            "#loan-details-page-content"
+        );
+
+
+    if (!content) return;
 
 
     const schedule =
@@ -1862,12 +1966,7 @@ function renderLoanDetails(loan) {
         "Pending";
 
 
-    container.classList.remove(
-        "hidden"
-    );
-
-
-    container.innerHTML = `
+    content.innerHTML = `
 
         <div class="loan-details-panel">
 
@@ -1896,12 +1995,16 @@ function renderLoanDetails(loan) {
 
                 </div>
 
+
                 <button
                     type="button"
                     class="loan-details-close"
                     data-action="close-loan-details"
+                    aria-label="Back to loans"
                 >
+
                     ×
+
                 </button>
 
             </div>
@@ -2508,14 +2611,14 @@ function attachDetailsActions() {
 
     const container =
         document.getElementById(
-            "loan-details-container"
+            "loan-details-page"
         );
 
     if (!container) return;
 
 
     // ==========================================
-    // CLOSE
+    // CLOSE / BACK
     // ==========================================
 
     container
@@ -2524,7 +2627,11 @@ function attachDetailsActions() {
         )
         ?.addEventListener(
             "click",
-            closeLoanDetails
+            () => {
+
+                closeLoanDetails();
+
+            }
         );
 
 
@@ -2651,49 +2758,6 @@ function attachDetailsActions() {
             );
 
         });
-
-}
-
-
-// ==========================================
-// CLOSE LOAN DETAILS
-// ==========================================
-
-function closeLoanDetails() {
-
-    selectedLoanId =
-        null;
-
-
-    const container =
-        document.getElementById(
-            "loan-details-container"
-        );
-
-
-    if (container) {
-
-        container.classList.add(
-            "hidden"
-        );
-
-        container.innerHTML =
-            "";
-
-    }
-
-
-    /*
-     * Refresh row highlighting.
-     */
-
-    const filtered =
-        getFilteredLoans();
-
-
-    renderLoans(
-        filtered
-    );
 
 }
 
@@ -3120,6 +3184,9 @@ async function deleteLoan(id) {
             null;
 
 
+        closeLoanDetails();
+
+
         alert(
             "Loan deleted successfully."
         );
@@ -3220,6 +3287,137 @@ function filterLoans() {
     renderLoans(
         getFilteredLoans()
     );
+
+}
+
+
+function getFilteredLoans() {
+
+    let filtered =
+        [...loans];
+
+
+    const keyword =
+        loanSearch?.value
+            ?.trim()
+            .toLowerCase() ||
+        "";
+
+
+    const status =
+        loanFilter?.value ||
+        "ALL";
+
+
+    const month =
+        loanMonthFilter?.value ||
+        "ALL";
+
+
+    const year =
+        loanYearFilter?.value ||
+        "ALL";
+
+
+    if (keyword) {
+
+        filtered =
+            filtered.filter(
+                loan =>
+
+                    (
+                        loan.clientName ||
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword
+                        )
+
+                    ||
+
+                    String(
+                        loan.id
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword
+                        )
+
+                    ||
+
+                    String(
+                        loan.loanNumber ||
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            keyword
+                        )
+
+            );
+
+    }
+
+
+    if (
+        status !==
+        "ALL"
+    ) {
+
+        filtered =
+            filtered.filter(
+                loan =>
+                    loan.status ===
+                    status
+            );
+
+    }
+
+
+    if (
+        month !== "ALL" ||
+        year !== "ALL"
+    ) {
+
+        filtered =
+            filtered.filter(
+                loan => {
+
+                    const date =
+                        loan.approvalDate
+                            ? new Date(
+                                loan.approvalDate
+                            )
+                            : loan.createdAt?.toDate
+                                ? loan.createdAt.toDate()
+                                : new Date();
+
+
+                    const monthMatch =
+                        month === "ALL" ||
+                        date.getMonth() ===
+                        Number(month);
+
+
+                    const yearMatch =
+                        year === "ALL" ||
+                        date.getFullYear() ===
+                        Number(year);
+
+
+                    return (
+                        monthMatch &&
+                        yearMatch
+                    );
+
+                }
+            );
+
+    }
+
+
+    return filtered;
 
 }
 
@@ -3441,7 +3639,13 @@ setInterval(
 setInterval(
     () => {
 
-        filterLoans();
+        if (
+            !loanDetailsPageOpen
+        ) {
+
+            filterLoans();
+
+        }
 
     },
     30000
@@ -3763,10 +3967,11 @@ async function deletePayment(
 
         if (
             selectedLoanId ===
-            loan.id
+            loan.id &&
+            loanDetailsPageOpen
         ) {
 
-            renderLoanDetails(
+            renderLoanDetailsPage(
                 loan
             );
 
@@ -3779,11 +3984,6 @@ async function deletePayment(
 
 
     } catch (error) {
-
-        /*
-         * Restore local data if Firestore
-         * update failed.
-         */
 
         installment.paymentHistory =
             originalHistory;
@@ -4452,24 +4652,6 @@ repaymentForm?.addEventListener(
             );
 
 
-            /*
-             * Keep the loan details section open.
-             * Firestore will refresh the values,
-             * but this makes the UI immediately
-             * responsive.
-             */
-
-            if (
-                selectedLoanId ===
-                loan.id
-            ) {
-
-                selectedLoanId =
-                    loan.id;
-
-            }
-
-
         } catch (error) {
 
             console.error(
@@ -4509,8 +4691,8 @@ repaymentForm?.addEventListener(
 // ==========================================
 //
 // Kept for compatibility with existing
-// HTML. The new interface uses the
-// expanded loan details instead.
+// HTML. The main interface now uses
+// the FULL LOAN DETAILS PAGE.
 // ==========================================
 
 function renderRepaymentSchedule(loan) {
@@ -4589,13 +4771,17 @@ function renderRepaymentSchedule(loan) {
                     </td>
 
                     <td>
+
                         ${currency(
                             item.paidAmount
                         )}
+
                         /
+
                         ${currency(
                             item.amount
                         )}
+
                     </td>
 
                     <td>
@@ -4740,10 +4926,10 @@ export {
 
 };
 
+
 // ==========================================
-// GREYMUS LOAN FINANCIAL HUB
 // FAB ADD REPAYMENT
-// VERSION 5.1
+// VERSION 5.2
 //
 // ✔ Floating + menu can open Add Repayment
 // ✔ User first selects the loan
@@ -4821,7 +5007,9 @@ function openFabRepaymentSelector() {
             <label
                 for="fab-repayment-loan-select"
             >
+
                 Select Loan
+
             </label>
 
             <select
@@ -5129,19 +5317,15 @@ function fillRepaymentFromSelectedLoan(
 
 
 // ==========================================
-// INITIALIZE
+// INITIALIZE FAB
 // ==========================================
 
 setupFabAddRepayment();
 
 
 // ==========================================
-// END OF FAB ADD REPAYMENT
-// ==========================================
-
-// ==========================================
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 5.0
+// VERSION 5.2
 // ==========================================
