@@ -1,7 +1,7 @@
 /* ==========================================
    GREYMUS LOAN FINANCIAL HUB
    styles.css
-   VERSION 1.5
+   VERSION 1.6
    ========================================== */
 
 *{
@@ -1307,6 +1307,7 @@ button{
 .fab{
     position:fixed;
     right:25px;
+    left:auto;
     bottom:80px;
     width:58px;
     height:58px;
@@ -1315,9 +1316,9 @@ button{
     background:#0b2948;
     color:#fff;
     box-shadow:0 8px 25px rgba(0,0,0,.25);
-    z-index:2500;
+    z-index:3500;
 
-    /* Prevent actual + text from appearing beside pseudo + */
+    /* Hide any existing text/icons inside the button */
     font-size:0;
 
     display:flex;
@@ -1325,11 +1326,17 @@ button{
     justify-content:center
 }
 
+/* Always render exactly ONE plus */
 .fab::before{
     content:"+";
+    display:block;
     font-size:32px;
     line-height:1;
     font-weight:300
+}
+
+.fab>*{
+    display:none!important
 }
 
 
@@ -1430,11 +1437,6 @@ button{
 
 /* ==========================================
    DARK THEME
-   Supports:
-   - body.dark-theme
-   - html.dark-theme
-   - body[data-theme="dark"]
-   - html[data-theme="dark"]
    ========================================== */
 
 html.dark-theme,
@@ -1853,7 +1855,6 @@ body[data-theme="dark"] .stat-card.danger{
 
 /* ==========================================
    SYSTEM DARK MODE
-   Used when Settings = System
    ========================================== */
 
 @media(prefers-color-scheme:dark){
@@ -2287,27 +2288,40 @@ body[data-theme="dark"] .stat-card.danger{
     /* ==========================================
        MOBILE FAB
        
-       IMPORTANT:
-       The FAB is centered above the navigation.
-       This prevents it from covering SETTINGS.
+       FAB is positioned at the far right,
+       directly above the SETTINGS tab.
+
+       It does NOT sit over the navigation.
+       It does NOT cover SETTINGS.
+       It displays exactly ONE +.
        ========================================== */
 
     .fab{
-        left:50%;
-        right:auto;
+        position:fixed;
+        left:auto;
+        right:18px;
         bottom:80px;
         width:52px;
         height:52px;
-        transform:translateX(-50%);
-        z-index:2500;
-        font-size:0
+        transform:none;
+        z-index:3500;
+        font-size:0;
+        display:flex;
+        align-items:center;
+        justify-content:center
     }
 
     .fab::before{
         content:"+";
+        display:block;
         font-size:31px;
         line-height:1;
         font-weight:300
+    }
+
+    /* Prevent any HTML icon/text from creating another + */
+    .fab>*{
+        display:none!important
     }
 
     .mobile-nav{
@@ -2432,10 +2446,18 @@ body[data-theme="dark"] .stat-card.danger{
         font-size:8px
     }
 
+    /* Keep FAB above the shorter navigation */
     .fab{
+        right:16px;
         bottom:76px;
         width:50px;
-        height:50px
+        height:50px;
+        transform:none
+    }
+
+    .fab::before{
+        content:"+";
+        font-size:30px
     }
 }
 
@@ -2455,7 +2477,9 @@ body[data-theme="dark"] .stat-card.danger{
     }
 
     .fab{
-        bottom:68px
+        right:18px;
+        bottom:68px;
+        transform:none
     }
 
     .modal{
