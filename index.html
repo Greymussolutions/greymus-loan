@@ -1,32 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
+
+<!-- =========================================================
+     GREYMUS LOAN FINANCIAL HUB
+     index.html
+     FULL VERSION
+     ========================================================= -->
+
 <head>
+
+    <!-- =====================================================
+         BASIC DOCUMENT SETTINGS
+         ===================================================== -->
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Greymus Loan Financial Hub</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- =====================================================
+         GOOGLE FONTS
+         ===================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
 
+
+    <!-- =====================================================
+         FONT AWESOME
+         ===================================================== -->
+
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     >
 
-    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- =====================================================
+         MAIN STYLESHEET
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="css/styles.css"
+    >
+
+
+    <!-- =====================================================
+         LOGIN PAGE STYLES
+         ===================================================== -->
 
     <style>
+
         #login-section {
             width: 100%;
             min-height: 100dvh;
             box-sizing: border-box;
         }
+
 
         .login-container {
             width: 100%;
@@ -41,6 +90,7 @@
             margin: auto;
         }
 
+
         .form-section {
             flex: 1;
             padding: 50px 60px;
@@ -52,9 +102,11 @@
             box-sizing: border-box;
         }
 
+
         .logo-area {
             text-align: center;
         }
+
 
         .login-logo {
             width: 60px;
@@ -63,6 +115,7 @@
             margin-bottom: 10px;
         }
 
+
         .logo-text {
             font-size: 22px;
             font-weight: 800;
@@ -70,6 +123,7 @@
             color: #0d233a;
             text-transform: uppercase;
         }
+
 
         .logo-subtext {
             font-size: 11px;
@@ -83,9 +137,11 @@
             display: inline-block;
         }
 
+
         .welcome-back {
             margin-top: -20px;
         }
+
 
         .welcome-back h2 {
             font-size: 24px;
@@ -94,17 +150,20 @@
             font-weight: 700;
         }
 
+
         .welcome-back > p {
             font-size: 13px;
             color: #666;
             margin-bottom: 25px;
         }
 
+
         .input-field-wrapper {
             position: relative;
             display: flex;
             align-items: center;
         }
+
 
         .input-field-wrapper i {
             position: absolute;
@@ -113,6 +172,7 @@
             font-size: 14px;
             z-index: 1;
         }
+
 
         .input-field-wrapper input {
             width: 100%;
@@ -124,6 +184,7 @@
             outline: none;
             background: #fafbfc;
         }
+
 
         #login-btn {
             width: 100%;
@@ -148,6 +209,7 @@
             min-height: 48px;
         }
 
+
         .features-footer {
             display: flex;
             justify-content: space-around;
@@ -159,15 +221,18 @@
             margin-top: 10px;
         }
 
+
         .feature-item {
             display: flex;
             align-items: center;
             gap: 5px;
         }
 
+
         .feature-item i {
             color: #0a2540;
         }
+
 
         .visual-section {
             flex: 1.1;
@@ -194,6 +259,7 @@
             box-sizing: border-box;
         }
 
+
         .visual-content h1 {
             font-size: 32px;
             font-weight: 800;
@@ -201,9 +267,11 @@
             margin-bottom: 10px;
         }
 
+
         .visual-content h1 span {
             color: #38bdf8;
         }
+
 
         .visual-content p {
             font-size: 13px;
@@ -211,6 +279,7 @@
             line-height: 1.5;
             max-width: 320px;
         }
+
 
         .brand-badge {
             background: rgba(255, 255, 255, 0.05);
@@ -224,10 +293,12 @@
             width: fit-content;
         }
 
+
         .brand-badge > i {
             font-size: 22px;
             color: #38bdf8;
         }
+
 
         .brand-badge-text h4 {
             font-size: 13px;
@@ -235,23 +306,100 @@
             letter-spacing: 0.5px;
         }
 
+
         .brand-badge-text p {
             font-size: 11px;
             color: #94a3b8;
         }
+
 
         .brand-badge-text p span {
             font-style: italic;
             color: #cbd5e1;
         }
 
+
         #loans-table tbody tr {
             cursor: pointer;
         }
 
+
         #loans-table tbody tr:hover {
             background: rgba(10, 37, 64, 0.05);
         }
+
+
+        /* =====================================================
+           FLOATING ACTION BUTTON
+           ===================================================== */
+
+        .fab-actions {
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 9998;
+        }
+
+
+        .fab-actions.show {
+            display: flex;
+        }
+
+
+        .fab-action {
+            border: none;
+            border-radius: 30px;
+            padding: 11px 17px;
+            background: #ffffff;
+            color: #0a2540;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.18);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+
+        .fab-action i {
+            font-size: 15px;
+        }
+
+
+        .fab-action:hover {
+            transform: translateY(-1px);
+        }
+
+
+        #fab-new-loan {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: none;
+            background: #0a2540;
+            color: #ffffff;
+            font-size: 25px;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        #fab-new-loan.open {
+            transform: rotate(45deg);
+        }
+
 
         @media (max-width: 768px) {
 
@@ -266,6 +414,7 @@
                 box-sizing: border-box;
             }
 
+
             .login-container {
                 width: 100%;
                 max-width: 430px;
@@ -278,6 +427,7 @@
                 overflow: hidden;
             }
 
+
             .form-section {
                 width: 100%;
                 flex: none;
@@ -287,9 +437,11 @@
                 box-sizing: border-box;
             }
 
+
             .logo-area {
                 width: 100%;
             }
+
 
             .login-logo {
                 width: 58px;
@@ -297,44 +449,53 @@
                 margin-bottom: 8px;
             }
 
+
             .logo-text {
                 font-size: 21px;
             }
+
 
             .logo-subtext {
                 font-size: 9px;
                 letter-spacing: 2.5px;
             }
 
+
             .welcome-back {
                 margin-top: 0;
                 width: 100%;
             }
+
 
             .welcome-back h2 {
                 font-size: 23px;
                 margin-top: 0;
             }
 
+
             .welcome-back > p {
                 font-size: 12px;
                 margin-bottom: 22px;
             }
 
+
             .form-group {
                 margin-bottom: 17px !important;
             }
+
 
             .input-field-wrapper input {
                 min-height: 48px;
                 font-size: 16px;
             }
 
+
             #login-btn {
                 min-height: 50px;
                 font-size: 15px;
                 margin-top: 6px;
             }
+
 
             .features-footer {
                 width: 100%;
@@ -343,9 +504,11 @@
                 gap: 8px;
             }
 
+
             .feature-item {
                 font-size: 11px;
             }
+
 
             .visual-section {
                 width: 100%;
@@ -357,10 +520,12 @@
                 box-sizing: border-box;
             }
 
+
             .visual-content h1 {
                 font-size: 27px;
                 margin: 0 0 8px;
             }
+
 
             .visual-content p {
                 max-width: none;
@@ -368,24 +533,42 @@
                 margin: 0;
             }
 
+
             .brand-badge {
                 width: 100%;
                 box-sizing: border-box;
                 padding: 13px 15px;
             }
 
+
             .brand-badge > i {
                 font-size: 20px;
             }
+
 
             .brand-badge-text h4 {
                 font-size: 12px;
             }
 
+
             .brand-badge-text p {
                 font-size: 10px;
             }
+
+
+            .fab-actions {
+                right: 15px;
+                bottom: 88px;
+            }
+
+
+            #fab-new-loan {
+                right: 15px;
+                bottom: 18px;
+            }
+
         }
+
 
         @media (max-width: 380px) {
 
@@ -393,51 +576,63 @@
                 padding: 8px;
             }
 
+
             .login-container {
                 margin: 4px auto;
                 border-radius: 15px;
             }
+
 
             .form-section {
                 padding: 23px 17px 18px;
                 gap: 18px;
             }
 
+
             .login-logo {
                 width: 52px;
                 height: 52px;
             }
 
+
             .logo-text {
                 font-size: 19px;
             }
+
 
             .logo-subtext {
                 font-size: 8px;
                 letter-spacing: 2px;
             }
 
+
             .welcome-back h2 {
                 font-size: 21px;
             }
+
 
             .features-footer {
                 font-size: 10px;
             }
 
+
             .feature-item {
                 gap: 3px;
             }
+
 
             .visual-section {
                 min-height: 175px;
                 padding: 23px 17px;
             }
 
+
             .visual-content h1 {
                 font-size: 24px;
             }
+
         }
+
 
         @media (max-width: 768px) and (orientation: landscape) {
 
@@ -446,15 +641,18 @@
                 padding: 10px;
             }
 
+
             .login-container {
                 max-width: 760px;
                 flex-direction: row;
             }
 
+
             .form-section {
                 width: 55%;
                 padding: 22px;
             }
+
 
             .visual-section {
                 width: 45%;
@@ -469,28 +667,72 @@
                 margin-left: -35px;
                 padding-left: 60px;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
+    <!-- =====================================================
+         STARTUP LOGO
+         ===================================================== -->
+
     <div id="startup-logo">
-        <img src="IMG-20260707-WA0009.jpg" alt="Greymus Logo">
+
+        <img
+            src="IMG-20260707-WA0009.jpg"
+            alt="Greymus Logo"
+        >
+
     </div>
 
-    <div id="loading-overlay" class="hidden">
+
+    <!-- =====================================================
+         LOADING OVERLAY
+         ===================================================== -->
+
+    <div
+        id="loading-overlay"
+        class="hidden"
+    >
+
         <div class="spinner"></div>
+
         <p>Loading...</p>
+
     </div>
+
+
+    <!-- =====================================================
+         TOAST
+         ===================================================== -->
 
     <div id="toast"></div>
 
-    <section id="login-section" class="center-page">
+
+    <!-- =====================================================
+         LOGIN SECTION
+         ===================================================== -->
+
+    <section
+        id="login-section"
+        class="center-page"
+    >
 
         <div class="login-container">
 
+
+            <!-- =================================================
+                 LOGIN FORM
+                 ================================================= -->
+
             <div class="form-section">
+
 
                 <div class="logo-area">
 
@@ -510,6 +752,7 @@
 
                 </div>
 
+
                 <div class="welcome-back">
 
                     <h2>Welcome Back!</h2>
@@ -518,7 +761,9 @@
                         Sign in to continue to your dashboard
                     </p>
 
+
                     <form id="login-form">
+
 
                         <div class="form-group">
 
@@ -542,6 +787,7 @@
 
                         </div>
 
+
                         <div class="form-group">
 
                             <label for="password">
@@ -564,38 +810,60 @@
 
                         </div>
 
+
                         <button
                             id="login-btn"
                             type="submit"
                         >
+
                             <i class="fa-solid fa-arrow-right-to-bracket"></i>
+
                             LOGIN
+
                         </button>
+
 
                     </form>
 
                 </div>
 
+
                 <div class="features-footer">
 
                     <div class="feature-item">
+
                         <i class="fa-solid fa-shield-halved"></i>
+
                         <span>Secure</span>
+
                     </div>
 
+
                     <div class="feature-item">
+
                         <i class="fa-solid fa-circle-check"></i>
+
                         <span>Reliable</span>
+
                     </div>
 
+
                     <div class="feature-item">
+
                         <i class="fa-solid fa-users"></i>
+
                         <span>Trusted</span>
+
                     </div>
 
                 </div>
 
             </div>
+
+
+            <!-- =================================================
+                 LOGIN VISUAL SECTION
+                 ================================================= -->
 
             <div class="visual-section">
 
@@ -613,6 +881,7 @@
 
                 </div>
 
+
                 <div class="brand-badge">
 
                     <i class="fa-solid fa-shield-cat"></i>
@@ -625,9 +894,11 @@
 
                         <p>
                             Loans Solutions<br>
+
                             <span>
                                 Your Growth, Our Priority
                             </span>
+
                         </p>
 
                     </div>
@@ -640,9 +911,22 @@
 
     </section>
 
-    <section id="dashboard-section" class="hidden">
+
+    <!-- =====================================================
+         DASHBOARD SECTION
+         ===================================================== -->
+
+    <section
+        id="dashboard-section"
+        class="hidden"
+    >
 
         <div class="dashboard-layout">
+
+
+            <!-- =================================================
+                 SIDEBAR
+                 ================================================= -->
 
             <aside class="sidebar">
 
@@ -660,29 +944,49 @@
 
                 </div>
 
+
                 <nav class="sidebar-menu">
 
-                    <button class="tab-btn active" data-tab="dashboard">
+                    <button
+                        class="tab-btn active"
+                        data-tab="dashboard"
+                    >
                         <span>🏠</span>
                         <small>Dashboard</small>
                     </button>
 
-                    <button class="tab-btn" data-tab="clients">
+
+                    <button
+                        class="tab-btn"
+                        data-tab="clients"
+                    >
                         <span>👥</span>
                         <small>Clients</small>
                     </button>
 
-                    <button class="tab-btn" data-tab="loans">
+
+                    <button
+                        class="tab-btn"
+                        data-tab="loans"
+                    >
                         <span>💰</span>
                         <small>Loans</small>
                     </button>
 
-                    <button class="tab-btn" data-tab="history">
+
+                    <button
+                        class="tab-btn"
+                        data-tab="history"
+                    >
                         <span>📋</span>
                         <small>History</small>
                     </button>
 
-                    <button class="tab-btn" data-tab="settings">
+
+                    <button
+                        class="tab-btn"
+                        data-tab="settings"
+                    >
                         <span>⚙️</span>
                         <small>Settings</small>
                     </button>
@@ -691,7 +995,17 @@
 
             </aside>
 
+
+            <!-- =================================================
+                 MAIN CONTENT
+                 ================================================= -->
+
             <main class="main-content">
+
+
+                <!-- =============================================
+                     TOPBAR
+                     ============================================= -->
 
                 <header class="topbar">
 
@@ -709,6 +1023,7 @@
 
                     </div>
 
+
                     <div class="topbar-actions">
 
                         <button
@@ -724,7 +1039,20 @@
 
                 </header>
 
-                <section id="dashboard-tab" class="tab-content">
+
+                <!-- =================================================
+                     DASHBOARD TAB
+                     ================================================= -->
+
+                <section
+                    id="dashboard-tab"
+                    class="tab-content"
+                >
+
+
+                    <!-- =============================================
+                         PORTFOLIO HERO
+                         ============================================= -->
 
                     <div class="hero-card">
 
@@ -744,6 +1072,7 @@
 
                                 </div>
 
+
                                 <button
                                     type="button"
                                     id="portfolio-summary-btn"
@@ -755,9 +1084,11 @@
 
                             </div>
 
+
                             <small id="stat-monthly-portfolio">
                                 This Month Portfolio: KES 0
                             </small>
+
 
                             <div
                                 id="portfolio-summary-content"
@@ -778,6 +1109,7 @@
 
                                     </div>
 
+
                                     <div class="portfolio-breakdown-row">
 
                                         <span>
@@ -796,11 +1128,17 @@
 
                         </div>
 
+
                         <div class="hero-icon">
                             💼
                         </div>
 
                     </div>
+
+
+                    <!-- =============================================
+                         TODAY'S COLLECTION
+                         ============================================= -->
 
                     <section class="today-collection">
 
@@ -819,6 +1157,7 @@
                             </div>
 
                         </div>
+
 
                         <div class="stat-card expandable-card">
 
@@ -839,6 +1178,7 @@
 
                                 </div>
 
+
                                 <button
                                     type="button"
                                     id="today-due-btn"
@@ -850,7 +1190,11 @@
 
                             </div>
 
-                            <div id="today-due-content" class="hidden">
+
+                            <div
+                                id="today-due-content"
+                                class="hidden"
+                            >
 
                                 <div
                                     id="todayDueList"
@@ -873,29 +1217,62 @@
 
                     </section>
 
+
+                    <!-- =============================================
+                         TODAY SUMMARY
+                         ============================================= -->
+
                     <div class="today-summary-grid">
 
                         <div class="stat-card">
+
                             <span>Expected</span>
-                            <h3 id="expectedCollection">KES 0</h3>
+
+                            <h3 id="expectedCollection">
+                                KES 0
+                            </h3>
+
                         </div>
 
+
                         <div class="stat-card">
+
                             <span>Collected</span>
-                            <h3 id="collectedToday">KES 0</h3>
+
+                            <h3 id="collectedToday">
+                                KES 0
+                            </h3>
+
                         </div>
 
+
                         <div class="stat-card">
+
                             <span>Remaining</span>
-                            <h3 id="remainingCollection">KES 0</h3>
+
+                            <h3 id="remainingCollection">
+                                KES 0
+                            </h3>
+
                         </div>
+
 
                         <div class="stat-card success">
+
                             <span>Collection Rate</span>
-                            <h3 id="collectionRate">0%</h3>
+
+                            <h3 id="collectionRate">
+                                0%
+                            </h3>
+
                         </div>
 
                     </div>
+
+
+                    <!-- =============================================
+                         TOTAL LOANS SUMMARY
+                         ============================================= -->
 
                     <div class="stat-card expandable-card">
 
@@ -916,6 +1293,7 @@
 
                             </div>
 
+
                             <button
                                 type="button"
                                 id="loan-summary-btn"
@@ -927,6 +1305,7 @@
 
                         </div>
 
+
                         <div
                             id="loan-summary-content"
                             class="hidden"
@@ -935,18 +1314,41 @@
                             <div class="loan-summary-stats">
 
                                 <div class="summary-stat">
-                                    <span>Active Loans</span>
-                                    <strong id="stat-active-loans">0</strong>
+
+                                    <span>
+                                        Active Loans
+                                    </span>
+
+                                    <strong id="stat-active-loans">
+                                        0
+                                    </strong>
+
                                 </div>
 
-                                <div class="summary-stat">
-                                    <span>Completed Loans</span>
-                                    <strong id="stat-completed-loans">0</strong>
-                                </div>
 
                                 <div class="summary-stat">
-                                    <span>Repeat Loans</span>
-                                    <strong id="stat-repeat-loans">0</strong>
+
+                                    <span>
+                                        Completed Loans
+                                    </span>
+
+                                    <strong id="stat-completed-loans">
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="summary-stat">
+
+                                    <span>
+                                        Repeat Loans
+                                    </span>
+
+                                    <strong id="stat-repeat-loans">
+                                        0
+                                    </strong>
+
                                 </div>
 
                             </div>
@@ -955,26 +1357,56 @@
 
                     </div>
 
+
+                    <!-- =============================================
+                         DASHBOARD STATISTICS
+                         ============================================= -->
+
                     <div class="stats-grid">
 
+
                         <div class="stat-card">
-                            <span>Total Portfolio Issued</span>
-                            <h3 id="stat-total-portfolio">KES 0</h3>
+
+                            <span>
+                                Total Portfolio Issued
+                            </span>
+
+                            <h3 id="stat-total-portfolio">
+                                KES 0
+                            </h3>
+
                         </div>
+
 
                         <div
                             class="stat-card clickable-card"
                             id="previous-portfolio-card"
                         >
-                            <span>Previous Months Portfolio</span>
-                            <h3 id="stat-previous-portfolio">KES 0</h3>
-                            <small>Click to view monthly portfolio</small>
+
+                            <span>
+                                Previous Months Portfolio
+                            </span>
+
+                            <h3 id="stat-previous-portfolio">
+                                KES 0
+                            </h3>
+
+                            <small>
+                                Click to view monthly portfolio
+                            </small>
+
                         </div>
+
+
+                        <!-- =========================================
+                             PREVIOUS PORTFOLIO MODAL
+                             ========================================= -->
 
                         <div
                             id="previous-months-portfolio-modal"
                             class="modal hidden"
                         >
+
                             <div class="modal-content">
 
                                 <div class="modal-header">
@@ -992,44 +1424,92 @@
 
                                 </div>
 
+
                                 <div id="previous-months-portfolio-list">
+
                                     <p>
                                         No previous months records.
                                     </p>
+
                                 </div>
 
                             </div>
+
                         </div>
 
-                        <div class="stat-card">
-                            <span>Clients</span>
-                            <h3 id="stat-clients">0</h3>
-                        </div>
 
                         <div class="stat-card">
-                            <span>This Month Income</span>
-                            <h3 id="stat-revenue">KES 0</h3>
-                            <small>Auto resets every month</small>
+
+                            <span>
+                                Clients
+                            </span>
+
+                            <h3 id="stat-clients">
+                                0
+                            </h3>
+
                         </div>
 
+
                         <div class="stat-card">
-                            <span>Total Income</span>
-                            <h3 id="stat-total-income">KES 0</h3>
+
+                            <span>
+                                This Month Income
+                            </span>
+
+                            <h3 id="stat-revenue">
+                                KES 0
+                            </h3>
+
+                            <small>
+                                Auto resets every month
+                            </small>
+
                         </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                Total Income
+                            </span>
+
+                            <h3 id="stat-total-income">
+                                KES 0
+                            </h3>
+
+                        </div>
+
 
                         <div
                             class="stat-card clickable-card"
                             id="previous-income-card"
                         >
-                            <span>Previous Months Income</span>
-                            <h3 id="stat-previous-income">KES 0</h3>
-                            <small>Click to view monthly income</small>
+
+                            <span>
+                                Previous Months Income
+                            </span>
+
+                            <h3 id="stat-previous-income">
+                                KES 0
+                            </h3>
+
+                            <small>
+                                Click to view monthly income
+                            </small>
+
                         </div>
+
+
+                        <!-- =========================================
+                             PREVIOUS INCOME MODAL
+                             ========================================= -->
 
                         <div
                             id="previous-months-income-modal"
                             class="modal hidden"
                         >
+
                             <div class="modal-content">
 
                                 <div class="modal-header">
@@ -1047,36 +1527,77 @@
 
                                 </div>
 
+
                                 <div id="previous-months-income-list">
+
                                     <p>
                                         No previous months income records.
                                     </p>
+
                                 </div>
 
                             </div>
+
                         </div>
 
-                        <div class="stat-card">
-                            <span>Pending Loans</span>
-                            <h3 id="stat-pending">0</h3>
-                        </div>
 
                         <div class="stat-card">
-                            <span>Approved Loans</span>
-                            <h3 id="stat-approved">0</h3>
+
+                            <span>
+                                Pending Loans
+                            </span>
+
+                            <h3 id="stat-pending">
+                                0
+                            </h3>
+
                         </div>
 
+
                         <div class="stat-card">
-                            <span>Rejected Loans</span>
-                            <h3 id="stat-rejected">0</h3>
+
+                            <span>
+                                Approved Loans
+                            </span>
+
+                            <h3 id="stat-approved">
+                                0
+                            </h3>
+
                         </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                Rejected Loans
+                            </span>
+
+                            <h3 id="stat-rejected">
+                                0
+                            </h3>
+
+                        </div>
+
 
                         <div class="stat-card danger">
-                            <span>Loans in Arrears</span>
-                            <h3 id="stat-arrears">0</h3>
+
+                            <span>
+                                Loans in Arrears
+                            </span>
+
+                            <h3 id="stat-arrears">
+                                0
+                            </h3>
+
                         </div>
 
                     </div>
+
+
+                    <!-- =============================================
+                         ARREARS
+                         ============================================= -->
 
                     <section class="arrears-section">
 
@@ -1096,27 +1617,54 @@
 
                         </div>
 
+
                         <div class="arrears-card">
 
                             <p>
-                                <strong>Total Clients:</strong>
-                                <span id="arrears-client-count">0</span>
+
+                                <strong>
+                                    Total Clients:
+                                </strong>
+
+                                <span id="arrears-client-count">
+                                    0
+                                </span>
+
                             </p>
 
+
                             <p>
-                                <strong>Total Amount:</strong>
-                                <span id="arrears-total-amount">KES 0</span>
+
+                                <strong>
+                                    Total Amount:
+                                </strong>
+
+                                <span id="arrears-total-amount">
+                                    KES 0
+                                </span>
+
                             </p>
+
 
                             <hr>
 
+
                             <div id="arrears-client-list">
-                                <p>No clients in arrears.</p>
+
+                                <p>
+                                    No clients in arrears.
+                                </p>
+
                             </div>
 
                         </div>
 
                     </section>
+
+
+                    <!-- =============================================
+                         QUICK ACTIONS
+                         ============================================= -->
 
                     <section class="quick-actions">
 
@@ -1136,29 +1684,57 @@
 
                         </div>
 
+
                         <div class="quick-grid">
+
 
                             <button
                                 id="new-client-btn"
                                 class="action-card"
                             >
-                                <div class="action-icon">👤</div>
-                                <div>
-                                    <h3>New Client</h3>
-                                    <p>Register a borrower</p>
+
+                                <div class="action-icon">
+                                    👤
                                 </div>
+
+                                <div>
+
+                                    <h3>
+                                        New Client
+                                    </h3>
+
+                                    <p>
+                                        Register a borrower
+                                    </p>
+
+                                </div>
+
                             </button>
+
 
                             <button
                                 id="new-loan-btn"
                                 class="action-card"
                             >
-                                <div class="action-icon">💰</div>
-                                <div>
-                                    <h3>New Loan</h3>
-                                    <p>Create a weekly loan</p>
+
+                                <div class="action-icon">
+                                    💰
                                 </div>
+
+                                <div>
+
+                                    <h3>
+                                        New Loan
+                                    </h3>
+
+                                    <p>
+                                        Create a weekly loan
+                                    </p>
+
+                                </div>
+
                             </button>
+
 
                         </div>
 
@@ -1166,17 +1742,32 @@
 
                 </section>
 
+
+                <!-- =================================================
+                     CLIENTS TAB
+                     ================================================= -->
+
                 <section
                     id="clients-tab"
                     class="tab-content hidden"
                 >
 
                     <div class="section-header">
+
                         <div>
-                            <h2>Clients</h2>
-                            <p>Manage registered borrowers</p>
+
+                            <h2>
+                                Clients
+                            </h2>
+
+                            <p>
+                                Manage registered borrowers
+                            </p>
+
                         </div>
+
                     </div>
+
 
                     <div class="toolbar">
 
@@ -1188,12 +1779,15 @@
 
                     </div>
 
+
                     <div class="table-wrapper">
 
                         <table id="clients-table">
 
                             <thead>
+
                                 <tr>
+
                                     <th>No.</th>
                                     <th>Name</th>
                                     <th>Phone</th>
@@ -1202,8 +1796,11 @@
                                     <th>Guarantor</th>
                                     <th>Registered By</th>
                                     <th>Actions</th>
+
                                 </tr>
+
                             </thead>
+
 
                             <tbody id="clients-table-body"></tbody>
 
@@ -1213,19 +1810,35 @@
 
                 </section>
 
+
+                <!-- =================================================
+                     LOANS TAB
+                     ================================================= -->
+
                 <section
                     id="loans-tab"
                     class="tab-content hidden"
                 >
 
                     <div class="section-header">
+
                         <div>
-                            <h2>Loans</h2>
-                            <p>Manage loans and weekly repayments</p>
+
+                            <h2>
+                                Loans
+                            </h2>
+
+                            <p>
+                                Manage loans and weekly repayments
+                            </p>
+
                         </div>
+
                     </div>
 
+
                     <div class="toolbar toolbar-wrap">
+
 
                         <input
                             type="text"
@@ -1233,43 +1846,112 @@
                             placeholder="Search loans..."
                         >
 
+
                         <select id="loan-filter">
-                            <option value="ALL">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Arrears">Arrears</option>
-                            <option value="Completed">Completed</option>
+
+                            <option value="ALL">
+                                All Status
+                            </option>
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="Approved">
+                                Approved
+                            </option>
+
+                            <option value="Rejected">
+                                Rejected
+                            </option>
+
+                            <option value="Arrears">
+                                Arrears
+                            </option>
+
+                            <option value="Completed">
+                                Completed
+                            </option>
+
                         </select>
+
 
                         <select id="loan-month-filter">
-                            <option value="ALL">All</option>
-                            <option value="0">January</option>
-                            <option value="1">February</option>
-                            <option value="2">March</option>
-                            <option value="3">April</option>
-                            <option value="4">May</option>
-                            <option value="5">June</option>
-                            <option value="6">July</option>
-                            <option value="7">August</option>
-                            <option value="8">September</option>
-                            <option value="9">October</option>
-                            <option value="10">November</option>
-                            <option value="11">December</option>
+
+                            <option value="ALL">
+                                All
+                            </option>
+
+                            <option value="0">
+                                January
+                            </option>
+
+                            <option value="1">
+                                February
+                            </option>
+
+                            <option value="2">
+                                March
+                            </option>
+
+                            <option value="3">
+                                April
+                            </option>
+
+                            <option value="4">
+                                May
+                            </option>
+
+                            <option value="5">
+                                June
+                            </option>
+
+                            <option value="6">
+                                July
+                            </option>
+
+                            <option value="7">
+                                August
+                            </option>
+
+                            <option value="8">
+                                September
+                            </option>
+
+                            <option value="9">
+                                October
+                            </option>
+
+                            <option value="10">
+                                November
+                            </option>
+
+                            <option value="11">
+                                December
+                            </option>
+
                         </select>
 
+
                         <select id="loan-year-filter">
-                            <option value="ALL">All</option>
+
+                            <option value="ALL">
+                                All
+                            </option>
+
                         </select>
 
                     </div>
+
 
                     <div class="table-wrapper">
 
                         <table id="loans-table">
 
                             <thead>
+
                                 <tr>
+
                                     <th>No.</th>
                                     <th>Disbursement Date</th>
                                     <th>Client</th>
@@ -1283,8 +1965,11 @@
                                     <th>Due Date</th>
                                     <th>Status</th>
                                     <th>Officer</th>
+
                                 </tr>
+
                             </thead>
+
 
                             <tbody id="loans-table-body"></tbody>
 
@@ -1294,17 +1979,32 @@
 
                 </section>
 
+
+                <!-- =================================================
+                     HISTORY TAB
+                     ================================================= -->
+
                 <section
                     id="history-tab"
                     class="tab-content hidden"
                 >
 
                     <div class="section-header">
+
                         <div>
-                            <h2>Repayment History</h2>
-                            <p>All loan repayments</p>
+
+                            <h2>
+                                Repayment History
+                            </h2>
+
+                            <p>
+                                All loan repayments
+                            </p>
+
                         </div>
+
                     </div>
+
 
                     <div class="toolbar">
 
@@ -1316,12 +2016,15 @@
 
                     </div>
 
+
                     <div class="table-wrapper">
 
                         <table>
 
                             <thead>
+
                                 <tr>
+
                                     <th>DATE</th>
                                     <th>TIME</th>
                                     <th>CLIENT</th>
@@ -1329,18 +2032,23 @@
                                     <th>AMOUNT</th>
                                     <th>BALANCE</th>
                                     <th>OFFICER</th>
+
                                 </tr>
+
                             </thead>
+
 
                             <tbody id="history-table-body">
 
                                 <tr>
+
                                     <td
                                         colspan="7"
                                         style="text-align:center"
                                     >
                                         No repayments recorded.
                                     </td>
+
                                 </tr>
 
                             </tbody>
@@ -1351,6 +2059,11 @@
 
                 </section>
 
+
+                <!-- =================================================
+                     SETTINGS TAB
+                     ================================================= -->
+
                 <section
                     id="settings-tab"
                     class="tab-content hidden"
@@ -1359,22 +2072,33 @@
                     <div class="section-header">
 
                         <div>
-                            <h2>Settings</h2>
+
+                            <h2>
+                                Settings
+                            </h2>
+
                             <p>
                                 Manage your account and application
                                 preferences.
                             </p>
+
                         </div>
 
                     </div>
 
+
                     <div class="settings-page">
+
 
                         <div class="settings-card">
 
-                            <h3>Appearance</h3>
+                            <h3>
+                                Appearance
+                            </h3>
 
-                            <label>Theme</label>
+                            <label>
+                                Theme
+                            </label>
 
                             <select id="theme-select">
 
@@ -1394,9 +2118,12 @@
 
                         </div>
 
+
                         <div class="settings-card">
 
-                            <h3>Account</h3>
+                            <h3>
+                                Account
+                            </h3>
 
                             <button id="profile-settings-btn">
                                 Edit Profile
@@ -1408,9 +2135,12 @@
 
                         </div>
 
+
                         <div class="settings-card admin-only">
 
-                            <h3>User Management</h3>
+                            <h3>
+                                User Management
+                            </h3>
 
                             <button id="add-user-btn">
                                 Add User
@@ -1422,9 +2152,12 @@
 
                         </div>
 
+
                         <div class="settings-card">
 
-                            <h3>Activity Log</h3>
+                            <h3>
+                                Activity Log
+                            </h3>
 
                             <p>
                                 View all system activities recorded in
@@ -1437,9 +2170,12 @@
 
                         </div>
 
+
                         <div class="settings-card">
 
-                            <h3>Session</h3>
+                            <h3>
+                                Session
+                            </h3>
 
                             <button
                                 id="logout-btn"
@@ -1454,13 +2190,23 @@
 
                 </section>
 
-                <div id="client-modal" class="modal hidden">
+
+                <!-- =================================================
+                     CLIENT MODAL
+                     ================================================= -->
+
+                <div
+                    id="client-modal"
+                    class="modal hidden"
+                >
 
                     <div class="modal-content">
+
 
                         <div class="modal-header">
 
                             <div>
+
                                 <h2 id="client-modal-title">
                                     New Client
                                 </h2>
@@ -1468,7 +2214,9 @@
                                 <p>
                                     Register a new borrower
                                 </p>
+
                             </div>
+
 
                             <button
                                 type="button"
@@ -1479,6 +2227,7 @@
 
                         </div>
 
+
                         <form id="client-form">
 
                             <input
@@ -1486,60 +2235,98 @@
                                 id="client-id"
                             >
 
+
                             <div class="form-grid">
 
+
                                 <div class="form-group">
-                                    <label>Full Name</label>
+
+                                    <label>
+                                        Full Name
+                                    </label>
+
                                     <input
                                         type="text"
                                         id="client-name"
                                         required
                                     >
+
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label>Phone Number</label>
+
+                                    <label>
+                                        Phone Number
+                                    </label>
+
                                     <input
                                         type="tel"
                                         id="client-phone"
                                         required
                                     >
+
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label>ID Number</label>
+
+                                    <label>
+                                        ID Number
+                                    </label>
+
                                     <input
                                         type="text"
                                         id="client-id-number"
                                         required
                                     >
+
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label>Occupation</label>
+
+                                    <label>
+                                        Occupation
+                                    </label>
+
                                     <input
                                         type="text"
                                         id="client-occupation"
                                     >
+
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label>Guarantor</label>
+
+                                    <label>
+                                        Guarantor
+                                    </label>
+
                                     <input
                                         type="text"
                                         id="client-guarantor"
                                     >
+
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label>Guarantor Phone</label>
+
+                                    <label>
+                                        Guarantor Phone
+                                    </label>
+
                                     <input
                                         type="tel"
                                         id="client-guarantor-phone"
                                     >
+
                                 </div>
 
                             </div>
+
 
                             <div class="form-group">
 
@@ -1554,6 +2341,7 @@
 
                             </div>
 
+
                             <div class="modal-buttons">
 
                                 <button
@@ -1562,6 +2350,7 @@
                                 >
                                     Save Client
                                 </button>
+
 
                                 <button
                                     type="button"
@@ -1578,6 +2367,11 @@
 
                 </div>
 
+
+                <!-- =================================================
+                     CLIENT HISTORY MODAL
+                     ================================================= -->
+
                 <div
                     id="client-history-modal"
                     class="modal hidden"
@@ -1588,12 +2382,17 @@
                         <div class="modal-header">
 
                             <div>
-                                <h2>Client Loan History</h2>
+
+                                <h2>
+                                    Client Loan History
+                                </h2>
 
                                 <p id="history-client-name">
                                     Loan Summary
                                 </p>
+
                             </div>
+
 
                             <button
                                 type="button"
@@ -1605,43 +2404,69 @@
 
                         </div>
 
+
                         <div class="schedule-summary">
 
                             <p>
-                                <strong>Total Loans:</strong>
-                                <span id="history-total-loans">0</span>
+
+                                <strong>
+                                    Total Loans:
+                                </strong>
+
+                                <span id="history-total-loans">
+                                    0
+                                </span>
+
                             </p>
 
+
                             <p>
-                                <strong>Total Borrowed:</strong>
+
+                                <strong>
+                                    Total Borrowed:
+                                </strong>
+
                                 <span id="history-total-borrowed">
                                     KES 0
                                 </span>
+
                             </p>
 
+
                             <p>
-                                <strong>Outstanding Balance:</strong>
+
+                                <strong>
+                                    Outstanding Balance:
+                                </strong>
+
                                 <span id="history-balance">
                                     KES 0
                                 </span>
+
                             </p>
 
                         </div>
+
 
                         <div class="table-wrapper">
 
                             <table id="client-history-table">
 
                                 <thead>
+
                                     <tr>
+
                                         <th>Loan No.</th>
                                         <th>Principal</th>
                                         <th>Status</th>
                                         <th>Start Date</th>
                                         <th>Due Date</th>
                                         <th>Outstanding</th>
+
                                     </tr>
+
                                 </thead>
+
 
                                 <tbody id="client-history-body"></tbody>
 
@@ -1653,13 +2478,23 @@
 
                 </div>
 
-                <div id="loan-modal" class="modal hidden">
+
+                <!-- =================================================
+                     LOAN MODAL
+                     ================================================= -->
+
+                <div
+                    id="loan-modal"
+                    class="modal hidden"
+                >
 
                     <div class="modal-content">
+
 
                         <div class="modal-header">
 
                             <div>
+
                                 <h2 id="loan-modal-title">
                                     New Loan
                                 </h2>
@@ -1667,7 +2502,9 @@
                                 <p>
                                     Create or edit a loan
                                 </p>
+
                             </div>
+
 
                             <button
                                 type="button"
@@ -1678,6 +2515,7 @@
 
                         </div>
 
+
                         <form id="loan-form">
 
                             <input
@@ -1685,11 +2523,15 @@
                                 id="loan-id"
                             >
 
+
                             <div class="form-grid">
+
 
                                 <div class="form-group">
 
-                                    <label>Client</label>
+                                    <label>
+                                        Client
+                                    </label>
 
                                     <select
                                         id="loan-client"
@@ -1703,6 +2545,7 @@
                                     </select>
 
                                 </div>
+
 
                                 <div class="form-group">
 
@@ -1719,6 +2562,7 @@
 
                                 </div>
 
+
                                 <div class="form-group">
 
                                     <label>
@@ -1733,6 +2577,7 @@
                                     >
 
                                 </div>
+
 
                                 <div class="form-group">
 
@@ -1749,6 +2594,7 @@
 
                                 </div>
 
+
                                 <div class="form-group">
 
                                     <label>
@@ -1764,6 +2610,7 @@
                                     >
 
                                 </div>
+
 
                                 <div class="form-group">
 
@@ -1785,6 +2632,7 @@
 
                                 </div>
 
+
                                 <div class="form-group">
 
                                     <label>
@@ -1797,6 +2645,7 @@
                                     >
 
                                 </div>
+
 
                                 <div class="form-group historical-only">
 
@@ -1812,6 +2661,7 @@
                                     >
 
                                 </div>
+
 
                                 <div class="form-group historical-only">
 
@@ -1830,53 +2680,93 @@
 
                             </div>
 
+
                             <div class="loan-summary-card">
 
-                                <h3>Loan Preview</h3>
+                                <h3>
+                                    Loan Preview
+                                </h3>
+
 
                                 <div class="summary-row">
-                                    <span>Principal</span>
+
+                                    <span>
+                                        Principal
+                                    </span>
+
                                     <strong id="preview-principal">
                                         KES 0
                                     </strong>
+
                                 </div>
 
+
                                 <div class="summary-row">
-                                    <span>Processing Fee</span>
+
+                                    <span>
+                                        Processing Fee
+                                    </span>
+
                                     <strong id="preview-fee">
                                         KES 0
                                     </strong>
+
                                 </div>
 
+
                                 <div class="summary-row">
-                                    <span>Interest</span>
+
+                                    <span>
+                                        Interest
+                                    </span>
+
                                     <strong id="preview-interest">
                                         0%
                                     </strong>
+
                                 </div>
 
+
                                 <div class="summary-row">
-                                    <span>Total Repayable</span>
+
+                                    <span>
+                                        Total Repayable
+                                    </span>
+
                                     <strong id="preview-total">
                                         KES 0
                                     </strong>
+
                                 </div>
 
+
                                 <div class="summary-row">
-                                    <span>Weekly Payment</span>
+
+                                    <span>
+                                        Weekly Payment
+                                    </span>
+
                                     <strong id="preview-weekly">
                                         KES 0
                                     </strong>
+
                                 </div>
 
+
                                 <div class="summary-row">
-                                    <span>Duration</span>
+
+                                    <span>
+                                        Duration
+                                    </span>
+
                                     <strong id="preview-duration">
                                         0 Weeks
                                     </strong>
+
                                 </div>
 
                             </div>
+
 
                             <div class="modal-buttons">
 
@@ -1887,6 +2777,7 @@
                                     Save Loan
                                 </button>
 
+
                                 <button
                                     type="button"
                                     class="secondary-btn close-modal"
@@ -1902,16 +2793,33 @@
 
                 </div>
 
-                <div id="repayment-modal" class="modal hidden">
+
+                <!-- =================================================
+                     REPAYMENT MODAL
+                     ================================================= -->
+
+                <div
+                    id="repayment-modal"
+                    class="modal hidden"
+                >
 
                     <div class="modal-content">
+
 
                         <div class="modal-header">
 
                             <div>
-                                <h2>Loan Repayment</h2>
-                                <p>Receive a repayment</p>
+
+                                <h2>
+                                    Loan Repayment
+                                </h2>
+
+                                <p>
+                                    Receive a repayment
+                                </p>
+
                             </div>
+
 
                             <button
                                 type="button"
@@ -1922,6 +2830,7 @@
 
                         </div>
 
+
                         <form id="repayment-form">
 
                             <input
@@ -1929,59 +2838,96 @@
                                 id="repayment-loan-id"
                             >
 
+
                             <div class="form-group">
-                                <label>Client</label>
+
+                                <label>
+                                    Client
+                                </label>
+
                                 <input
                                     type="text"
                                     id="repayment-client"
                                     readonly
                                 >
+
                             </div>
 
+
                             <div class="form-group">
-                                <label>Outstanding Balance</label>
+
+                                <label>
+                                    Outstanding Balance
+                                </label>
+
                                 <input
                                     type="text"
                                     id="repayment-balance"
                                     readonly
                                 >
+
                             </div>
 
+
                             <div class="form-group">
-                                <label>Weekly Repayment</label>
+
+                                <label>
+                                    Weekly Repayment
+                                </label>
+
                                 <input
                                     type="text"
                                     id="repayment-weekly"
                                     readonly
                                 >
+
                             </div>
 
+
                             <div class="form-group">
-                                <label>Amount Paid</label>
+
+                                <label>
+                                    Amount Paid
+                                </label>
+
                                 <input
                                     type="number"
                                     id="repayment-amount"
                                     min="1"
                                     required
                                 >
+
                             </div>
 
+
                             <div class="form-group">
-                                <label>Payment Date</label>
+
+                                <label>
+                                    Payment Date
+                                </label>
+
                                 <input
                                     type="date"
                                     id="repayment-date"
                                     required
                                 >
+
                             </div>
 
+
                             <div class="form-group">
-                                <label>Remarks</label>
+
+                                <label>
+                                    Remarks
+                                </label>
+
                                 <textarea
                                     id="repayment-notes"
                                     rows="3"
                                 ></textarea>
+
                             </div>
+
 
                             <div class="modal-buttons">
 
@@ -1991,6 +2937,7 @@
                                 >
                                     Save Repayment
                                 </button>
+
 
                                 <button
                                     type="button"
@@ -2007,7 +2954,15 @@
 
                 </div>
 
-                <div id="confirm-modal" class="modal hidden">
+
+                <!-- =================================================
+                     CONFIRMATION MODAL
+                     ================================================= -->
+
+                <div
+                    id="confirm-modal"
+                    class="modal hidden"
+                >
 
                     <div class="modal-content confirmation-modal">
 
@@ -2015,11 +2970,16 @@
                             ⚠️
                         </div>
 
-                        <h2>Confirmation</h2>
+
+                        <h2>
+                            Confirmation
+                        </h2>
+
 
                         <p id="confirm-message">
                             Are you sure you want to continue?
                         </p>
+
 
                         <div class="modal-buttons">
 
@@ -2030,6 +2990,7 @@
                             >
                                 Yes
                             </button>
+
 
                             <button
                                 id="confirm-no"
@@ -2045,6 +3006,11 @@
 
                 </div>
 
+
+                <!-- =================================================
+                     NOTIFICATION PANEL
+                     ================================================= -->
+
                 <div
                     id="notification-panel"
                     class="notification-panel hidden"
@@ -2052,7 +3018,9 @@
 
                     <div class="notification-header">
 
-                        <h3>Notifications</h3>
+                        <h3>
+                            Notifications
+                        </h3>
 
                         <button
                             id="close-notifications"
@@ -2063,6 +3031,7 @@
 
                     </div>
 
+
                     <div
                         id="notification-list"
                         class="notification-list"
@@ -2070,7 +3039,9 @@
 
                         <div class="empty-state">
 
-                            <h3>No Notifications</h3>
+                            <h3>
+                                No Notifications
+                            </h3>
 
                             <p>
                                 You're all caught up.
@@ -2088,60 +3059,111 @@
 
     </section>
 
+
+    <!-- =====================================================
+         MOBILE NAVIGATION
+         ===================================================== -->
+
     <nav class="mobile-nav">
+
 
         <button
             class="tab-btn active"
             data-tab="dashboard"
         >
+
             <span>🏠</span>
-            <small>Dashboard</small>
+
+            <small>
+                Dashboard
+            </small>
+
         </button>
+
 
         <button
             class="tab-btn"
             data-tab="clients"
         >
+
             <span>👥</span>
-            <small>Clients</small>
+
+            <small>
+                Clients
+            </small>
+
         </button>
+
 
         <button
             class="tab-btn"
             data-tab="loans"
         >
+
             <span>💰</span>
-            <small>Loans</small>
+
+            <small>
+                Loans
+            </small>
+
         </button>
+
 
         <button
             class="tab-btn"
             data-tab="history"
         >
+
             <span>📋</span>
-            <small>History</small>
+
+            <small>
+                History
+            </small>
+
         </button>
+
 
         <button
             class="tab-btn"
             data-tab="settings"
         >
+
             <span>⚙️</span>
-            <small>Settings</small>
+
+            <small>
+                Settings
+            </small>
+
         </button>
 
     </nav>
 
-    <div id="profile-modal" class="modal hidden">
+
+    <!-- =====================================================
+         PROFILE MODAL
+         ===================================================== -->
+
+    <div
+        id="profile-modal"
+        class="modal hidden"
+    >
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>Profile Settings</h2>
-                    <p>Update your account information.</p>
+
+                    <h2>
+                        Profile Settings
+                    </h2>
+
+                    <p>
+                        Update your account information.
+                    </p>
+
                 </div>
+
 
                 <button
                     type="button"
@@ -2152,37 +3174,54 @@
 
             </div>
 
+
             <form id="profile-form">
 
+
                 <div class="form-group">
-                    <label>Full Name</label>
+
+                    <label>
+                        Full Name
+                    </label>
 
                     <input
                         type="text"
                         id="profile-name"
                         placeholder="Enter your full name"
                     >
+
                 </div>
 
+
                 <div class="form-group">
-                    <label>Email Address</label>
+
+                    <label>
+                        Email Address
+                    </label>
 
                     <input
                         type="email"
                         id="profile-email"
                         readonly
                     >
+
                 </div>
 
+
                 <div class="form-group">
-                    <label>Phone Number</label>
+
+                    <label>
+                        Phone Number
+                    </label>
 
                     <input
                         type="tel"
                         id="profile-phone"
                         placeholder="Enter phone number"
                     >
+
                 </div>
+
 
                 <div class="modal-buttons">
 
@@ -2192,6 +3231,7 @@
                     >
                         Save Changes
                     </button>
+
 
                     <button
                         type="button"
@@ -2208,18 +3248,32 @@
 
     </div>
 
-    <div id="security-modal" class="modal hidden">
+
+    <!-- =====================================================
+         SECURITY MODAL
+         ===================================================== -->
+
+    <div
+        id="security-modal"
+        class="modal hidden"
+    >
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>Change Password</h2>
+
+                    <h2>
+                        Change Password
+                    </h2>
+
                     <p>
                         Update your account password securely.
                     </p>
+
                 </div>
+
 
                 <button
                     type="button"
@@ -2230,11 +3284,15 @@
 
             </div>
 
+
             <form id="security-form">
+
 
                 <div class="form-group">
 
-                    <label>Current Password</label>
+                    <label>
+                        Current Password
+                    </label>
 
                     <input
                         type="password"
@@ -2246,9 +3304,12 @@
 
                 </div>
 
+
                 <div class="form-group">
 
-                    <label>New Password</label>
+                    <label>
+                        New Password
+                    </label>
 
                     <input
                         type="password"
@@ -2261,9 +3322,12 @@
 
                 </div>
 
+
                 <div class="form-group">
 
-                    <label>Confirm New Password</label>
+                    <label>
+                        Confirm New Password
+                    </label>
 
                     <input
                         type="password"
@@ -2276,6 +3340,7 @@
 
                 </div>
 
+
                 <div class="modal-buttons">
 
                     <button
@@ -2284,6 +3349,7 @@
                     >
                         Change Password
                     </button>
+
 
                     <button
                         type="button"
@@ -2300,18 +3366,32 @@
 
     </div>
 
-    <div id="add-user-modal" class="modal hidden">
+
+    <!-- =====================================================
+         ADD USER MODAL
+         ===================================================== -->
+
+    <div
+        id="add-user-modal"
+        class="modal hidden"
+    >
 
         <div class="modal-content">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>Add User</h2>
+
+                    <h2>
+                        Add User
+                    </h2>
+
                     <p>
                         Create a new Greymus system user.
                     </p>
+
                 </div>
+
 
                 <button
                     type="button"
@@ -2322,10 +3402,15 @@
 
             </div>
 
+
             <form id="add-user-form">
 
+
                 <div class="form-group">
-                    <label>Full Name</label>
+
+                    <label>
+                        Full Name
+                    </label>
 
                     <input
                         type="text"
@@ -2333,10 +3418,15 @@
                         placeholder="Enter full name"
                         required
                     >
+
                 </div>
 
+
                 <div class="form-group">
-                    <label>Email Address</label>
+
+                    <label>
+                        Email Address
+                    </label>
 
                     <input
                         type="email"
@@ -2344,10 +3434,15 @@
                         placeholder="Enter email address"
                         required
                     >
+
                 </div>
 
+
                 <div class="form-group">
-                    <label>Temporary Password</label>
+
+                    <label>
+                        Temporary Password
+                    </label>
 
                     <input
                         type="password"
@@ -2356,12 +3451,20 @@
                         minlength="6"
                         required
                     >
+
                 </div>
 
-                <div class="form-group">
-                    <label>User Role</label>
 
-                    <select id="new-user-role" required>
+                <div class="form-group">
+
+                    <label>
+                        User Role
+                    </label>
+
+                    <select
+                        id="new-user-role"
+                        required
+                    >
 
                         <option value="Officer">
                             Officer
@@ -2375,6 +3478,7 @@
 
                 </div>
 
+
                 <div class="modal-buttons">
 
                     <button
@@ -2383,6 +3487,7 @@
                     >
                         Create User
                     </button>
+
 
                     <button
                         type="button"
@@ -2399,18 +3504,32 @@
 
     </div>
 
-    <div id="manage-users-modal" class="modal hidden">
+
+    <!-- =====================================================
+         MANAGE USERS MODAL
+         ===================================================== -->
+
+    <div
+        id="manage-users-modal"
+        class="modal hidden"
+    >
 
         <div class="modal-content large">
 
             <div class="modal-header">
 
                 <div>
-                    <h2>Manage Users</h2>
+
+                    <h2>
+                        Manage Users
+                    </h2>
+
                     <p>
                         View and manage Greymus system users.
                     </p>
+
                 </div>
+
 
                 <button
                     type="button"
@@ -2421,6 +3540,7 @@
 
             </div>
 
+
             <div class="table-wrapper">
 
                 <table id="users-table">
@@ -2428,14 +3548,17 @@
                     <thead>
 
                         <tr>
+
                             <th>No.</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
                             <th>Actions</th>
+
                         </tr>
 
                     </thead>
+
 
                     <tbody id="users-table-body">
 
@@ -2460,16 +3583,78 @@
 
     </div>
 
-    <div>
+
+    <!-- =====================================================
+         FLOATING ACTION BUTTON
+         ===================================================== -->
+
+    <div
+        id="fab-actions"
+        class="fab-actions"
+    >
+
+
+        <!-- ================================================
+             FAB - NEW LOAN
+             ================================================ -->
 
         <button
-            id="fab-new-loan"
-            class="fab"
+            id="fab-action-new-loan"
+            class="fab-action"
             type="button"
-            title="New Loan"
-        ></button>
+        >
+
+            <i class="fa-solid fa-money-bill-transfer"></i>
+
+            <span>
+                New Loan
+            </span>
+
+        </button>
+
+
+        <!-- ================================================
+             FAB - ADD REPAYMENT
+             ================================================ -->
+
+        <button
+            id="fab-action-repayment"
+            class="fab-action"
+            type="button"
+        >
+
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+
+            <span>
+                Add Repayment
+            </span>
+
+        </button>
 
     </div>
+
+
+    <!-- =====================================================
+         MAIN FLOATING PLUS BUTTON
+         ===================================================== -->
+
+    <button
+        id="fab-new-loan"
+        class="fab"
+        type="button"
+        title="Quick Actions"
+        aria-label="Open quick actions"
+        aria-expanded="false"
+    >
+
+        <i class="fa-solid fa-plus"></i>
+
+    </button>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
 
     <footer class="app-footer">
 
@@ -2481,16 +3666,29 @@
 
         </div>
 
+
         <div class="footer-right">
+
             © 2026 Greymus Solutions. All Rights Reserved.
+
         </div>
 
     </footer>
+
+
+    <!-- =====================================================
+         GLOBAL OVERLAY
+         ===================================================== -->
 
     <div
         id="global-overlay"
         class="hidden"
     ></div>
+
+
+    <!-- =====================================================
+         REPAYMENT SCHEDULE MODAL
+         ===================================================== -->
 
     <div
         id="schedule-modal"
@@ -2499,11 +3697,13 @@
 
         <div class="modal-content large">
 
+
             <div class="modal-header">
 
                 <h2>
                     Repayment Schedule
                 </h2>
+
 
                 <button
                     type="button"
@@ -2514,43 +3714,83 @@
 
             </div>
 
+
             <div class="schedule-summary">
 
                 <p>
-                    <strong>Client:</strong>
-                    <span id="schedule-client">-</span>
+
+                    <strong>
+                        Client:
+                    </strong>
+
+                    <span id="schedule-client">
+                        -
+                    </span>
+
                 </p>
 
+
                 <p>
-                    <strong>Outstanding Balance:</strong>
-                    <span id="schedule-balance">KES 0</span>
+
+                    <strong>
+                        Outstanding Balance:
+                    </strong>
+
+                    <span id="schedule-balance">
+                        KES 0
+                    </span>
+
                 </p>
 
             </div>
+
 
             <table id="schedule-table">
 
                 <thead>
 
                     <tr>
-                        <th>Week</th>
-                        <th>Due Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Paid Date</th>
+
+                        <th>
+                            Week
+                        </th>
+
+                        <th>
+                            Due Date
+                        </th>
+
+                        <th>
+                            Amount
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Paid Date
+                        </th>
+
                     </tr>
 
                 </thead>
 
+
                 <tbody id="schedule-table-body"></tbody>
 
             </table>
+
 
             <div id="schedule-cards"></div>
 
         </div>
 
     </div>
+
+
+    <!-- =====================================================
+         ACTIVITY LOG MODAL
+         ===================================================== -->
 
     <div
         id="activity-log-modal"
@@ -2559,17 +3799,20 @@
 
         <div class="modal-content activity-log-modal">
 
+
             <div class="modal-header">
 
                 <h2>
                     Activity Log
                 </h2>
 
+
                 <button id="close-activity-log">
                     &times;
                 </button>
 
             </div>
+
 
             <div class="table-responsive">
 
@@ -2578,14 +3821,31 @@
                     <thead>
 
                         <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Officer</th>
-                            <th>Action</th>
-                            <th>Details</th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Officer
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+
+                            <th>
+                                Details
+                            </th>
+
                         </tr>
 
                     </thead>
+
 
                     <tbody id="activity-log-body">
 
@@ -2610,55 +3870,278 @@
 
     </div>
 
+
+    <!-- =====================================================
+         JAVASCRIPT MODULES
+         ===================================================== -->
+
     <script
         type="module"
         src="js/firebase.js"
     ></script>
+
 
     <script
         type="module"
         src="js/utils.js"
     ></script>
 
+
     <script
         type="module"
         src="js/ui.js"
     ></script>
+
 
     <script
         type="module"
         src="js/auth.js"
     ></script>
 
+
     <script
         type="module"
         src="js/dashboard.js"
     ></script>
+
 
     <script
         type="module"
         src="js/clients.js"
     ></script>
 
+
     <script
         type="module"
         src="js/loans.js"
     ></script>
+
 
     <script
         type="module"
         src="js/history.js"
     ></script>
 
+
     <script
         type="module"
         src="js/settings.js"
     ></script>
+
 
     <script
         type="module"
         src="js/app.js"
     ></script>
 
+
+    <!-- =====================================================
+         FLOATING ACTION BUTTON CONTROLLER
+         ===================================================== -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                const fab = document.getElementById(
+                    "fab-new-loan"
+                );
+
+                const fabActions = document.getElementById(
+                    "fab-actions"
+                );
+
+                const newLoanAction =
+                    document.getElementById(
+                        "fab-action-new-loan"
+                    );
+
+                const repaymentAction =
+                    document.getElementById(
+                        "fab-action-repayment"
+                    );
+
+
+                if (!fab || !fabActions) {
+                    return;
+                }
+
+
+                /* =============================================
+                   OPEN / CLOSE FAB MENU
+                   ============================================= */
+
+                fab.addEventListener(
+                    "click",
+                    (event) => {
+
+                        event.stopPropagation();
+
+                        const isOpen =
+                            fabActions.classList.contains(
+                                "show"
+                            );
+
+                        if (isOpen) {
+
+                            fabActions.classList.remove(
+                                "show"
+                            );
+
+                            fab.classList.remove(
+                                "open"
+                            );
+
+                            fab.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+
+                        } else {
+
+                            fabActions.classList.add(
+                                "show"
+                            );
+
+                            fab.classList.add(
+                                "open"
+                            );
+
+                            fab.setAttribute(
+                                "aria-expanded",
+                                "true"
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                /* =============================================
+                   CLOSE FAB WHEN CLICKING OUTSIDE
+                   ============================================= */
+
+                document.addEventListener(
+                    "click",
+                    (event) => {
+
+                        if (
+                            !fab.contains(event.target) &&
+                            !fabActions.contains(event.target)
+                        ) {
+
+                            fabActions.classList.remove(
+                                "show"
+                            );
+
+                            fab.classList.remove(
+                                "open"
+                            );
+
+                            fab.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                /* =============================================
+                   NEW LOAN ACTION
+                   ============================================= */
+
+                if (newLoanAction) {
+
+                    newLoanAction.addEventListener(
+                        "click",
+                        () => {
+
+                            fabActions.classList.remove(
+                                "show"
+                            );
+
+                            fab.classList.remove(
+                                "open"
+                            );
+
+                            fab.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+
+
+                            const existingButton =
+                                document.getElementById(
+                                    "new-loan-btn"
+                                );
+
+
+                            if (existingButton) {
+
+                                existingButton.click();
+
+                            }
+
+                        }
+                    );
+
+                }
+
+
+                /* =============================================
+                   REPAYMENT ACTION
+                   ============================================= */
+
+                if (repaymentAction) {
+
+                    repaymentAction.addEventListener(
+                        "click",
+                        () => {
+
+                            fabActions.classList.remove(
+                                "show"
+                            );
+
+                            fab.classList.remove(
+                                "open"
+                            );
+
+                            fab.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+
+
+                            const repaymentModal =
+                                document.getElementById(
+                                    "repayment-modal"
+                                );
+
+
+                            if (repaymentModal) {
+
+                                repaymentModal.classList.remove(
+                                    "hidden"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+
+            }
+        );
+
+    </script>
+
 </body>
+
 </html>
