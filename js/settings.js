@@ -1,12 +1,11 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // settings.js
-// VERSION 3.0
-// PART 1 OF 20
-// IMPORTS & CONSTANTS
+// VERSION 3.1
+// FULL REPLACEMENT FILE
 // ==========================================
 
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
     signOut,
@@ -24,14 +23,12 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    getDocs,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { db } from "./firebase.js";
 console.log("=================================");
 console.log("GREYMUS SETTINGS MODULE LOADED");
-console.log("Version 3.0");
+console.log("Version 3.1");
 console.log("=================================");
 
 
@@ -42,17 +39,14 @@ console.log("=================================");
 const STORAGE = {
 
     USER_NAME: "userName",
-
     USER_PHONE: "userPhone",
-
     USER_ROLE: "userRole",
 
+    // Theme
     THEME: "appTheme",
 
     DEFAULT_INTEREST: "defaultInterest",
-
     DEFAULT_DURATION: "defaultDuration",
-
     DEFAULT_FEE: "defaultFee"
 
 };
@@ -73,8 +67,10 @@ function isAdmin() {
         ADMIN_EMAIL.toLowerCase()
     );
 
-}// ==========================================
-// PART 2 OF 20
+}
+
+
+// ==========================================
 // DOM ELEMENTS
 // ==========================================
 
@@ -188,6 +184,7 @@ const toast =
 const settingsTab =
     document.getElementById("settings-tab");
 
+
 // ---------- Activity Log ----------
 
 const activityLogBtn =
@@ -202,9 +199,18 @@ const closeActivityLog =
 const activityLogBody =
     document.getElementById("activity-log-body");
 
+
+// ---------- Import Settings ----------
+
+const importDataBtn =
+    document.getElementById("import-data-btn");
+
+const importSettingsFile =
+    document.getElementById("import-settings-file");
+
+
 // ==========================================
-// PART 3 OF 20
-// TOAST & HELPER FUNCTIONS
+// TOAST
 // ==========================================
 
 function showToast(message, type = "success") {
@@ -219,7 +225,8 @@ function showToast(message, type = "success") {
 
     toast.textContent = message;
 
-    toast.className = `toast ${type} show`;
+    toast.className =
+        `toast ${type} show`;
 
     setTimeout(() => {
 
@@ -242,30 +249,30 @@ function getCurrentUser() {
 
 
 // ==========================================
-// GET LOCAL VALUE
+// LOCAL STORAGE HELPERS
 // ==========================================
 
 function getStorage(key, defaultValue = "") {
 
-    return localStorage.getItem(key) || defaultValue;
+    const value =
+        localStorage.getItem(key);
+
+    return value !== null
+        ? value
+        : defaultValue;
 
 }
 
-
-// ==========================================
-// SAVE LOCAL VALUE
-// ==========================================
 
 function setStorage(key, value) {
 
-    localStorage.setItem(key, value);
+    localStorage.setItem(
+        key,
+        String(value)
+    );
 
 }
 
-
-// ==========================================
-// REMOVE LOCAL VALUE
-// ==========================================
 
 function removeStorage(key) {
 
@@ -275,12 +282,13 @@ function removeStorage(key) {
 
 
 // ==========================================
-// LOAD PROFILE
+// PROFILE
 // ==========================================
 
 function loadProfile() {
 
-    const user = getCurrentUser();
+    const user =
+        getCurrentUser();
 
     if (profileEmail) {
 
@@ -299,14 +307,87 @@ function loadProfile() {
     if (profileName) {
 
         profileName.value =
-            getStorage(STORAGE.USER_NAME);
+            getStorage(
+                STORAGE.USER_NAME,
+                ""
+            );
 
     }
 
     if (profilePhone) {
 
         profilePhone.value =
-            getStorage(STORAGE.USER_PHONE);
+            getStorage(
+                STORAGE.USER_PHONE,
+                ""
+            );
+
+    }
+
+}
+
+
+function saveProfile() {
+
+    setStorage(
+        STORAGE.USER_NAME,
+        profileName?.value.trim() || ""
+    );
+
+    setStorage(
+        STORAGE.USER_PHONE,
+        profilePhone?.value.trim() || ""
+    );
+
+}
+
+
+// ==========================================
+// THEME SYSTEM
+// ==========================================
+
+/*
+    Supported values:
+
+    light
+    dark
+    system
+
+    The selected value is saved in:
+
+    localStorage:
+    appTheme
+
+    The actual theme applied to the page is:
+
+    <html data-theme="light">
+    <html data-theme="dark">
+*/
+
+
+// ==========================================
+// GET SYSTEM THEME
+// ==========================================
+
+function getSystemTheme() {
+
+    try {
+
+        return window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches
+            ? "dark"
+            : "light";
+
+    }
+    catch (error) {
+
+        console.error(
+            "Unable to detect system theme:",
+            error
+        );
+
+        return "light";
 
     }
 
@@ -314,64 +395,74 @@ function loadProfile() {
 
 
 // ==========================================
-// SAVE PROFILE
-// ==========================================
-
-function saveProfile() {
-
-    setStorage(
-
-        STORAGE.USER_NAME,
-
-        profileName?.value.trim() || ""
-
-    );
-
-    setStorage(
-
-        STORAGE.USER_PHONE,
-
-        profilePhone?.value.trim() || ""
-
-    );
-
-}// ==========================================
-// PART 4 OF 20
-// THEME SETTINGS
+// APPLY THEME
 // ==========================================
 
 function applyTheme(theme) {
 
-    if (!theme) {
+    // Only allow valid themes
+
+    if (
+        theme !== "light" &&
+        theme !== "dark" &&
+        theme !== "system"
+    ) {
 
         theme = "system";
 
     }
 
+
+    let actualTheme = theme;
+
+
+    // System follows the phone/browser theme
+
     if (theme === "system") {
 
-        const prefersDark = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-        ).matches;
-
-        document.documentElement.setAttribute(
-
-            "data-theme",
-
-            prefersDark ? "dark" : "light"
-
-        );
-
-        return;
+        actualTheme =
+            getSystemTheme();
 
     }
 
+
+    // Apply to HTML element
+
     document.documentElement.setAttribute(
-
         "data-theme",
+        actualTheme
+    );
 
-        theme
 
+    // Also keep a direct theme marker
+
+    document.documentElement.dataset.theme =
+        actualTheme;
+
+
+    // Apply class as an additional fallback
+
+    document.documentElement.classList.remove(
+        "theme-light",
+        "theme-dark"
+    );
+
+    document.documentElement.classList.add(
+        `theme-${actualTheme}`
+    );
+
+
+    // Update color-scheme for browser controls
+
+    document.documentElement.style.colorScheme =
+        actualTheme;
+
+
+    console.log(
+        "Theme applied:",
+        theme,
+        "→",
+        actualTheme
     );
 
 }
@@ -383,21 +474,38 @@ function applyTheme(theme) {
 
 function loadTheme() {
 
-    const savedTheme =
-
+    let savedTheme =
         getStorage(
-
             STORAGE.THEME,
-
             "system"
-
         );
+
+
+    // Validate saved value
+
+    if (
+        savedTheme !== "light" &&
+        savedTheme !== "dark" &&
+        savedTheme !== "system"
+    ) {
+
+        savedTheme = "system";
+
+        setStorage(
+            STORAGE.THEME,
+            savedTheme
+        );
+
+    }
+
 
     applyTheme(savedTheme);
 
+
     if (themeSelect) {
 
-        themeSelect.value = savedTheme;
+        themeSelect.value =
+            savedTheme;
 
     }
 
@@ -410,22 +518,51 @@ function loadTheme() {
 
 function saveTheme(theme) {
 
+    // Validate
+
+    if (
+        theme !== "light" &&
+        theme !== "dark" &&
+        theme !== "system"
+    ) {
+
+        theme = "system";
+
+    }
+
+
+    // Save immediately
+
     setStorage(
-
         STORAGE.THEME,
-
         theme
-
     );
+
+
+    // Apply immediately
 
     applyTheme(theme);
 
+
+    // Keep dropdown synchronized
+
+    if (themeSelect) {
+
+        themeSelect.value =
+            theme;
+
+    }
+
+
     showToast(
-
-        "Theme updated successfully.",
-
+        `Theme changed to ${
+            theme === "system"
+                ? "System"
+                : theme === "light"
+                    ? "Light"
+                    : "Dark"
+        }.`,
         "success"
-
     );
 
 }
@@ -436,68 +573,85 @@ function saveTheme(theme) {
 // ==========================================
 
 themeSelect?.addEventListener(
-
     "change",
-
     () => {
 
+        const selectedTheme =
+            themeSelect.value;
+
         saveTheme(
-
-            themeSelect.value
-
+            selectedTheme
         );
 
     }
-
 );
 
 
 // ==========================================
-// FOLLOW PHONE THEME
+// FOLLOW PHONE / SYSTEM THEME
 // ==========================================
 
-window.matchMedia(
+const systemThemeMedia =
+    window.matchMedia(
+        "(prefers-color-scheme: dark)"
+    );
 
-    "(prefers-color-scheme: dark)"
 
-).addEventListener(
+function handleSystemThemeChange() {
 
-    "change",
+    const savedTheme =
+        getStorage(
+            STORAGE.THEME,
+            "system"
+        );
 
-    () => {
+    if (savedTheme === "system") {
 
-        if (
-
-            getStorage(
-
-                STORAGE.THEME,
-
-                "system"
-
-            ) === "system"
-
-        ) {
-
-            applyTheme("system");
-
-        }
+        applyTheme("system");
 
     }
 
-);
+}
+
+
+// Modern browsers
+
+if (
+    systemThemeMedia &&
+    typeof systemThemeMedia.addEventListener ===
+        "function"
+) {
+
+    systemThemeMedia.addEventListener(
+        "change",
+        handleSystemThemeChange
+    );
+
+}
+else if (
+    systemThemeMedia &&
+    typeof systemThemeMedia.addListener ===
+        "function"
+) {
+
+    // Older browser support
+
+    systemThemeMedia.addListener(
+        handleSystemThemeChange
+    );
+
+}
 
 
 // ==========================================
-// INITIALISE THEME
+// INITIALIZE THEME IMMEDIATELY
 // ==========================================
 
-loadTheme();// ==========================================
-// PART 5 OF 20
-// PROFILE MODAL & PROFILE MANAGEMENT
-// ==========================================
+loadTheme();
+
 
 // ==========================================
-// OPEN PROFILE
+// PROFILE MODAL
 // ==========================================
 
 profileBtn?.addEventListener(
@@ -506,51 +660,49 @@ profileBtn?.addEventListener(
 
         loadProfile();
 
-        profileModal?.classList.remove("hidden");
+        profileModal?.classList.remove(
+            "hidden"
+        );
 
     }
 );
 
 
-// ==========================================
-// CLOSE PROFILE BUTTONS
-// ==========================================
+closeProfileButtons.forEach(
+    (button) => {
 
-closeProfileButtons.forEach((button) => {
+        button.addEventListener(
+            "click",
+            () => {
 
-    button.addEventListener(
-        "click",
-        () => {
+                profileModal?.classList.add(
+                    "hidden"
+                );
 
-            profileModal?.classList.add("hidden");
+            }
+        );
 
-        }
-    );
+    }
+);
 
-});
-
-
-// ==========================================
-// CLOSE WHEN CLICKING OUTSIDE
-// ==========================================
 
 profileModal?.addEventListener(
     "click",
     (e) => {
 
-        if (e.target === profileModal) {
+        if (
+            e.target === profileModal
+        ) {
 
-            profileModal.classList.add("hidden");
+            profileModal.classList.add(
+                "hidden"
+            );
 
         }
 
     }
 );
 
-
-// ==========================================
-// SAVE PROFILE
-// ==========================================
 
 profileForm?.addEventListener(
     "submit",
@@ -560,7 +712,9 @@ profileForm?.addEventListener(
 
         saveProfile();
 
-        profileModal?.classList.add("hidden");
+        profileModal?.classList.add(
+            "hidden"
+        );
 
         showToast(
             "Profile updated successfully.",
@@ -585,22 +739,7 @@ function refreshProfile() {
 
 
 // ==========================================
-// AUTO LOAD PROFILE
-// ==========================================
-
-auth.onAuthStateChanged((user) => {
-
-    if (!user) return;
-
-    refreshProfile();
-
-});// ==========================================
-// PART 6 OF 20
 // CHANGE PASSWORD
-// ==========================================
-
-// ==========================================
-// OPEN PASSWORD SECTION
 // ==========================================
 
 securityBtn?.addEventListener(
@@ -621,7 +760,6 @@ securityBtn?.addEventListener(
         securityForm.scrollIntoView({
 
             behavior: "smooth",
-
             block: "center"
 
         });
@@ -632,10 +770,6 @@ securityBtn?.addEventListener(
 );
 
 
-// ==========================================
-// CHANGE PASSWORD
-// ==========================================
-
 securityForm?.addEventListener(
     "submit",
     async (e) => {
@@ -644,9 +778,13 @@ securityForm?.addEventListener(
 
         try {
 
-            const user = auth.currentUser;
+            const user =
+                auth.currentUser;
 
-            if (!user || !user.email) {
+            if (
+                !user ||
+                !user.email
+            ) {
 
                 throw new Error(
                     "You are not logged in."
@@ -663,6 +801,7 @@ securityForm?.addEventListener(
             const confirmPwd =
                 confirmPassword.value.trim();
 
+
             if (
                 !oldPassword ||
                 !newPwd ||
@@ -678,7 +817,10 @@ securityForm?.addEventListener(
 
             }
 
-            if (newPwd !== confirmPwd) {
+
+            if (
+                newPwd !== confirmPwd
+            ) {
 
                 showToast(
                     "New passwords do not match.",
@@ -689,7 +831,10 @@ securityForm?.addEventListener(
 
             }
 
-            if (newPwd.length < 6) {
+
+            if (
+                newPwd.length < 6
+            ) {
 
                 showToast(
                     "Password must be at least 6 characters.",
@@ -700,23 +845,28 @@ securityForm?.addEventListener(
 
             }
 
+
             const credential =
                 EmailAuthProvider.credential(
                     user.email,
                     oldPassword
                 );
 
+
             await reauthenticateWithCredential(
                 user,
                 credential
             );
+
 
             await updatePassword(
                 user,
                 newPwd
             );
 
+
             securityForm.reset();
+
 
             showToast(
                 "Password changed successfully.",
@@ -731,6 +881,7 @@ securityForm?.addEventListener(
             switch (error.code) {
 
                 case "auth/wrong-password":
+                case "auth/invalid-credential":
 
                     showToast(
                         "Current password is incorrect.",
@@ -738,6 +889,7 @@ securityForm?.addEventListener(
                     );
 
                     break;
+
 
                 case "auth/weak-password":
 
@@ -748,6 +900,7 @@ securityForm?.addEventListener(
 
                     break;
 
+
                 case "auth/requires-recent-login":
 
                     showToast(
@@ -756,6 +909,7 @@ securityForm?.addEventListener(
                     );
 
                     break;
+
 
                 default:
 
@@ -770,25 +924,20 @@ securityForm?.addEventListener(
         }
 
     }
-);// ==========================================
-// PART 7 OF 20
+);
+
+
+// ==========================================
 // LOGOUT
 // ==========================================
-
-// Support both desktop and mobile logout buttons
 
 const logoutButtons = [
 
     logoutBtn,
-
     mobileLogoutBtn
 
 ].filter(Boolean);
 
-
-// ==========================================
-// LOGOUT FUNCTION
-// ==========================================
 
 async function logoutUser() {
 
@@ -796,24 +945,28 @@ async function logoutUser() {
 
         await signOut(auth);
 
-        // Clear user session
-
-        localStorage.removeItem(STORAGE.USER_ROLE);
+        localStorage.removeItem(
+            STORAGE.USER_ROLE
+        );
 
         sessionStorage.clear();
+
 
         showToast(
             "Logged out successfully.",
             "success"
         );
 
-        setTimeout(() => {
 
-            // Return to login page
+        setTimeout(
+            () => {
 
-            window.location.href = "index.html";
+                window.location.href =
+                    "index.html";
 
-        }, 800);
+            },
+            800
+        );
 
     }
     catch (error) {
@@ -833,92 +986,86 @@ async function logoutUser() {
 }
 
 
+logoutButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            logoutUser
+        );
+
+    }
+);
+
+
+window.logoutUser =
+    logoutUser;
+
+
 // ==========================================
-// ATTACH LOGOUT EVENTS
-// ==========================================
-
-logoutButtons.forEach((button) => {
-
-    button.addEventListener(
-        "click",
-        logoutUser
-    );
-
-});
-
-
-// ==========================================
-// EXPOSE GLOBALLY
-// ==========================================
-
-window.logoutUser = logoutUser;// ==========================================
-// PART 8 OF 20
 // ADD USER MODAL
 // ==========================================
 
-// ==========================================
-// OPEN ADD USER MODAL
-// ==========================================
+addUserBtn?.addEventListener(
+    "click",
+    () => {
 
-addUserBtn?.addEventListener("click", () => {
+        if (!isAdmin()) {
 
-    if (!isAdmin()) {
+            showToast(
+                "Only the Administrator can add users.",
+                "error"
+            );
 
-        showToast(
-            "Only the Administrator can add users.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    addUserForm?.reset();
-
-    addUserModal?.classList.remove("hidden");
-
-});
-
-
-// ==========================================
-// CLOSE BUTTONS
-// ==========================================
-
-closeAddUserButtons.forEach((button) => {
-
-    button.addEventListener(
-        "click",
-        () => {
-
-            addUserModal?.classList.add("hidden");
+            return;
 
         }
-    );
 
-});
+        addUserForm?.reset();
+
+        addUserModal?.classList.remove(
+            "hidden"
+        );
+
+    }
+);
 
 
-// ==========================================
-// CLOSE WHEN CLICKING OUTSIDE
-// ==========================================
+closeAddUserButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                addUserModal?.classList.add(
+                    "hidden"
+                );
+
+            }
+        );
+
+    }
+);
+
 
 addUserModal?.addEventListener(
     "click",
     (e) => {
 
-        if (e.target === addUserModal) {
+        if (
+            e.target === addUserModal
+        ) {
 
-            addUserModal.classList.add("hidden");
+            addUserModal.classList.add(
+                "hidden"
+            );
 
         }
 
     }
 );
 
-
-// ==========================================
-// ESC KEY CLOSE
-// ==========================================
 
 document.addEventListener(
     "keydown",
@@ -927,10 +1074,14 @@ document.addEventListener(
         if (
             e.key === "Escape" &&
             addUserModal &&
-            !addUserModal.classList.contains("hidden")
+            !addUserModal.classList.contains(
+                "hidden"
+            )
         ) {
 
-            addUserModal.classList.add("hidden");
+            addUserModal.classList.add(
+                "hidden"
+            );
 
         }
 
@@ -938,19 +1089,19 @@ document.addEventListener(
 );
 
 
-// ==========================================
-// RESET WHEN CLOSED
-// ==========================================
-
 function closeAddUserModal() {
 
     addUserForm?.reset();
 
-    addUserModal?.classList.add("hidden");
+    addUserModal?.classList.add(
+        "hidden"
+    );
 
-}// ==========================================
-// PART 9 OF 20
-// ADD USER FORM
+}
+
+
+// ==========================================
+// ADD USER
 // ==========================================
 
 addUserForm?.addEventListener(
@@ -959,19 +1110,47 @@ addUserForm?.addEventListener(
 
         e.preventDefault();
 
+
         const name =
-            document.getElementById("new-user-name")?.value.trim();
+            document
+                .getElementById(
+                    "new-user-name"
+                )
+                ?.value
+                .trim();
+
 
         const email =
-            document.getElementById("new-user-email")?.value.trim();
+            document
+                .getElementById(
+                    "new-user-email"
+                )
+                ?.value
+                .trim();
+
 
         const password =
-            document.getElementById("new-user-password")?.value;
+            document
+                .getElementById(
+                    "new-user-password"
+                )
+                ?.value;
+
 
         const role =
-            document.getElementById("new-user-role")?.value || "Officer";
+            document
+                .getElementById(
+                    "new-user-role"
+                )
+                ?.value ||
+            "Officer";
 
-        if (!name || !email || !password) {
+
+        if (
+            !name ||
+            !email ||
+            !password
+        ) {
 
             showToast(
                 "Please complete all required fields.",
@@ -982,7 +1161,10 @@ addUserForm?.addEventListener(
 
         }
 
-        if (password.length < 6) {
+
+        if (
+            password.length < 6
+        ) {
 
             showToast(
                 "Password must be at least 6 characters.",
@@ -993,31 +1175,41 @@ addUserForm?.addEventListener(
 
         }
 
+
         try {
 
             await addDoc(
-    collection(db, "Users"),
-    {
-        name,
-        email,
-        role,
-        status: "Active",
-        createdAt: serverTimestamp(),
-        createdBy:
-            auth.currentUser?.email || "Unknown"
-    }
-);
+                collection(
+                    db,
+                    "Users"
+                ),
+                {
+                    name,
+                    email,
+                    role,
+                    status: "Active",
 
-showToast(
-    "User saved successfully.",
-    "success"
-);
+                    createdAt:
+                        serverTimestamp(),
 
-addUserForm.reset();
+                    createdBy:
+                        auth.currentUser?.email ||
+                        "Unknown"
+                }
+            );
 
-closeAddUserModal();
 
-loadUsers();
+            showToast(
+                "User saved successfully.",
+                "success"
+            );
+
+
+            addUserForm.reset();
+
+            closeAddUserModal();
+
+            loadUsers();
 
         }
         catch (error) {
@@ -1025,23 +1217,18 @@ loadUsers();
             console.error(error);
 
             showToast(
-
                 "Unable to create user.",
-
                 "error"
-
             );
 
         }
 
     }
-);// ==========================================
-// PART 10 OF 20
-// MANAGE USERS
-// ==========================================
+);
+
 
 // ==========================================
-// OPEN MANAGE USERS
+// MANAGE USERS
 // ==========================================
 
 manageUsersBtn?.addEventListener(
@@ -1065,14 +1252,13 @@ manageUsersBtn?.addEventListener(
 );
 
 
-// ==========================================
-// OPEN MODULE
-// ==========================================
-
 function openManageUsers() {
 
     const usersTab =
-        document.getElementById("manage-users-modal");
+        document.getElementById(
+            "manage-users-modal"
+        );
+
 
     if (!usersTab) {
 
@@ -1085,219 +1271,351 @@ function openManageUsers() {
 
     }
 
-    usersTab.classList.remove("hidden");
+
+    usersTab.classList.remove(
+        "hidden"
+    );
+
 
     loadUsers();
 
 }
 
 
-// ==========================================
-// LOAD USERS
-// ==========================================
+let usersUnsubscribe = null;
+
 
 function loadUsers() {
 
     const usersTableBody =
-        document.getElementById("users-table-body");
+        document.getElementById(
+            "users-table-body"
+        );
+
 
     if (!usersTableBody) return;
 
+
+    if (usersUnsubscribe) {
+
+        usersUnsubscribe();
+
+        usersUnsubscribe = null;
+
+    }
+
+
     const usersRef =
-        collection(db, "Users");
+        collection(
+            db,
+            "Users"
+        );
 
-    onSnapshot(usersRef, (snapshot) => {
 
-        if (snapshot.empty) {
+    usersUnsubscribe =
+        onSnapshot(
+            usersRef,
+            (snapshot) => {
 
-            usersTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="text-align:center">
-                        No users found.
-                    </td>
-                </tr>
-            `;
+                if (
+                    snapshot.empty
+                ) {
 
-            return;
+                    usersTableBody.innerHTML = `
+                        <tr>
+                            <td
+                                colspan="5"
+                                style="text-align:center"
+                            >
+                                No users found.
+                            </td>
+                        </tr>
+                    `;
 
-        }
+                    return;
 
-        usersTableBody.innerHTML = "";
+                }
 
-        snapshot.forEach((userDoc) => {
 
-            const user = userDoc.data();
+                usersTableBody.innerHTML =
+                    "";
 
-            usersTableBody.innerHTML += `
-                <tr>
-                    <td>${user.name || "-"}</td>
-                    <td>${user.email || "-"}</td>
-                    <td>${user.role || "Officer"}</td>
-                    <td>${user.status || "Active"}</td>
-                    <td>
-                        <button
-                            class="edit-user-btn"
-                            data-id="${userDoc.id}">
-                            Edit
-                        </button>
 
-                        <button
-                            class="delete-user-btn"
-                            data-id="${userDoc.id}">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            `;
+                snapshot.forEach(
+                    (userDoc) => {
 
-        });
+                        const user =
+                            userDoc.data();
 
-    });
+
+                        usersTableBody.innerHTML += `
+                            <tr>
+
+                                <td>
+                                    ${user.name || "-"}
+                                </td>
+
+                                <td>
+                                    ${user.email || "-"}
+                                </td>
+
+                                <td>
+                                    ${user.role || "Officer"}
+                                </td>
+
+                                <td>
+                                    ${user.status || "Active"}
+                                </td>
+
+                                <td>
+
+                                    <button
+                                        class="edit-user-btn"
+                                        data-id="${userDoc.id}"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="delete-user-btn"
+                                        data-id="${userDoc.id}"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                        `;
+
+                    }
+                );
+
+            },
+            (error) => {
+
+                console.error(
+                    "Users listener error:",
+                    error
+                );
+
+                showToast(
+                    "Unable to load users.",
+                    "error"
+                );
+
+            }
+        );
 
 }
+
 
 // ==========================================
 // DELETE USER
 // ==========================================
 
-document.addEventListener("click", async (e) => {
+document.addEventListener(
+    "click",
+    async (e) => {
 
-    if (!e.target.classList.contains("delete-user-btn")) {
+        if (
+            !e.target.classList.contains(
+                "delete-user-btn"
+            )
+        ) {
 
-        return;
+            return;
+
+        }
+
+
+        if (!isAdmin()) {
+
+            showToast(
+                "Only the Administrator can delete users.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const userId =
+            e.target.dataset.id;
+
+
+        const confirmed =
+            confirm(
+                "Delete this user?"
+            );
+
+
+        if (!confirmed) return;
+
+
+        try {
+
+            await deleteDoc(
+                doc(
+                    db,
+                    "Users",
+                    userId
+                )
+            );
+
+
+            showToast(
+                "User deleted successfully.",
+                "success"
+            );
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            showToast(
+                "Unable to delete user.",
+                "error"
+            );
+
+        }
 
     }
+);
 
-    if (!isAdmin()) {
-
-        showToast(
-            "Only the Administrator can delete users.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    const userId =
-        e.target.dataset.id;
-
-    const confirmed = confirm(
-        "Delete this user?"
-    );
-
-    if (!confirmed) {
-
-        return;
-
-    }
-
-    try {
-
-        await deleteDoc(
-            doc(db, "Users", userId)
-        );
-
-        showToast(
-            "User deleted successfully.",
-            "success"
-        );
-
-    }
-    catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Unable to delete user.",
-            "error"
-        );
-
-    }
-
-});
 
 // ==========================================
 // EDIT USER
 // ==========================================
 
-document.addEventListener("click", async (e) => {
+document.addEventListener(
+    "click",
+    async (e) => {
 
-    if (!e.target.classList.contains("edit-user-btn")) {
+        if (
+            !e.target.classList.contains(
+                "edit-user-btn"
+            )
+        ) {
 
-        return;
+            return;
+
+        }
+
+
+        if (!isAdmin()) {
+
+            showToast(
+                "Only the Administrator can edit users.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const userId =
+            e.target.dataset.id;
+
+
+        const row =
+            e.target.closest("tr");
+
+
+        if (!row) return;
+
+
+        const currentName =
+            row.children[0]
+                .textContent
+                .trim();
+
+
+        const currentRole =
+            row.children[2]
+                .textContent
+                .trim();
+
+
+        const currentStatus =
+            row.children[3]
+                .textContent
+                .trim();
+
+
+        const newName =
+            prompt(
+                "User Name:",
+                currentName
+            );
+
+
+        if (newName === null) return;
+
+
+        const newRole =
+            prompt(
+                "Role (Admin or Officer):",
+                currentRole
+            );
+
+
+        if (newRole === null) return;
+
+
+        const newStatus =
+            prompt(
+                "Status (Active or Disabled):",
+                currentStatus
+            );
+
+
+        if (newStatus === null) return;
+
+
+        try {
+
+            await updateDoc(
+                doc(
+                    db,
+                    "Users",
+                    userId
+                ),
+                {
+                    name:
+                        newName.trim(),
+
+                    role:
+                        newRole.trim(),
+
+                    status:
+                        newStatus.trim()
+                }
+            );
+
+
+            showToast(
+                "User updated successfully.",
+                "success"
+            );
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            showToast(
+                "Unable to update user.",
+                "error"
+            );
+
+        }
 
     }
-
-    if (!isAdmin()) {
-
-        showToast(
-            "Only the Administrator can edit users.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    const userId = e.target.dataset.id;
-
-    const row = e.target.closest("tr");
-
-    const currentName = row.children[0].textContent.trim();
-    const currentRole = row.children[2].textContent.trim();
-    const currentStatus = row.children[3].textContent.trim();
-
-    const newName = prompt(
-        "User Name:",
-        currentName
-    );
-
-    if (newName === null) return;
-
-    const newRole = prompt(
-        "Role (Admin or Officer):",
-        currentRole
-    );
-
-    if (newRole === null) return;
-
-    const newStatus = prompt(
-        "Status (Active or Disabled):",
-        currentStatus
-    );
-
-    if (newStatus === null) return;
-
-    try {
-
-        await updateDoc(
-            doc(db, "Users", userId),
-            {
-                name: newName.trim(),
-                role: newRole.trim(),
-                status: newStatus.trim()
-            }
-        );
-
-        showToast(
-            "User updated successfully.",
-            "success"
-        );
-
-    }
-    catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Unable to update user.",
-            "error"
-        );
-
-    }
-
-});
+);
 
 
 // ==========================================
@@ -1305,29 +1623,35 @@ document.addEventListener("click", async (e) => {
 // ==========================================
 
 document
-    .querySelectorAll(".close-manage-users")
-    .forEach((button) => {
+    .querySelectorAll(
+        ".close-manage-users"
+    )
+    .forEach(
+        (button) => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                document
-                    .getElementById("manage-users-modal")
-                    ?.classList.add("hidden");
+                    document
+                        .getElementById(
+                            "manage-users-modal"
+                        )
+                        ?.classList.add(
+                            "hidden"
+                        );
 
-            }
-        );
+                }
+            );
 
-    });
+        }
+    );
 
-
-// ==========================================
-// CLICK OUTSIDE TO CLOSE
-// ==========================================
 
 document
-    .getElementById("manage-users-modal")
+    .getElementById(
+        "manage-users-modal"
+    )
     ?.addEventListener(
         "click",
         (e) => {
@@ -1337,18 +1661,18 @@ document
                 "manage-users-modal"
             ) {
 
-                e.target.classList.add("hidden");
+                e.target.classList.add(
+                    "hidden"
+                );
 
             }
 
         }
-    );// ==========================================
-// PART 11 OF 20
-// LOAN DEFAULT SETTINGS
-// ==========================================
+    );
+
 
 // ==========================================
-// LOAD LOAN DEFAULTS
+// LOAN DEFAULT SETTINGS
 // ==========================================
 
 function loadLoanDefaults() {
@@ -1363,6 +1687,7 @@ function loadLoanDefaults() {
 
     }
 
+
     if (defaultDuration) {
 
         defaultDuration.value =
@@ -1372,6 +1697,7 @@ function loadLoanDefaults() {
             );
 
     }
+
 
     if (defaultFee) {
 
@@ -1386,30 +1712,33 @@ function loadLoanDefaults() {
 }
 
 
-// ==========================================
-// SAVE LOAN DEFAULTS
-// ==========================================
-
 loanDefaultsForm?.addEventListener(
     "submit",
     (e) => {
 
         e.preventDefault();
 
+
         setStorage(
             STORAGE.DEFAULT_INTEREST,
-            defaultInterest?.value || "20"
+            defaultInterest?.value ||
+            "20"
         );
+
 
         setStorage(
             STORAGE.DEFAULT_DURATION,
-            defaultDuration?.value || "12"
+            defaultDuration?.value ||
+            "12"
         );
+
 
         setStorage(
             STORAGE.DEFAULT_FEE,
-            defaultFee?.value || "0"
+            defaultFee?.value ||
+            "0"
         );
+
 
         showToast(
             "Loan defaults saved successfully.",
@@ -1425,7 +1754,9 @@ loanDefaultsForm?.addEventListener(
 // ==========================================
 
 document
-    .getElementById("reset-defaults-btn")
+    .getElementById(
+        "reset-defaults-btn"
+    )
     ?.addEventListener(
         "click",
         () => {
@@ -1440,22 +1771,27 @@ document
 
             }
 
+
             setStorage(
                 STORAGE.DEFAULT_INTEREST,
                 "20"
             );
+
 
             setStorage(
                 STORAGE.DEFAULT_DURATION,
                 "12"
             );
 
+
             setStorage(
                 STORAGE.DEFAULT_FEE,
                 "0"
             );
 
+
             loadLoanDefaults();
+
 
             showToast(
                 "Loan defaults restored.",
@@ -1466,12 +1802,10 @@ document
     );
 
 
-// ==========================================
-// INITIALIZE DEFAULTS
-// ==========================================
+loadLoanDefaults();
 
-loadLoanDefaults();// ==========================================
-// PART 12 OF 20
+
+// ==========================================
 // CLEAR LOCAL DATA
 // ==========================================
 
@@ -1479,58 +1813,70 @@ clearDataBtn?.addEventListener(
     "click",
     () => {
 
-        const confirmed = confirm(
+        const confirmed =
+            confirm(
+                "This will clear locally saved settings only.\n\nContinue?"
+            );
 
-            "This will clear locally saved settings only.\n\nContinue?"
 
-        );
+        if (!confirmed) return;
 
-        if (!confirmed) {
-
-            return;
-
-        }
 
         try {
 
-            // ==================================
-            // REMOVE SAVED SETTINGS
-            // ==================================
+            removeStorage(
+                STORAGE.USER_NAME
+            );
 
-            removeStorage(STORAGE.USER_NAME);
+            removeStorage(
+                STORAGE.USER_PHONE
+            );
 
-            removeStorage(STORAGE.USER_PHONE);
+            removeStorage(
+                STORAGE.DEFAULT_INTEREST
+            );
 
-            removeStorage(STORAGE.DEFAULT_INTEREST);
+            removeStorage(
+                STORAGE.DEFAULT_DURATION
+            );
 
-            removeStorage(STORAGE.DEFAULT_DURATION);
+            removeStorage(
+                STORAGE.DEFAULT_FEE
+            );
 
-            removeStorage(STORAGE.DEFAULT_FEE);
+            removeStorage(
+                STORAGE.THEME
+            );
 
-            removeStorage(STORAGE.THEME);
-
-            // ==================================
-            // RELOAD DEFAULT VALUES
-            // ==================================
 
             loadProfile();
 
             loadLoanDefaults();
 
-            applyTheme("system");
+
+            // Reset theme to System
+
+            setStorage(
+                STORAGE.THEME,
+                "system"
+            );
+
+            applyTheme(
+                "system"
+            );
+
 
             if (themeSelect) {
 
-                themeSelect.value = "system";
+                themeSelect.value =
+                    "system";
 
             }
 
+
             showToast(
-
                 "Local settings cleared successfully.",
-
                 "success"
-
             );
 
         }
@@ -1539,18 +1885,17 @@ clearDataBtn?.addEventListener(
             console.error(error);
 
             showToast(
-
                 "Failed to clear local settings.",
-
                 "error"
-
             );
 
         }
 
     }
-);// ==========================================
-// PART 13 OF 20
+);
+
+
+// ==========================================
 // EXPORT SETTINGS
 // ==========================================
 
@@ -1563,22 +1908,34 @@ exportDataBtn?.addEventListener(
             const settings = {
 
                 userName:
-                    getStorage(STORAGE.USER_NAME),
+                    getStorage(
+                        STORAGE.USER_NAME
+                    ),
 
                 userPhone:
-                    getStorage(STORAGE.USER_PHONE),
+                    getStorage(
+                        STORAGE.USER_PHONE
+                    ),
 
                 userRole:
-                    getStorage(STORAGE.USER_ROLE),
+                    getStorage(
+                        STORAGE.USER_ROLE
+                    ),
 
                 defaultInterest:
-                    getStorage(STORAGE.DEFAULT_INTEREST),
+                    getStorage(
+                        STORAGE.DEFAULT_INTEREST
+                    ),
 
                 defaultDuration:
-                    getStorage(STORAGE.DEFAULT_DURATION),
+                    getStorage(
+                        STORAGE.DEFAULT_DURATION
+                    ),
 
                 defaultFee:
-                    getStorage(STORAGE.DEFAULT_FEE),
+                    getStorage(
+                        STORAGE.DEFAULT_FEE
+                    ),
 
                 theme:
                     getStorage(
@@ -1587,41 +1944,65 @@ exportDataBtn?.addEventListener(
                     ),
 
                 exportedAt:
-                    new Date().toISOString()
+                    new Date()
+                        .toISOString()
 
             };
 
-            const json = JSON.stringify(
-                settings,
-                null,
-                2
-            );
 
-            const blob = new Blob(
-                [json],
-                {
-                    type: "application/json"
-                }
-            );
+            const json =
+                JSON.stringify(
+                    settings,
+                    null,
+                    2
+                );
+
+
+            const blob =
+                new Blob(
+                    [json],
+                    {
+                        type:
+                            "application/json"
+                    }
+                );
+
 
             const url =
-                URL.createObjectURL(blob);
+                URL.createObjectURL(
+                    blob
+                );
+
 
             const link =
-                document.createElement("a");
+                document.createElement(
+                    "a"
+                );
+
 
             link.href = url;
 
             link.download =
                 "greymus-settings.json";
 
-            document.body.appendChild(link);
+
+            document.body.appendChild(
+                link
+            );
+
 
             link.click();
 
-            document.body.removeChild(link);
 
-            URL.revokeObjectURL(url);
+            document.body.removeChild(
+                link
+            );
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
 
             showToast(
                 "Settings exported successfully.",
@@ -1641,20 +2022,11 @@ exportDataBtn?.addEventListener(
         }
 
     }
-);// ==========================================
-// PART 14 OF 20
-// IMPORT / RESTORE SETTINGS
-// ==========================================
-
-const importDataBtn =
-    document.getElementById("import-data-btn");
-
-const importSettingsFile =
-    document.getElementById("import-settings-file");
+);
 
 
 // ==========================================
-// OPEN FILE PICKER
+// IMPORT SETTINGS
 // ==========================================
 
 importDataBtn?.addEventListener(
@@ -1667,27 +2039,31 @@ importDataBtn?.addEventListener(
 );
 
 
-// ==========================================
-// IMPORT SETTINGS
-// ==========================================
-
 importSettingsFile?.addEventListener(
     "change",
     async (e) => {
 
-        const file = e.target.files?.[0];
+        const file =
+            e.target.files?.[0];
+
 
         if (!file) return;
+
 
         try {
 
             const text =
                 await file.text();
 
+
             const settings =
                 JSON.parse(text);
 
-            if (settings.userName) {
+
+            if (
+                settings.userName !==
+                undefined
+            ) {
 
                 setStorage(
                     STORAGE.USER_NAME,
@@ -1696,7 +2072,11 @@ importSettingsFile?.addEventListener(
 
             }
 
-            if (settings.userPhone) {
+
+            if (
+                settings.userPhone !==
+                undefined
+            ) {
 
                 setStorage(
                     STORAGE.USER_PHONE,
@@ -1705,7 +2085,15 @@ importSettingsFile?.addEventListener(
 
             }
 
-            if (settings.theme) {
+
+            if (
+                settings.theme ===
+                    "light" ||
+                settings.theme ===
+                    "dark" ||
+                settings.theme ===
+                    "system"
+            ) {
 
                 setStorage(
                     STORAGE.THEME,
@@ -1714,7 +2102,11 @@ importSettingsFile?.addEventListener(
 
             }
 
-            if (settings.defaultInterest) {
+
+            if (
+                settings.defaultInterest !==
+                undefined
+            ) {
 
                 setStorage(
                     STORAGE.DEFAULT_INTEREST,
@@ -1723,7 +2115,11 @@ importSettingsFile?.addEventListener(
 
             }
 
-            if (settings.defaultDuration) {
+
+            if (
+                settings.defaultDuration !==
+                undefined
+            ) {
 
                 setStorage(
                     STORAGE.DEFAULT_DURATION,
@@ -1732,7 +2128,11 @@ importSettingsFile?.addEventListener(
 
             }
 
-            if (settings.defaultFee) {
+
+            if (
+                settings.defaultFee !==
+                undefined
+            ) {
 
                 setStorage(
                     STORAGE.DEFAULT_FEE,
@@ -1741,11 +2141,13 @@ importSettingsFile?.addEventListener(
 
             }
 
+
             loadProfile();
 
             loadLoanDefaults();
 
             loadTheme();
+
 
             showToast(
                 "Settings imported successfully.",
@@ -1764,55 +2166,58 @@ importSettingsFile?.addEventListener(
 
         }
 
-        importSettingsFile.value = "";
+
+        importSettingsFile.value =
+            "";
 
     }
-);// ==========================================
-// PART 15 OF 20
-// AUTHENTICATION STATE LISTENER
-// ==========================================
-
-auth.onAuthStateChanged((user) => {
-
-    if (!user) {
-
-        console.log("No authenticated user.");
-
-        return;
-
-    }
-
-    console.log(
-        "Logged in as:",
-        user.email
-    );
-
-    // Update profile email
-
-    if (profileEmail) {
-
-        profileEmail.value =
-            user.email || "";
-
-    }
-
-    // Refresh locally stored profile
-
-    loadProfile();
-
-    // Reload loan defaults
-
-    loadLoanDefaults();
-
-    // Reload theme
-
-    loadTheme();
-
-});
+);
 
 
 // ==========================================
-// REFRESH PROFILE WHEN TAB BECOMES ACTIVE
+// AUTHENTICATION STATE
+// ==========================================
+
+auth.onAuthStateChanged(
+    (user) => {
+
+        if (!user) {
+
+            console.log(
+                "No authenticated user."
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "Logged in as:",
+            user.email
+        );
+
+
+        if (profileEmail) {
+
+            profileEmail.value =
+                user.email || "";
+
+        }
+
+
+        loadProfile();
+
+        loadLoanDefaults();
+
+        loadTheme();
+
+    }
+);
+
+
+// ==========================================
+// REFRESH PROFILE WHEN TAB ACTIVE
 // ==========================================
 
 document.addEventListener(
@@ -1820,11 +2225,16 @@ document.addEventListener(
     () => {
 
         if (
-            document.visibilityState === "visible" &&
+            document.visibilityState ===
+                "visible" &&
             auth.currentUser
         ) {
 
             loadProfile();
+
+            // Re-apply theme
+
+            loadTheme();
 
         }
 
@@ -1833,7 +2243,7 @@ document.addEventListener(
 
 
 // ==========================================
-// REFRESH AFTER WINDOW GAINS FOCUS
+// REFRESH AFTER WINDOW FOCUS
 // ==========================================
 
 window.addEventListener(
@@ -1843,6 +2253,8 @@ window.addEventListener(
         if (auth.currentUser) {
 
             loadProfile();
+
+            loadTheme();
 
         }
 
@@ -1854,117 +2266,225 @@ window.addEventListener(
 // KEEP PROFILE SYNCHRONIZED
 // ==========================================
 
-setInterval(() => {
+setInterval(
+    () => {
 
-    if (auth.currentUser) {
+        if (auth.currentUser) {
 
-        loadProfile();
+            loadProfile();
 
-    }
+        }
 
-}, 60000);
+    },
+    60000
+);
+
 
 // ==========================================
-// PART 16 OF 20
 // ACTIVITY LOG MODAL
 // ==========================================
 
 // Open
 
-activityLogBtn?.addEventListener("click", () => {
+activityLogBtn?.addEventListener(
+    "click",
+    () => {
 
-    activityLogModal?.classList.remove("hidden");
-
-});
-
-// Close Button
-
-closeActivityLog?.addEventListener("click", () => {
-
-    activityLogModal?.classList.add("hidden");
-
-});
-
-// Click Outside
-
-activityLogModal?.addEventListener("click", (e) => {
-
-    if (e.target === activityLogModal) {
-
-        activityLogModal.classList.add("hidden");
+        activityLogModal?.classList.remove(
+            "hidden"
+        );
 
     }
-
-});
-
-// Escape Key
-
-document.addEventListener("keydown", (e) => {
-
-    if (
-        e.key === "Escape" &&
-        activityLogModal &&
-        !activityLogModal.classList.contains("hidden")
-    ) {
-
-        activityLogModal.classList.add("hidden");
-
-    }
-
-});
-
-// ==========================================
-// PART 17 OF 20
-// LOAD ACTIVITY LOG
-// ==========================================
-
-const activityQuery = query(
-    collection(db, "activityLogs"),
-    orderBy("timestamp", "desc")
 );
 
-onSnapshot(activityQuery, (snapshot) => {
 
-    if (!activityLogBody) return;
+// Close
 
-    if (snapshot.empty) {
+closeActivityLog?.addEventListener(
+    "click",
+    () => {
 
-        activityLogBody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align:center">
-                    No activity recorded.
-                </td>
-            </tr>
-        `;
+        activityLogModal?.classList.add(
+            "hidden"
+        );
 
-        return;
     }
+);
 
-    activityLogBody.innerHTML = "";
 
-    snapshot.forEach((doc) => {
+// Click outside
 
-        const item = doc.data();
+activityLogModal?.addEventListener(
+    "click",
+    (e) => {
 
-        const date = item.timestamp
-            ? item.timestamp.toDate().toLocaleDateString()
-            : "-";
+        if (
+            e.target ===
+            activityLogModal
+        ) {
 
-        const time = item.timestamp
-            ? item.timestamp.toDate().toLocaleTimeString()
-            : "-";
+            activityLogModal.classList.add(
+                "hidden"
+            );
 
-        activityLogBody.innerHTML += `
-            <tr>
-                <td>${date}</td>
-                <td>${time}</td>
-                <td>${item.officer || "-"}</td>
-                <td>${item.action || "-"}</td>
-                <td>${item.details || "-"}</td>
-            </tr>
-        `;
+        }
 
-    });
+    }
+);
 
-});
 
+// Escape
+
+document.addEventListener(
+    "keydown",
+    (e) => {
+
+        if (
+            e.key === "Escape" &&
+            activityLogModal &&
+            !activityLogModal.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            activityLogModal.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// ACTIVITY LOG
+// ==========================================
+
+const activityQuery =
+    query(
+        collection(
+            db,
+            "activityLogs"
+        ),
+        orderBy(
+            "timestamp",
+            "desc"
+        )
+    );
+
+
+onSnapshot(
+    activityQuery,
+    (snapshot) => {
+
+        if (!activityLogBody) return;
+
+
+        if (snapshot.empty) {
+
+            activityLogBody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="5"
+                        style="text-align:center"
+                    >
+                        No activity recorded.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        activityLogBody.innerHTML =
+            "";
+
+
+        snapshot.forEach(
+            (activityDoc) => {
+
+                const item =
+                    activityDoc.data();
+
+
+                const date =
+                    item.timestamp
+                        ? item.timestamp
+                            .toDate()
+                            .toLocaleDateString()
+                        : "-";
+
+
+                const time =
+                    item.timestamp
+                        ? item.timestamp
+                            .toDate()
+                            .toLocaleTimeString(
+                                [],
+                                {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                    hour12: false
+                                }
+                            )
+                        : "-";
+
+
+                activityLogBody.innerHTML += `
+                    <tr>
+
+                        <td>
+                            ${date}
+                        </td>
+
+                        <td>
+                            ${time}
+                        </td>
+
+                        <td>
+                            ${item.officer || "-"}
+                        </td>
+
+                        <td>
+                            ${item.action || "-"}
+                        </td>
+
+                        <td>
+                            ${item.details || "-"}
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        );
+
+    },
+    (error) => {
+
+        console.error(
+            "Activity log error:",
+            error
+        );
+
+    }
+);
+
+
+// ==========================================
+// FINAL THEME CHECK
+// ==========================================
+
+// Make sure the saved theme is applied
+// after the complete settings module loads.
+
+loadTheme();
+
+
+console.log(
+    "Greymus Settings initialization complete."
+);
