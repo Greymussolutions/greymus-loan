@@ -1,7 +1,7 @@
 /* ==========================================
    GREYMUS LOAN FINANCIAL HUB
    styles.css
-   VERSION 1.6
+   VERSION 1.7
    ========================================== */
 
 *{
@@ -1239,7 +1239,9 @@ button{
     border:1px solid #dbe3ec;
     border-radius:8px;
     padding:0 10px;
-    margin-bottom:10px
+    margin-bottom:10px;
+    background:#fff;
+    color:#1e293b
 }
 
 .settings-card button{
@@ -1248,11 +1250,14 @@ button{
     padding:9px 14px;
     border:none;
     border-radius:8px;
-    background:#e2e8f0
+    background:#e2e8f0;
+    color:#1e293b;
+    font-weight:500
 }
 
 .settings-card button:hover{
-    background:#cbd5e1
+    background:#cbd5e1;
+    color:#0f172a
 }
 
 
@@ -1297,7 +1302,7 @@ button{
 
 
 /* ==========================================
-   MOBILE NAVIGATION + FAB
+   MOBILE NAVIGATION
    ========================================== */
 
 .mobile-nav{
@@ -1311,16 +1316,9 @@ button{
 
 .fab{
     position:fixed;
-
-    /* FAR RIGHT */
-    right:28px;
+    right:18px;
     left:auto;
-
-    /*
-       Positioned well above the bottom navigation
-       and directly above the Settings area.
-    */
-    bottom:330px;
+    bottom:85px;
 
     width:58px;
     height:58px;
@@ -1335,25 +1333,24 @@ button{
 
     z-index:2500;
 
-    /*
-       Hide any text supplied by HTML.
-       The single + is created below.
-    */
     font-size:0;
 
     display:flex;
     align-items:center;
-    justify-content:center;
+    justify-content:center
 }
 
-
-/* ONE PLUS ONLY */
+.fab > *{
+    display:none!important
+}
 
 .fab::before{
     content:"+";
+    display:block;
     font-size:34px;
     line-height:1;
-    font-weight:300
+    font-weight:300;
+    color:#fff
 }
 
 
@@ -1726,6 +1723,25 @@ body[data-theme="dark"] .action-card:hover{
 }
 
 
+/* ---------- SETTINGS BUTTONS ---------- */
+
+html.dark-theme .settings-card button,
+body.dark-theme .settings-card button,
+html[data-theme="dark"] .settings-card button,
+body[data-theme="dark"] .settings-card button{
+    background:#e2e8f0;
+    color:#1e293b
+}
+
+html.dark-theme .settings-card button:hover,
+body.dark-theme .settings-card button:hover,
+html[data-theme="dark"] .settings-card button:hover,
+body[data-theme="dark"] .settings-card button:hover{
+    background:#cbd5e1;
+    color:#0f172a
+}
+
+
 /* ---------- Modals ---------- */
 
 html.dark-theme .modal,
@@ -1852,6 +1868,13 @@ body[data-theme="dark"] .fab{
     box-shadow:0 8px 25px rgba(0,0,0,.45)
 }
 
+html.dark-theme .fab::before,
+body.dark-theme .fab::before,
+html[data-theme="dark"] .fab::before,
+body[data-theme="dark"] .fab::before{
+    color:#fff
+}
+
 
 /* ---------- Status borders ---------- */
 
@@ -1940,6 +1963,18 @@ body[data-theme="dark"] .stat-card.danger{
         color:#e2e8f0
     }
 
+    html[data-theme="system"] .settings-card button,
+    body[data-theme="system"] .settings-card button{
+        background:#e2e8f0;
+        color:#1e293b
+    }
+
+    html[data-theme="system"] .settings-card button:hover,
+    body[data-theme="system"] .settings-card button:hover{
+        background:#cbd5e1;
+        color:#0f172a
+    }
+
     html[data-theme="system"] .mobile-nav,
     body[data-theme="system"] .mobile-nav{
         background:#0d1b2d;
@@ -1954,6 +1989,17 @@ body[data-theme="dark"] .stat-card.danger{
     html[data-theme="system"] .mobile-nav .tab-btn.active,
     body[data-theme="system"] .mobile-nav .tab-btn.active{
         color:#38bdf8
+    }
+
+    html[data-theme="system"] .fab,
+    body[data-theme="system"] .fab{
+        background:#0a2947;
+        box-shadow:0 8px 25px rgba(0,0,0,.45)
+    }
+
+    html[data-theme="system"] .fab::before,
+    body[data-theme="system"] .fab::before{
+        color:#fff
     }
 }
 
@@ -2304,44 +2350,37 @@ body[data-theme="dark"] .stat-card.danger{
 
     /* ==========================================
        MOBILE FAB
-       
-       FAR RIGHT ABOVE SETTINGS
        ========================================== */
 
     .fab{
+        right:16px;
         left:auto;
-        right:28px;
-
-        /*
-           330px from bottom places the FAB
-           above the Settings navigation area
-           instead of covering the Settings tab.
-        */
-        bottom:330px;
+        bottom:78px;
 
         width:52px;
         height:52px;
 
         transform:none;
-
         z-index:2500;
 
         font-size:0;
 
         display:flex;
         align-items:center;
-        justify-content:center;
+        justify-content:center
+    }
+
+    .fab > *{
+        display:none!important
     }
 
     .fab::before{
         content:"+";
+        display:block;
         font-size:34px;
         line-height:1;
         font-weight:300;
-    }
-
-    .mobile-nav{
-        z-index:3000
+        color:#fff
     }
 
 
@@ -2463,8 +2502,8 @@ body[data-theme="dark"] .stat-card.danger{
     }
 
     .fab{
-        right:20px;
-        bottom:300px;
+        right:14px;
+        bottom:74px;
         width:50px;
         height:50px
     }
@@ -2492,7 +2531,7 @@ body[data-theme="dark"] .stat-card.danger{
 
     .fab{
         right:20px;
-        bottom:180px;
+        bottom:70px;
         width:48px;
         height:48px
     }
