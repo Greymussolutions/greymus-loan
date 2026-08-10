@@ -1,16 +1,6 @@
 /* ==========================================
    GREYMUS LOAN FINANCIAL HUB
-   styles.css
-   VERSION 2.1
-
-   UPDATED:
-   ✔ Full-screen Loan Details support
-   ✔ Loan Details attached directly to body
-   ✔ Mobile-friendly full-screen details
-   ✔ FAB stays ABOVE mobile navigation
-   ✔ FAB stays outside navigation
-   ✔ Clickable loan rows preserved
-   ✔ Existing dashboard/settings/dark mode preserved
+   styles.css - UPDATED FOR EXPANDABLE ROW-DOWN DETAILS
    ========================================== */
 
 *{
@@ -883,7 +873,7 @@ button{
 
 
 /* ==========================================
-   CLICKABLE LOAN ROW
+   CLICKABLE LOAN ROW & EXPANDABLE DETAILS ROW
    ========================================== */
 
 .loan-clickable-row{
@@ -904,6 +894,17 @@ button{
 .loan-row-selected{
     background:#dbeafe!important;
     box-shadow:inset 4px 0 0 #38bdf8
+}
+
+/* Expandable Inline Details Row Container (3-rows down look inside table body) */
+.loan-details-dropdown-row {
+    background: #071525 !important;
+    color: #e2e8f0;
+}
+
+.loan-details-dropdown-row td {
+    padding: 0 !important;
+    border-top: none !important;
 }
 
 
@@ -953,77 +954,67 @@ button{
 
 
 /* ==========================================
-   LOANS TABLE
+   LOANS TABLE (Updated to 12 columns - No action buttons column)
    ========================================== */
 
 #loans-table th:nth-child(1),
 #loans-table td:nth-child(1){
-    width:3%
+    width:4%
 }
 
 #loans-table th:nth-child(2),
 #loans-table td:nth-child(2){
-    width:7%
+    width:8%
 }
 
 #loans-table th:nth-child(3),
 #loans-table td:nth-child(3){
-    width:9%
+    width:12%
 }
 
 #loans-table th:nth-child(4),
 #loans-table td:nth-child(4){
-    width:7%
+    width:9%
 }
 
 #loans-table th:nth-child(5),
 #loans-table td:nth-child(5){
-    width:6%
+    width:7%
 }
 
 #loans-table th:nth-child(6),
 #loans-table td:nth-child(6){
-    width:6%
+    width:7%
 }
 
 #loans-table th:nth-child(7),
 #loans-table td:nth-child(7){
-    width:5%
+    width:6%
 }
 
 #loans-table th:nth-child(8),
 #loans-table td:nth-child(8){
-    width:8%
+    width:9%
 }
 
 #loans-table th:nth-child(9),
 #loans-table td:nth-child(9){
-    width:9%
+    width:10%
 }
 
 #loans-table th:nth-child(10),
 #loans-table td:nth-child(10){
-    width:8%
+    width:9%
 }
 
 #loans-table th:nth-child(11),
 #loans-table td:nth-child(11){
-    width:7%
+    width:9%
 }
 
 #loans-table th:nth-child(12),
 #loans-table td:nth-child(12){
-    width:7%
-}
-
-#loans-table th:nth-child(13),
-#loans-table td:nth-child(13){
-    width:7%
-}
-
-#loans-table th:nth-child(14),
-#loans-table td:nth-child(14){
-    width:11%
+    width:10%
 }
 
 .table-wrapper td button{
@@ -1036,7 +1027,7 @@ button{
 
 
 /* ==========================================
-   LOAN DETAILS
+   FINTECH SMART LOAN DETAILS (INLINE & CONTAINER)
    ========================================== */
 
 .loan-details-container{
@@ -1098,15 +1089,55 @@ button{
     background:#293d56
 }
 
+/* FinTech Split Body Layout (Details Info Left + Action Buttons Right) */
+.loan-details-body-split {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    border-bottom: 1px solid #20334b;
+}
+
+@media(max-width: 1024px) {
+    .loan-details-body-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.loan-details-main-pane {
+    padding: 20px;
+}
+
+.loan-details-actions-pane {
+    padding: 20px;
+    background: #091827;
+    border-left: 1px solid #20334b;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+@media(max-width: 1024px) {
+    .loan-details-actions-pane {
+        border-left: none;
+        border-top: 1px solid #20334b;
+    }
+}
+
 .loan-details-grid{
-    padding:20px;
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:16px
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:16px
+}
+
+@media(max-width: 1200px) {
+    .loan-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .loan-detail-item{
-    padding:16px;
+    padding:14px;
     border-radius:12px;
     background:#0f2034;
     border:1px solid #20344c
@@ -1116,7 +1147,7 @@ button{
     display:block;
     color:#8fa2b8;
     font-size:11px;
-    margin-bottom:7px;
+    margin-bottom:5px;
     text-transform:uppercase;
     letter-spacing:.3px
 }
@@ -1124,7 +1155,7 @@ button{
 .loan-detail-item strong{
     display:block;
     color:#f8fafc;
-    font-size:15px;
+    font-size:14px;
     word-break:break-word
 }
 
@@ -1136,19 +1167,14 @@ button{
     color:#ef4444
 }
 
-.loan-details-actions{
-    padding:20px;
-    border-top:1px solid #20334b;
-    background:#091827
-}
-
 .loan-details-actions-title{
     display:flex;
     align-items:center;
     gap:8px;
     color:#f8fafc;
     font-size:16px;
-    margin-bottom:14px
+    margin-bottom:14px;
+    font-weight: 700;
 }
 
 .loan-details-actions-title::before{
@@ -1162,7 +1188,7 @@ button{
     border:none;
     border-radius:10px;
     padding:11px 15px;
-    margin-bottom:9px;
+    margin-bottom:10px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -1184,7 +1210,7 @@ button{
 
 .loan-detail-action::after{
     content:"›";
-    font-size:25px;
+    font-size:22px;
     line-height:1
 }
 
@@ -1193,7 +1219,9 @@ button{
 }
 
 .loan-detail-action.edit-action{
-    background:#1d4ed8
+    background:#f59e0b;
+    color:#1e293b;
+    font-weight: 700;
 }
 
 .loan-detail-action.approve-action{
@@ -1206,7 +1234,7 @@ button{
 
 .loan-details-schedule{
     padding:20px;
-    border-top:1px solid #20334b
+    background:#071525;
 }
 
 .loan-details-section-title{
@@ -1215,7 +1243,8 @@ button{
     gap:9px;
     color:#f8fafc;
     font-size:16px;
-    margin-bottom:14px
+    margin-bottom:14px;
+    font-weight: 700;
 }
 
 .loan-details-section-title::before{
@@ -1304,304 +1333,6 @@ button{
 
 .delete-payment:hover{
     background:#5a202d
-}
-
-
-/* ==========================================
-   TRUE FULL-SCREEN LOAN DETAILS PAGE
-   ========================================== */
-
-/*
-   These selectors support the Loan Details element
-   when loans.js attaches it directly to document.body.
-
-   Multiple selector names are intentionally supported
-   so the CSS remains compatible with the existing
-   loans.js implementation.
-*/
-
-#loan-details-page,
-.loan-details-page,
-.loan-details-fullscreen,
-.fullscreen-loan-details{
-    position:fixed;
-    inset:0;
-    width:100vw;
-    height:100dvh;
-    min-height:100vh;
-    margin:0!important;
-    padding:0!important;
-    background:#071525;
-    z-index:20000;
-    overflow-y:auto;
-    overflow-x:hidden;
-    -webkit-overflow-scrolling:touch
-}
-
-#loan-details-page .loan-details-container,
-.loan-details-page .loan-details-container,
-.loan-details-fullscreen .loan-details-container,
-.fullscreen-loan-details .loan-details-container{
-    width:100%;
-    min-height:100%;
-    margin:0;
-    padding:0
-}
-
-#loan-details-page .loan-details-panel,
-.loan-details-page .loan-details-panel,
-.loan-details-fullscreen .loan-details-panel,
-.fullscreen-loan-details .loan-details-panel{
-    width:100%;
-    min-height:100%;
-    margin:0;
-    border:none;
-    border-radius:0;
-    box-shadow:none
-}
-
-#loan-details-page .loan-details-header,
-.loan-details-page .loan-details-header,
-.loan-details-fullscreen .loan-details-header,
-.fullscreen-loan-details .loan-details-header{
-    position:sticky;
-    top:0;
-    z-index:10
-}
-
-#loan-details-page .loan-details-close,
-.loan-details-page .loan-details-close,
-.loan-details-fullscreen .loan-details-close,
-.fullscreen-loan-details .loan-details-close{
-    cursor:pointer
-}
-
-body.loan-details-open{
-    overflow:hidden
-}
-
-body.loan-details-open #dashboard-section{
-    visibility:hidden
-}
-
-body.loan-details-open .mobile-nav,
-body.loan-details-open .fab,
-body.loan-details-open .app-footer{
-    display:none!important
-}
-
-
-/* ==========================================
-   LOAN DETAILS - FINANCIAL STATUS
-   ========================================== */
-
-.loan-details-status-card{
-    margin:20px 20px 0;
-    padding:20px;
-    border-radius:14px;
-    background:linear-gradient(135deg,#111f32,#0d1a2b);
-    border:1px solid #233952
-}
-
-.loan-details-status-card.arrears{
-    border-color:rgba(239,68,68,.28)
-}
-
-.loan-details-status-card.active{
-    border-color:rgba(34,197,94,.25)
-}
-
-.loan-details-status{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-    margin-bottom:18px
-}
-
-.loan-details-status-label{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color:#f8fafc;
-    font-size:16px;
-    font-weight:700
-}
-
-.loan-details-status-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:7px;
-    padding:7px 12px;
-    border-radius:20px;
-    background:rgba(34,197,94,.12);
-    color:#4ade80;
-    font-size:11px;
-    font-weight:700
-}
-
-.loan-details-status-badge::before{
-    content:"";
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:#22c55e
-}
-
-.loan-details-status-badge.arrears{
-    background:rgba(239,68,68,.12);
-    color:#f87171
-}
-
-.loan-details-status-badge.arrears::before{
-    background:#ef4444
-}
-
-.loan-details-balance{
-    color:#ef4444;
-    font-size:30px;
-    font-weight:800;
-    margin:5px 0 10px
-}
-
-.loan-details-progress{
-    width:100%;
-    height:7px;
-    overflow:hidden;
-    border-radius:10px;
-    background:#1c2d43
-}
-
-.loan-details-progress-bar{
-    height:100%;
-    border-radius:10px;
-    background:linear-gradient(90deg,#ef4444,#f43f5e)
-}
-
-.loan-details-paid-line{
-    margin-top:10px;
-    color:#cbd5e1;
-    font-size:12px
-}
-
-.loan-details-paid-line strong{
-    color:#4ade80
-}
-
-
-/* ==========================================
-   LOAN DETAILS SUMMARY
-   ========================================== */
-
-.loan-details-summary{
-    margin:16px 20px 0;
-    padding:20px;
-    border-radius:14px;
-    background:#0d1c2e;
-    border:1px solid #20344c
-}
-
-.loan-details-summary-title{
-    display:flex;
-    align-items:center;
-    gap:9px;
-    color:#f8fafc;
-    font-size:16px;
-    font-weight:700;
-    margin-bottom:18px
-}
-
-.loan-details-summary-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr)
-}
-
-.loan-details-summary-item{
-    padding:0 16px;
-    text-align:center;
-    border-right:1px solid #314157
-}
-
-.loan-details-summary-item:first-child{
-    padding-left:0
-}
-
-.loan-details-summary-item:last-child{
-    border-right:none;
-    padding-right:0
-}
-
-.loan-details-summary-item span{
-    display:block;
-    color:#94a3b8;
-    font-size:11px;
-    margin-bottom:7px
-}
-
-.loan-details-summary-item strong{
-    display:block;
-    color:#38bdf8;
-    font-size:15px
-}
-
-.loan-details-summary-item strong.paid{
-    color:#22c55e
-}
-
-
-/* ==========================================
-   LOAN INFORMATION CARD
-   ========================================== */
-
-.loan-details-information{
-    margin:16px 20px 0;
-    padding:20px;
-    border-radius:14px;
-    background:#0d1c2e;
-    border:1px solid #20344c
-}
-
-.loan-details-information-title{
-    color:#f8fafc;
-    font-size:16px;
-    font-weight:700;
-    margin-bottom:18px
-}
-
-.loan-details-information-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:0
-}
-
-.loan-details-information-item{
-    min-height:58px;
-    padding:10px 15px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-    border-bottom:1px solid rgba(148,163,184,.08)
-}
-
-.loan-details-information-item:nth-child(odd){
-    border-right:1px solid rgba(148,163,184,.08)
-}
-
-.loan-details-information-item span{
-    color:#94a3b8;
-    font-size:12px
-}
-
-.loan-details-information-item strong{
-    color:#f1f5f9;
-    font-size:12px;
-    text-align:right;
-    word-break:break-word
-}
-
-.loan-details-information-item strong.income{
-    color:#22c55e
 }
 
 
@@ -2329,26 +2060,10 @@ body[data-theme="dark"] .loan-detail-item{
     border-color:#20344c
 }
 
-html.dark-theme .loan-details-summary,
-body.dark-theme .loan-details-summary,
-html[data-theme="dark"] .loan-details-summary,
-body[data-theme="dark"] .loan-details-summary{
-    background:#0d1c2e;
-    border-color:#20344c
-}
-
-html.dark-theme .loan-details-information,
-body.dark-theme .loan-details-information,
-html[data-theme="dark"] .loan-details-information,
-body[data-theme="dark"] .loan-details-information{
-    background:#0d1c2e;
-    border-color:#20344c
-}
-
-html.dark-theme .loan-details-actions,
-body.dark-theme .loan-details-actions,
-html[data-theme="dark"] .loan-details-actions,
-body[data-theme="dark"] .loan-details-actions{
+html.dark-theme .loan-details-actions-pane,
+body.dark-theme .loan-details-actions-pane,
+html[data-theme="dark"] .loan-details-actions-pane,
+body[data-theme="dark"] .loan-details-actions-pane{
     background:#091827;
     border-color:#20334b
 }
@@ -2357,6 +2072,7 @@ html.dark-theme .loan-details-schedule,
 body.dark-theme .loan-details-schedule,
 html[data-theme="dark"] .loan-details-schedule,
 body[data-theme="dark"] .loan-details-schedule{
+    background:#071525;
     border-color:#20334b
 }
 
@@ -2709,15 +2425,6 @@ body[data-theme="dark"] .stat-card.danger{
         font-size:10px;
         padding:10px 5px
     }
-
-    .loan-details-summary-grid{
-        grid-template-columns:repeat(2,1fr);
-        row-gap:18px
-    }
-
-    .loan-details-summary-item:nth-child(2){
-        border-right:none
-    }
 }
 
 
@@ -2985,7 +2692,7 @@ body[data-theme="dark"] .stat-card.danger{
 
 
     /* ==========================================
-       MOBILE LOAN DETAILS
+       MOBILE EXPANDABLE LOAN DETAILS ROW
        ========================================== */
 
     .loan-details-container{
@@ -3004,226 +2711,25 @@ body[data-theme="dark"] .stat-card.danger{
 
     .loan-details-header{
         padding:17px 15px;
-        min-height:70px
-    }
-
-    .loan-details-title{
-        gap:10px
+        min-height:65px
     }
 
     .loan-details-title h2{
-        font-size:20px
-    }
-
-    .loan-details-number{
-        font-size:10px
-    }
-
-    .loan-details-close{
-        width:35px;
-        height:35px;
         font-size:18px
     }
 
-    .loan-details-status-card{
-        margin:12px 12px 0;
-        padding:17px;
-        border-radius:13px
+    .loan-details-grid{
+        grid-template-columns:repeat(2, 1fr);
+        gap:10px;
     }
 
-    .loan-details-status{
-        align-items:flex-start;
-        margin-bottom:14px
+    .loan-details-body-split {
+        grid-template-columns: 1fr;
     }
 
-    .loan-details-status-label{
-        font-size:15px
-    }
-
-    .loan-details-status-badge{
-        padding:6px 9px;
-        font-size:9px
-    }
-
-    .loan-details-balance{
-        font-size:28px;
-        margin-top:4px
-    }
-
-    .loan-details-paid-line{
-        font-size:11px
-    }
-
-    .loan-details-summary{
-        margin:12px 12px 0;
-        padding:16px;
-        border-radius:13px
-    }
-
-    .loan-details-summary-title{
-        font-size:15px;
-        margin-bottom:16px
-    }
-
-    .loan-details-summary-grid{
-        grid-template-columns:repeat(2,1fr);
-        gap:0
-    }
-
-    .loan-details-summary-item{
-        min-height:70px;
-        padding:10px;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        border-right:1px solid #314157
-    }
-
-    .loan-details-summary-item:nth-child(2){
-        border-right:none
-    }
-
-    .loan-details-summary-item:nth-child(-n+2){
-        border-bottom:1px solid #314157
-    }
-
-    .loan-details-summary-item:first-child,
-    .loan-details-summary-item:last-child{
-        padding-left:10px;
-        padding-right:10px
-    }
-
-    .loan-details-summary-item span{
-        font-size:10px
-    }
-
-    .loan-details-summary-item strong{
-        font-size:13px
-    }
-
-    .loan-details-information{
-        margin:12px 12px 0;
-        padding:16px;
-        border-radius:13px
-    }
-
-    .loan-details-information-title{
-        font-size:15px;
-        margin-bottom:12px
-    }
-
-    .loan-details-information-grid{
-        grid-template-columns:1fr
-    }
-
-    .loan-details-information-item{
-        min-height:51px;
-        padding:8px 4px;
-        border-right:none!important
-    }
-
-    .loan-details-information-item span{
-        font-size:11px
-    }
-
-    .loan-details-information-item strong{
-        max-width:55%;
-        font-size:11px
-    }
-
-    .loan-details-actions{
-        margin-top:12px;
-        padding:16px
-    }
-
-    .loan-details-actions-title{
-        font-size:15px;
-        margin-bottom:12px
-    }
-
-    .loan-detail-action{
-        min-height:48px;
-        padding:12px 14px;
-        font-size:12px;
-        border-radius:9px
-    }
-
-    .loan-details-schedule{
-        padding:16px;
-        margin-top:12px
-    }
-
-    .loan-details-section-title{
-        font-size:15px;
-        margin-bottom:12px
-    }
-
-    .loan-schedule-wrapper{
-        border-radius:9px
-    }
-
-    .loan-detail-schedule-table{
-        min-width:570px
-    }
-
-    .loan-detail-schedule-table th,
-    .loan-detail-schedule-table td{
-        padding:10px;
-        font-size:11px
-    }
-
-
-    /* ==========================================
-       FULL-SCREEN LOAN DETAILS ON MOBILE
-       ========================================== */
-
-    #loan-details-page,
-    .loan-details-page,
-    .loan-details-fullscreen,
-    .fullscreen-loan-details{
-        position:fixed;
-        inset:0;
-        width:100vw;
-        height:100dvh;
-        min-height:100dvh;
-        margin:0!important;
-        padding:0!important;
-        border-radius:0!important;
-        z-index:20000;
-        overflow-x:hidden;
-        overflow-y:auto;
-        -webkit-overflow-scrolling:touch
-    }
-
-    #loan-details-page .loan-details-container,
-    .loan-details-page .loan-details-container,
-    .loan-details-fullscreen .loan-details-container,
-    .fullscreen-loan-details .loan-details-container{
-        width:100%;
-        min-height:100%;
-        margin:0;
-        padding:0
-    }
-
-    #loan-details-page .loan-details-panel,
-    .loan-details-page .loan-details-panel,
-    .loan-details-fullscreen .loan-details-panel,
-    .fullscreen-loan-details .loan-details-panel{
-        width:100%;
-        min-height:100%;
-        margin:0;
-        border:0;
-        border-radius:0;
-        box-shadow:none
-    }
-
-    #loan-details-page .loan-details-header,
-    .loan-details-page .loan-details-header,
-    .loan-details-fullscreen .loan-details-header,
-    .fullscreen-loan-details .loan-details-header{
-        position:sticky;
-        top:0;
-        z-index:20
+    .loan-details-actions-pane {
+        border-top: 1px solid #20334b;
+        border-left: none;
     }
 
 
@@ -3434,29 +2940,6 @@ body[data-theme="dark"] .stat-card.danger{
         content:"+";
         font-size:33px
     }
-
-    .loan-details-status-card{
-        margin-left:8px;
-        margin-right:8px
-    }
-
-    .loan-details-summary{
-        margin-left:8px;
-        margin-right:8px
-    }
-
-    .loan-details-information{
-        margin-left:8px;
-        margin-right:8px
-    }
-
-    .loan-details-actions{
-        padding:13px
-    }
-
-    .loan-details-schedule{
-        padding:13px
-    }
 }
 
 
@@ -3489,22 +2972,6 @@ body[data-theme="dark"] .stat-card.danger{
 
     .modal-content{
         max-height:calc(100dvh - 20px)
-    }
-
-    .loan-details-summary-grid{
-        grid-template-columns:repeat(4,1fr)
-    }
-
-    .loan-details-information-grid{
-        grid-template-columns:repeat(2,1fr)
-    }
-
-    #loan-details-page,
-    .loan-details-page,
-    .loan-details-fullscreen,
-    .fullscreen-loan-details{
-        height:100dvh;
-        min-height:100dvh
     }
 }
 
