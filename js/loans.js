@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.2
+// VERSION 6.3
 //
 // ✔ Loan row -> TRUE FULL-SCREEN LOAN DETAILS PAGE
 // ✔ Details page is NOT placed below the table
@@ -10,7 +10,7 @@
 // ✔ Mobile-friendly loan details
 // ✔ Back button returns to Loans
 // ✔ Android/browser back button supported
-// ✔ Receive Repayment
+// ✔ Receive Repayment opens correctly
 // ✔ Edit Loan
 // ✔ Approve Loan
 // ✔ Admin-only Delete Loan
@@ -29,6 +29,9 @@
 // ✔ Repayment recalls clients from Firestore
 // ✔ Client must be selected — NO manual client entry
 // ✔ Outstanding loan loads automatically after client selection
+// ✔ Repayment modal forced above loan details page
+// ✔ Repayment modal close handling
+// ✔ Duplicate repayment protection
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -709,9 +712,6 @@ function loadClients() {
             populateClientDropdown();
 
 
-            // Refresh repayment selector
-            // if the repayment modal is open.
-
             if (
                 repaymentModal &&
                 !repaymentModal.classList.contains(
@@ -908,9 +908,6 @@ function loadLoans() {
             }
 
 
-            // Keep the repayment
-            // client selector current.
-
             if (
                 repaymentModal &&
                 !repaymentModal.classList.contains(
@@ -993,13 +990,6 @@ document
         "click",
         openLoanModal
     );
-
-
-// IMPORTANT:
-// There is deliberately NO
-// #fab-new-loan -> openLoanModal handler.
-// The FAB is handled by
-// setupFabAddRepayment() below.
 
 
 // ==========================================
@@ -2905,6 +2895,7 @@ function attachLoanDetailsPageActions() {
 
 // ==========================================
 // OPEN REPAYMENT FOR SPECIFIC LOAN
+// VERSION 6.3
 // ==========================================
 
 function openRepaymentForLoan(
@@ -2928,7 +2919,9 @@ function openRepaymentForLoan(
     }
 
 
-    if (!repaymentModal) {
+    if (!repaymentModal ||
+        !repaymentForm
+    ) {
 
         alert(
             "Repayment form is unavailable."
@@ -2938,8 +2931,26 @@ function openRepaymentForLoan(
     }
 
 
-    // Make sure the repayment
-    // client selector exists.
+    if (
+        Number(
+            loan.balance ||
+            0
+        ) <= 0 ||
+        loan.status ===
+        "Completed"
+    ) {
+
+        alert(
+            "This loan has no outstanding balance."
+        );
+
+        return;
+    }
+
+
+    // ==========================================
+    // CREATE REPAYMENT SELECTORS
+    // ==========================================
 
     createFabRepaymentSelectors(
         repaymentForm
@@ -2964,10 +2975,60 @@ function openRepaymentForLoan(
         );
 
 
+    // ==========================================
+    // SELECT CLIENT
+    // ==========================================
+
     if (clientSelector) {
 
         clientSelector.value =
             loan.clientId || "";
+    }
+
+
+    // ==========================================
+    // SELECT SPECIFIC LOAN
+    // ==========================================
+
+    if (loanSelector) {
+
+        loanSelector.innerHTML = `
+
+            <option value="">
+                Select Loan
+            </option>
+
+        `;
+
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+
+        option.value =
+            loan.id;
+
+
+        option.textContent =
+            `${
+                loan.loanNumber ||
+                "Loan"
+            } — Balance ${
+                currency(
+                    loan.balance
+                )
+            }`;
+
+
+        loanSelector.appendChild(
+            option
+        );
+
+
+        loanSelector.value =
+            loan.id;
     }
 
 
@@ -2978,17 +3039,54 @@ function openRepaymentForLoan(
     }
 
 
-    if (loanSelector) {
+    // ==========================================
+    // LOAD SELECTED LOAN
+    // ==========================================
 
-        loanSelector.value =
+    fillRepaymentFromSelectedLoan(
+        loan.id
+    );
+
+
+    // ==========================================
+    // FORCE CORRECT LOAN ID
+    // ==========================================
+
+    if (repaymentLoanId) {
+
+        repaymentLoanId.value =
             loan.id;
     }
 
 
-    if (repaymentLoanId)
-        repaymentLoanId.value =
-            loan.id;
+    // ==========================================
+    // RESET PAYMENT INPUT
+    // ==========================================
 
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    // ==========================================
+    // HIDE OLD MANUAL CLIENT FIELD
+    // ==========================================
 
     if (repaymentClient) {
 
@@ -3003,43 +3101,45 @@ function openRepaymentForLoan(
     }
 
 
-    if (repaymentBalance)
-        repaymentBalance.value =
-            currency(
-                loan.balance
-            );
+    // ==========================================
+    // FORCE REPAYMENT MODAL ABOVE
+    // LOAN DETAILS PAGE
+    // ==========================================
+
+    repaymentModal.style.position =
+        "fixed";
 
 
-    const weeklyRepayment =
-        document.getElementById(
-            "repayment-weekly"
-        );
+    repaymentModal.style.zIndex =
+        "100001";
 
 
-    if (weeklyRepayment)
-        weeklyRepayment.value =
-            currency(
-                loan.weeklyPayment
-            );
-
-
-    if (repaymentAmount)
-        repaymentAmount.value =
-            "";
-
-
-    if (repaymentNotes)
-        repaymentNotes.value =
-            "";
-
-
-    if (repaymentDate)
-        repaymentDate.value =
-            today();
-
+    // ==========================================
+    // OPEN MODAL
+    // ==========================================
 
     repaymentModal.classList.remove(
         "hidden"
+    );
+
+
+    repaymentModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    // ==========================================
+    // FOCUS PAYMENT AMOUNT
+    // ==========================================
+
+    setTimeout(
+        () => {
+
+            repaymentAmount?.focus();
+
+        },
+        150
     );
 }
 
@@ -4116,6 +4216,154 @@ async function deletePayment(
 
 
 // ==========================================
+// CLOSE REPAYMENT MODAL
+// VERSION 6.3
+// ==========================================
+
+function closeRepaymentModal() {
+
+    const modal =
+        document.getElementById(
+            "repayment-modal"
+        );
+
+
+    if (!modal)
+        return;
+
+
+    modal.classList.add(
+        "hidden"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    // Remove temporary high z-index.
+    modal.style.zIndex =
+        "";
+
+
+    clearRepaymentFields();
+
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+}
+
+
+// ==========================================
+// REPAYMENT MODAL CLOSE BUTTONS
+// ==========================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const closeButton =
+            event.target.closest(
+
+                "#close-repayment-modal, " +
+
+                ".close-repayment-modal, " +
+
+                '[data-close="repayment-modal"], ' +
+
+                '[data-modal-close="repayment-modal"]'
+            );
+
+
+        if (!closeButton)
+            return;
+
+
+        event.preventDefault();
+
+
+        closeRepaymentModal();
+    }
+);
+
+
+// ==========================================
+// CLICK OUTSIDE REPAYMENT MODAL
+// ==========================================
+
+document
+    .getElementById(
+        "repayment-modal"
+    )
+    ?.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target.id ===
+                "repayment-modal"
+            ) {
+
+                closeRepaymentModal();
+            }
+        }
+    );
+
+
+// ==========================================
+// ESCAPE KEY
+// ==========================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key !==
+            "Escape"
+        )
+            return;
+
+
+        const modal =
+            document.getElementById(
+                "repayment-modal"
+            );
+
+
+        if (
+            modal &&
+            !modal.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            closeRepaymentModal();
+        }
+    }
+);
+
+
+// ==========================================
 // RECEIVE REPAYMENT
 // ==========================================
 
@@ -4224,7 +4472,8 @@ repaymentForm?.addEventListener(
 
         let balance =
             Number(
-                loan.balance
+                loan.balance ||
+                0
             );
 
 
@@ -4254,16 +4503,19 @@ repaymentForm?.addEventListener(
 
         const totalInterest =
             Number(
-                loan.totalRepayment
+                loan.totalRepayment ||
+                0
             ) -
             Number(
-                loan.amount
+                loan.amount ||
+                0
             );
 
 
         const interestRatio =
             Number(
-                loan.totalRepayment
+                loan.totalRepayment ||
+                0
             ) > 0
 
                 ? totalInterest /
@@ -4657,22 +4909,24 @@ repaymentForm?.addEventListener(
             );
 
 
-            repaymentModal?.classList.add(
-                "hidden"
-            );
+            // ==========================================
+            // CLOSE REPAYMENT MODAL
+            // ==========================================
 
+            closeRepaymentModal();
+
+
+            // ==========================================
+            // RESET REPAYMENT FORM
+            // ==========================================
 
             repaymentForm.reset();
 
-
-            // Reset hidden loan ID.
 
             if (repaymentLoanId)
                 repaymentLoanId.value =
                     "";
 
-
-            // Reset visible client selector.
 
             const clientSelector =
                 document.getElementById(
@@ -4988,14 +5242,13 @@ function getNextRepayment(
 
 // ==========================================
 // FAB ADD REPAYMENT
+// VERSION 6.3
 // ==========================================
 //
-// IMPORTANT:
+// The floating + button opens
+// the repayment form.
 //
-// The dashboard FAB now opens
-// the repayment modal.
-//
-// It does NOT open the new-loan modal.
+// It NEVER opens the new-loan form.
 //
 // Client selection comes from the
 // Firestore clients collection.
@@ -5029,11 +5282,14 @@ function setupFabAddRepayment() {
 
             event.preventDefault();
 
+
             event.stopPropagation();
 
 
             openFabRepaymentSelector();
-        }
+
+        },
+        true
     );
 }
 
@@ -5317,6 +5573,7 @@ function populateFabClientSelector() {
 
 // ==========================================
 // OPEN FAB REPAYMENT
+// VERSION 6.3
 // ==========================================
 
 function openFabRepaymentSelector() {
@@ -5342,6 +5599,22 @@ function openFabRepaymentSelector() {
         return;
     }
 
+
+    // ==========================================
+    // FORCE MODAL ABOVE EVERYTHING
+    // ==========================================
+
+    modal.style.position =
+        "fixed";
+
+
+    modal.style.zIndex =
+        "100001";
+
+
+    // ==========================================
+    // CREATE SELECTORS
+    // ==========================================
 
     createFabRepaymentSelectors(
         form
@@ -5369,10 +5642,18 @@ function openFabRepaymentSelector() {
         );
 
 
+    // ==========================================
+    // RESET CLIENT
+    // ==========================================
+
     if (clientSelector)
         clientSelector.value =
             "";
 
+
+    // ==========================================
+    // RESET LOAN
+    // ==========================================
 
     if (loanSelector) {
 
@@ -5396,10 +5677,37 @@ function openFabRepaymentSelector() {
     }
 
 
+    // ==========================================
+    // CLEAR REPAYMENT FIELDS
+    // ==========================================
+
     clearRepaymentFields();
 
 
-    // Hide the old manual client field.
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    // ==========================================
+    // HIDE OLD MANUAL CLIENT FIELD
+    // ==========================================
 
     if (repaymentClient) {
 
@@ -5414,13 +5722,32 @@ function openFabRepaymentSelector() {
     }
 
 
-    if (repaymentDate)
-        repaymentDate.value =
-            today();
-
+    // ==========================================
+    // OPEN MODAL
+    // ==========================================
 
     modal.classList.remove(
         "hidden"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    // ==========================================
+    // FOCUS CLIENT SELECTOR
+    // ==========================================
+
+    setTimeout(
+        () => {
+
+            clientSelector?.focus();
+
+        },
+        100
     );
 }
 
@@ -5650,43 +5977,43 @@ function fillRepaymentFromSelectedLoan(
         );
 
 
-    const repaymentLoanId =
+    const repaymentLoanIdField =
         document.getElementById(
             "repayment-loan-id"
         );
 
 
-    const repaymentClient =
+    const repaymentClientField =
         document.getElementById(
             "repayment-client"
         );
 
 
-    const repaymentBalance =
+    const repaymentBalanceField =
         document.getElementById(
             "repayment-balance"
         );
 
 
-    const repaymentWeekly =
+    const repaymentWeeklyField =
         document.getElementById(
             "repayment-weekly"
         );
 
 
-    const repaymentAmount =
+    const repaymentAmountField =
         document.getElementById(
             "repayment-amount"
         );
 
 
-    const repaymentNotes =
+    const repaymentNotesField =
         document.getElementById(
             "repayment-notes"
         );
 
 
-    const repaymentDate =
+    const repaymentDateField =
         document.getElementById(
             "repayment-date"
         );
@@ -5704,8 +6031,8 @@ function fillRepaymentFromSelectedLoan(
     // HIDDEN LOAN ID
     // ==========================================
 
-    if (repaymentLoanId)
-        repaymentLoanId.value =
+    if (repaymentLoanIdField)
+        repaymentLoanIdField.value =
             loan.id;
 
 
@@ -5713,16 +6040,16 @@ function fillRepaymentFromSelectedLoan(
     // CLIENT
     // ==========================================
 
-    if (repaymentClient) {
+    if (repaymentClientField) {
 
-        repaymentClient.value =
+        repaymentClientField.value =
             loan.clientName ||
             "";
 
-        repaymentClient.readOnly =
+        repaymentClientField.readOnly =
             true;
 
-        repaymentClient.style.display =
+        repaymentClientField.style.display =
             "none";
     }
 
@@ -5731,8 +6058,8 @@ function fillRepaymentFromSelectedLoan(
     // BALANCE
     // ==========================================
 
-    if (repaymentBalance)
-        repaymentBalance.value =
+    if (repaymentBalanceField)
+        repaymentBalanceField.value =
             currency(
                 loan.balance
             );
@@ -5742,12 +6069,6 @@ function fillRepaymentFromSelectedLoan(
     // WEEKLY REPAYMENT
     // ==========================================
 
-    const repaymentWeeklyField =
-        document.getElementById(
-            "repayment-weekly"
-        );
-
-
     if (repaymentWeeklyField)
         repaymentWeeklyField.value =
             currency(
@@ -5756,21 +6077,21 @@ function fillRepaymentFromSelectedLoan(
 
 
     // ==========================================
-    // RESET PAYMENT INPUTS
+    // RESET PAYMENT INPUT
     // ==========================================
 
-    if (repaymentAmount)
-        repaymentAmount.value =
+    if (repaymentAmountField)
+        repaymentAmountField.value =
             "";
 
 
-    if (repaymentNotes)
-        repaymentNotes.value =
+    if (repaymentNotesField)
+        repaymentNotesField.value =
             "";
 
 
-    if (repaymentDate)
-        repaymentDate.value =
+    if (repaymentDateField)
+        repaymentDateField.value =
             today();
 }
 
@@ -5918,5 +6239,5 @@ export {
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.2
+// VERSION 6.3
 // ==========================================
