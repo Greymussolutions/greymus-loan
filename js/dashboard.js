@@ -1169,6 +1169,7 @@ if(previousIncomeList){
                             ${client.status}
                         </p>
 
+                        <br><br>
                     </div>
 
                 `;
