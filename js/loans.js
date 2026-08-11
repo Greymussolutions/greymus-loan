@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.3
+// VERSION 7.0
 //
 // ✔ Loan row -> TRUE FULL-SCREEN LOAN DETAILS PAGE
 // ✔ Details page is NOT placed below the table
@@ -32,6 +32,17 @@
 // ✔ Repayment modal forced above loan details page
 // ✔ Repayment modal close handling
 // ✔ Duplicate repayment protection
+//
+// NEW VERSION 7.0
+// ✔ Approved status replaced by Active
+// ✔ Pending -> Active when approved
+// ✔ Loans list shows only Pending, Active and Arrears
+// ✔ Completed loans hidden from main Loans list
+// ✔ Completed loans remain in Firestore
+// ✔ Previous Loans clickable card in Loan Details
+// ✔ Previous Loans shows this client's complete loan history
+// ✔ Previous loan records are clickable
+// ✔ Current loan is excluded from Previous Loans
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -201,6 +212,10 @@ let selectedLoanId = null;
 
 let loanDetailsOpen = false;
 
+let previousLoansOpen = false;
+
+let previousLoanSelectedId = null;
+
 let repaymentSaving = false;
 
 
@@ -277,6 +292,162 @@ function escapeHtml(value) {
         .replace(
             /'/g,
             "&#039;"
+        );
+}
+
+
+// ==========================================
+// NORMALIZE LOAN STATUS
+// ==========================================
+//
+// Older Firestore records may still contain
+// "Approved". The application now treats
+// Approved as Active.
+//
+// New records are saved as Active.
+// ==========================================
+
+function normalizeLoanStatus(
+    status
+) {
+
+    const value =
+        String(
+            status || "Pending"
+        ).trim();
+
+
+    if (
+        value.toLowerCase() ===
+        "approved"
+    ) {
+
+        return "Active";
+    }
+
+
+    if (
+        value.toLowerCase() ===
+        "active"
+    ) {
+
+        return "Active";
+    }
+
+
+    if (
+        value.toLowerCase() ===
+        "pending"
+    ) {
+
+        return "Pending";
+    }
+
+
+    if (
+        value.toLowerCase() ===
+        "arrears"
+    ) {
+
+        return "Arrears";
+    }
+
+
+    if (
+        value.toLowerCase() ===
+        "completed"
+    ) {
+
+        return "Completed";
+    }
+
+
+    if (
+        value.toLowerCase() ===
+        "rejected"
+    ) {
+
+        return "Rejected";
+    }
+
+
+    return value;
+}
+
+
+// ==========================================
+// ACTIVE LOAN STATUS CHECK
+// ==========================================
+
+function isRunningLoan(
+    loan
+) {
+
+    if (!loan)
+        return false;
+
+
+    const status =
+        normalizeLoanStatus(
+            loan.status
+        );
+
+
+    return (
+        status === "Pending" ||
+        status === "Active" ||
+        status === "Arrears"
+    );
+}
+
+
+// ==========================================
+// PREVIOUS LOANS
+// ==========================================
+//
+// Returns every loan belonging to the same
+// client except the loan currently being viewed.
+//
+// Completed loans are intentionally included.
+// ==========================================
+
+function getPreviousLoans(
+    currentLoan
+) {
+
+    if (!currentLoan)
+        return [];
+
+
+    return loans
+        .filter(
+            loan =>
+
+                loan.clientId ===
+                currentLoan.clientId &&
+
+                loan.id !==
+                currentLoan.id
+        )
+        .sort(
+            (a, b) => {
+
+                const dateA =
+                    a.approvalDate ||
+                    a.createdAt?.toDate?.() ||
+                    "";
+
+                const dateB =
+                    b.approvalDate ||
+                    b.createdAt?.toDate?.() ||
+                    "";
+
+
+                return (
+                    new Date(dateB) -
+                    new Date(dateA)
+                );
+            }
         );
 }
 
@@ -721,6 +892,29 @@ function loadClients() {
 
                 populateFabClientSelector();
             }
+
+
+            if (
+                loanDetailsOpen &&
+                selectedLoanId &&
+                !previousLoansOpen
+            ) {
+
+                const currentLoan =
+                    loans.find(
+                        loan =>
+                            loan.id ===
+                            selectedLoanId
+                    );
+
+
+                if (currentLoan) {
+
+                    renderLoanDetailsPage(
+                        currentLoan
+                    );
+                }
+            }
         },
 
         error => {
@@ -855,6 +1049,16 @@ function loadLoans() {
                         false;
 
 
+                    // ==========================================
+                    // NORMALIZE OLD "APPROVED" RECORDS
+                    // ==========================================
+
+                    loan.status =
+                        normalizeLoanStatus(
+                            loan.status
+                        );
+
+
                     const next =
                         loan.repaymentSchedule.find(
                             item =>
@@ -893,9 +1097,20 @@ function loadLoans() {
 
                 if (selectedLoan) {
 
-                    renderLoanDetailsPage(
-                        selectedLoan
-                    );
+                    if (
+                        previousLoansOpen
+                    ) {
+
+                        renderPreviousLoansPage(
+                            selectedLoan
+                        );
+
+                    } else {
+
+                        renderLoanDetailsPage(
+                            selectedLoan
+                        );
+                    }
 
                 } else {
 
@@ -1164,13 +1379,21 @@ if (loanForm) {
                     remainingInstallments:
                         calc.duration,
 
+                    // ==========================================
+                    // NEW STATUS RULE
+                    // ==========================================
+                    //
+                    // New loans begin Pending.
+                    // Historical loans with a balance begin Active.
+                    // Historical loans fully paid are Completed.
+                    //
                     status:
                         isHistorical
                             ? (
                                 outstandingBalance <=
                                 0
                                     ? "Completed"
-                                    : "Approved"
+                                    : "Active"
                             )
                             : "Pending",
 
@@ -1215,7 +1438,9 @@ if (loanForm) {
                                     0
                                 ) > 0 ||
 
-                                loan.status ===
+                                normalizeLoanStatus(
+                                    loan.status
+                                ) ===
                                 "Arrears"
                             )
                     );
@@ -1397,6 +1622,15 @@ if (loanForm) {
 // ==========================================
 // RENDER LOANS TABLE
 // ==========================================
+//
+// IMPORTANT:
+// Completed loans are NEVER rendered here.
+//
+// Main Loans page contains only:
+// Pending
+// Active
+// Arrears
+// ==========================================
 
 function renderLoans(
     list
@@ -1412,6 +1646,19 @@ function renderLoans(
 
     loansTableBody.innerHTML =
         "";
+
+
+    // ==========================================
+    // SAFETY FILTER
+    // ==========================================
+
+    list =
+        list.filter(
+            loan =>
+                isRunningLoan(
+                    loan
+                )
+        );
 
 
     list.sort(
@@ -1461,7 +1708,7 @@ function renderLoans(
                     colspan="15"
                     style="text-align:center;"
                 >
-                    No loans found.
+                    No active loans found.
                 </td>
 
             </tr>
@@ -1571,15 +1818,15 @@ function renderLoans(
                 <td>
 
                     <span class="status ${
-                        (
-                            loan.status ||
-                            "Pending"
+                        normalizeLoanStatus(
+                            loan.status
                         ).toLowerCase()
                     }">
 
                         ${escapeHtml(
-                            loan.status ||
-                            "Pending"
+                            normalizeLoanStatus(
+                                loan.status
+                            )
                         )}
 
                     </span>
@@ -1724,6 +1971,14 @@ function openLoanDetailsPage(
 
     selectedLoanId =
         id;
+
+
+    previousLoansOpen =
+        false;
+
+
+    previousLoanSelectedId =
+        null;
 
 
     loanDetailsOpen =
@@ -1889,6 +2144,14 @@ function closeLoanDetailsPage(
         null;
 
 
+    previousLoansOpen =
+        false;
+
+
+    previousLoanSelectedId =
+        null;
+
+
     loanDetailsOpen =
         false;
 
@@ -1966,6 +2229,34 @@ window.addEventListener(
     "popstate",
     () => {
 
+        if (previousLoansOpen) {
+
+            previousLoansOpen =
+                false;
+
+            previousLoanSelectedId =
+                null;
+
+
+            const currentLoan =
+                loans.find(
+                    loan =>
+                        loan.id ===
+                        selectedLoanId
+                );
+
+
+            if (currentLoan) {
+
+                renderLoanDetailsPage(
+                    currentLoan
+                );
+
+                return;
+            }
+        }
+
+
         if (loanDetailsOpen) {
 
             closeLoanDetailsPage(
@@ -2017,6 +2308,10 @@ function renderLoanDetailsPage(
         return;
 
 
+    previousLoansOpen =
+        false;
+
+
     const schedule =
         loan.repaymentSchedule ||
         [];
@@ -2051,8 +2346,9 @@ function renderLoanDetailsPage(
 
 
     const status =
-        loan.status ||
-        "Pending";
+        normalizeLoanStatus(
+            loan.status
+        );
 
 
     const statusClass =
@@ -2062,6 +2358,12 @@ function renderLoanDetailsPage(
                 /\s+/g,
                 "-"
             );
+
+
+    const previousLoans =
+        getPreviousLoans(
+            loan
+        );
 
 
     page.innerHTML = `
@@ -2365,6 +2667,64 @@ function renderLoanDetailsPage(
             </div>
 
 
+            <!-- ==========================================
+                 PREVIOUS LOANS CLICKABLE CARD
+                 ========================================== -->
+
+            <div class="loan-details-section-heading">
+                Client Loan History
+            </div>
+
+
+            <button
+                type="button"
+                class="loan-previous-loans-card"
+                data-loan-action="previous-loans"
+            >
+
+                <div class="loan-previous-loans-icon">
+                    📚
+                </div>
+
+                <div class="loan-previous-loans-content">
+
+                    <div class="loan-previous-loans-title">
+                        Previous Loans
+                    </div>
+
+                    <div class="loan-previous-loans-subtitle">
+
+                        ${
+                            previousLoans.length
+                                ? `${previousLoans.length} previous ${
+                                    previousLoans.length === 1
+                                        ? "loan"
+                                        : "loans"
+                                } for ${
+                                    escapeHtml(
+                                        loan.clientName ||
+                                        "this client"
+                                    )
+                                }`
+                                : `No previous loans for ${
+                                    escapeHtml(
+                                        loan.clientName ||
+                                        "this client"
+                                    )
+                                }`
+                        }
+
+                    </div>
+
+                </div>
+
+                <div class="loan-previous-loans-arrow">
+                    ›
+                </div>
+
+            </button>
+
+
             <div class="loan-details-section-heading">
                 Actions
             </div>
@@ -2373,7 +2733,7 @@ function renderLoanDetailsPage(
             <div class="loan-details-action-list">
 
                 ${
-                    loan.status !==
+                    status !==
                     "Completed"
 
                         ? `
@@ -2406,7 +2766,7 @@ function renderLoanDetailsPage(
 
 
                 ${
-                    loan.status ===
+                    status ===
                     "Pending"
 
                         ? `
@@ -2461,7 +2821,7 @@ function renderLoanDetailsPage(
 
 
                 ${
-                    loan.status ===
+                    status ===
                     "Pending" &&
                     isAdmin()
 
@@ -2537,6 +2897,818 @@ function renderLoanDetailsPage(
 
 
     attachLoanDetailsPageActions();
+
+
+    page.scrollTop =
+        0;
+}
+
+
+// ==========================================
+// RENDER PREVIOUS LOANS PAGE
+// ==========================================
+//
+// This page remains inside the same full-screen
+// loan details container.
+//
+// Completed loans are intentionally displayed here.
+// ==========================================
+
+function renderPreviousLoansPage(
+    currentLoan
+) {
+
+    const page =
+        getLoanDetailsPage();
+
+
+    if (!page)
+        return;
+
+
+    const previousLoans =
+        getPreviousLoans(
+            currentLoan
+        );
+
+
+    previousLoansOpen =
+        true;
+
+
+    page.innerHTML = `
+
+        <div class="loan-details-mobile-page">
+
+            <div class="loan-details-mobile-header">
+
+                <button
+                    type="button"
+                    class="loan-details-back"
+                    data-loan-action="previous-loans-back"
+                    aria-label="Back to loan details"
+                >
+                    ←
+                </button>
+
+                <div class="loan-details-header-text">
+
+                    <div class="loan-details-page-title">
+                        Previous Loans
+                    </div>
+
+                    <div class="loan-details-page-number">
+                        ${escapeHtml(
+                            currentLoan.clientName ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-previous-history-header">
+
+                <div class="loan-details-client-label">
+                    CLIENT LOAN HISTORY
+                </div>
+
+                <div class="loan-details-client-name">
+                    ${escapeHtml(
+                        currentLoan.clientName ||
+                        "-"
+                    )}
+                </div>
+
+                <div class="loan-previous-history-count">
+                    ${
+                        previousLoans.length
+                    }
+                    ${
+                        previousLoans.length === 1
+                            ? "previous loan"
+                            : "previous loans"
+                    }
+                </div>
+
+            </div>
+
+
+            ${
+                previousLoans.length === 0
+
+                    ? `
+
+                        <div class="loan-no-previous-loans-card">
+
+                            <div class="loan-no-previous-icon">
+                                📚
+                            </div>
+
+                            <strong>
+                                No Previous Loans
+                            </strong>
+
+                            <span>
+                                This client has no other loan records.
+                            </span>
+
+                        </div>
+
+                    `
+
+                    : `
+
+                        <div class="loan-previous-loans-list">
+
+                            ${
+                                previousLoans
+                                    .map(
+                                        loan =>
+                                            renderPreviousLoanCard(
+                                                loan
+                                            )
+                                    )
+                                    .join("")
+                            }
+
+                        </div>
+
+                    `
+            }
+
+
+            <div class="loan-details-bottom-space"></div>
+
+        </div>
+    `;
+
+
+    attachPreviousLoansActions();
+
+
+    page.scrollTop =
+        0;
+}
+
+
+// ==========================================
+// PREVIOUS LOAN CARD
+// ==========================================
+
+function renderPreviousLoanCard(
+    loan
+) {
+
+    const status =
+        normalizeLoanStatus(
+            loan.status
+        );
+
+
+    const statusClass =
+        status
+            .toLowerCase()
+            .replace(
+                /\s+/g,
+                "-"
+            );
+
+
+    const completed =
+        status ===
+        "Completed";
+
+
+    return `
+
+        <button
+            type="button"
+            class="loan-previous-loan-item"
+            data-loan-action="open-previous-loan"
+            data-id="${loan.id}"
+        >
+
+            <div class="loan-previous-loan-top">
+
+                <div class="loan-previous-loan-number">
+
+                    ${escapeHtml(
+                        loan.loanNumber ||
+                        "Loan"
+                    )}
+
+                </div>
+
+                <span
+                    class="loan-details-status ${statusClass}"
+                >
+                    ${escapeHtml(
+                        status
+                    )}
+                </span>
+
+            </div>
+
+
+            <div class="loan-previous-loan-main">
+
+                <div class="loan-previous-loan-amount">
+
+                    ${currency(
+                        loan.amount ||
+                        0
+                    )}
+
+                </div>
+
+                <div class="loan-previous-loan-date">
+
+                    ${
+                        escapeHtml(
+                            loan.approvalDate ||
+                            loan.createdAt?.toDate?.()
+                                ? formatDate(
+                                    loan.approvalDate ||
+                                    loan.createdAt.toDate()
+                                )
+                                : "-"
+                        )
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-previous-loan-details">
+
+                <div>
+
+                    <span>
+                        Paid
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            loan.amountPaid ||
+                            0
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Balance
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            loan.balance ||
+                            0
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Type
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.loanType ||
+                            "new"
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-previous-loan-footer">
+
+                ${
+                    completed
+                        ? "Completed loan record"
+                        : "View loan details"
+                }
+
+                <span>
+                    ›
+                </span>
+
+            </div>
+
+        </button>
+    `;
+}
+
+
+// ==========================================
+// PREVIOUS LOANS ACTIONS
+// ==========================================
+
+function attachPreviousLoansActions() {
+
+    const page =
+        document.getElementById(
+            "loan-details-page"
+        );
+
+
+    if (!page)
+        return;
+
+
+    page
+        .querySelector(
+            '[data-loan-action="previous-loans-back"]'
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+
+                previousLoansOpen =
+                    false;
+
+                previousLoanSelectedId =
+                    null;
+
+
+                const currentLoan =
+                    loans.find(
+                        loan =>
+                            loan.id ===
+                            selectedLoanId
+                    );
+
+
+                if (currentLoan) {
+
+                    renderLoanDetailsPage(
+                        currentLoan
+                    );
+                }
+            }
+        );
+
+
+    page
+        .querySelectorAll(
+            '[data-loan-action="open-previous-loan"]'
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const id =
+                            button.dataset.id;
+
+
+                        const previousLoan =
+                            loans.find(
+                                loan =>
+                                    loan.id ===
+                                    id
+                            );
+
+
+                        if (!previousLoan)
+                            return;
+
+
+                        previousLoanSelectedId =
+                            id;
+
+
+                        renderHistoricalLoanDetails(
+                            previousLoan
+                        );
+                    }
+                );
+            }
+        );
+}
+
+
+// ==========================================
+// RENDER SELECTED PREVIOUS LOAN DETAILS
+// ==========================================
+//
+// This displays a historical/completed loan
+// without changing the main current-loan
+// selection.
+// ==========================================
+
+function renderHistoricalLoanDetails(
+    loan
+) {
+
+    const page =
+        getLoanDetailsPage();
+
+
+    if (!page)
+        return;
+
+
+    const schedule =
+        loan.repaymentSchedule ||
+        [];
+
+
+    const status =
+        normalizeLoanStatus(
+            loan.status
+        );
+
+
+    const statusClass =
+        status
+            .toLowerCase()
+            .replace(
+                /\s+/g,
+                "-"
+            );
+
+
+    const paidAmount =
+        Number(
+            loan.amountPaid ||
+            0
+        );
+
+
+    const totalRepayment =
+        Number(
+            loan.totalRepayment ||
+            0
+        );
+
+
+    const balance =
+        Number(
+            loan.balance ||
+            0
+        );
+
+
+    page.innerHTML = `
+
+        <div class="loan-details-mobile-page">
+
+            <div class="loan-details-mobile-header">
+
+                <button
+                    type="button"
+                    class="loan-details-back"
+                    data-loan-action="historical-loan-back"
+                    aria-label="Back to previous loans"
+                >
+                    ←
+                </button>
+
+                <div class="loan-details-header-text">
+
+                    <div class="loan-details-page-title">
+                        Loan History
+                    </div>
+
+                    <div class="loan-details-page-number">
+                        ${escapeHtml(
+                            loan.loanNumber ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-details-client-card">
+
+                <div class="loan-details-client-label">
+                    CLIENT
+                </div>
+
+                <div class="loan-details-client-name">
+                    ${escapeHtml(
+                        loan.clientName ||
+                        "-"
+                    )}
+                </div>
+
+                <span
+                    class="loan-details-status ${statusClass}"
+                >
+                    ${escapeHtml(
+                        status
+                    )}
+                </span>
+
+            </div>
+
+
+            <div class="loan-details-balance-card">
+
+                <div class="loan-details-balance-label">
+                    LOAN BALANCE
+                </div>
+
+                <div class="loan-details-balance-value">
+                    ${currency(
+                        balance
+                    )}
+                </div>
+
+                <div class="loan-details-balance-sub">
+
+                    ${currency(
+                        paidAmount
+                    )}
+
+                    paid of
+
+                    ${currency(
+                        totalRepayment
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-details-section-heading">
+                Loan Summary
+            </div>
+
+
+            <div class="loan-details-summary-grid">
+
+                <div class="loan-summary-card">
+
+                    <span>
+                        Loan Amount
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            loan.amount
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-summary-card">
+
+                    <span>
+                        Total Repayment
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            totalRepayment
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-summary-card">
+
+                    <span>
+                        Amount Paid
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            paidAmount
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-summary-card">
+
+                    <span>
+                        Weekly Payment
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            loan.weeklyPayment
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-details-section-heading">
+                Loan Information
+            </div>
+
+
+            <div class="loan-details-info-card">
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Loan Number
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.loanNumber ||
+                            "-"
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Loan Type
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.loanType ||
+                            "new"
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Start Date
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.approvalDate ||
+                            "-"
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Due Date
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.dueDate ||
+                            "-"
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Processing Fee
+                    </span>
+
+                    <strong>
+                        ${currency(
+                            loan.processingFee
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Interest
+                    </span>
+
+                    <strong>
+                        ${loan.interest || 0}%
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Duration
+                    </span>
+
+                    <strong>
+                        ${loan.duration || 0}
+                        Weeks
+                    </strong>
+
+                </div>
+
+
+                <div class="loan-info-row">
+
+                    <span>
+                        Officer
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            loan.createdBy ||
+                            "-"
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="loan-details-section-heading">
+                Repayment History
+            </div>
+
+
+            <div class="loan-mobile-schedule">
+
+                ${
+                    schedule.length === 0
+
+                        ? `
+
+                            <div class="loan-no-schedule-card">
+
+                                No repayment history available.
+
+                            </div>
+
+                        `
+
+                        : schedule
+                            .map(
+                                item =>
+                                    renderMobileScheduleCard(
+                                        loan,
+                                        item
+                                    )
+                            )
+                            .join("")
+                }
+
+            </div>
+
+
+            <div class="loan-details-bottom-space"></div>
+
+        </div>
+    `;
+
+
+    page
+        .querySelector(
+            '[data-loan-action="historical-loan-back"]'
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+
+                renderPreviousLoansPage(
+                    loans.find(
+                        item =>
+                            item.id ===
+                            selectedLoanId
+                    )
+                );
+            }
+        );
 
 
     page.scrollTop =
@@ -2785,6 +3957,33 @@ function attachLoanDetailsPageActions() {
 
 
     page
+        .querySelector(
+            '[data-loan-action="previous-loans"]'
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+
+                const loan =
+                    loans.find(
+                        item =>
+                            item.id ===
+                            selectedLoanId
+                    );
+
+
+                if (!loan)
+                    return;
+
+
+                renderPreviousLoansPage(
+                    loan
+                );
+            }
+        );
+
+
+    page
         .querySelectorAll(
             '[data-loan-action="repay"]'
         )
@@ -2895,7 +4094,7 @@ function attachLoanDetailsPageActions() {
 
 // ==========================================
 // OPEN REPAYMENT FOR SPECIFIC LOAN
-// VERSION 6.3
+// VERSION 7.0
 // ==========================================
 
 function openRepaymentForLoan(
@@ -2936,7 +4135,9 @@ function openRepaymentForLoan(
             loan.balance ||
             0
         ) <= 0 ||
-        loan.status ===
+        normalizeLoanStatus(
+            loan.status
+        ) ===
         "Completed"
     ) {
 
@@ -3164,7 +4365,9 @@ function editLoan(
 
 
     if (
-        loan.status !==
+        normalizeLoanStatus(
+            loan.status
+        ) !==
         "Pending"
     ) {
 
@@ -3249,6 +4452,11 @@ function editLoan(
 // ==========================================
 // APPROVE LOAN
 // ==========================================
+//
+// Pending -> Active
+//
+// NEVER save "Approved" anymore.
+// ==========================================
 
 async function approveLoan(
     id
@@ -3266,12 +4474,14 @@ async function approveLoan(
 
 
     if (
-        loan.status !==
+        normalizeLoanStatus(
+            loan.status
+        ) !==
         "Pending"
     ) {
 
         alert(
-            "Loan is already approved."
+            "Loan is already active or has been processed."
         );
 
         return;
@@ -3339,8 +4549,16 @@ async function approveLoan(
                 remainingInstallments:
                     schedule.length,
 
+                // ==========================================
+                // IMPORTANT:
+                // APPROVED IS NOW ACTIVE
+                // ==========================================
+
                 status:
-                    "Approved",
+                    "Active",
+
+                completed:
+                    false,
 
                 updatedAt:
                     serverTimestamp()
@@ -3363,13 +4581,16 @@ async function approveLoan(
                     loan.clientName,
 
                 amount:
-                    loan.amount
+                    loan.amount,
+
+                newStatus:
+                    "Active"
             }
         );
 
 
         alert(
-            "Loan approved successfully."
+            "Loan approved successfully. Status is now Active."
         );
 
 
@@ -3417,7 +4638,9 @@ async function deleteLoan(
 
 
     if (
-        loan.status !==
+        normalizeLoanStatus(
+            loan.status
+        ) !==
         "Pending"
     ) {
 
@@ -3564,11 +4787,32 @@ function populateYearFilter() {
 // ==========================================
 // FILTER LOANS
 // ==========================================
+//
+// IMPORTANT:
+// Completed loans are removed BEFORE the
+// normal search/status/month/year filters.
+//
+// This guarantees that Completed loans cannot
+// accidentally appear on the main Loans page.
+// ==========================================
 
 function getFilteredLoans() {
 
     let filtered =
         [...loans];
+
+
+    // ==========================================
+    // MAIN LOANS LIST ONLY
+    // ==========================================
+
+    filtered =
+        filtered.filter(
+            loan =>
+                isRunningLoan(
+                    loan
+                )
+        );
 
 
     const keyword =
@@ -3640,8 +4884,12 @@ function getFilteredLoans() {
         filtered =
             filtered.filter(
                 loan =>
-                    loan.status ===
-                    status
+                    normalizeLoanStatus(
+                        loan.status
+                    ) ===
+                    normalizeLoanStatus(
+                        status
+                    )
             );
     }
 
@@ -3741,6 +4989,18 @@ loanYearFilter?.addEventListener(
 // ==========================================
 // CHECK OVERDUE LOANS
 // ==========================================
+//
+// Pending loans are untouched.
+//
+// Active/Arrears loans are checked.
+//
+// Completed loans remain Completed.
+//
+// Active -> Arrears when overdue.
+//
+// Active/Arrears -> Completed when there
+// are no unpaid installments.
+// ==========================================
 
 async function checkOverdueLoans() {
 
@@ -3752,11 +5012,19 @@ async function checkOverdueLoans() {
         const loan of loans
     ) {
 
+        const currentStatus =
+            normalizeLoanStatus(
+                loan.status
+            );
+
+
         if (
-            loan.status ===
+            currentStatus ===
             "Pending" ||
-            loan.status ===
-            "Completed"
+            currentStatus ===
+            "Completed" ||
+            currentStatus ===
+            "Rejected"
         ) {
 
             continue;
@@ -3821,12 +5089,12 @@ async function checkOverdueLoans() {
         } else {
 
             status =
-                "Approved";
+                "Active";
         }
 
 
         if (
-            loan.status ===
+            currentStatus ===
             status &&
 
             loan.nextRepaymentDate ===
@@ -4083,7 +5351,7 @@ async function deletePayment(
 
 
     let status =
-        "Approved";
+        "Active";
 
 
     if (
@@ -4190,9 +5458,24 @@ async function deletePayment(
 
             if (updatedLoan) {
 
-                renderLoanDetailsPage(
-                    updatedLoan
-                );
+                if (
+                    previousLoansOpen
+                ) {
+
+                    renderPreviousLoansPage(
+                        loans.find(
+                            item =>
+                                item.id ===
+                                selectedLoanId
+                        )
+                    );
+
+                } else {
+
+                    renderLoanDetailsPage(
+                        updatedLoan
+                    );
+                }
             }
         }
 
@@ -4217,7 +5500,7 @@ async function deletePayment(
 
 // ==========================================
 // CLOSE REPAYMENT MODAL
-// VERSION 6.3
+// VERSION 7.0
 // ==========================================
 
 function closeRepaymentModal() {
@@ -4766,7 +6049,7 @@ repaymentForm?.addEventListener(
 
 
         let status =
-            "Approved";
+            "Active";
 
 
         if (
@@ -5242,7 +6525,7 @@ function getNextRepayment(
 
 // ==========================================
 // FAB ADD REPAYMENT
-// VERSION 6.3
+// VERSION 7.0
 // ==========================================
 //
 // The floating + button opens
@@ -5490,7 +6773,9 @@ function populateFabClientSelector() {
                             0
                         ) > 0 &&
 
-                        loan.status !==
+                        normalizeLoanStatus(
+                            loan.status
+                        ) !==
                         "Completed"
                 );
 
@@ -5555,7 +6840,9 @@ function populateFabClientSelector() {
                         0
                     ) > 0 &&
 
-                    loan.status !==
+                    normalizeLoanStatus(
+                        loan.status
+                    ) !==
                     "Completed"
             );
 
@@ -5573,7 +6860,7 @@ function populateFabClientSelector() {
 
 // ==========================================
 // OPEN FAB REPAYMENT
-// VERSION 6.3
+// VERSION 7.0
 // ==========================================
 
 function openFabRepaymentSelector() {
@@ -5827,7 +7114,9 @@ function loadLoansForSelectedClient(
                         0
                     ) > 0 &&
 
-                    loan.status !==
+                    normalizeLoanStatus(
+                        loan.status
+                    ) !==
                     "Completed"
             )
             .sort(
@@ -6238,5 +7527,5 @@ export {
 // END OF FILE
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 6.3
+// VERSION 7.0
 // ==========================================
