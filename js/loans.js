@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // loans.js
-// VERSION 7.1
+// VERSION 7.0
 //
 // ✔ Loan row -> TRUE FULL-SCREEN LOAN DETAILS PAGE
 // ✔ Details page is NOT placed below the table
@@ -33,7 +33,7 @@
 // ✔ Repayment modal close handling
 // ✔ Duplicate repayment protection
 //
-// VERSION 7.0
+// NEW VERSION 7.0
 // ✔ Approved status replaced by Active
 // ✔ Pending -> Active when approved
 // ✔ Loans list shows only Pending, Active and Arrears
@@ -43,12 +43,6 @@
 // ✔ Previous Loans shows this client's complete loan history
 // ✔ Previous loan records are clickable
 // ✔ Current loan is excluded from Previous Loans
-//
-// NEW VERSION 7.1
-// ✔ Loan Details -> Receive Repayment no longer shows a
-//   Client selector (loan row already identifies the client)
-// ✔ Delete Repayment button on the loan details schedule
-//   only appears within 24 hours of the repayment being made
 // ==========================================
 
 import { db } from "./firebase.js";
@@ -299,51 +293,6 @@ function escapeHtml(value) {
             /'/g,
             "&#039;"
         );
-}
-
-
-// ==========================================
-// 24-HOUR REPAYMENT-DELETE WINDOW
-// ==========================================
-//
-// Returns true only if the given timestamp
-// (ISO string or Date-parseable value) is
-// within the last 24 hours.
-//
-// Used to decide whether the "Delete latest
-// payment" control is shown / allowed on the
-// loan details repayment schedule.
-// ==========================================
-
-function isWithinLast24Hours(
-    timestampValue
-) {
-
-    if (!timestampValue)
-        return false;
-
-
-    const paymentTime =
-        new Date(
-            timestampValue
-        ).getTime();
-
-
-    if (
-        Number.isNaN(
-            paymentTime
-        )
-    ) {
-
-        return false;
-    }
-
-
-    return (
-        Date.now() -
-        paymentTime
-    ) <=
-        24 * 60 * 60 * 1000;
 }
 
 
@@ -3770,15 +3719,6 @@ function renderHistoricalLoanDetails(
 // ==========================================
 // MOBILE SCHEDULE CARD
 // ==========================================
-//
-// The "Delete latest payment" control is only
-// rendered when:
-//   1) the current user is an admin, AND
-//   2) the installment has at least one
-//      recorded payment, AND
-//   3) that latest payment was made within
-//      the last 24 hours.
-// ==========================================
 
 function renderMobileScheduleCard(
     loan,
@@ -3845,18 +3785,9 @@ function renderMobileScheduleCard(
     }
 
 
-    const lastPayment =
-        item.paymentHistory?.at(
-            -1
-        );
-
-
     const deleteButton =
         isAdmin() &&
-        lastPayment &&
-        isWithinLast24Hours(
-            lastPayment.timestamp
-        )
+        item.paymentHistory?.length
 
             ? `
 
@@ -4163,13 +4094,7 @@ function attachLoanDetailsPageActions() {
 
 // ==========================================
 // OPEN REPAYMENT FOR SPECIFIC LOAN
-// VERSION 7.1
-// ==========================================
-//
-// Opened from the Loan Details page.
-// The loan (and therefore the client) is
-// already known, so the Client selector is
-// hidden — only the payment fields are shown.
+// VERSION 7.0
 // ==========================================
 
 function openRepaymentForLoan(
@@ -4231,12 +4156,6 @@ function openRepaymentForLoan(
     createFabRepaymentSelectors(
         repaymentForm
     );
-
-
-    const clientGroup =
-        document.getElementById(
-            "fab-repayment-client-group"
-        );
 
 
     const clientSelector =
@@ -4314,25 +4233,9 @@ function openRepaymentForLoan(
     }
 
 
-    // ==========================================
-    // HIDE CLIENT + LOAN SELECTORS
-    // ==========================================
-    //
-    // Coming from a loan row, the client and
-    // loan are already fixed — no need to let
-    // the officer pick either one again.
-    // ==========================================
-
     if (loanGroup) {
 
         loanGroup.style.display =
-            "none";
-    }
-
-
-    if (clientGroup) {
-
-        clientGroup.style.display =
             "none";
     }
 
@@ -5025,4 +4928,2604 @@ function getFilteredLoans() {
                         );
 
 
-              
+                    const yearMatch =
+                        year ===
+                        "ALL" ||
+                        date.getFullYear() ===
+                        Number(
+                            year
+                        );
+
+
+                    return (
+                        monthMatch &&
+                        yearMatch
+                    );
+                }
+            );
+    }
+
+
+    return filtered;
+}
+
+
+function filterLoans() {
+
+    if (loanDetailsOpen)
+        return;
+
+
+    renderLoans(
+        getFilteredLoans()
+    );
+}
+
+
+loanSearch?.addEventListener(
+    "input",
+    filterLoans
+);
+
+
+loanFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+loanMonthFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+loanYearFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+// ==========================================
+// CHECK OVERDUE LOANS
+// ==========================================
+//
+// Pending loans are untouched.
+//
+// Active/Arrears loans are checked.
+//
+// Completed loans remain Completed.
+//
+// Active -> Arrears when overdue.
+//
+// Active/Arrears -> Completed when there
+// are no unpaid installments.
+// ==========================================
+
+async function checkOverdueLoans() {
+
+    const todayDate =
+        today();
+
+
+    for (
+        const loan of loans
+    ) {
+
+        const currentStatus =
+            normalizeLoanStatus(
+                loan.status
+            );
+
+
+        if (
+            currentStatus ===
+            "Pending" ||
+            currentStatus ===
+            "Completed" ||
+            currentStatus ===
+            "Rejected"
+        ) {
+
+            continue;
+        }
+
+
+        const schedule =
+            loan.repaymentSchedule ||
+            [];
+
+
+        let arrears =
+            false;
+
+        let nextRepayment =
+            null;
+
+
+        for (
+            const item of schedule
+        ) {
+
+            if (item.paid)
+                continue;
+
+
+            nextRepayment =
+                item.dueDate;
+
+
+            if (
+                item.dueDate <
+                todayDate
+            ) {
+
+                arrears =
+                    true;
+            }
+
+
+            break;
+        }
+
+
+        let status;
+
+
+        if (
+            !nextRepayment
+        ) {
+
+            status =
+                "Completed";
+
+        } else if (
+            arrears
+        ) {
+
+            status =
+                "Arrears";
+
+        } else {
+
+            status =
+                "Active";
+        }
+
+
+        if (
+            currentStatus ===
+            status &&
+
+            loan.nextRepaymentDate ===
+            nextRepayment
+        ) {
+
+            continue;
+        }
+
+
+        try {
+
+            await updateDoc(
+
+                doc(
+                    db,
+                    "loans",
+                    loan.id
+                ),
+
+                {
+
+                    status,
+
+                    completed:
+                        !nextRepayment,
+
+                    nextRepaymentDate:
+                        nextRepayment ||
+                        "-",
+
+                    remainingInstallments:
+                        schedule.filter(
+                            item =>
+                                !item.paid
+                        ).length,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+        }
+    }
+}
+
+
+// ==========================================
+// DELETE PAYMENT
+// ==========================================
+
+async function deletePayment(
+    loanIdValue,
+    week
+) {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Only the Administrator can delete repayments."
+        );
+
+        return;
+    }
+
+
+    const loan =
+        loans.find(
+            item =>
+                item.id ===
+                loanIdValue
+        );
+
+
+    if (!loan) {
+
+        alert(
+            "Loan not found."
+        );
+
+        return;
+    }
+
+
+    const schedule =
+        loan.repaymentSchedule ||
+        [];
+
+
+    const installment =
+        schedule.find(
+            item =>
+                Number(
+                    item.week
+                ) ===
+                Number(
+                    week
+                )
+        );
+
+
+    if (
+        !installment ||
+        !installment.paymentHistory?.length
+    ) {
+
+        alert(
+            "Repayment not found."
+        );
+
+        return;
+    }
+
+
+    const payment =
+        installment
+            .paymentHistory
+            .at(-1);
+
+
+    if (!payment) {
+
+        alert(
+            "Repayment not found."
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            `Delete repayment of ${
+                currency(
+                    payment.amount
+                )
+            }?`
+        )
+    ) {
+
+        return;
+    }
+
+
+    const originalHistory =
+        [
+            ...installment.paymentHistory
+        ];
+
+
+    installment.paymentHistory.pop();
+
+
+    installment.paidAmount =
+        Math.max(
+
+            Number(
+                installment.paidAmount ||
+                0
+            ) -
+
+            Number(
+                payment.amount ||
+                0
+            ),
+
+            0
+        );
+
+
+    installment.remainingAmount =
+        Math.max(
+
+            Number(
+                installment.amount ||
+                0
+            ) -
+
+            installment.paidAmount,
+
+            0
+        );
+
+
+    installment.paid =
+        installment.paidAmount >=
+        installment.amount;
+
+
+    installment.status =
+        installment.paid
+            ? "Paid"
+            : installment.paidAmount > 0
+                ? "Partial"
+                : "Pending";
+
+
+    if (
+        !installment.paid
+    ) {
+
+        installment.paidDate =
+            null;
+    }
+
+
+    const balance =
+        Math.min(
+
+            Number(
+                loan.totalRepayment ||
+                0
+            ),
+
+            Number(
+                loan.balance ||
+                0
+            ) +
+
+            Number(
+                payment.amount ||
+                0
+            )
+        );
+
+
+    const amountPaid =
+        Math.max(
+
+            Number(
+                loan.amountPaid ||
+                0
+            ) -
+
+            Number(
+                payment.amount ||
+                0
+            ),
+
+            0
+        );
+
+
+    const next =
+        schedule.find(
+            item =>
+                !item.paid
+        );
+
+
+    let status =
+        "Active";
+
+
+    if (
+        next &&
+        next.dueDate <
+        today()
+    ) {
+
+        status =
+            "Arrears";
+    }
+
+
+    if (
+        !next &&
+        balance <= 0
+    ) {
+
+        status =
+            "Completed";
+    }
+
+
+    try {
+
+        await updateDoc(
+
+            doc(
+                db,
+                "loans",
+                loan.id
+            ),
+
+            {
+
+                balance,
+
+                amountPaid,
+
+                repaymentSchedule:
+                    schedule,
+
+                nextRepaymentDate:
+                    next
+                        ? next.dueDate
+                        : "-",
+
+                remainingInstallments:
+                    schedule.filter(
+                        item =>
+                            !item.paid
+                    ).length,
+
+                status,
+
+                completed:
+                    balance <= 0,
+
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+
+
+        await logHistory(
+
+            "Repayment Deleted",
+
+            "Repayment",
+
+            {
+
+                loanId:
+                    loan.loanNumber,
+
+                client:
+                    loan.clientName,
+
+                amount:
+                    payment.amount,
+
+                balance
+            }
+        );
+
+
+        alert(
+            "Repayment deleted successfully."
+        );
+
+
+        if (
+            selectedLoanId ===
+            loan.id
+        ) {
+
+            const updatedLoan =
+                loans.find(
+                    item =>
+                        item.id ===
+                        loan.id
+                );
+
+
+            if (updatedLoan) {
+
+                if (
+                    previousLoansOpen
+                ) {
+
+                    renderPreviousLoansPage(
+                        loans.find(
+                            item =>
+                                item.id ===
+                                selectedLoanId
+                        )
+                    );
+
+                } else {
+
+                    renderLoanDetailsPage(
+                        updatedLoan
+                    );
+                }
+            }
+        }
+
+
+    } catch (error) {
+
+        installment.paymentHistory =
+            originalHistory;
+
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "Failed to delete repayment."
+        );
+    }
+}
+
+
+// ==========================================
+// CLOSE REPAYMENT MODAL
+// VERSION 7.0
+// ==========================================
+
+function closeRepaymentModal() {
+
+    const modal =
+        document.getElementById(
+            "repayment-modal"
+        );
+
+
+    if (!modal)
+        return;
+
+
+    modal.classList.add(
+        "hidden"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    // Remove temporary high z-index.
+    modal.style.zIndex =
+        "";
+
+
+    clearRepaymentFields();
+
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+}
+
+
+// ==========================================
+// REPAYMENT MODAL CLOSE BUTTONS
+// ==========================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const closeButton =
+            event.target.closest(
+
+                "#close-repayment-modal, " +
+
+                ".close-repayment-modal, " +
+
+                '[data-close="repayment-modal"], ' +
+
+                '[data-modal-close="repayment-modal"]'
+            );
+
+
+        if (!closeButton)
+            return;
+
+
+        event.preventDefault();
+
+
+        closeRepaymentModal();
+    }
+);
+
+
+// ==========================================
+// CLICK OUTSIDE REPAYMENT MODAL
+// ==========================================
+
+document
+    .getElementById(
+        "repayment-modal"
+    )
+    ?.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target.id ===
+                "repayment-modal"
+            ) {
+
+                closeRepaymentModal();
+            }
+        }
+    );
+
+
+// ==========================================
+// ESCAPE KEY
+// ==========================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key !==
+            "Escape"
+        )
+            return;
+
+
+        const modal =
+            document.getElementById(
+                "repayment-modal"
+            );
+
+
+        if (
+            modal &&
+            !modal.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            closeRepaymentModal();
+        }
+    }
+);
+
+
+// ==========================================
+// RECEIVE REPAYMENT
+// ==========================================
+
+repaymentForm?.addEventListener(
+    "submit",
+    async e => {
+
+        e.preventDefault();
+
+
+        if (repaymentSaving)
+            return;
+
+
+        const loan =
+            loans.find(
+                item =>
+                    item.id ===
+                    repaymentLoanId.value
+            );
+
+
+        if (!loan) {
+
+            alert(
+                "Please select a client with an outstanding loan."
+            );
+
+            return;
+        }
+
+
+        const payment =
+            Number(
+                repaymentAmount.value
+            );
+
+
+        if (
+            payment <= 0
+        ) {
+
+            alert(
+                "Enter a valid repayment amount."
+            );
+
+            return;
+        }
+
+
+        if (
+            payment >
+            Number(
+                loan.balance ||
+                0
+            )
+        ) {
+
+            alert(
+                "Payment cannot exceed the outstanding balance."
+            );
+
+            return;
+        }
+
+
+        if (
+            !confirm(
+                `Confirm repayment of ${
+                    currency(
+                        payment
+                    )
+                }?`
+            )
+        ) {
+
+            return;
+        }
+
+
+        repaymentSaving =
+            true;
+
+
+        const saveButton =
+            repaymentForm.querySelector(
+                'button[type="submit"]'
+            );
+
+
+        const originalText =
+            saveButton?.innerHTML ||
+            "Save Repayment";
+
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+
+            saveButton.innerHTML =
+                "⏳ Recording Repayment...";
+        }
+
+
+        let balance =
+            Number(
+                loan.balance ||
+                0
+            );
+
+
+        let amountPaid =
+            Number(
+                loan.amountPaid ||
+                0
+            );
+
+
+        balance -=
+            payment;
+
+
+        if (
+            balance < 0
+        ) {
+
+            balance =
+                0;
+        }
+
+
+        amountPaid +=
+            payment;
+
+
+        const totalInterest =
+            Number(
+                loan.totalRepayment ||
+                0
+            ) -
+            Number(
+                loan.amount ||
+                0
+            );
+
+
+        const interestRatio =
+            Number(
+                loan.totalRepayment ||
+                0
+            ) > 0
+
+                ? totalInterest /
+                    Number(
+                        loan.totalRepayment
+                    )
+
+                : 0;
+
+
+        const incomeEarned =
+            payment *
+            interestRatio;
+
+
+        const totalIncome =
+            Number(
+                loan.totalIncome ||
+                0
+            ) +
+            incomeEarned;
+
+
+        const schedule =
+            (
+                loan.repaymentSchedule ||
+                []
+            ).map(
+                item => ({
+
+                    ...item,
+
+                    paymentHistory:
+                        [
+                            ...(item.paymentHistory ||
+                                [])
+                        ]
+                })
+            );
+
+
+        let remaining =
+            payment;
+
+
+        for (
+            const item of schedule
+        ) {
+
+            if (
+                remaining <=
+                0
+            )
+                break;
+
+
+            if (item.paid)
+                continue;
+
+
+            const unpaid =
+                Math.max(
+
+                    Number(
+                        item.amount ||
+                        0
+                    ) -
+
+                    Number(
+                        item.paidAmount ||
+                        0
+                    ),
+
+                    0
+                );
+
+
+            if (
+                unpaid <=
+                0
+            )
+                continue;
+
+
+            const paymentTimestamp =
+                new Date();
+
+
+            item.paymentHistory ??=
+                [];
+
+
+            const paymentTime =
+                paymentTimestamp
+                    .toLocaleTimeString(
+                        [],
+                        {
+
+                            hour:
+                                "2-digit",
+
+                            minute:
+                                "2-digit",
+
+                            second:
+                                "2-digit",
+
+                            hour12:
+                                false
+                        }
+                    );
+
+
+            if (
+                remaining >=
+                unpaid
+            ) {
+
+                item.paidAmount =
+                    Number(
+                        item.paidAmount ||
+                        0
+                    ) +
+                    unpaid;
+
+
+                item.remainingAmount =
+                    0;
+
+
+                item.paid =
+                    true;
+
+
+                item.status =
+                    "Paid";
+
+
+                item.paidDate =
+                    repaymentDate.value;
+
+
+                item.paymentHistory.push({
+
+                    amount:
+                        unpaid,
+
+                    date:
+                        repaymentDate.value,
+
+                    time:
+                        paymentTime,
+
+                    timestamp:
+                        paymentTimestamp
+                            .toISOString(),
+
+                    notes:
+                        repaymentNotes.value ||
+                        "",
+
+                    officer:
+                        localStorage.getItem(
+                            "userName"
+                        ) ||
+                        localStorage.getItem(
+                            "userEmail"
+                        ) ||
+                        "Unknown Officer"
+                });
+
+
+                remaining -=
+                    unpaid;
+
+            } else {
+
+                item.paidAmount =
+                    Number(
+                        item.paidAmount ||
+                        0
+                    ) +
+                    remaining;
+
+
+                item.remainingAmount =
+                    Math.max(
+
+                        Number(
+                            item.amount ||
+                            0
+                        ) -
+
+                        Number(
+                            item.paidAmount ||
+                            0
+                        ),
+
+                        0
+                    );
+
+
+                item.status =
+                    "Partial";
+
+
+                item.paymentHistory.push({
+
+                    amount:
+                        remaining,
+
+                    date:
+                        repaymentDate.value,
+
+                    time:
+                        paymentTime,
+
+                    timestamp:
+                        paymentTimestamp
+                            .toISOString(),
+
+                    notes:
+                        repaymentNotes.value ||
+                        "",
+
+                    officer:
+                        localStorage.getItem(
+                            "userName"
+                        ) ||
+                        localStorage.getItem(
+                            "userEmail"
+                        ) ||
+                        "Unknown Officer"
+                });
+
+
+                remaining =
+                    0;
+            }
+        }
+
+
+        const next =
+            schedule.find(
+                item =>
+                    !item.paid
+            );
+
+
+        let status =
+            "Active";
+
+
+        if (
+            next &&
+            next.dueDate <
+            today()
+        ) {
+
+            status =
+                "Arrears";
+        }
+
+
+        if (
+            balance <=
+            0
+        ) {
+
+            balance =
+                0;
+
+            status =
+                "Completed";
+        }
+
+
+        try {
+
+            await updateDoc(
+
+                doc(
+                    db,
+                    "loans",
+                    loan.id
+                ),
+
+                {
+
+                    balance,
+
+                    amountPaid,
+
+                    totalIncome,
+
+                    repaymentSchedule:
+                        schedule,
+
+                    nextRepaymentDate:
+                        next
+                            ? next.dueDate
+                            : "-",
+
+                    remainingInstallments:
+                        schedule.filter(
+                            item =>
+                                !item.paid
+                        ).length,
+
+                    status,
+
+                    completed:
+                        balance <= 0,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
+
+            await addDoc(
+
+                collection(
+                    db,
+                    "repayments"
+                ),
+
+                {
+
+                    loanId:
+                        loan.id,
+
+                    loanNumber:
+                        loan.loanNumber ||
+                        "-",
+
+                    clientId:
+                        loan.clientId,
+
+                    clientName:
+                        loan.clientName,
+
+                    amount:
+                        payment,
+
+                    balance,
+
+                    paymentDate:
+                        repaymentDate.value,
+
+                    paymentTime:
+                        new Date()
+                            .toLocaleTimeString(
+                                [],
+                                {
+
+                                    hour:
+                                        "2-digit",
+
+                                    minute:
+                                        "2-digit",
+
+                                    second:
+                                        "2-digit",
+
+                                    hour12:
+                                        false
+                                }
+                            ),
+
+                    paymentTimestamp:
+                        new Date()
+                            .toISOString(),
+
+                    officer:
+                        localStorage.getItem(
+                            "userName"
+                        ) ||
+                        localStorage.getItem(
+                            "userEmail"
+                        ) ||
+                        "Unknown Officer",
+
+                    notes:
+                        repaymentNotes.value ||
+                        "",
+
+                    createdAt:
+                        serverTimestamp()
+                }
+            );
+
+
+            // ==========================================
+            // CLOSE REPAYMENT MODAL
+            // ==========================================
+
+            closeRepaymentModal();
+
+
+            // ==========================================
+            // RESET REPAYMENT FORM
+            // ==========================================
+
+            repaymentForm.reset();
+
+
+            if (repaymentLoanId)
+                repaymentLoanId.value =
+                    "";
+
+
+            const clientSelector =
+                document.getElementById(
+                    "fab-repayment-client-select"
+                );
+
+
+            const loanSelector =
+                document.getElementById(
+                    "fab-repayment-loan-select"
+                );
+
+
+            const loanGroup =
+                document.getElementById(
+                    "fab-repayment-loan-group"
+                );
+
+
+            if (clientSelector)
+                clientSelector.value =
+                    "";
+
+
+            if (loanSelector) {
+
+                loanSelector.innerHTML = `
+
+                    <option value="">
+                        Select Loan
+                    </option>
+
+                `;
+
+                loanSelector.value =
+                    "";
+            }
+
+
+            if (loanGroup) {
+
+                loanGroup.style.display =
+                    "none";
+            }
+
+
+            await logHistory(
+
+                "Repayment Recorded",
+
+                "Repayment",
+
+                {
+
+                    loanId:
+                        loan.loanNumber,
+
+                    client:
+                        loan.clientName,
+
+                    amount:
+                        payment,
+
+                    balance
+                }
+            );
+
+
+            alert(
+                "✅ Repayment recorded successfully."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            alert(
+                "Failed to record repayment."
+            );
+
+
+        } finally {
+
+            repaymentSaving =
+                false;
+
+
+            if (saveButton) {
+
+                saveButton.disabled =
+                    false;
+
+
+                saveButton.innerHTML =
+                    originalText;
+            }
+        }
+    }
+);
+
+
+// ==========================================
+// OLD SCHEDULE MODAL
+// ==========================================
+
+function renderRepaymentSchedule(
+    loan
+) {
+
+    if (
+        !scheduleModal ||
+        !scheduleTableBody
+    ) {
+
+        return;
+    }
+
+
+    scheduleClient.textContent =
+        loan.clientName ||
+        "-";
+
+
+    scheduleBalance.textContent =
+        currency(
+            loan.balance ||
+            0
+        );
+
+
+    scheduleTableBody.innerHTML =
+        "";
+
+
+    const schedule =
+        loan.repaymentSchedule ||
+        [];
+
+
+    if (
+        !schedule.length
+    ) {
+
+        scheduleTableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    style="text-align:center;"
+                >
+
+                    No repayment schedule available.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    } else {
+
+        schedule.forEach(
+            item => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${item.week}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            item.dueDate
+                        )}
+                    </td>
+
+                    <td>
+
+                        ${currency(
+                            item.paidAmount
+                        )}
+
+                        /
+
+                        ${currency(
+                            item.amount
+                        )}
+
+                    </td>
+
+                    <td>
+
+                        ${
+                            item.paid
+
+                                ? "✅ Paid"
+
+                                : item.paidAmount > 0
+
+                                    ? "🟡 Partial"
+
+                                    : "⏳ Pending"
+                        }
+
+                    </td>
+
+                    <td>
+                        ${
+                            item.paidDate ||
+                            "-"
+                        }
+                    </td>
+
+                `;
+
+
+                scheduleTableBody.appendChild(
+                    row
+                );
+            }
+        );
+    }
+
+
+    scheduleModal.classList.remove(
+        "hidden"
+    );
+}
+
+
+closeScheduleModal?.addEventListener(
+    "click",
+    () => {
+
+        scheduleModal?.classList.add(
+            "hidden"
+        );
+    }
+);
+
+
+scheduleModal?.addEventListener(
+    "click",
+    e => {
+
+        if (
+            e.target ===
+            scheduleModal
+        ) {
+
+            scheduleModal.classList.add(
+                "hidden"
+            );
+        }
+    }
+);
+
+
+// ==========================================
+// REFRESH
+// ==========================================
+
+function refreshLoanTable() {
+
+    filterLoans();
+}
+
+
+// ==========================================
+// GET LOAN
+// ==========================================
+
+function getLoanById(
+    id
+) {
+
+    return loans.find(
+        loan =>
+            loan.id ===
+            id
+    );
+}
+
+
+// ==========================================
+// GET NEXT REPAYMENT
+// ==========================================
+
+function getNextRepayment(
+    schedule = []
+) {
+
+    return (
+        schedule.find(
+            item =>
+                !item.paid
+        ) ||
+        null
+    );
+}
+
+
+// ==========================================
+// FAB ADD REPAYMENT
+// VERSION 7.0
+// ==========================================
+//
+// The floating + button opens
+// the repayment form.
+//
+// It NEVER opens the new-loan form.
+//
+// Client selection comes from the
+// Firestore clients collection.
+//
+// The user cannot manually type
+// a client name.
+// ==========================================
+
+function setupFabAddRepayment() {
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+
+                    "#fab-add-repayment, " +
+
+                    "#fab-repayment, " +
+
+                    "#fab-new-loan, " +
+
+                    '[data-action="add-repayment"]'
+                );
+
+
+            if (!button)
+                return;
+
+
+            event.preventDefault();
+
+
+            event.stopPropagation();
+
+
+            openFabRepaymentSelector();
+
+        },
+        true
+    );
+}
+
+
+// ==========================================
+// CREATE REPAYMENT SELECTORS
+// ==========================================
+
+function createFabRepaymentSelectors(
+    form
+) {
+
+    if (!form)
+        return null;
+
+
+    let container =
+        document.getElementById(
+            "fab-repayment-selectors"
+        );
+
+
+    if (container)
+        return container;
+
+
+    container =
+        document.createElement(
+            "div"
+        );
+
+
+    container.id =
+        "fab-repayment-selectors";
+
+
+    container.className =
+        "fab-repayment-selectors";
+
+
+    container.innerHTML = `
+
+        <div class="fab-repayment-selector-group">
+
+            <label
+                for="fab-repayment-client-select"
+            >
+                Client
+            </label>
+
+            <select
+                id="fab-repayment-client-select"
+                required
+            >
+
+                <option value="">
+                    Select Client
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div
+            class="fab-repayment-selector-group"
+            id="fab-repayment-loan-group"
+            style="display:none;"
+        >
+
+            <label
+                for="fab-repayment-loan-select"
+            >
+                Loan
+            </label>
+
+            <select
+                id="fab-repayment-loan-select"
+            >
+
+                <option value="">
+                    Select Loan
+                </option>
+
+            </select>
+
+        </div>
+
+    `;
+
+
+    form.insertBefore(
+        container,
+        form.firstElementChild
+    );
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    clientSelector?.addEventListener(
+        "change",
+        () => {
+
+            loadLoansForSelectedClient(
+                clientSelector.value
+            );
+        }
+    );
+
+
+    loanSelector?.addEventListener(
+        "change",
+        () => {
+
+            fillRepaymentFromSelectedLoan(
+                loanSelector.value
+            );
+        }
+    );
+
+
+    return container;
+}
+
+
+// ==========================================
+// POPULATE FAB CLIENT SELECTOR
+// ==========================================
+
+function populateFabClientSelector() {
+
+    if (!repaymentForm)
+        return;
+
+
+    createFabRepaymentSelectors(
+        repaymentForm
+    );
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+
+    if (!clientSelector)
+        return;
+
+
+    const currentValue =
+        clientSelector.value;
+
+
+    clientSelector.innerHTML = `
+
+        <option value="">
+            Select Client
+        </option>
+
+    `;
+
+
+    const sortedClients =
+        [...clients].sort(
+            (a, b) =>
+                (
+                    a.name || ""
+                ).localeCompare(
+                    b.name || ""
+                )
+        );
+
+
+    sortedClients.forEach(
+        client => {
+
+            const clientLoans =
+                loans.filter(
+
+                    loan =>
+
+                        loan.clientId ===
+                        client.id &&
+
+                        Number(
+                            loan.balance ||
+                            0
+                        ) > 0 &&
+
+                        normalizeLoanStatus(
+                            loan.status
+                        ) !==
+                        "Completed"
+                );
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                client.id;
+
+
+            if (
+                clientLoans.length
+            ) {
+
+                option.textContent =
+                    client.name ||
+                    "Unnamed Client";
+
+            } else {
+
+                option.textContent =
+                    `${
+                        client.name ||
+                        "Unnamed Client"
+                    } — No outstanding loan`;
+
+                option.disabled =
+                    true;
+            }
+
+
+            clientSelector.appendChild(
+                option
+            );
+        }
+    );
+
+
+    if (
+        currentValue &&
+        sortedClients.some(
+            client =>
+                client.id ===
+                currentValue
+        )
+    ) {
+
+        const selectedClientLoans =
+            loans.filter(
+
+                loan =>
+
+                    loan.clientId ===
+                    currentValue &&
+
+                    Number(
+                        loan.balance ||
+                        0
+                    ) > 0 &&
+
+                    normalizeLoanStatus(
+                        loan.status
+                    ) !==
+                    "Completed"
+            );
+
+
+        if (
+            selectedClientLoans.length
+        ) {
+
+            clientSelector.value =
+                currentValue;
+        }
+    }
+}
+
+
+// ==========================================
+// OPEN FAB REPAYMENT
+// VERSION 7.0
+// ==========================================
+
+function openFabRepaymentSelector() {
+
+    const modal =
+        document.getElementById(
+            "repayment-modal"
+        );
+
+
+    const form =
+        document.getElementById(
+            "repayment-form"
+        );
+
+
+    if (!modal || !form) {
+
+        alert(
+            "Repayment form is unavailable."
+        );
+
+        return;
+    }
+
+
+    // ==========================================
+    // FORCE MODAL ABOVE EVERYTHING
+    // ==========================================
+
+    modal.style.position =
+        "fixed";
+
+
+    modal.style.zIndex =
+        "100001";
+
+
+    // ==========================================
+    // CREATE SELECTORS
+    // ==========================================
+
+    createFabRepaymentSelectors(
+        form
+    );
+
+
+    populateFabClientSelector();
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    const loanGroup =
+        document.getElementById(
+            "fab-repayment-loan-group"
+        );
+
+
+    // ==========================================
+    // RESET CLIENT
+    // ==========================================
+
+    if (clientSelector)
+        clientSelector.value =
+            "";
+
+
+    // ==========================================
+    // RESET LOAN
+    // ==========================================
+
+    if (loanSelector) {
+
+        loanSelector.innerHTML = `
+
+            <option value="">
+                Select Loan
+            </option>
+
+        `;
+
+        loanSelector.value =
+            "";
+    }
+
+
+    if (loanGroup) {
+
+        loanGroup.style.display =
+            "none";
+    }
+
+
+    // ==========================================
+    // CLEAR REPAYMENT FIELDS
+    // ==========================================
+
+    clearRepaymentFields();
+
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    // ==========================================
+    // HIDE OLD MANUAL CLIENT FIELD
+    // ==========================================
+
+    if (repaymentClient) {
+
+        repaymentClient.value =
+            "";
+
+        repaymentClient.readOnly =
+            true;
+
+        repaymentClient.style.display =
+            "none";
+    }
+
+
+    // ==========================================
+    // OPEN MODAL
+    // ==========================================
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    // ==========================================
+    // FOCUS CLIENT SELECTOR
+    // ==========================================
+
+    setTimeout(
+        () => {
+
+            clientSelector?.focus();
+
+        },
+        100
+    );
+}
+
+
+// ==========================================
+// LOAD LOANS FOR SELECTED CLIENT
+// ==========================================
+
+function loadLoansForSelectedClient(
+    clientId
+) {
+
+    const client =
+        clients.find(
+            item =>
+                item.id ===
+                clientId
+        );
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    const loanGroup =
+        document.getElementById(
+            "fab-repayment-loan-group"
+        );
+
+
+    if (!client) {
+
+        if (loanSelector) {
+
+            loanSelector.innerHTML = `
+
+                <option value="">
+                    Select Loan
+                </option>
+
+            `;
+        }
+
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+
+        clearRepaymentFields();
+
+        return;
+    }
+
+
+    const clientLoans =
+        loans
+            .filter(
+
+                loan =>
+
+                    loan.clientId ===
+                    clientId &&
+
+                    Number(
+                        loan.balance ||
+                        0
+                    ) > 0 &&
+
+                    normalizeLoanStatus(
+                        loan.status
+                    ) !==
+                    "Completed"
+            )
+            .sort(
+                (a, b) =>
+                    (
+                        a.approvalDate ||
+                        ""
+                    ).localeCompare(
+                        b.approvalDate ||
+                        ""
+                    )
+            );
+
+
+    if (
+        !clientLoans.length
+    ) {
+
+        clearRepaymentFields();
+
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+
+        if (clientSelector)
+            clientSelector.value =
+                "";
+
+
+        alert(
+
+            `${
+                client.name ||
+                "This client"
+            } has no outstanding loan.`
+        );
+
+
+        return;
+    }
+
+
+    // ==========================================
+    // ONE OUTSTANDING LOAN
+    // ==========================================
+
+    if (
+        clientLoans.length ===
+        1
+    ) {
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+
+        fillRepaymentFromSelectedLoan(
+            clientLoans[0].id
+        );
+
+
+        return;
+    }
+
+
+    // ==========================================
+    // MULTIPLE OUTSTANDING LOANS
+    // ==========================================
+
+    if (loanGroup) {
+
+        loanGroup.style.display =
+            "block";
+    }
+
+
+    if (loanSelector) {
+
+        loanSelector.innerHTML = `
+
+            <option value="">
+                Select Loan
+            </option>
+
+        `;
+
+
+        clientLoans.forEach(
+            loan => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    loan.id;
+
+
+                option.textContent =
+
+                    `${
+                        loan.loanNumber ||
+                        "Loan"
+                    } — Balance ${
+                        currency(
+                            loan.balance
+                        )
+                    }`;
+
+
+                loanSelector.appendChild(
+                    option
+                );
+            }
+        );
+
+
+        loanSelector.value =
+            "";
+    }
+
+
+    clearRepaymentFields();
+}
+
+
+// ==========================================
+// FILL REPAYMENT FROM SELECTED LOAN
+// ==========================================
+
+function fillRepaymentFromSelectedLoan(
+    id
+) {
+
+    const loan =
+        loans.find(
+            item =>
+                item.id === id
+        );
+
+
+    const repaymentLoanIdField =
+        document.getElementById(
+            "repayment-loan-id"
+        );
+
+
+    const repaymentClientField =
+        document.getElementById(
+            "repayment-client"
+        );
+
+
+    const repaymentBalanceField =
+        document.getElementById(
+            "repayment-balance"
+        );
+
+
+    const repaymentWeeklyField =
+        document.getElementById(
+            "repayment-weekly"
+        );
+
+
+    const repaymentAmountField =
+        document.getElementById(
+            "repayment-amount"
+        );
+
+
+    const repaymentNotesField =
+        document.getElementById(
+            "repayment-notes"
+        );
+
+
+    const repaymentDateField =
+        document.getElementById(
+            "repayment-date"
+        );
+
+
+    if (!loan) {
+
+        clearRepaymentFields();
+
+        return;
+    }
+
+
+    // ==========================================
+    // HIDDEN LOAN ID
+    // ==========================================
+
+    if (repaymentLoanIdField)
+        repaymentLoanIdField.value =
+            loan.id;
+
+
+    // ==========================================
+    // CLIENT
+    // ==========================================
+
+    if (repaymentClientField) {
+
+        repaymentClientField.value =
+            loan.clientName ||
+            "";
+
+        repaymentClientField.readOnly =
+            true;
+
+        repaymentClientField.style.display =
+            "none";
+    }
+
+
+    // ==========================================
+    // BALANCE
+    // ==========================================
+
+    if (repaymentBalanceField)
+        repaymentBalanceField.value =
+            currency(
+                loan.balance
+            );
+
+
+    // ==========================================
+    // WEEKLY REPAYMENT
+    // ==========================================
+
+    if (repaymentWeeklyField)
+        repaymentWeeklyField.value =
+            currency(
+                loan.weeklyPayment
+            );
+
+
+    // ==========================================
+    // RESET PAYMENT INPUT
+    // ==========================================
+
+    if (repaymentAmountField)
+        repaymentAmountField.value =
+            "";
+
+
+    if (repaymentNotesField)
+        repaymentNotesField.value =
+            "";
+
+
+    if (repaymentDateField)
+        repaymentDateField.value =
+            today();
+}
+
+
+// ==========================================
+// CLEAR REPAYMENT FIELDS
+// ==========================================
+
+function clearRepaymentFields() {
+
+    const repaymentLoanIdField =
+        document.getElementById(
+            "repayment-loan-id"
+        );
+
+
+    const repaymentClientField =
+        document.getElementById(
+            "repayment-client"
+        );
+
+
+    const repaymentBalanceField =
+        document.getElementById(
+            "repayment-balance"
+        );
+
+
+    const repaymentWeeklyField =
+        document.getElementById(
+            "repayment-weekly"
+        );
+
+
+    if (
+        repaymentLoanIdField
+    )
+        repaymentLoanIdField.value =
+            "";
+
+
+    if (
+        repaymentClientField
+    )
+        repaymentClientField.value =
+            "";
+
+
+    if (
+        repaymentBalanceField
+    )
+        repaymentBalanceField.value =
+            "";
+
+
+    if (
+        repaymentWeeklyField
+    )
+        repaymentWeeklyField.value =
+            "";
+}
+
+
+// ==========================================
+// AUTO CHECK
+// ==========================================
+
+setInterval(
+    () => {
+
+        if (
+            loans.length
+        )
+            checkOverdueLoans();
+
+    },
+    60000
+);
+
+
+// ==========================================
+// AUTO REFRESH
+// ==========================================
+
+setInterval(
+    () => {
+
+        if (
+            !loanDetailsOpen
+        )
+            filterLoans();
+
+    },
+    30000
+);
+
+
+// ==========================================
+// INITIALIZE
+// ==========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        calculateLoan();
+
+        loadClients();
+
+        loadLoans();
+
+        checkOverdueLoans();
+
+        setupFabAddRepayment();
+    }
+);
+
+
+// ==========================================
+// EXPORTS
+// ==========================================
+
+export {
+
+    loadLoans,
+
+    renderLoans,
+
+    calculateLoan,
+
+    currency,
+
+    generateRepaymentSchedule,
+
+    refreshLoanTable,
+
+    getLoanById,
+
+    getNextRepayment
+
+};
+
+// ==========================================
+// END OF FILE
+// GREYMUS LOAN FINANCIAL HUB
+// loans.js
+// VERSION 7.0
+// ==========================================
