@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.1
+// VERSION 4.2
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
@@ -25,6 +25,9 @@
 // ✔ Today's Collection
 // ✔ Today's Due List
 // ✔ Today's Due + Arrears Visible Together
+// ✔ PARTIAL PAYMENT STAYS IN TODAY'S LIST
+// ✔ FULL PAYMENT STAYS IN TODAY'S LIST UNTIL NEXT DAY
+// ✔ Today's List Changes Only When Calendar Date Changes
 // ✔ Auto Refresh
 // ✔ Firestore Realtime Sync
 //
@@ -791,19 +794,29 @@ function updateDashboard(){
 // ==========================================
 // TODAY'S COLLECTION
 // ==========================================
+//
+// IMPORTANT BEHAVIOR:
+//
+// Today's list is based on the INSTALLMENT
+// DUE DATE, not the payment status.
+//
+// Therefore:
+//
+// Pending  -> stays today
+// Partial  -> stays today
+// Paid     -> stays today
+//
+// The client disappears automatically only
+// when the calendar date becomes tomorrow.
+//
+// This prevents a payment from removing a
+// client from today's collection list.
+// ==========================================
 
         if(
-
-            (
-                status === "Approved" ||
-
-                status === "Arrears"
-            ) &&
-
             Array.isArray(
                 loan.repaymentSchedule
             )
-
         ){
 
             loan.repaymentSchedule.forEach(
@@ -826,6 +839,12 @@ function updateDashboard(){
                             ).padStart(2, "0")
                         }`;
 
+
+                    // --------------------------------------
+                    // ONLY THE CALENDAR DATE DETERMINES
+                    // WHETHER THIS INSTALLMENT BELONGS
+                    // TO "TODAY'S" LIST.
+                    // --------------------------------------
 
                     if(
                         dueDate !== today
@@ -867,12 +886,15 @@ function updateDashboard(){
 // CLIENT DUE TODAY RECORD
 // ==========================================
 //
-// Important:
-// The loan's previously missed installments
-// are included as arrears when the loan is
-// already in "Arrears".
+// The client remains in this list regardless
+// of whether today's installment is:
 //
-// Today's due remains separate from arrears.
+// Pending
+// Partial
+// Paid
+//
+// The status shown on the card changes, but
+// the card itself remains until tomorrow.
 // ==========================================
 
                     clientsDueToday.push({
@@ -1851,7 +1873,8 @@ if(
 
 
             portfolioSummaryContent
-                .classList.toggle(
+                .classList
+                .toggle(
                     "hidden"
                 );
 
