@@ -1,7 +1,37 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.2 (WITH ACCOUNT BALANCE CARD & DETAILS LOGIC)
+// VERSION 4.2
+//
+// ✔ Current Outstanding Portfolio
+// ✔ Total Portfolio Issued
+// ✔ Monthly Portfolio
+// ✔ Previous Portfolio
+// ✔ Monthly Income
+// ✔ Previous Income
+// ✔ Total Income
+// ✔ Clients
+// ✔ Total Loans Issued
+// ✔ Active Loans
+// ✔ Completed Loans
+// ✔ Historical Loans
+// ✔ Repeat Clients
+// ✔ Pending Loans
+// ✔ Approved Loans
+// ✔ Rejected Loans
+// ✔ Arrears Count
+// ✔ Arrears Amount (Missed Installments Only)
+// ✔ Clients in Arrears List
+// ✔ Today's Collection
+// ✔ Today's Due List
+// ✔ Today's Due + Arrears Visible Together
+// ✔ PARTIAL PAYMENT STAYS IN TODAY'S LIST
+// ✔ FULL PAYMENT STAYS IN TODAY'S LIST UNTIL NEXT DAY
+// ✔ Today's List Changes Only When Calendar Date Changes
+// ✔ Auto Refresh
+// ✔ Firestore Realtime Sync
+//
+// STATUS: ✅ FINISHED
 // ==========================================
 
 
@@ -9,15 +39,7 @@ import { db } from "./firebase.js";
 
 import {
     collection,
-    onSnapshot,
-    doc,
-    setDoc,
-    getDoc,
-    addDoc,
-    deleteDoc,
-    query,
-    where,
-    getDocs
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
@@ -28,8 +50,6 @@ import {
 let loans = [];
 let clients = [];
 let repayments = [];
-let expenses = [];
-let openingBalances = {}; // Format: { "YYYY-MM-DD": amount }
 
 
 // ==========================================
@@ -156,35 +176,6 @@ const arrearsClientList =
 
 
 // ==========================================
-// ACCOUNT BALANCE ELEMENTS
-// ==========================================
-
-const cardClosingBalance = document.getElementById("card-closing-balance");
-const accountBalanceCard = document.getElementById("account-balance-card");
-const accountBalanceDetailsTab = document.getElementById("account-balance-details-tab");
-const dashboardTab = document.getElementById("dashboard-tab");
-const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
-const accountBalanceDatePicker = document.getElementById("account-balance-date-picker");
-
-const accOpeningBalance = document.getElementById("acc-opening-balance");
-const accMoneyIn = document.getElementById("acc-money-in");
-const accMoneyOut = document.getElementById("acc-money-out");
-const accClosingBalance = document.getElementById("acc-closing-balance");
-
-const editOpeningBalanceBtn = document.getElementById("edit-opening-balance-btn");
-const openingBalanceModal = document.getElementById("opening-balance-modal");
-const openingBalanceForm = document.getElementById("opening-balance-form");
-const openingBalanceInput = document.getElementById("opening-balance-input");
-
-const addExpenseBtn = document.getElementById("add-expense-btn");
-const expenseModal = document.getElementById("expense-modal");
-const expenseForm = document.getElementById("expense-form");
-const expenseDescription = document.getElementById("expense-description");
-const expenseAmount = document.getElementById("expense-amount");
-const expensesTableBody = document.getElementById("expenses-table-body");
-
-
-// ==========================================
 // MONEY FORMAT
 // ==========================================
 
@@ -299,7 +290,6 @@ onSnapshot(
         });
 
         updateDashboard();
-        updateAccountBalanceSection();
 
     }
 
@@ -307,6 +297,7 @@ onSnapshot(
 
 
 // REPAYMENTS
+// Backward compatibility
 onSnapshot(
 
     collection(db, "repayments"),
@@ -328,189 +319,10 @@ onSnapshot(
         });
 
         updateDashboard();
-        updateAccountBalanceSection();
 
     }
 
 );
-
-
-// EXPENSES
-onSnapshot(
-
-    collection(db, "expenses"),
-
-    snapshot => {
-
-        expenses = [];
-
-        snapshot.forEach(doc => {
-
-            expenses.push({
-
-                id: doc.id,
-
-                ...doc.data()
-
-            });
-
-        });
-
-        updateAccountBalanceSection();
-
-    }
-
-);
-
-
-// OPENING BALANCES
-onSnapshot(
-
-    collection(db, "opening_balances"),
-
-    snapshot => {
-
-        openingBalances = {};
-
-        snapshot.forEach(doc => {
-
-            openingBalances[doc.id] = doc.data().amount || 0;
-
-        });
-
-        updateAccountBalanceSection();
-
-    }
-
-);
-
-
-// ==========================================
-// UPDATE ACCOUNT BALANCE CALCULATIONS
-// ==========================================
-
-function getSelectedAccountDate() {
-
-    if (accountBalanceDatePicker && accountBalanceDatePicker.value) {
-
-        return accountBalanceDatePicker.value;
-
-    }
-
-    return todayString();
-
-}
-
-
-function updateAccountBalanceSection() {
-
-    const selectedDate = getSelectedAccountDate();
-
-    // 1. Opening Balance for selected date
-    const opening = Number(openingBalances[selectedDate] || 0);
-
-    // 2. Money In (Repayments received on selected date)
-    let moneyIn = 0;
-
-    // Check repayments collection or loan schedule payment dates
-    repayments.forEach(rep => {
-        const repDate = rep.date || (rep.timestamp ? new Date(rep.timestamp).toISOString().split('T')[0] : "");
-        if (repDate === selectedDate) {
-            moneyIn += Number(rep.amount || 0);
-        }
-    });
-
-    // If repayments collection isn't fully used, also cross-check loan schedule payment history if applicable
-    if (moneyIn === 0) {
-        loans.forEach(loan => {
-            if (Array.isArray(loan.repaymentSchedule)) {
-                loan.repaymentSchedule.forEach(item => {
-                    const paidDate = item.paidDate ? new Date(item.paidDate).toISOString().split('T')[0] : "";
-                    if (paidDate === selectedDate) {
-                        moneyIn += Number(item.paidAmount || 0);
-                    }
-                });
-            }
-        });
-    }
-
-    // 3. Money Out (Disbursements on selected date + 100 fixed fee per disbursement + Expenses on selected date)
-    let disbursementsTotal = 0;
-    let processingFeesTotal = 0; // or 100 fee per disbursement as stated in requirements
-
-    loans.forEach(loan => {
-        const disbDate = loan.approvalDate || loan.createdAt ? new Date(loan.approvalDate || loan.createdAt).toISOString().split('T')[0] : "";
-        if (disbDate === selectedDate && (loan.status === "Approved" || loan.status === "Arrears" || loan.status === "Completed")) {
-            disburalsTotal += Number(loan.amount || 0);
-            processingFeesTotal += 100; // 100 fee requirement
-        }
-    });
-
-    let expensesTotal = 0;
-    const filteredExpenses = [];
-
-    expenses.forEach(exp => {
-        const expDate = exp.date || "";
-        if (expDate === selectedDate) {
-            expensesTotal += Number(exp.amount || 0);
-            filteredExpenses.push(exp);
-        }
-    });
-
-    const moneyOut = disbursementsTotal + processingFeesTotal + expensesTotal;
-
-    // 4. Closing Balance
-    const closing = opening + moneyIn - moneyOut;
-
-    // Update UI elements in full page
-    if (accOpeningBalance) accOpeningBalance.textContent = currency(opening);
-    if (accMoneyIn) accMoneyIn.textContent = currency(moneyIn);
-    if (accMoneyOut) accMoneyOut.textContent = currency(moneyOut);
-    if (accClosingBalance) accClosingBalance.textContent = currency(closing);
-
-    // Also update dashboard compact card closing balance
-    if (cardClosingBalance) {
-        cardClosingBalance.textContent = currency(closing);
-    }
-
-    // Render Expenses Table
-    if (expensesTableBody) {
-        expensesTableBody.innerHTML = "";
-
-        if (filteredExpenses.length === 0) {
-            expensesTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No expenses recorded for this date.</td></tr>`;
-        } else {
-            filteredExpenses.forEach((exp, index) => {
-                expensesTableBody.innerHTML += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${exp.description || ""}</td>
-                        <td>${currency(exp.amount)}</td>
-                        <td>${exp.officer || "System"}</td>
-                        <td>
-                            <button type="button" class="danger-btn" style="padding: 3px 8px; font-size: 11px;" onclick="window.deleteExpense('${exp.id}')">Delete</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-    }
-
-}
-
-
-// Global delete expense helper
-window.deleteExpense = async function(expenseId) {
-    if (confirm("Are you sure you want to delete this expense?")) {
-        try {
-            await deleteDoc(doc(db, "expenses", expenseId));
-            updateAccountBalanceSection();
-        } catch (error) {
-            console.error("Error deleting expense:", error);
-            alert("Failed to delete expense.");
-        }
-    }
-};
 
 
 // ==========================================
@@ -982,6 +794,24 @@ function updateDashboard(){
 // ==========================================
 // TODAY'S COLLECTION
 // ==========================================
+//
+// IMPORTANT BEHAVIOR:
+//
+// Today's list is based on the INSTALLMENT
+// DUE DATE, not the payment status.
+//
+// Therefore:
+//
+// Pending  -> stays today
+// Partial  -> stays today
+// Paid     -> stays today
+//
+// The client disappears automatically only
+// when the calendar date becomes tomorrow.
+//
+// This prevents a payment from removing a
+// client from today's collection list.
+// ==========================================
 
         if(
             Array.isArray(
@@ -1009,6 +839,12 @@ function updateDashboard(){
                             ).padStart(2, "0")
                         }`;
 
+
+                    // --------------------------------------
+                    // ONLY THE CALENDAR DATE DETERMINES
+                    // WHETHER THIS INSTALLMENT BELONGS
+                    // TO "TODAY'S" LIST.
+                    // --------------------------------------
 
                     if(
                         dueDate !== today
@@ -1045,6 +881,21 @@ function updateDashboard(){
                     collectedToday +=
                         paid;
 
+
+// ==========================================
+// CLIENT DUE TODAY RECORD
+// ==========================================
+//
+// The client remains in this list regardless
+// of whether today's installment is:
+//
+// Pending
+// Partial
+// Paid
+//
+// The status shown on the card changes, but
+// the card itself remains until tomorrow.
+// ==========================================
 
                     clientsDueToday.push({
 
@@ -1786,119 +1637,88 @@ function getAverageLoanAmount(){
 function refreshDashboard(){
 
     updateDashboard();
-    updateAccountBalanceSection();
 
 }
 
 
-// ==========================================
-// EVENT LISTENERS FOR ACCOUNT BALANCE HUB
-// ==========================================
+// Dashboard Summary
+function dashboardSummary(){
 
-if (accountBalanceCard) {
-    accountBalanceCard.addEventListener("click", () => {
-        if (dashboardTab && accountBalanceDetailsTab) {
-            dashboardTab.classList.add("hidden");
-            accountBalanceDetailsTab.classList.remove("hidden");
-            if (accountBalanceDatePicker && !accountBalanceDatePicker.value) {
-                accountBalanceDatePicker.value = todayString();
-            }
-            updateAccountBalanceSection();
-        }
-    });
-}
+    console.log(
+        "===================================="
+    );
 
-if (backToDashboardBtn) {
-    backToDashboardBtn.addEventListener("click", () => {
-        if (dashboardTab && accountBalanceDetailsTab) {
-            accountBalanceDetailsTab.classList.add("hidden");
-            dashboardTab.classList.remove("hidden");
-        }
-    });
-}
+    console.log(
+        "GREYMUS LOAN FINANCIAL HUB"
+    );
 
-if (accountBalanceDatePicker) {
-    accountBalanceDatePicker.value = todayString();
-    accountBalanceDatePicker.addEventListener("change", () => {
-        updateAccountBalanceSection();
-    });
-}
+    console.log(
+        "===================================="
+    );
 
-// Opening Balance Modal Toggle
-if (editOpeningBalanceBtn && openingBalanceModal) {
-    editOpeningBalanceBtn.addEventListener("click", () => {
-        const selDate = getSelectedAccountDate();
-        if (openingBalanceInput) {
-            openingBalanceInput.value = openingBalances[selDate] || "";
-        }
-        openingBalanceModal.classList.remove("hidden");
-    });
-}
+    console.log(
+        "Clients:",
+        clients.length
+    );
 
-document.querySelectorAll(".close-opening-balance").forEach(btn => {
-    btn.addEventListener("click", () => {
-        if (openingBalanceModal) openingBalanceModal.classList.add("hidden");
-    });
-});
+    console.log(
+        "Loans:",
+        loans.length
+    );
 
-if (openingBalanceForm) {
-    openingBalanceForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const selDate = getSelectedAccountDate();
-        const amount = Number(openingBalanceInput.value || 0);
+    console.log(
+        "Approved:",
+        approvedStat?.textContent || 0
+    );
 
-        try {
-            await setDoc(doc(db, "opening_balances", selDate), {
-                date: selDate,
-                amount: amount,
-                updatedAt: new Date().toISOString()
-            });
-            openingBalances[selDate] = amount;
-            if (openingBalanceModal) openingBalanceModal.classList.add("hidden");
-            updateAccountBalanceSection();
-        } catch (error) {
-            console.error("Error saving opening balance:", error);
-            alert("Failed to save opening balance.");
-        }
-    });
-}
+    console.log(
+        "Arrears:",
+        arrearsStat?.textContent || 0
+    );
 
-// Expense Modal Toggle
-if (addExpenseBtn && expenseModal) {
-    addExpenseBtn.addEventListener("click", () => {
-        if (expenseDescription) expenseDescription.value = "";
-        if (expenseAmount) expenseAmount.value = "";
-        expenseModal.classList.remove("hidden");
-    });
-}
+    console.log(
+        "Pending:",
+        pendingStat?.textContent || 0
+    );
 
-document.querySelectorAll(".close-expense").forEach(btn => {
-    btn.addEventListener("click", () => {
-        if (expenseModal) expenseModal.classList.add("hidden");
-    });
-});
+    console.log(
+        "Completed:",
+        completedLoansStat?.textContent || 0
+    );
 
-if (expenseForm) {
-    expenseForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const selDate = getSelectedAccountDate();
-        const desc = expenseDescription ? expenseDescription.value.trim() : "";
-        const amt = Number(expenseAmount ? expenseAmount.value : 0);
+    console.log(
+        "Outstanding:",
+        portfolioStat?.textContent
+    );
 
-        try {
-            await addDoc(collection(db, "expenses"), {
-                date: selDate,
-                description: desc,
-                amount: amt,
-                createdAt: new Date().toISOString()
-            });
-            if (expenseModal) expenseModal.classList.add("hidden");
-            updateAccountBalanceSection();
-        } catch (error) {
-            console.error("Error adding expense:", error);
-            alert("Failed to add expense.");
-        }
-    });
+    console.log(
+        "Monthly Income:",
+        revenueStat?.textContent
+    );
+
+    console.log(
+        "Total Income:",
+        totalIncomeStat?.textContent
+    );
+
+    console.log(
+        "Collected:",
+        currency(
+            getTotalCollected()
+        )
+    );
+
+    console.log(
+        "Average Loan:",
+        currency(
+            getAverageLoanAmount()
+        )
+    );
+
+    console.log(
+        "===================================="
+    );
+
 }
 
 
@@ -2255,6 +2075,8 @@ export {
     currency,
 
     refreshDashboard,
+
+    dashboardSummary,
 
     getTotalOutstandingBalance,
 
