@@ -1,23 +1,15 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.4
+// VERSION 4.3
 //
 // ✔ Current Outstanding Portfolio
-// ✔ Active Loans Included In Outstanding
-// ✔ Outstanding Principal
-// ✔ Outstanding Interest
 // ✔ Total Portfolio Issued
 // ✔ Monthly Portfolio
 // ✔ Previous Portfolio
-//
-// ✔ MONTHLY INCOME FROM ACTUAL REPAYMENTS
-// ✔ PREVIOUS MONTHS INCOME FROM ACTUAL REPAYMENTS
-// ✔ TOTAL INCOME FROM ACTUAL REPAYMENTS
-// ✔ Income Based On Repayment Date
-// ✔ Principal Portion Of Repayment Excluded From Income
-// ✔ Interest Portion Of Repayment Counted As Income
-//
+// ✔ Monthly Income
+// ✔ Previous Income
+// ✔ Total Income
 // ✔ Clients
 // ✔ Total Loans Issued
 // ✔ Active Loans
@@ -29,7 +21,7 @@
 // ✔ Rejected Loans
 // ✔ Arrears Count
 // ✔ Arrears Amount (Missed Installments Only)
-// ✔ Clients In Arrears List
+// ✔ Clients in Arrears List
 // ✔ Today's Collection
 // ✔ Today's Due List
 // ✔ Today's Due + Arrears Visible Together
@@ -38,6 +30,8 @@
 // ✔ Today's List Changes Only When Calendar Date Changes
 // ✔ Auto Refresh
 // ✔ Firestore Realtime Sync
+// ✔ ACTIVE LOANS INCLUDED IN OUTSTANDING PORTFOLIO
+// ✔ OUTSTANDING PORTFOLIO RECONCILES WITH PRINCIPAL + INTEREST
 //
 // STATUS: ✅ CORRECTED
 // ==========================================
@@ -244,148 +238,6 @@ function monthKey(date){
 
 
 // ==========================================
-// PAYMENT DATE HELPER
-// ==========================================
-//
-// Supports:
-// ✔ timestamp
-// ✔ date + time
-// ✔ date
-//
-// Date-only values are parsed locally to
-// avoid UTC month/day shifting.
-// ==========================================
-
-function getPaymentDate(payment){
-
-    if(!payment){
-
-        return null;
-
-    }
-
-
-    // --------------------------------------
-    // FIRESTORE / ISO TIMESTAMP
-    // --------------------------------------
-
-    if(
-        payment.timestamp &&
-        typeof payment.timestamp === "object" &&
-        typeof payment.timestamp.toDate === "function"
-    ){
-
-        return payment.timestamp.toDate();
-
-    }
-
-
-    if(
-        payment.timestamp &&
-        typeof payment.timestamp === "string"
-    ){
-
-        const timestampDate =
-            new Date(
-                payment.timestamp
-            );
-
-
-        if(
-            !Number.isNaN(
-                timestampDate.getTime()
-            )
-        ){
-
-            return timestampDate;
-
-        }
-
-    }
-
-
-    // --------------------------------------
-    // DATE + TIME
-    // --------------------------------------
-
-    if(
-        payment.date &&
-        payment.time
-    ){
-
-        const combined =
-            new Date(
-                `${payment.date} ${payment.time}`
-            );
-
-
-        if(
-            !Number.isNaN(
-                combined.getTime()
-            )
-        ){
-
-            return combined;
-
-        }
-
-    }
-
-
-    // --------------------------------------
-    // DATE ONLY
-    // --------------------------------------
-
-    if(payment.date){
-
-        const dateString =
-            String(
-                payment.date
-            );
-
-
-        const match =
-            dateString.match(
-                /^(\d{4})-(\d{2})-(\d{2})$/
-            );
-
-
-        if(match){
-
-            return new Date(
-                Number(match[1]),
-                Number(match[2]) - 1,
-                Number(match[3])
-            );
-
-        }
-
-
-        const parsed =
-            new Date(
-                dateString
-            );
-
-
-        if(
-            !Number.isNaN(
-                parsed.getTime()
-            )
-        ){
-
-            return parsed;
-
-        }
-
-    }
-
-
-    return null;
-
-}
-
-
-// ==========================================
 // FIRESTORE LISTENERS
 // ==========================================
 
@@ -495,28 +347,6 @@ function updateDashboard(){
 
     let previousMonthsPortfolio = {};
 
-
-// ==========================================
-// INCOME
-// ==========================================
-//
-// IMPORTANT:
-//
-// Income is NO LONGER calculated from the
-// loan approval/disbursement date.
-//
-// Income is calculated from actual repayment
-// records inside each loan's repaymentSchedule.
-//
-// Example:
-//
-// Loan issued in January
-// Repayment received in August
-//
-// The interest income goes into AUGUST,
-// not January.
-// ==========================================
-
     let monthlyIncome = 0;
 
     let totalIncome = 0;
@@ -524,11 +354,6 @@ function updateDashboard(){
     let previousIncome = 0;
 
     let previousMonthsIncome = {};
-
-
-// ==========================================
-// OTHER COUNTERS
-// ==========================================
 
     let pending = 0;
 
@@ -617,18 +442,6 @@ function updateDashboard(){
 
 
 // ==========================================
-// LOAN INTEREST
-// ==========================================
-
-        const totalLoanInterest =
-            Math.max(
-                0,
-                totalRepayment -
-                principal
-            );
-
-
-// ==========================================
 // OUTSTANDING PRINCIPAL / INTEREST
 // ==========================================
 
@@ -672,17 +485,52 @@ function updateDashboard(){
 
 
 // ==========================================
+// INTEREST / INCOME
+// ==========================================
+
+        const interest =
+            Math.max(
+                0,
+                totalRepayment -
+                principal
+            );
+
+
+        const earnedInterest =
+            totalRepayment > 0
+
+            ? (
+                amountPaid /
+                totalRepayment
+            ) * interest
+
+            : 0;
+
+
+        const income =
+            processingFee +
+            earnedInterest;
+
+
+// ==========================================
 // OUTSTANDING PORTFOLIO
 // ==========================================
 //
-// Approved + Active + Arrears
+// IMPORTANT:
 //
-// All three are treated consistently.
+// These same statuses are used for:
+//
+// 1. Current Outstanding Portfolio
+// 2. Outstanding Principal
+// 3. Outstanding Interest
+//
 // Therefore:
 //
 // Outstanding Portfolio
 // = Outstanding Principal
 // + Outstanding Interest
+//
+// Active loans MUST be included here.
 // ==========================================
 
         const isOutstandingLoan =
@@ -698,6 +546,7 @@ function updateDashboard(){
 
             outstandingInterest +=
                 remainingInterest;
+
 
             currentPortfolio +=
                 outstanding;
@@ -759,194 +608,54 @@ function updateDashboard(){
 
 
 // ==========================================
-// REPAYMENT-BASED INCOME
-// ==========================================
-//
-// Income is calculated from actual payment
-// history.
-//
-// Each repayment is divided proportionally:
-//
-// Principal portion = repayment ×
-/* principal / totalRepayment */
-
-// Interest portion = repayment ×
-/* interest / totalRepayment */
-
-// ONLY the interest portion is income.
-//
-// The payment's actual date determines the
-// month in which the income is recorded.
+// INCOME
 // ==========================================
 
-        let interestCollectedForLoan = 0;
+        totalIncome +=
+            income;
 
 
         if(
-            Array.isArray(
-                loan.repaymentSchedule
-            )
+
+            approvalDate.getMonth() ===
+                currentMonth &&
+
+            approvalDate.getFullYear() ===
+                currentYear
+
         ){
 
-            // --------------------------------------
-            // Process installments in their existing
-            // schedule order.
-            // --------------------------------------
+            monthlyIncome +=
+                income;
 
-            loan.repaymentSchedule.forEach(
-                item => {
+        }else{
 
-                    if(
-                        !Array.isArray(
-                            item.paymentHistory
-                        )
-                    ){
+            previousIncome +=
+                income;
 
-                        return;
 
+            const monthName =
+                approvalDate.toLocaleString(
+                    "en-US",
+                    {
+                        month: "long"
                     }
+                );
 
 
-                    item.paymentHistory.forEach(
-                        payment => {
-
-                            const paymentAmount =
-                                Number(
-                                    payment.amount || 0
-                                );
+            const year =
+                approvalDate.getFullYear();
 
 
-                            if(
-                                paymentAmount <= 0
-                            ){
-
-                                return;
-
-                            }
+            const key =
+                `${monthName} ${year}`;
 
 
-                            const paymentDate =
-                                getPaymentDate(
-                                    payment
-                                );
-
-
-                            if(!paymentDate){
-
-                                return;
-
-                            }
-
-
-                            // ----------------------------------
-                            // Calculate interest portion
-                            // ----------------------------------
-
-                            let paymentInterest =
-                                0;
-
-
-                            if(
-                                totalRepayment > 0 &&
-                                totalLoanInterest > 0
-                            ){
-
-                                paymentInterest =
-                                    (
-                                        paymentAmount /
-                                        totalRepayment
-                                    ) *
-                                    totalLoanInterest;
-
-                            }
-
-
-                            // ----------------------------------
-                            // Do not count more interest than
-                            // the loan actually contains.
-                            // ----------------------------------
-
-                            const remainingLoanInterest =
-                                Math.max(
-                                    0,
-                                    totalLoanInterest -
-                                    interestCollectedForLoan
-                                );
-
-
-                            paymentInterest =
-                                Math.min(
-                                    paymentInterest,
-                                    remainingLoanInterest
-                                );
-
-
-                            interestCollectedForLoan +=
-                                paymentInterest;
-
-
-                            totalIncome +=
-                                paymentInterest;
-
-
-                            // ----------------------------------
-                            // Current month income
-                            // ----------------------------------
-
-                            if(
-
-                                paymentDate.getMonth() ===
-                                    currentMonth &&
-
-                                paymentDate.getFullYear() ===
-                                    currentYear
-
-                            ){
-
-                                monthlyIncome +=
-                                    paymentInterest;
-
-                            }else{
-
-                                // ----------------------------------
-                                // Previous month income
-                                // ----------------------------------
-
-                                previousIncome +=
-                                    paymentInterest;
-
-
-                                const monthName =
-                                    paymentDate.toLocaleString(
-                                        "en-US",
-                                        {
-                                            month: "long"
-                                        }
-                                    );
-
-
-                                const year =
-                                    paymentDate.getFullYear();
-
-
-                                const key =
-                                    `${monthName} ${year}`;
-
-
-                                previousMonthsIncome[key] =
-                                    (
-                                        previousMonthsIncome[key]
-                                        || 0
-                                    ) +
-                                    paymentInterest;
-
-                            }
-
-                        }
-                    );
-
-                }
-            );
+            previousMonthsIncome[key] =
+                (
+                    previousMonthsIncome[key]
+                    || 0
+                ) + income;
 
         }
 
@@ -1122,11 +831,19 @@ function updateDashboard(){
 // TODAY'S COLLECTION
 // ==========================================
 //
-// Today's list is based ONLY on the
-// installment due date.
+// IMPORTANT BEHAVIOR:
 //
-// Payment status does not remove the
-// installment from today's list.
+// Today's list is based on the INSTALLMENT
+// DUE DATE, not the payment status.
+//
+// Therefore:
+//
+// Pending  -> stays today
+// Partial  -> stays today
+// Paid     -> stays today
+//
+// The client disappears automatically only
+// when the calendar date becomes tomorrow.
 // ==========================================
 
         if(
@@ -1335,22 +1052,7 @@ function updateDashboard(){
 
         Object.entries(
             previousMonthsPortfolio
-        )
-        .sort(
-            (a, b) => {
-
-                return (
-                    new Date(
-                        `1 ${b[0]}`
-                    ) -
-                    new Date(
-                        `1 ${a[0]}`
-                    )
-                );
-
-            }
-        )
-        .forEach(
+        ).forEach(
             ([month, amount]) => {
 
                 previousMonthsList.innerHTML += `
@@ -1374,10 +1076,6 @@ function updateDashboard(){
 
     }
 
-
-// ==========================================
-// CLIENTS / LOANS
-// ==========================================
 
     if(clientsStat){
 
@@ -1426,23 +1124,6 @@ function updateDashboard(){
 
     }
 
-
-// ==========================================
-// INCOME CARDS
-// ==========================================
-//
-// revenueStat = CURRENT MONTH'S ACTUAL
-// REPAYMENT INCOME.
-//
-// totalIncomeStat = ALL INTEREST ACTUALLY
-// COLLECTED THROUGH REPAYMENTS.
-//
-// previousIncomeStat = INTEREST ACTUALLY
-// COLLECTED IN PREVIOUS MONTHS.
-//
-// Processing fees are intentionally NOT
-// included here.
-// ==========================================
 
     if(revenueStat){
 
@@ -1496,12 +1177,8 @@ function updateDashboard(){
             (a, b) => {
 
                 return (
-                    new Date(
-                        `1 ${b[0]}`
-                    ) -
-                    new Date(
-                        `1 ${a[0]}`
-                    )
+                    new Date(b[0]) -
+                    new Date(a[0])
                 );
 
             }
@@ -1853,13 +1530,7 @@ function updateDashboard(){
 // ==========================================
 
 
-// ==========================================
-// TOTAL OUTSTANDING BALANCE
-// ==========================================
-//
-// Approved + Active + Arrears
-// ==========================================
-
+// Total Outstanding Portfolio
 function getTotalOutstandingBalance(){
 
     return loans.reduce(
@@ -1898,10 +1569,7 @@ function getTotalOutstandingBalance(){
 }
 
 
-// ==========================================
-// COMPLETED LOANS
-// ==========================================
-
+// Completed Loans
 function getCompletedLoans(){
 
     return loans.filter(
@@ -1912,16 +1580,7 @@ function getCompletedLoans(){
 }
 
 
-// ==========================================
-// TOTAL COLLECTED
-// ==========================================
-//
-// This is the total money received from
-// repayment installments.
-//
-// It includes principal + interest.
-// ==========================================
-
+// Total Collected
 function getTotalCollected(){
 
     let total = 0;
@@ -1958,149 +1617,7 @@ function getTotalCollected(){
 }
 
 
-// ==========================================
-// TOTAL REPAYMENT INTEREST COLLECTED
-// ==========================================
-//
-// This helper calculates the actual interest
-// collected through repayment history.
-// ==========================================
-
-function getTotalIncome(){
-
-    let totalIncome = 0;
-
-
-    loans.forEach(
-        loan => {
-
-            const principal =
-                Number(
-                    loan.amount || 0
-                );
-
-
-            const totalRepayment =
-                Number(
-                    loan.totalRepayment ||
-                    principal
-                );
-
-
-            const totalInterest =
-                Math.max(
-                    0,
-                    totalRepayment -
-                    principal
-                );
-
-
-            let interestCollected =
-                0;
-
-
-            if(
-                !Array.isArray(
-                    loan.repaymentSchedule
-                )
-            ){
-
-                return;
-
-            }
-
-
-            loan.repaymentSchedule.forEach(
-                item => {
-
-                    if(
-                        !Array.isArray(
-                            item.paymentHistory
-                        )
-                    ){
-
-                        return;
-
-                    }
-
-
-                    item.paymentHistory.forEach(
-                        payment => {
-
-                            const paymentAmount =
-                                Number(
-                                    payment.amount || 0
-                                );
-
-
-                            if(
-                                paymentAmount <= 0
-                            ){
-
-                                return;
-
-                            }
-
-
-                            if(
-                                totalRepayment <= 0 ||
-                                totalInterest <= 0
-                            ){
-
-                                return;
-
-                            }
-
-
-                            const paymentInterest =
-                                (
-                                    paymentAmount /
-                                    totalRepayment
-                                ) *
-                                totalInterest;
-
-
-                            const remainingInterest =
-                                Math.max(
-                                    0,
-                                    totalInterest -
-                                    interestCollected
-                                );
-
-
-                            const actualInterest =
-                                Math.min(
-                                    paymentInterest,
-                                    remainingInterest
-                                );
-
-
-                            interestCollected +=
-                                actualInterest;
-
-
-                            totalIncome +=
-                                actualInterest;
-
-                        }
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-    return totalIncome;
-
-}
-
-
-// ==========================================
-// AVERAGE LOAN AMOUNT
-// ==========================================
-
+// Average Loan Amount
 function getAverageLoanAmount(){
 
     if(
@@ -2134,10 +1651,7 @@ function getAverageLoanAmount(){
 }
 
 
-// ==========================================
-// REFRESH DASHBOARD
-// ==========================================
-
+// Refresh Dashboard
 function refreshDashboard(){
 
     updateDashboard();
@@ -2145,10 +1659,7 @@ function refreshDashboard(){
 }
 
 
-// ==========================================
-// DASHBOARD SUMMARY
-// ==========================================
-
+// Dashboard Summary
 function dashboardSummary(){
 
     console.log(
@@ -2201,11 +1712,6 @@ function dashboardSummary(){
     console.log(
         "Monthly Income:",
         revenueStat?.textContent
-    );
-
-    console.log(
-        "Previous Income:",
-        previousIncomeStat?.textContent
     );
 
     console.log(
@@ -2595,8 +2101,6 @@ export {
     getCompletedLoans,
 
     getTotalCollected,
-
-    getTotalIncome,
 
     getAverageLoanAmount
 
