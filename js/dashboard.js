@@ -508,7 +508,7 @@ function updateDashboard(){
 
         if(
 
-            status === "Approved" ||
+            status === "Active" ||
 
             status === "Arrears"
 
