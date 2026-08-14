@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.2
+// VERSION 4.3
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
@@ -30,8 +30,10 @@
 // ✔ Today's List Changes Only When Calendar Date Changes
 // ✔ Auto Refresh
 // ✔ Firestore Realtime Sync
+// ✔ ACTIVE LOANS INCLUDED IN OUTSTANDING PORTFOLIO
+// ✔ OUTSTANDING PORTFOLIO RECONCILES WITH PRINCIPAL + INTEREST
 //
-// STATUS: ✅ FINISHED
+// STATUS: ✅ CORRECTED
 // ==========================================
 
 
@@ -470,6 +472,10 @@ function updateDashboard(){
         }
 
 
+// ==========================================
+// APPROVAL DATE
+// ==========================================
+
         const approvalDate =
             new Date(
                 loan.approvalDate ||
@@ -477,6 +483,10 @@ function updateDashboard(){
                 Date.now()
             );
 
+
+// ==========================================
+// INTEREST / INCOME
+// ==========================================
 
         const interest =
             Math.max(
@@ -503,18 +513,33 @@ function updateDashboard(){
 
 
 // ==========================================
-// PORTFOLIO
+// OUTSTANDING PORTFOLIO
+// ==========================================
+//
+// IMPORTANT:
+//
+// These same statuses are used for:
+//
+// 1. Current Outstanding Portfolio
+// 2. Outstanding Principal
+// 3. Outstanding Interest
+//
+// Therefore:
+//
+// Outstanding Portfolio
+// = Outstanding Principal
+// + Outstanding Interest
+//
+// Active loans MUST be included here.
 // ==========================================
 
-        if(
-
+        const isOutstandingLoan =
             status === "Approved" ||
-
             status === "Active" ||
+            status === "Arrears";
 
-            status === "Arrears"
 
-        ){
+        if(isOutstandingLoan){
 
             outstandingPrincipal +=
                 remainingPrincipal;
@@ -522,8 +547,16 @@ function updateDashboard(){
             outstandingInterest +=
                 remainingInterest;
 
+
+            currentPortfolio +=
+                outstanding;
+
         }
 
+
+// ==========================================
+// TOTAL PORTFOLIO
+// ==========================================
 
         totalPortfolio +=
             principal;
@@ -731,8 +764,12 @@ function updateDashboard(){
 
                 activeLoans++;
 
-                currentPortfolio +=
-                    outstanding;
+                break;
+
+
+            case "Active":
+
+                activeLoans++;
 
                 break;
 
@@ -742,9 +779,6 @@ function updateDashboard(){
                 arrears++;
 
                 activeLoans++;
-
-                currentPortfolio +=
-                    outstanding;
 
 
                 if(
@@ -810,9 +844,6 @@ function updateDashboard(){
 //
 // The client disappears automatically only
 // when the calendar date becomes tomorrow.
-//
-// This prevents a payment from removing a
-// client from today's collection list.
 // ==========================================
 
         if(
@@ -841,12 +872,6 @@ function updateDashboard(){
                             ).padStart(2, "0")
                         }`;
 
-
-                    // --------------------------------------
-                    // ONLY THE CALENDAR DATE DETERMINES
-                    // WHETHER THIS INSTALLMENT BELONGS
-                    // TO "TODAY'S" LIST.
-                    // --------------------------------------
 
                     if(
                         dueDate !== today
@@ -886,17 +911,6 @@ function updateDashboard(){
 
 // ==========================================
 // CLIENT DUE TODAY RECORD
-// ==========================================
-//
-// The client remains in this list regardless
-// of whether today's installment is:
-//
-// Pending
-// Partial
-// Paid
-//
-// The status shown on the card changes, but
-// the card itself remains until tomorrow.
 // ==========================================
 
                     clientsDueToday.push({
@@ -1525,6 +1539,8 @@ function getTotalOutstandingBalance(){
             if(
 
                 loan.status === "Approved" ||
+
+                loan.status === "Active" ||
 
                 loan.status === "Arrears"
 
