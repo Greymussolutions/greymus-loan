@@ -18,6 +18,7 @@
 // ==========================================
 
 import { db } from "./firebase.js";
+import { openMessageComposer } from "./messaging.js";
 
 import {
     collection,
@@ -1786,6 +1787,29 @@ function renderLoanDetailsPage(
 
             <div class="loan-details-action-list">
 
+                <button
+                    type="button"
+                    class="loan-page-action"
+                    data-loan-action="message"
+                    data-id="${escapeHtml(
+                        loan.id
+                    )}"
+                >
+
+                    <span class="loan-action-icon">
+                        💬
+                    </span>
+
+                    <span>
+                        Message Client
+                    </span>
+
+                    <span class="loan-action-arrow">
+                        ›
+                    </span>
+
+                </button>
+
                 ${
                     status !== "Completed"
                         ? `
@@ -2919,6 +2943,50 @@ function attachLoanDetailsPageActions() {
      */
     page
         .querySelectorAll(
+            '[data-loan-action="message"]'
+        )
+        .forEach(
+            btn => {
+                btn.addEventListener(
+                    "click",
+                    () => {
+                        const loan =
+                            loans.find(
+                                item =>
+                                    item.id ===
+                                    btn.dataset.id
+                            );
+
+                        if (!loan) {
+                            alert(
+                                "The selected loan could not be found."
+                            );
+                            return;
+                        }
+
+                        const client =
+                            clients.find(
+                                item =>
+                                    item.id ===
+                                    loan.clientId
+                            );
+
+                        openMessageComposer({
+                            type: "default",
+                            loan,
+                            client,
+                            outstanding: Number(
+                                loan.balance || 0
+                            )
+                        });
+                    }
+                );
+            }
+        );
+
+
+    page
+        .querySelectorAll(
             '[data-loan-action="repay"]'
         )
         .forEach(
@@ -3431,6 +3499,28 @@ async function approveLoan(
         alert(
             "Loan approved successfully. Status is now Active."
         );
+
+        // Offer the officer a manual GREYMUS approval message.
+        const approvedLoan = {
+            ...loan,
+            approvalDate: formatDate(approvalDate),
+            repaymentSchedule: schedule,
+            nextRepaymentDate: schedule.length
+                ? schedule[0].dueDate
+                : "-",
+            remainingInstallments: schedule.length,
+            status: "Active"
+        };
+
+        const approvedClient =
+            clients.find(item => item.id === loan.clientId);
+
+        openMessageComposer({
+            type: "approved",
+            loan: approvedLoan,
+            client: approvedClient,
+            outstanding: Number(approvedLoan.balance ?? loan.balance ?? loan.totalRepayment ?? 0)
+        });
 
     } catch (error) {
         console.error(
@@ -4803,6 +4893,34 @@ repaymentForm?.addEventListener(
                 "✅ Repayment recorded successfully."
             );
 
+            // Offer a manual GREYMUS payment confirmation.
+            const updatedLoan = {
+                ...loan,
+                balance,
+                amountPaid,
+                totalIncome,
+                repaymentSchedule: schedule,
+                nextRepaymentDate: next
+                    ? next.dueDate
+                    : "-",
+                remainingInstallments: schedule.filter(
+                    item => !item.paid
+                ).length,
+                status,
+                completed: balance <= 0
+            };
+
+            const paymentClient =
+                clients.find(item => item.id === loan.clientId);
+
+            openMessageComposer({
+                type: "payment",
+                loan: updatedLoan,
+                client: paymentClient,
+                payment,
+                outstanding: balance
+            });
+
 
         } catch (error) {
 
@@ -5688,90 +5806,5 @@ setInterval(
  */
 setInterval(
     () => {
-        if (
-            loanDetailsOpen &&
-            selectedLoanId &&
-            !previousLoansOpen
-        ) {
-            const loan =
-                loans.find(
-                    item =>
-                        item.id ===
-                        selectedLoanId
-                );
-
-            if (loan) {
-                renderLoanDetailsPage(
-                    loan
-                );
-            }
-        }
-    },
-    60000
-);
-
-
-// ==========================================
-// INITIALIZATION
-// ==========================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        calculateLoan();
-
-        loadClients();
-
-        loadLoans();
-
-        checkOverdueLoans();
-
-        setupFabAddRepayment();
-
-    }
-);
-
-
-// ==========================================
-// EXPORTS
-// ==========================================
-
-export {
-    loadLoans,
-    renderLoans,
-    calculateLoan,
-    currency,
-    generateRepaymentSchedule,
-    refreshLoanTable,
-    getLoanById,
-    getNextRepayment
-};
-
-
-function refreshLoanTable() {
-    filterLoans();
-}
-
-
-function getLoanById(
-    id
-) {
-    return loans.find(
-        l =>
-            l.id === id
-    );
-}
-
-
-function getNextRepayment(
-    schedule = []
-) {
-    return (
-        schedule.find(
-            i =>
-                !i.paid
-        ) ||
-        null
-    );
-}
+     
+Preview truncated for large file
