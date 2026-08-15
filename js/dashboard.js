@@ -38,6 +38,7 @@
 
 
 import { db } from "./firebase.js";
+import { openMessageComposer } from "./messaging.js";
 
 import {
     collection,
@@ -795,11 +796,31 @@ function updateDashboard(){
                             loan.clientName ||
                             "Unknown Client",
 
+                        clientId:
+                            loan.clientId || "",
+
+                        loanId:
+                            loan.id,
+
+                        loan,
+
                         weeks:
                             missedWeeks,
 
                         amount:
-                            overdueAmount
+                            overdueAmount,
+
+                        outstanding:
+                            Number(loan.balance || 0),
+
+                        dueDate:
+                            loan.repaymentSchedule?.find(
+                                item =>
+                                    item.dueDate &&
+                                    item.dueDate < today
+                            )?.dueDate ||
+                            loan.nextRepaymentDate ||
+                            ""
 
                     });
 
@@ -919,11 +940,25 @@ function updateDashboard(){
                             loan.clientName ||
                             "Unknown Client",
 
+                        clientId:
+                            loan.clientId || "",
+
+                        loanId:
+                            loan.id,
+
+                        loan,
+
+                        dueDate:
+                            item.dueDate,
+
                         due,
 
                         paid,
 
                         balance,
+
+                        outstanding:
+                            Number(loan.balance || 0),
 
                         arrears:
                             status === "Arrears"
@@ -1307,27 +1342,49 @@ function updateDashboard(){
 
                     arrearsClientList.innerHTML += `
 
-                        <div class="today-card">
+                        <div class="today-card message-enabled-card">
 
-                            <h4>
-                                ${client.client}
-                            </h4>
+                            <div class="message-card-main">
 
-                            <p>
-                                <strong>
-                                    Missed Installments:
-                                </strong>
-                                ${client.weeks}
-                            </p>
+                                <h4>
+                                    ${client.client}
+                                </h4>
 
-                            <p>
-                                <strong>
-                                    Arrears Amount:
-                                </strong>
-                                ${currency(
-                                    client.amount
-                                )}
-                            </p>
+                                <p>
+                                    <strong>
+                                        Missed Installments:
+                                    </strong>
+                                    ${client.weeks}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Arrears Amount:
+                                    </strong>
+                                    ${currency(
+                                        client.amount
+                                    )}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Outstanding Balance:
+                                    </strong>
+                                    ${currency(
+                                        client.outstanding
+                                    )}
+                                </p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="message-client-btn"
+                                data-message-type="arrears"
+                                data-message-loan-id="${client.loanId}"
+                            >
+                                💬 Message
+                            </button>
 
                         </div>
 
@@ -1444,72 +1501,75 @@ function updateDashboard(){
 
                     todayDueList.innerHTML += `
 
-                        <div class="today-card">
+                        <div class="today-card message-enabled-card">
 
-                            <h4>
-                                ${client.client}
-                            </h4>
+                            <div class="message-card-main">
 
-                            <p>
-                                <strong>
-                                    Due:
-                                </strong>
-                                ${currency(
-                                    client.due
-                                )}
-                            </p>
+                                <h4>
+                                    ${client.client}
+                                </h4>
 
-                            <p>
-                                <strong>
-                                    Paid:
-                                </strong>
-                                ${currency(
-                                    client.paid
-                                )}
-                            </p>
+                                <p>
+                                    <strong>
+                                        Due:
+                                    </strong>
+                                    ${currency(
+                                        client.due
+                                    )}
+                                </p>
 
-                            <p>
-                                <strong>
-                                    Balance:
-                                </strong>
-                                ${currency(
-                                    client.balance
-                                )}
-                            </p>
+                                <p>
+                                    <strong>
+                                        Paid:
+                                    </strong>
+                                    ${currency(
+                                        client.paid
+                                    )}
+                                </p>
 
-                            ${
-                                Number(
-                                    client.arrears || 0
-                                ) > 0
+                                <p>
+                                    <strong>
+                                        Balance:
+                                    </strong>
+                                    ${currency(
+                                        client.balance
+                                    )}
+                                </p>
 
-                                ? `
+                                ${
+                                    Number(
+                                        client.arrears || 0
+                                    ) > 0
+                                    ? `
+                                        <p>
+                                            <strong>
+                                                Arrears:
+                                            </strong>
+                                            ${currency(
+                                                client.arrears
+                                            )}
+                                        </p>
+                                    `
+                                    : ""
+                                }
 
-                                    <p>
+                                <p>
+                                    <strong>
+                                        Status:
+                                    </strong>
+                                    ${client.status}
+                                </p>
 
-                                        <strong>
-                                            Arrears:
-                                        </strong>
+                            </div>
 
-                                        ${currency(
-                                            client.arrears
-                                        )}
-
-                                    </p>
-
-                                `
-
-                                : ""
-
-                            }
-
-                            <p>
-                                <strong>
-                                    Status:
-                                </strong>
-                                ${client.status}
-                            </p>
-
-                            <br><br>
+                            <button
+                                type="button"
+                                class="message-client-btn"
+                                data-message-type="due"
+                                data-message-loan-id="${client.loanId}"
+                            >
+                                💬 Message
+                            </button>
 
                         </div>
 
@@ -2110,3 +2170,90 @@ export {
 // ==========================================
 // END OF FILE
 // ==========================================
+
+// ==========================================
+// DASHBOARD MESSAGE BUTTONS
+// ==========================================
+
+document.addEventListener("click", event => {
+
+    const button =
+        event.target.closest(".message-client-btn");
+
+    if (!button) return;
+
+    const loanId =
+        button.dataset.messageLoanId;
+
+    const type =
+        button.dataset.messageType;
+
+    const loan = loans.find(
+        item => item.id === loanId
+    );
+
+    if (!loan) {
+        alert("The selected loan could not be found.");
+        return;
+    }
+
+    const client = clients.find(
+        item => item.id === loan.clientId
+    );
+
+    if (!client) {
+        alert("The client for this loan could not be found.");
+        return;
+    }
+
+    if (type === "arrears") {
+        const overdueItems =
+            (loan.repaymentSchedule || []).filter(item => {
+                const dueDate = new Date(item.dueDate);
+                const due = Number(item.amount || 0);
+                const paid = Number(item.paidAmount || 0);
+                return dueDate < new Date(today()) && paid < due;
+            });
+
+        const arrearsAmount = overdueItems.reduce(
+            (sum, item) =>
+                sum + Math.max(
+                    Number(item.amount || 0) -
+                    Number(item.paidAmount || 0),
+                    0
+                ),
+            0
+        );
+
+        openMessageComposer({
+            type: "arrears",
+            loan,
+            client,
+            arrears: arrearsAmount,
+            overdueInstallments: overdueItems.length,
+            outstanding: Number(loan.balance || 0),
+            dueDate: overdueItems[0]?.dueDate || loan.nextRepaymentDate
+        });
+        return;
+    }
+
+    const dueItem =
+        (loan.repaymentSchedule || []).find(
+            item => item.dueDate === today()
+        );
+
+    if (!dueItem) {
+        alert("Today's repayment could not be found for this loan.");
+        return;
+    }
+
+    openMessageComposer({
+        type: "due",
+        loan,
+        client,
+        due: Number(dueItem.amount || 0),
+        dueDate: dueItem.dueDate,
+        outstanding: Number(loan.balance || 0)
+    });
+});
+
