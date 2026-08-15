@@ -3944,3 +3944,159 @@ span.status.approved { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
 span.status.pending { background: rgba(234, 179, 8, 0.15); color: #facc15; }
 span.status.arrears { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 span.status.completed { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+/* ==========================================
+   GREYMUS MANUAL MESSAGING
+   ========================================== */
+
+.message-enabled-card {
+    position: relative;
+}
+
+.message-card-main {
+    min-width: 0;
+}
+
+.message-client-btn {
+    width: 100%;
+    margin-top: 12px;
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #0f766e;
+    color: #fff;
+    box-shadow: 0 5px 14px rgba(15, 118, 110, 0.18);
+}
+
+.message-client-btn:active {
+    transform: translateY(1px);
+}
+
+.greymus-message-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+}
+
+.greymus-message-modal.hidden {
+    display: none;
+}
+
+.greymus-message-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.greymus-message-dialog {
+    position: relative;
+    width: min(92vw, 560px);
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 5vh auto 0;
+    padding: 20px;
+    border-radius: 20px;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #111827);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.28);
+}
+
+.greymus-message-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.greymus-message-kicker {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    opacity: 0.65;
+}
+
+.greymus-message-header h2 {
+    margin: 3px 0 0;
+}
+
+.greymus-message-close {
+    border: 0;
+    background: transparent;
+    font-size: 30px;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+}
+
+.greymus-message-recipient {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 16px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(127, 127, 127, 0.10);
+}
+
+.greymus-message-recipient span {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.greymus-message-label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.greymus-message-text {
+    width: 100%;
+    min-height: 190px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 13px;
+    border: 1px solid rgba(127, 127, 127, 0.28);
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1.55;
+}
+
+.greymus-message-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+    margin-top: 14px;
+}
+
+.greymus-message-btn {
+    border: 0;
+    border-radius: 11px;
+    padding: 12px 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.greymus-message-btn.whatsapp,
+.greymus-message-btn.sms,
+.greymus-message-btn.copy {
+    background: rgba(127, 127, 127, 0.12);
+    color: inherit;
+}
+
+@media (max-width: 520px) {
+    .greymus-message-dialog {
+        width: calc(100vw - 20px);
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 17px;
+    }
+
+    .greymus-message-actions {
+        grid-template-columns: 1fr;
+    }
+}
