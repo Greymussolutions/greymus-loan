@@ -2174,86 +2174,288 @@ export {
 // ==========================================
 // DASHBOARD MESSAGE BUTTONS
 // ==========================================
+//
+// Handles:
+//
+// ✔ Message button in Today's Due list
+// ✔ Message button in Arrears list
+// ✔ Finds the selected loan
+// ✔ Finds the selected client
+// ✔ Finds today's repayment
+// ✔ Calculates arrears
+// ✔ Opens messaging.js composer
+//
+// IMPORTANT:
+// Uses todayString()
+// NOT today()
+// ==========================================
 
-document.addEventListener("click", event => {
+document.addEventListener(
+    "click",
+    event => {
 
-    const button =
-        event.target.closest(".message-client-btn");
+        const button =
+            event.target.closest(
+                ".message-client-btn"
+            );
 
-    if (!button) return;
 
-    const loanId =
-        button.dataset.messageLoanId;
+        if (!button) {
+            return;
+        }
 
-    const type =
-        button.dataset.messageType;
 
-    const loan = loans.find(
-        item => item.id === loanId
-    );
+        // ==========================================
+        // GET BUTTON DATA
+        // ==========================================
 
-    if (!loan) {
-        alert("The selected loan could not be found.");
-        return;
-    }
+        const loanId =
+            button.dataset.messageLoanId;
 
-    const client = clients.find(
-        item => item.id === loan.clientId
-    );
+        const type =
+            button.dataset.messageType;
 
-    if (!client) {
-        alert("The client for this loan could not be found.");
-        return;
-    }
 
-    if (type === "arrears") {
-        const overdueItems =
-            (loan.repaymentSchedule || []).filter(item => {
-                const dueDate = new Date(item.dueDate);
-                const due = Number(item.amount || 0);
-                const paid = Number(item.paidAmount || 0);
-                return dueDate < new Date(today()) && paid < due;
+        // ==========================================
+        // FIND LOAN
+        // ==========================================
+
+        const loan =
+            loans.find(
+                item =>
+                    item.id === loanId
+            );
+
+
+        if (!loan) {
+
+            alert(
+                "The selected loan could not be found."
+            );
+
+            return;
+
+        }
+
+
+        // ==========================================
+        // FIND CLIENT
+        // ==========================================
+
+        const client =
+            clients.find(
+                item =>
+                    item.id === loan.clientId
+            );
+
+
+        if (!client) {
+
+            alert(
+                "The client for this loan could not be found."
+            );
+
+            return;
+
+        }
+
+
+        // ==========================================
+        // ARREARS MESSAGE
+        // ==========================================
+
+        if (
+            type === "arrears"
+        ) {
+
+            const today =
+                todayString();
+
+
+            const overdueItems =
+                (
+                    loan.repaymentSchedule ||
+                    []
+                ).filter(
+                    item => {
+
+                        if (!item.dueDate) {
+                            return false;
+                        }
+
+
+                        const dueDateObj =
+                            new Date(
+                                item.dueDate
+                            );
+
+
+                        const dueDate =
+                            `${dueDateObj.getFullYear()}-${
+                                String(
+                                    dueDateObj.getMonth() + 1
+                                ).padStart(2, "0")
+                            }-${
+                                String(
+                                    dueDateObj.getDate()
+                                ).padStart(2, "0")
+                            }`;
+
+
+                        const due =
+                            Number(
+                                item.amount || 0
+                            );
+
+
+                        const paid =
+                            Number(
+                                item.paidAmount || 0
+                            );
+
+
+                        return (
+                            dueDate < today &&
+                            paid < due
+                        );
+
+                    }
+                );
+
+
+            // ======================================
+            // TOTAL ARREARS
+            // ======================================
+
+            const arrearsAmount =
+                overdueItems.reduce(
+                    (
+                        sum,
+                        item
+                    ) => {
+
+                        const due =
+                            Number(
+                                item.amount || 0
+                            );
+
+
+                        const paid =
+                            Number(
+                                item.paidAmount || 0
+                            );
+
+
+                        return (
+                            sum +
+                            Math.max(
+                                due - paid,
+                                0
+                            )
+                        );
+
+                    },
+                    0
+                );
+
+
+            // ======================================
+            // OPEN MESSAGE COMPOSER
+            // ======================================
+
+            openMessageComposer({
+
+                type:
+                    "arrears",
+
+                loan,
+
+                client,
+
+                arrears:
+                    arrearsAmount,
+
+                overdueInstallments:
+                    overdueItems.length,
+
+                outstanding:
+                    Number(
+                        loan.balance || 0
+                    ),
+
+                dueDate:
+                    overdueItems[0]?.dueDate ||
+                    loan.nextRepaymentDate
+
             });
 
-        const arrearsAmount = overdueItems.reduce(
-            (sum, item) =>
-                sum + Math.max(
-                    Number(item.amount || 0) -
-                    Number(item.paidAmount || 0),
-                    0
-                ),
-            0
-        );
+
+            return;
+
+        }
+
+
+        // ==========================================
+        // TODAY'S DUE MESSAGE
+        // ==========================================
+
+        const today =
+            todayString();
+
+
+        const dueItem =
+            (
+                loan.repaymentSchedule ||
+                []
+            ).find(
+                item =>
+                    item.dueDate === today
+            );
+
+
+        if (!dueItem) {
+
+            alert(
+                "Today's repayment could not be found for this loan."
+            );
+
+            return;
+
+        }
+
+
+        // ==========================================
+        // OPEN MESSAGE COMPOSER
+        // ==========================================
 
         openMessageComposer({
-            type: "arrears",
+
+            type:
+                "due",
+
             loan,
+
             client,
-            arrears: arrearsAmount,
-            overdueInstallments: overdueItems.length,
-            outstanding: Number(loan.balance || 0),
-            dueDate: overdueItems[0]?.dueDate || loan.nextRepaymentDate
+
+            due:
+                Number(
+                    dueItem.amount || 0
+                ),
+
+            dueDate:
+                dueItem.dueDate,
+
+            outstanding:
+                Number(
+                    loan.balance || 0
+                )
+
         });
-        return;
+
     }
+);
 
-    const dueItem =
-        (loan.repaymentSchedule || []).find(
-            item => item.dueDate === today()
-        );
 
-    if (!dueItem) {
-        alert("Today's repayment could not be found for this loan.");
-        return;
-    }
-
-    openMessageComposer({
-        type: "due",
-        loan,
-        client,
-        due: Number(dueItem.amount || 0),
-        dueDate: dueItem.dueDate,
-        outstanding: Number(loan.balance || 0)
-    });
-});
-
+// ==========================================
+// END OF DASHBOARD MESSAGE BUTTONS
+// ==========================================
