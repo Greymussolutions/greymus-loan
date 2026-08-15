@@ -1,34 +1,24 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
 // messaging.js
-// VERSION 1.1
+// VERSION 2.0
 //
-// CLIENT SMS COMPOSER
+// GREYMUS CLIENT MESSAGING
 //
-// PURPOSE:
-// Opens a message composer when the Dashboard
-// "💬 Message" button is clicked.
-//
-// NO SMS API
-// NO EXTERNAL SMS SERVICE
-// NO FIREBASE CHANGES
-//
-// The final SEND SMS action opens the phone's
-// native SMS composer with the client's phone
-// number and message already filled.
-//
-// DASHBOARD INTEGRATION:
-//
-// import { openMessageComposer } from "./messaging.js";
-//
-// openMessageComposer({
-//     type: "due",
-//     loan,
-//     client,
-//     due,
-//     dueDate,
-//     outstanding
-// });
+// ✔ Due today message
+// ✔ Partial repayment message
+// ✔ Due today + arrears message
+// ✔ Arrears message
+// ✔ Remaining installment amount
+// ✔ Current outstanding loan balance
+// ✔ Dynamic client name
+// ✔ Dynamic amounts
+// ✔ Native phone SMS
+// ✔ No SMS API
+// ✔ No external messaging service
+// ✔ Every message ends with:
+//      With regards,
+//      GREYMUS.
 //
 // =========================================================
 
@@ -37,7 +27,7 @@
 // FORMAT KES
 // =========================================================
 
-function formatKES(amount) {
+function formatKES(value) {
 
     return new Intl.NumberFormat(
         "en-KE",
@@ -48,8 +38,80 @@ function formatKES(amount) {
             maximumFractionDigits: 0
         }
     ).format(
-        Number(amount || 0)
+        Number(value || 0)
     );
+
+}
+
+
+// =========================================================
+// GET CLIENT NAME
+// =========================================================
+
+function getClientName(client = {}) {
+
+    return (
+        client.name ||
+        client.clientName ||
+        client.fullName ||
+        "Client"
+    );
+
+}
+
+
+// =========================================================
+// GET CLIENT PHONE
+// =========================================================
+
+function getClientPhone(client = {}) {
+
+    let phone =
+        client.phone ||
+        client.phoneNumber ||
+        client.mobile ||
+        client.mobileNumber ||
+        "";
+
+    phone =
+        String(phone)
+            .trim()
+            .replace(
+                /[\s\-().]/g,
+                ""
+            );
+
+
+    if (!phone) {
+        return "";
+    }
+
+
+    // Kenya: 07XXXXXXXX
+    if (
+        phone.startsWith("07") ||
+        phone.startsWith("01")
+    ) {
+
+        return (
+            "+254" +
+            phone.substring(1)
+        );
+
+    }
+
+
+    // Kenya: 2547XXXXXXXX
+    if (
+        phone.startsWith("254")
+    ) {
+
+        return "+" + phone;
+
+    }
+
+
+    return phone;
 
 }
 
@@ -71,87 +133,56 @@ function escapeHtml(value) {
 
 
 // =========================================================
-// GET CLIENT NAME
+// TODAY
 // =========================================================
 
-function getClientName(client) {
+function getTodayString() {
+
+    const today =
+        new Date();
 
     return (
-        client?.name ||
-        client?.clientName ||
-        client?.fullName ||
-        "Client"
+        today.getFullYear() +
+        "-" +
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0") +
+        "-" +
+        String(
+            today.getDate()
+        ).padStart(2, "0")
     );
 
 }
 
 
 // =========================================================
-// GET CLIENT PHONE
+// MESSAGE SIGNATURE
 // =========================================================
 
-function getClientPhone(client) {
+function messageSignature() {
 
-    let phone =
-        client?.phone ||
-        client?.phoneNumber ||
-        client?.mobile ||
-        client?.mobileNumber ||
-        "";
+    return `
 
-    phone = String(phone).trim();
-
-
-    // -----------------------------------------------------
-    // ALREADY INTERNATIONAL KENYAN FORMAT
-    // -----------------------------------------------------
-
-    if (phone.startsWith("+254")) {
-        return phone;
-    }
-
-
-    // -----------------------------------------------------
-    // 2547XXXXXXXX
-    // -----------------------------------------------------
-
-    if (phone.startsWith("254")) {
-        return "+" + phone;
-    }
-
-
-    // -----------------------------------------------------
-    // 07XXXXXXXX
-    // 01XXXXXXXX
-    // -----------------------------------------------------
-
-    if (
-        phone.startsWith("07") ||
-        phone.startsWith("01")
-    ) {
-
-        return (
-            "+254" +
-            phone.substring(1)
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // REMOVE COMMON FORMATTING
-    // -----------------------------------------------------
-
-    return phone.replace(
-        /[\s\-().]/g,
-        ""
-    );
+With regards,
+GREYMUS.`;
 
 }
 
 
 // =========================================================
 // BUILD DUE MESSAGE
+// =========================================================
+//
+// CASE 1:
+// Due today and NOT in arrears.
+//
+// CASE 2:
+// Due today AND client is in arrears.
+//
+// CASE 3:
+// Partial repayment already made.
+//
 // =========================================================
 
 function buildDueMessage(data) {
@@ -161,16 +192,136 @@ function buildDueMessage(data) {
             data.client
         );
 
-    const amount =
-        formatKES(
-            data.due
+
+    const due =
+        Number(
+            data.due || 0
         );
 
 
+    const paid =
+        Number(
+            data.paid || 0
+        );
+
+
+    const remaining =
+        Math.max(
+            0,
+            due - paid
+        );
+
+
+    const arrears =
+        Number(
+            data.arrears || 0
+        );
+
+
+    const outstanding =
+        Number(
+            data.outstanding || 0
+        );
+
+
+    // =====================================================
+    // PARTIAL PAYMENT + ARREARS
+    // =====================================================
+
+    if (
+        paid > 0 &&
+        remaining > 0 &&
+        arrears > 0
+    ) {
+
+        const totalToPay =
+            remaining +
+            arrears;
+
+
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} was partially paid. ` +
+            `The remaining amount for today's repayment ` +
+            `is ${formatKES(remaining)}. ` +
+            `You also have ${formatKES(arrears)} in arrears. ` +
+            `Your total amount to be paid is ` +
+            `${formatKES(totalToPay)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please make your payment as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // PARTIAL PAYMENT WITHOUT ARREARS
+    // =====================================================
+
+    if (
+        paid > 0 &&
+        remaining > 0
+    ) {
+
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} was partially paid. ` +
+            `The remaining amount for today's repayment ` +
+            `is ${formatKES(remaining)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please clear the remaining amount as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // DUE TODAY + ARREARS
+    // =====================================================
+
+    if (
+        arrears > 0
+    ) {
+
+        const totalToPay =
+            due +
+            arrears;
+
+
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} is due today. ` +
+            `You also have ${formatKES(arrears)} in arrears. ` +
+            `Your total amount to be paid is ` +
+            `${formatKES(totalToPay)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please make your payment as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // NORMAL DUE TODAY
+    // =====================================================
+
     return (
-        `Hello ${name}, your GREYMUS repayment of ${amount} ` +
-        `is due today. Please make your repayment on time. ` +
-        `Thank you.`
+        `Hello ${name}, your GREYMUS repayment ` +
+        `of ${formatKES(due)} is due today. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}. ` +
+        `Please make your payment on time. ` +
+        `Thank you.` +
+        messageSignature()
     );
 
 }
@@ -187,46 +338,37 @@ function buildArrearsMessage(data) {
             data.client
         );
 
-    const amount =
-        formatKES(
-            data.arrears
-        );
 
-    const missed =
+    const arrears =
         Number(
-            data.overdueInstallments || 0
+            data.arrears || 0
         );
 
 
-    if (missed > 1) {
-
-        return (
-            `Hello ${name}, your GREYMUS loan has ${missed} ` +
-            `missed repayments totaling ${amount}. Please make ` +
-            `your outstanding payment as soon as possible. Thank you.`
+    const outstanding =
+        Number(
+            data.outstanding || 0
         );
-
-    }
 
 
     return (
         `Hello ${name}, your GREYMUS loan has an overdue ` +
-        `repayment of ${amount}. Please make your outstanding ` +
-        `payment as soon as possible. Thank you.`
+        `repayment of ${formatKES(arrears)}. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}. ` +
+        `Please make your outstanding payment as soon as possible. ` +
+        `Thank you.` +
+        messageSignature()
     );
 
 }
 
 
 // =========================================================
-// INJECT MESSAGING STYLES
-//
-// The styles are included here so the messaging system
-// does not depend on additional CSS changes.
-//
+// INJECT STYLES
 // =========================================================
 
-function injectMessagingStyles() {
+function injectStyles() {
 
     if (
         document.getElementById(
@@ -251,48 +393,28 @@ function injectMessagingStyles() {
 
     style.textContent = `
 
-        /* =================================================
-           MESSAGE OVERLAY
-           ================================================= */
-
         .greymus-message-overlay {
 
             position: fixed;
-
             inset: 0;
-
             z-index: 999999;
 
             display: flex;
-
             align-items: center;
-
             justify-content: center;
 
             padding: 18px;
 
             background:
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.72
-                );
+                rgba(0,0,0,.72);
 
         }
 
 
-        /* =================================================
-           MESSAGE MODAL
-           ================================================= */
-
         .greymus-message-modal {
 
             width:
-                min(
-                    100%,
-                    520px
-                );
+                min(100%, 520px);
 
             max-height: 92vh;
 
@@ -306,52 +428,38 @@ function injectMessagingStyles() {
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.12
-                );
+                rgba(255,255,255,.12);
 
             border-radius:
                 20px;
 
             box-shadow:
                 0 25px 70px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.45
-                );
+                rgba(0,0,0,.45);
 
         }
 
 
-        /* =================================================
-           HEADER
-           ================================================= */
-
         .greymus-message-header {
 
-            display: flex;
+            display:
+                flex;
 
-            align-items: flex-start;
+            justify-content:
+                space-between;
 
-            justify-content: space-between;
+            align-items:
+                flex-start;
 
-            gap: 15px;
+            gap:
+                15px;
 
-            padding: 20px;
+            padding:
+                20px;
 
             border-bottom:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.10
-                );
+                rgba(255,255,255,.10);
 
         }
 
@@ -360,9 +468,8 @@ function injectMessagingStyles() {
 
             margin: 0;
 
-            font-size: 22px;
-
-            color: #ffffff;
+            font-size:
+                22px;
 
         }
 
@@ -381,10 +488,6 @@ function injectMessagingStyles() {
         }
 
 
-        /* =================================================
-           CLOSE BUTTON
-           ================================================= */
-
         .greymus-message-close {
 
             width:
@@ -400,31 +503,19 @@ function injectMessagingStyles() {
                 50%;
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.08
-                );
+                rgba(255,255,255,.08);
 
             color:
-                #ffffff;
+                #fff;
 
             font-size:
                 28px;
-
-            line-height:
-                1;
 
             cursor:
                 pointer;
 
         }
 
-
-        /* =================================================
-           BODY
-           ================================================= */
 
         .greymus-message-body {
 
@@ -433,10 +524,6 @@ function injectMessagingStyles() {
 
         }
 
-
-        /* =================================================
-           FIELD
-           ================================================= */
 
         .greymus-message-field {
 
@@ -466,10 +553,6 @@ function injectMessagingStyles() {
         }
 
 
-        /* =================================================
-           READ ONLY INFORMATION
-           ================================================= */
-
         .greymus-message-readonly {
 
             width:
@@ -482,34 +565,20 @@ function injectMessagingStyles() {
                 11px;
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.07
-                );
+                rgba(255,255,255,.07);
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.09
-                );
+                rgba(255,255,255,.09);
 
             color:
-                #ffffff;
+                #fff;
 
             font-size:
                 15px;
 
         }
 
-
-        /* =================================================
-           SUMMARY
-           ================================================= */
 
         .greymus-message-summary {
 
@@ -537,21 +606,11 @@ function injectMessagingStyles() {
                 12px;
 
             background:
-                rgba(
-                    16,
-                    185,
-                    129,
-                    0.10
-                );
+                rgba(16,185,129,.10);
 
             border:
                 1px solid
-                rgba(
-                    16,
-                    185,
-                    129,
-                    0.18
-                );
+                rgba(16,185,129,.18);
 
         }
 
@@ -575,21 +634,14 @@ function injectMessagingStyles() {
 
         .greymus-message-summary strong {
 
-            display:
-                block;
+            color:
+                #fff;
 
             font-size:
                 16px;
 
-            color:
-                #ffffff;
-
         }
 
-
-        /* =================================================
-           MESSAGE TEXTAREA
-           ================================================= */
 
         .greymus-message-field textarea {
 
@@ -600,7 +652,7 @@ function injectMessagingStyles() {
                 100%;
 
             min-height:
-                145px;
+                180px;
 
             resize:
                 vertical;
@@ -613,18 +665,13 @@ function injectMessagingStyles() {
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.13
-                );
+                rgba(255,255,255,.13);
 
             background:
                 #0d1726;
 
             color:
-                #ffffff;
+                #fff;
 
             font:
                 inherit;
@@ -646,21 +693,8 @@ function injectMessagingStyles() {
             border-color:
                 #0f9d8f;
 
-            box-shadow:
-                0 0 0 3px
-                rgba(
-                    15,
-                    157,
-                    143,
-                    0.14
-                );
-
         }
 
-
-        /* =================================================
-           COUNTER
-           ================================================= */
 
         .greymus-message-counter {
 
@@ -669,9 +703,6 @@ function injectMessagingStyles() {
 
             justify-content:
                 space-between;
-
-            gap:
-                10px;
 
             margin-top:
                 6px;
@@ -684,39 +715,6 @@ function injectMessagingStyles() {
 
         }
 
-
-        /* =================================================
-           ERROR
-           ================================================= */
-
-        .greymus-message-error {
-
-            padding:
-                12px;
-
-            border-radius:
-                10px;
-
-            background:
-                rgba(
-                    239,
-                    68,
-                    68,
-                    0.12
-                );
-
-            color:
-                #ffb4b4;
-
-            font-size:
-                13px;
-
-        }
-
-
-        /* =================================================
-           FOOTER
-           ================================================= */
 
         .greymus-message-footer {
 
@@ -731,12 +729,7 @@ function injectMessagingStyles() {
 
             border-top:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.10
-                );
+                rgba(255,255,255,.10);
 
         }
 
@@ -767,29 +760,16 @@ function injectMessagingStyles() {
         }
 
 
-        /* =================================================
-           CANCEL
-           ================================================= */
-
         .greymus-message-cancel {
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.09
-                );
+                rgba(255,255,255,.09);
 
             color:
-                #ffffff;
+                #fff;
 
         }
 
-
-        /* =================================================
-           SEND
-           ================================================= */
 
         .greymus-message-send {
 
@@ -797,7 +777,7 @@ function injectMessagingStyles() {
                 #0f9d8f;
 
             color:
-                #ffffff;
+                #fff;
 
         }
 
@@ -805,7 +785,7 @@ function injectMessagingStyles() {
         .greymus-message-send:disabled {
 
             opacity:
-                0.5;
+                .5;
 
             cursor:
                 not-allowed;
@@ -813,13 +793,27 @@ function injectMessagingStyles() {
         }
 
 
-        /* =================================================
-           MOBILE
-           ================================================= */
+        .greymus-message-error {
 
-        @media (
-            max-width: 480px
-        ) {
+            padding:
+                12px;
+
+            border-radius:
+                10px;
+
+            background:
+                rgba(239,68,68,.12);
+
+            color:
+                #ffb4b4;
+
+            font-size:
+                13px;
+
+        }
+
+
+        @media(max-width:480px){
 
             .greymus-message-overlay {
 
@@ -858,20 +852,20 @@ function injectMessagingStyles() {
 
 
 // =========================================================
-// REMOVE EXISTING COMPOSER
+// CLOSE COMPOSER
 // =========================================================
 
-function removeComposer() {
+function closeComposer() {
 
-    const existing =
+    const overlay =
         document.getElementById(
             "greymus-message-composer"
         );
 
 
-    if (existing) {
+    if (overlay) {
 
-        existing.remove();
+        overlay.remove();
 
     }
 
@@ -879,22 +873,22 @@ function removeComposer() {
 
 
 // =========================================================
-// OPEN NATIVE SMS COMPOSER
+// OPEN NATIVE SMS
 // =========================================================
 
-function openNativeSms(
+function openNativeSMS(
     phone,
     message
 ) {
 
-    const encodedMessage =
+    const encoded =
         encodeURIComponent(
             message
         );
 
 
     const smsUrl =
-        `sms:${phone}?body=${encodedMessage}`;
+        `sms:${phone}?body=${encoded}`;
 
 
     window.location.href =
@@ -904,49 +898,23 @@ function openNativeSms(
 
 
 // =========================================================
-// MAIN MESSAGE FUNCTION
-//
-// THIS IS THE FUNCTION dashboard.js ALREADY EXPECTS.
-//
+// MAIN MESSAGE COMPOSER
 // =========================================================
 
 export function openMessageComposer(
     data = {}
 ) {
 
-    // -----------------------------------------------------
-    // Remove any old composer
-    // -----------------------------------------------------
+    closeComposer();
 
-    removeComposer();
-
-
-    // -----------------------------------------------------
-    // Make sure styles exist
-    // -----------------------------------------------------
-
-    injectMessagingStyles();
-
-
-    // -----------------------------------------------------
-    // Read supplied data
-    // -----------------------------------------------------
-
-    const type =
-        data.type ||
-        "due";
+    injectStyles();
 
 
     const client =
-        data.client ||
-        {};
+        data.client || {};
 
 
-    // -----------------------------------------------------
-    // Client information
-    // -----------------------------------------------------
-
-    const clientName =
+    const name =
         getClientName(
             client
         );
@@ -958,19 +926,18 @@ export function openMessageComposer(
         );
 
 
-    // -----------------------------------------------------
-    // Build appropriate message
-    // -----------------------------------------------------
+    const type =
+        data.type ||
+        "due";
 
-    const defaultMessage =
+
+    const message =
         type === "arrears"
+
             ? buildArrearsMessage(data)
+
             : buildDueMessage(data);
 
-
-    // -----------------------------------------------------
-    // CREATE OVERLAY
-    // -----------------------------------------------------
 
     const overlay =
         document.createElement(
@@ -986,18 +953,18 @@ export function openMessageComposer(
         "greymus-message-overlay";
 
 
-    // -----------------------------------------------------
+    // =====================================================
     // SUMMARY
-    // -----------------------------------------------------
+    // =====================================================
 
-    let summaryHtml = "";
+    let summary = "";
 
 
     if (
         type === "arrears"
     ) {
 
-        summaryHtml = `
+        summary = `
 
             <div
                 class="greymus-message-summary"
@@ -1006,65 +973,15 @@ export function openMessageComposer(
                 <div>
 
                     <span>
-                        Arrears Amount
+                        Arrears
                     </span>
 
                     <strong>
-                        ${
-                            escapeHtml(
-                                formatKES(
-                                    data.arrears
-                                )
+                        ${escapeHtml(
+                            formatKES(
+                                data.arrears
                             )
-                        }
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Missed Installments
-                    </span>
-
-                    <strong>
-                        ${
-                            Number(
-                                data.overdueInstallments ||
-                                0
-                            )
-                        }
-                    </strong>
-
-                </div>
-
-            </div>
-
-        `;
-
-    } else {
-
-        summaryHtml = `
-
-            <div
-                class="greymus-message-summary"
-            >
-
-                <div>
-
-                    <span>
-                        Due Today
-                    </span>
-
-                    <strong>
-                        ${
-                            escapeHtml(
-                                formatKES(
-                                    data.due
-                                )
-                            )
-                        }
+                        )}
                     </strong>
 
                 </div>
@@ -1077,13 +994,56 @@ export function openMessageComposer(
                     </span>
 
                     <strong>
-                        ${
-                            escapeHtml(
-                                formatKES(
-                                    data.outstanding
-                                )
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
                             )
-                        }
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    } else {
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Today's Due
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.due
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
                     </strong>
 
                 </div>
@@ -1095,23 +1055,13 @@ export function openMessageComposer(
     }
 
 
-    // -----------------------------------------------------
-    // HTML
-    // -----------------------------------------------------
-
     overlay.innerHTML = `
 
         <div
             class="greymus-message-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="greymus-message-title"
         >
-
-
-            <!-- =========================================
-                 HEADER
-                 ========================================= -->
 
             <div
                 class="greymus-message-header"
@@ -1119,12 +1069,9 @@ export function openMessageComposer(
 
                 <div>
 
-                    <h2
-                        id="greymus-message-title"
-                    >
+                    <h2>
                         Send Message
                     </h2>
-
 
                     <p>
                         GREYMUS client SMS
@@ -1137,7 +1084,6 @@ export function openMessageComposer(
                     type="button"
                     class="greymus-message-close"
                     id="greymus-message-close"
-                    aria-label="Close"
                 >
                     ×
                 </button>
@@ -1145,16 +1091,9 @@ export function openMessageComposer(
             </div>
 
 
-            <!-- =========================================
-                 BODY
-                 ========================================= -->
-
             <div
                 class="greymus-message-body"
             >
-
-
-                <!-- CLIENT -->
 
                 <div
                     class="greymus-message-field"
@@ -1164,21 +1103,14 @@ export function openMessageComposer(
                         Client
                     </label>
 
-
                     <div
                         class="greymus-message-readonly"
                     >
-                        ${
-                            escapeHtml(
-                                clientName
-                            )
-                        }
+                        ${escapeHtml(name)}
                     </div>
 
                 </div>
 
-
-                <!-- PHONE -->
 
                 <div
                     class="greymus-message-field"
@@ -1188,29 +1120,20 @@ export function openMessageComposer(
                         Phone Number
                     </label>
 
-
                     <div
                         class="greymus-message-readonly"
                     >
-
-                        ${
-                            escapeHtml(
-                                phone ||
-                                "No phone number registered"
-                            )
-                        }
-
+                        ${escapeHtml(
+                            phone ||
+                            "No phone number registered"
+                        )}
                     </div>
 
                 </div>
 
 
-                <!-- SUMMARY -->
+                ${summary}
 
-                ${summaryHtml}
-
-
-                <!-- MESSAGE -->
 
                 <div
                     class="greymus-message-field"
@@ -1222,15 +1145,10 @@ export function openMessageComposer(
                         Message
                     </label>
 
-
                     <textarea
                         id="greymus-message-text"
                         maxlength="500"
-                    >${
-                        escapeHtml(
-                            defaultMessage
-                        )
-                    }</textarea>
+                    >${escapeHtml(message)}</textarea>
 
 
                     <div
@@ -1241,13 +1159,10 @@ export function openMessageComposer(
                             Edit before sending
                         </span>
 
-
                         <span
                             id="greymus-message-count"
                         >
-                            ${
-                                defaultMessage.length
-                            }/500
+                            ${message.length}/500
                         </span>
 
                     </div>
@@ -1255,29 +1170,25 @@ export function openMessageComposer(
                 </div>
 
 
-                <!-- PHONE ERROR -->
-
                 ${
                     !phone
-                        ? `
 
-                            <div
-                                class="greymus-message-error"
-                            >
-                                This client has no valid
-                                phone number.
-                            </div>
+                    ? `
 
-                        `
-                        : ""
+                        <div
+                            class="greymus-message-error"
+                        >
+                            This client has no valid
+                            phone number.
+                        </div>
+
+                    `
+
+                    : ""
                 }
 
             </div>
 
-
-            <!-- =========================================
-                 FOOTER
-                 ========================================= -->
 
             <div
                 class="greymus-message-footer"
@@ -1296,11 +1207,7 @@ export function openMessageComposer(
                     type="button"
                     class="greymus-message-send"
                     id="greymus-message-send"
-                    ${
-                        phone
-                            ? ""
-                            : "disabled"
-                    }
+                    ${phone ? "" : "disabled"}
                 >
                     💬 Send SMS
                 </button>
@@ -1312,18 +1219,14 @@ export function openMessageComposer(
     `;
 
 
-    // -----------------------------------------------------
-    // ADD TO BODY
-    // -----------------------------------------------------
-
     document.body.appendChild(
         overlay
     );
 
 
-    // -----------------------------------------------------
-    // GET ELEMENTS
-    // -----------------------------------------------------
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
 
     const closeButton =
         document.getElementById(
@@ -1355,81 +1258,36 @@ export function openMessageComposer(
         );
 
 
-    // -----------------------------------------------------
-    // CLOSE FUNCTION
-    // -----------------------------------------------------
+    // =====================================================
+    // CLOSE
+    // =====================================================
 
     const close =
         () => {
 
-            overlay.remove();
-
-            document.removeEventListener(
-                "keydown",
-                onKeyDown
-            );
+            closeComposer();
 
         };
 
 
-    // -----------------------------------------------------
-    // ESCAPE KEY
-    // -----------------------------------------------------
-
-    const onKeyDown =
-        event => {
-
-            if (
-                event.key ===
-                "Escape"
-            ) {
-
-                close();
-
-            }
-
-        };
+    closeButton?.addEventListener(
+        "click",
+        close
+    );
 
 
-    // -----------------------------------------------------
-    // CLOSE BUTTON
-    // -----------------------------------------------------
+    cancelButton?.addEventListener(
+        "click",
+        close
+    );
 
-    if (closeButton) {
-
-        closeButton.addEventListener(
-            "click",
-            close
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // CANCEL BUTTON
-    // -----------------------------------------------------
-
-    if (cancelButton) {
-
-        cancelButton.addEventListener(
-            "click",
-            close
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // CLICK OUTSIDE
-    // -----------------------------------------------------
 
     overlay.addEventListener(
         "click",
         event => {
 
             if (
-                event.target ===
-                overlay
+                event.target === overlay
             ) {
 
                 close();
@@ -1440,146 +1298,116 @@ export function openMessageComposer(
     );
 
 
-    // -----------------------------------------------------
-    // ESCAPE LISTENER
-    // -----------------------------------------------------
+    // =====================================================
+    // ESCAPE
+    // =====================================================
 
-    document.addEventListener(
-        "keydown",
-        onKeyDown
-    );
+    const escapeHandler =
+        event => {
 
+            if (
+                event.key === "Escape"
+            ) {
 
-    // -----------------------------------------------------
-    // CHARACTER COUNTER
-    // -----------------------------------------------------
+                close();
 
-    if (textarea) {
-
-        textarea.addEventListener(
-            "input",
-            () => {
-
-                if (counter) {
-
-                    counter.textContent =
-                        `${textarea.value.length}/500`;
-
-                }
-
-            }
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // SEND SMS
-    // -----------------------------------------------------
-
-    if (sendButton) {
-
-        sendButton.addEventListener(
-            "click",
-            () => {
-
-                const message =
-                    textarea
-                        ? textarea.value.trim()
-                        : "";
-
-
-                // -----------------------------------------
-                // NO PHONE
-                // -----------------------------------------
-
-                if (!phone) {
-
-                    alert(
-                        "This client does not have a valid phone number."
-                    );
-
-                    return;
-
-                }
-
-
-                // -----------------------------------------
-                // NO MESSAGE
-                // -----------------------------------------
-
-                if (!message) {
-
-                    alert(
-                        "Please enter a message before sending."
-                    );
-
-
-                    if (textarea) {
-
-                        textarea.focus();
-
-                    }
-
-                    return;
-
-                }
-
-
-                // -----------------------------------------
-                // PREVENT DOUBLE TAP
-                // -----------------------------------------
-
-                sendButton.disabled =
-                    true;
-
-
-                sendButton.textContent =
-                    "Opening SMS…";
-
-
-                // -----------------------------------------
-                // OPEN NATIVE SMS
-                // -----------------------------------------
-
-                openNativeSms(
-                    phone,
-                    message
+                document.removeEventListener(
+                    "keydown",
+                    escapeHandler
                 );
 
             }
-        );
 
-    }
-
-
-    // -----------------------------------------------------
-    // FOCUS TEXTAREA
-    // -----------------------------------------------------
-
-    if (textarea) {
-
-        textarea.focus();
+        };
 
 
-        textarea.setSelectionRange(
-            textarea.value.length,
-            textarea.value.length
-        );
+    document.addEventListener(
+        "keydown",
+        escapeHandler
+    );
 
-    }
+
+    // =====================================================
+    // COUNTER
+    // =====================================================
+
+    textarea?.addEventListener(
+        "input",
+        () => {
+
+            if (counter) {
+
+                counter.textContent =
+                    `${textarea.value.length}/500`;
+
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // SEND
+    // =====================================================
+
+    sendButton?.addEventListener(
+        "click",
+        () => {
+
+            const finalMessage =
+                textarea
+                    ? textarea.value.trim()
+                    : "";
+
+
+            if (!phone) {
+
+                alert(
+                    "This client does not have a valid phone number."
+                );
+
+                return;
+
+            }
+
+
+            if (!finalMessage) {
+
+                alert(
+                    "Please enter a message before sending."
+                );
+
+                textarea?.focus();
+
+                return;
+
+            }
+
+
+            sendButton.disabled =
+                true;
+
+
+            sendButton.textContent =
+                "Opening SMS…";
+
+
+            openNativeSMS(
+                phone,
+                finalMessage
+            );
+
+        }
+    );
+
+
+    textarea?.focus();
 
 }
 
 
 // =========================================================
-// GLOBAL REFERENCE
-// =========================================================
-//
-// Useful for debugging from the browser console.
-//
-// window.GREYMUS_MESSAGING.openMessageComposer(...)
-//
+// GLOBAL DEBUG ACCESS
 // =========================================================
 
 window.GREYMUS_MESSAGING = {
