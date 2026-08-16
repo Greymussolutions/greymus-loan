@@ -1,26 +1,59 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
 // messaging.js
-// VERSION 2.0
+// VERSION 5.0
 //
 // GREYMUS CLIENT MESSAGING
 //
-// ✔ Due today message
-// ✔ Partial repayment message
-// ✔ Due today + arrears message
-// ✔ Arrears message
-// ✔ Remaining installment amount
-// ✔ Current outstanding loan balance
-// ✔ Dynamic client name
-// ✔ Dynamic amounts
-// ✔ Native phone SMS
-// ✔ No SMS API
-// ✔ No external messaging service
+// ✔ Loan Application Received
+// ✔ Loan Approved & Disbursed
+// ✔ Loan Rejected
+// ✔ Due Today
+// ✔ Due Today + Arrears combined into ONE amount
+// ✔ Arrears
+// ✔ Partial Repayment
+// ✔ Full Payment of Today's Due
+// ✔ Fully Paid Loan
+// ✔ Current Outstanding Loan Balance
+// ✔ Repayment message enabled after successful repayment
+// ✔ Due message disappears when today's due is fully paid
+// ✔ Due Today is the only reminder when client has due + arrears
+// ✔ Sent message button hidden until next day
+// ✔ Cloudflare Worker SMS API
+// ✔ Africa's Talking Sandbox
+// ✔ API key remains secured in Cloudflare
+// ✔ Message marked sent ONLY after API success
+// ✔ Prevents duplicate SMS submissions
 // ✔ Every message ends with:
+//
 //      With regards,
 //      GREYMUS.
 //
 // =========================================================
+
+
+// =========================================================
+// CLOUDFLARE SMS API
+// =========================================================
+//
+// The Africa's Talking API key is NEVER stored here.
+// It remains securely stored as AT_API_KEY
+// inside the Cloudflare Worker.
+//
+// Browser flow:
+//
+// GREYMUS APP
+//      ↓
+// Cloudflare Worker
+//      ↓
+// Africa's Talking
+//      ↓
+// Client
+//
+// =========================================================
+
+const GREYMUS_SMS_API =
+    "https://greymus-sms-api.gayisi0901.workers.dev";
 
 
 // =========================================================
@@ -81,13 +114,11 @@ function getClientPhone(client = {}) {
                 ""
             );
 
-
     if (!phone) {
         return "";
     }
 
-
-    // Kenya: 07XXXXXXXX
+    // Kenya: 07XXXXXXXX / 01XXXXXXXX
     if (
         phone.startsWith("07") ||
         phone.startsWith("01")
@@ -100,8 +131,7 @@ function getClientPhone(client = {}) {
 
     }
 
-
-    // Kenya: 2547XXXXXXXX
+    // Kenya: 2547XXXXXXXX / 2541XXXXXXXX
     if (
         phone.startsWith("254")
     ) {
@@ -110,8 +140,45 @@ function getClientPhone(client = {}) {
 
     }
 
+    // Already international format
+    if (
+        phone.startsWith("+")
+    ) {
+
+        return phone;
+
+    }
 
     return phone;
+
+}
+
+
+// =========================================================
+// GET DISBURSEMENT NUMBER
+// =========================================================
+
+function getDisbursementNumber(
+    data = {}
+) {
+
+    const client =
+        data.client || {};
+
+    const number =
+        data.disbursedTo ||
+        data.disbursementNumber ||
+        data.disbursedNumber ||
+        data.sentTo ||
+        data.phoneNumber ||
+        data.phone ||
+        client.phone ||
+        client.phoneNumber ||
+        client.mobile ||
+        client.mobileNumber ||
+        "";
+
+    return String(number || "").trim();
 
 }
 
@@ -157,6 +224,207 @@ function getTodayString() {
 
 
 // =========================================================
+// FORMAT DATE
+// =========================================================
+
+function formatMessageDate(value) {
+
+    if (!value) {
+        return "";
+    }
+
+    let date;
+
+    if (
+        value &&
+        typeof value.toDate === "function"
+    ) {
+
+        date = value.toDate();
+
+    } else {
+
+        date = new Date(value);
+
+    }
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(value);
+
+    }
+
+    return new Intl.DateTimeFormat(
+        "en-KE",
+        {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    ).format(date);
+
+}
+
+
+// =========================================================
+// CLIENT MESSAGE KEY
+// =========================================================
+
+function getClientMessageKey(
+    client = {},
+    data = {}
+) {
+
+    return String(
+        client.id ||
+        client.clientId ||
+        data.clientId ||
+        client.phone ||
+        client.phoneNumber ||
+        client.name ||
+        client.clientName ||
+        "unknown-client"
+    );
+
+}
+
+
+// =========================================================
+// MESSAGE STORAGE
+// =========================================================
+
+const MESSAGE_STORAGE_KEY =
+    "GREYMUS_MESSAGE_STATUS_V4";
+
+
+function getMessageStatus() {
+
+    try {
+
+        const stored =
+            localStorage.getItem(
+                MESSAGE_STORAGE_KEY
+            );
+
+        return stored
+            ? JSON.parse(stored)
+            : {};
+
+    } catch (error) {
+
+        return {};
+
+    }
+
+}
+
+
+function saveMessageStatus(status) {
+
+    try {
+
+        localStorage.setItem(
+            MESSAGE_STORAGE_KEY,
+            JSON.stringify(status)
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "GREYMUS messaging status could not be saved.",
+            error
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// MESSAGE STATUS KEY
+// =========================================================
+
+function getMessageStatusKey(
+    client,
+    data,
+    type
+) {
+
+    return (
+        getClientMessageKey(
+            client,
+            data
+        ) +
+        "__" +
+        type
+    );
+
+}
+
+
+// =========================================================
+// CHECK MESSAGE SENT TODAY
+// =========================================================
+
+function wasMessageSentToday(
+    client,
+    data,
+    type
+) {
+
+    const status =
+        getMessageStatus();
+
+    const key =
+        getMessageStatusKey(
+            client,
+            data,
+            type
+        );
+
+    return (
+        status[key] ===
+        getTodayString()
+    );
+
+}
+
+
+// =========================================================
+// MARK MESSAGE SENT
+// =========================================================
+
+function markMessageSent(
+    client,
+    data,
+    type
+) {
+
+    const status =
+        getMessageStatus();
+
+    const key =
+        getMessageStatusKey(
+            client,
+            data,
+            type
+        );
+
+    status[key] =
+        getTodayString();
+
+    saveMessageStatus(
+        status
+    );
+
+}
+
+
+// =========================================================
 // MESSAGE SIGNATURE
 // =========================================================
 
@@ -171,17 +439,164 @@ GREYMUS.`;
 
 
 // =========================================================
-// BUILD DUE MESSAGE
+// LOAN APPLICATION RECEIVED
+// =========================================================
+
+function buildApplicationMessage(data) {
+
+    const name =
+        getClientName(
+            data.client
+        );
+
+    const amount =
+        Math.max(
+            0,
+            Number(
+                data.amountApplied ??
+                data.amount ??
+                0
+            )
+        );
+
+    const weeks =
+        Number(
+            data.duration ??
+            data.weeks ??
+            data.repaymentPeriod ??
+            0
+        );
+
+    const weeklyPayment =
+        Math.max(
+            0,
+            Number(
+                data.weeklyPayment ??
+                data.weeklyRepayment ??
+                data.repayment ??
+                0
+            )
+        );
+
+    const periodText =
+        weeks > 0
+            ? `${weeks} weeks`
+            : "the selected period";
+
+    const weeklyText =
+        weeklyPayment > 0
+            ? ` Weekly repayment: ${formatKES(weeklyPayment)}.`
+            : "";
+
+    return (
+        `Hello ${name}, your GREYMUS loan application ` +
+        `of ${formatKES(amount)} has been received. ` +
+        `Repayment period: ${periodText}.` +
+        weeklyText +
+        ` Your application is being processed. ` +
+        `Kindly wait for approval.` +
+        messageSignature()
+    );
+
+}
+
+
+// =========================================================
+// LOAN APPROVED & DISBURSED
+// =========================================================
+
+function buildApprovedMessage(data) {
+
+    const name =
+        getClientName(
+            data.client
+        );
+
+    const amount =
+        Math.max(
+            0,
+            Number(
+                data.approvedAmount ??
+                data.amount ??
+                0
+            )
+        );
+
+    const disbursedTo =
+        getDisbursementNumber(
+            data
+        );
+
+    const outstanding =
+        Math.max(
+            0,
+            Number(
+                data.outstanding ??
+                data.balance ??
+                amount
+            )
+        );
+
+    const firstRepaymentDate =
+        formatMessageDate(
+            data.firstRepaymentDate ||
+            data.firstDueDate ||
+            data.nextRepaymentDate ||
+            data.dueDate
+        );
+
+    const numberText =
+        disbursedTo
+            ? `disbursed to your number ${disbursedTo}`
+            : `disbursed to your registered number`;
+
+    const dateText =
+        firstRepaymentDate
+            ? ` Your first repayment is due on ${firstRepaymentDate}.`
+            : "";
+
+    return (
+        `Hello ${name}, your GREYMUS loan of ` +
+        `${formatKES(amount)} has been approved and ` +
+        `${numberText}. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}.` +
+        dateText +
+        ` Kindly make your payment on time. ` +
+        `Contact our loan officer for any assistance.` +
+        messageSignature()
+    );
+
+}
+
+
+// =========================================================
+// LOAN REJECTED
+// =========================================================
+
+function buildRejectedMessage(data) {
+
+    const name =
+        getClientName(
+            data.client
+        );
+
+    return (
+        `Hello ${name}, your GREYMUS loan application ` +
+        `has not been approved at this time. ` +
+        `You may contact our loan officer for any assistance.` +
+        messageSignature()
+    );
+
+}
+
+
+// =========================================================
+// DUE TODAY
 // =========================================================
 //
-// CASE 1:
-// Due today and NOT in arrears.
-//
-// CASE 2:
-// Due today AND client is in arrears.
-//
-// CASE 3:
-// Partial repayment already made.
+// If arrears exist, they are added to the remaining
+// amount due today and shown as ONE amount.
 //
 // =========================================================
 
@@ -192,134 +607,67 @@ function buildDueMessage(data) {
             data.client
         );
 
-
     const due =
-        Number(
-            data.due || 0
+        Math.max(
+            0,
+            Number(
+                data.due || 0
+            )
         );
-
 
     const paid =
-        Number(
-            data.paid || 0
+        Math.max(
+            0,
+            Number(
+                data.paid || 0
+            )
         );
 
+    const arrears =
+        Math.max(
+            0,
+            Number(
+                data.arrears || 0
+            )
+        );
 
-    const remaining =
+    const outstanding =
+        Math.max(
+            0,
+            Number(
+                data.outstanding || 0
+            )
+        );
+
+    const remainingDue =
         Math.max(
             0,
             due - paid
         );
 
-
-    const arrears =
-        Number(
-            data.arrears || 0
-        );
-
-
-    const outstanding =
-        Number(
-            data.outstanding || 0
-        );
-
-
-    // =====================================================
-    // PARTIAL PAYMENT + ARREARS
-    // =====================================================
+    const totalDue =
+        remainingDue +
+        arrears;
 
     if (
-        paid > 0 &&
-        remaining > 0 &&
-        arrears > 0
+        totalDue <= 0
     ) {
 
-        const totalToPay =
-            remaining +
-            arrears;
-
-
         return (
-            `Hello ${name}, your GREYMUS repayment ` +
-            `of ${formatKES(due)} was partially paid. ` +
-            `The remaining amount for today's repayment ` +
-            `is ${formatKES(remaining)}. ` +
-            `You also have ${formatKES(arrears)} in arrears. ` +
-            `Your total amount to be paid is ` +
-            `${formatKES(totalToPay)}. ` +
-            `Your current outstanding loan balance is ` +
-            `${formatKES(outstanding)}. ` +
-            `Please make your payment as soon as possible. ` +
-            `Thank you.` +
+            `Hello ${name}, your repayment for today ` +
+            `has been fully paid. Your current outstanding ` +
+            `loan balance is ${formatKES(outstanding)}.` +
             messageSignature()
         );
 
     }
-
-
-    // =====================================================
-    // PARTIAL PAYMENT WITHOUT ARREARS
-    // =====================================================
-
-    if (
-        paid > 0 &&
-        remaining > 0
-    ) {
-
-        return (
-            `Hello ${name}, your GREYMUS repayment ` +
-            `of ${formatKES(due)} was partially paid. ` +
-            `The remaining amount for today's repayment ` +
-            `is ${formatKES(remaining)}. ` +
-            `Your current outstanding loan balance is ` +
-            `${formatKES(outstanding)}. ` +
-            `Please clear the remaining amount as soon as possible. ` +
-            `Thank you.` +
-            messageSignature()
-        );
-
-    }
-
-
-    // =====================================================
-    // DUE TODAY + ARREARS
-    // =====================================================
-
-    if (
-        arrears > 0
-    ) {
-
-        const totalToPay =
-            due +
-            arrears;
-
-
-        return (
-            `Hello ${name}, your GREYMUS repayment ` +
-            `of ${formatKES(due)} is due today. ` +
-            `You also have ${formatKES(arrears)} in arrears. ` +
-            `Your total amount to be paid is ` +
-            `${formatKES(totalToPay)}. ` +
-            `Your current outstanding loan balance is ` +
-            `${formatKES(outstanding)}. ` +
-            `Please make your payment as soon as possible. ` +
-            `Thank you.` +
-            messageSignature()
-        );
-
-    }
-
-
-    // =====================================================
-    // NORMAL DUE TODAY
-    // =====================================================
 
     return (
-        `Hello ${name}, your GREYMUS repayment ` +
-        `of ${formatKES(due)} is due today. ` +
+        `Hello ${name}, your GREYMUS payment due today ` +
+        `is ${formatKES(totalDue)}. ` +
         `Your current outstanding loan balance is ` +
         `${formatKES(outstanding)}. ` +
-        `Please make your payment on time. ` +
+        `Please make your payment today. ` +
         `Thank you.` +
         messageSignature()
     );
@@ -328,7 +676,7 @@ function buildDueMessage(data) {
 
 
 // =========================================================
-// BUILD ARREARS MESSAGE
+// ARREARS
 // =========================================================
 
 function buildArrearsMessage(data) {
@@ -338,28 +686,418 @@ function buildArrearsMessage(data) {
             data.client
         );
 
-
     const arrears =
-        Number(
-            data.arrears || 0
+        Math.max(
+            0,
+            Number(
+                data.arrears || 0
+            )
         );
-
 
     const outstanding =
-        Number(
-            data.outstanding || 0
+        Math.max(
+            0,
+            Number(
+                data.outstanding || 0
+            )
+        );
+
+    return (
+        `Hello ${name}, your loan is in arrears by ` +
+        `${formatKES(arrears)}. ` +
+        `Clear the arrears to maintain a good ` +
+        `repayment record and qualify for a higher limit. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}.` +
+        messageSignature()
+    );
+
+}
+
+
+// =========================================================
+// REPAYMENT
+// =========================================================
+
+function buildRepaymentMessage(data) {
+
+    const name =
+        getClientName(
+            data.client
+        );
+
+    const repaymentAmount =
+        Math.max(
+            0,
+            Number(
+                data.repaymentAmount ??
+                data.amount ??
+                data.paidAmount ??
+                0
+            )
+        );
+
+    const outstanding =
+        Math.max(
+            0,
+            Number(
+                data.outstanding || 0
+            )
+        );
+
+    const due =
+        Math.max(
+            0,
+            Number(
+                data.due || 0
+            )
+        );
+
+    const paid =
+        Math.max(
+            0,
+            Number(
+                data.paid || 0
+            )
+        );
+
+    const remainingDue =
+        Math.max(
+            0,
+            Number(
+                data.remainingDue !== undefined
+                    ? data.remainingDue
+                    : due - paid
+            )
+        );
+
+    const arrears =
+        Math.max(
+            0,
+            Number(
+                data.arrears || 0
+            )
         );
 
 
+    // =====================================================
+    // LOAN FULLY PAID
+    // =====================================================
+
+    if (
+        outstanding <= 0
+    ) {
+
+        return (
+            `Hello ${name}, we received your repayment of ` +
+            `${formatKES(repaymentAmount)}. Your loan has ` +
+            `been fully paid. Apply for another loan when ready. ` +
+            `Contact our loan officer for any assistance.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // TODAY'S DUE FULLY PAID
+    // =====================================================
+
+    if (
+        due > 0 &&
+        remainingDue <= 0
+    ) {
+
+        return (
+            `Hello ${name}, we received your repayment of ` +
+            `${formatKES(repaymentAmount)}. Your payment due ` +
+            `today has been fully paid. Your current ` +
+            `outstanding loan balance is ` +
+            `${formatKES(outstanding)}.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // PARTIAL PAYMENT
+    // =====================================================
+
+    if (
+        remainingDue > 0
+    ) {
+
+        const amountStillDue =
+            remainingDue +
+            arrears;
+
+        return (
+            `Hello ${name}, we received your repayment of ` +
+            `${formatKES(repaymentAmount)}. The amount still ` +
+            `due is ${formatKES(amountStillDue)}. Your current ` +
+            `outstanding loan balance is ` +
+            `${formatKES(outstanding)}.` +
+            messageSignature()
+        );
+
+    }
+
+
+    // =====================================================
+    // GENERAL REPAYMENT
+    // =====================================================
+
     return (
-        `Hello ${name}, your GREYMUS loan has an overdue ` +
-        `repayment of ${formatKES(arrears)}. ` +
-        `Your current outstanding loan balance is ` +
-        `${formatKES(outstanding)}. ` +
-        `Please make your outstanding payment as soon as possible. ` +
-        `Thank you.` +
+        `Hello ${name}, we received your repayment of ` +
+        `${formatKES(repaymentAmount)}. Your current ` +
+        `outstanding loan balance is ` +
+        `${formatKES(outstanding)}.` +
         messageSignature()
     );
+
+}
+
+
+// =========================================================
+// BUILD MESSAGE
+// =========================================================
+
+function buildMessage(
+    type,
+    data
+) {
+
+    switch (type) {
+
+        case "application":
+            return buildApplicationMessage(data);
+
+        case "approved":
+        case "approved-disbursed":
+        case "disbursed":
+            return buildApprovedMessage(data);
+
+        case "rejected":
+            return buildRejectedMessage(data);
+
+        case "arrears":
+            return buildArrearsMessage(data);
+
+        case "repayment":
+            return buildRepaymentMessage(data);
+
+        case "due":
+        default:
+            return buildDueMessage(data);
+
+    }
+
+}
+
+
+// =========================================================
+// MESSAGING STATE
+// =========================================================
+
+export function getMessagingState(
+    data = {}
+) {
+
+    const client =
+        data.client || {};
+
+    const due =
+        Math.max(
+            0,
+            Number(
+                data.due || 0
+            )
+        );
+
+    const paid =
+        Math.max(
+            0,
+            Number(
+                data.paid || 0
+            )
+        );
+
+    const arrears =
+        Math.max(
+            0,
+            Number(
+                data.arrears || 0
+            )
+        );
+
+    const outstanding =
+        Math.max(
+            0,
+            Number(
+                data.outstanding || 0
+            )
+        );
+
+    const remainingDue =
+        Math.max(
+            0,
+            due - paid
+        );
+
+    const dueFullyPaid =
+        due > 0 &&
+        remainingDue <= 0;
+
+    const loanFullyPaid =
+        outstanding <= 0;
+
+    const hasArrears =
+        arrears > 0;
+
+
+    // =====================================================
+    // DUE
+    // =====================================================
+
+    let dueAvailable =
+        !dueFullyPaid &&
+        !loanFullyPaid &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "due"
+        );
+
+
+    // =====================================================
+    // ARREARS
+    // =====================================================
+
+    let arrearsAvailable =
+        hasArrears &&
+        !loanFullyPaid &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "arrears"
+        );
+
+
+    // =====================================================
+    // REPAYMENT
+    // =====================================================
+
+    const repaymentAvailable =
+        Boolean(
+            data.repaymentMade
+        ) &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "repayment"
+        );
+
+
+    // =====================================================
+    // APPLICATION
+    // =====================================================
+
+    const applicationAvailable =
+        Boolean(
+            data.applicationReceived ||
+            data.loanApplication ||
+            data.application
+        ) &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "application"
+        );
+
+
+    // =====================================================
+    // APPROVED & DISBURSED
+    // =====================================================
+
+    const approvedAvailable =
+        Boolean(
+            data.loanApproved ||
+            data.approved ||
+            data.approvedAndDisbursed ||
+            data.disbursed
+        ) &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "approved"
+        );
+
+
+    // =====================================================
+    // REJECTED
+    // =====================================================
+
+    const rejectedAvailable =
+        Boolean(
+            data.loanRejected ||
+            data.rejected
+        ) &&
+        !wasMessageSentToday(
+            client,
+            data,
+            "rejected"
+        );
+
+
+    // =====================================================
+    // DUE + ARREARS
+    //
+    // Only Due Today is allowed.
+    // =====================================================
+
+    if (
+        due > 0 &&
+        !dueFullyPaid &&
+        hasArrears
+    ) {
+
+        arrearsAvailable =
+            false;
+
+    }
+
+
+    return {
+
+        application:
+            applicationAvailable,
+
+        approved:
+            approvedAvailable,
+
+        rejected:
+            rejectedAvailable,
+
+        due:
+            dueAvailable,
+
+        arrears:
+            arrearsAvailable,
+
+        repayment:
+            repaymentAvailable,
+
+        dueAndArrears:
+            due > 0 &&
+            !dueFullyPaid &&
+            hasArrears,
+
+        dueFullyPaid,
+
+        loanFullyPaid
+
+    };
 
 }
 
@@ -380,16 +1118,13 @@ function injectStyles() {
 
     }
 
-
     const style =
         document.createElement(
             "style"
         );
 
-
     style.id =
         "greymus-messaging-styles";
-
 
     style.textContent = `
 
@@ -416,9 +1151,11 @@ function injectStyles() {
             width:
                 min(100%, 520px);
 
-            max-height: 92vh;
+            max-height:
+                92vh;
 
-            overflow-y: auto;
+            overflow-y:
+                auto;
 
             background:
                 #162235;
@@ -466,7 +1203,8 @@ function injectStyles() {
 
         .greymus-message-header h2 {
 
-            margin: 0;
+            margin:
+                0;
 
             font-size:
                 22px;
@@ -577,6 +1315,9 @@ function injectStyles() {
             font-size:
                 15px;
 
+            box-sizing:
+                border-box;
+
         }
 
 
@@ -684,6 +1425,9 @@ function injectStyles() {
 
             outline:
                 none;
+
+            box-sizing:
+                border-box;
 
         }
 
@@ -843,7 +1587,6 @@ function injectStyles() {
 
     `;
 
-
     document.head.appendChild(
         style
     );
@@ -862,7 +1605,6 @@ function closeComposer() {
             "greymus-message-composer"
         );
 
-
     if (overlay) {
 
         overlay.remove();
@@ -873,26 +1615,144 @@ function closeComposer() {
 
 
 // =========================================================
-// OPEN NATIVE SMS
+// SEND SMS THROUGH CLOUDFLARE
+// =========================================================
+//
+// The Cloudflare Worker receives:
+//
+// {
+//     to: "+2547XXXXXXXX",
+//     message: "GREYMUS message"
+// }
+//
+// The Worker then securely adds the Africa's Talking
+// API key and sends the SMS.
+//
+// IMPORTANT:
+// The Africa's Talking API key is NEVER exposed here.
+//
 // =========================================================
 
-function openNativeSMS(
+async function sendSMSViaCloudflare(
     phone,
     message
 ) {
 
-    const encoded =
-        encodeURIComponent(
-            message
+    const response =
+        await fetch(
+            GREYMUS_SMS_API,
+            {
+
+                method:
+                    "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        to:
+                            phone,
+
+                        message:
+                            message
+
+                    })
+
+            }
         );
 
 
-    const smsUrl =
-        `sms:${phone}?body=${encoded}`;
+    let result = null;
+
+    const responseText =
+        await response.text();
 
 
-    window.location.href =
-        smsUrl;
+    if (responseText) {
+
+        try {
+
+            result =
+                JSON.parse(
+                    responseText
+                );
+
+        } catch (error) {
+
+            result = {
+
+                success:
+                    false,
+
+                error:
+                    responseText
+
+            };
+
+        }
+
+    }
+
+
+    if (
+        !response.ok ||
+        !result ||
+        result.success !== true
+    ) {
+
+        let errorMessage =
+            "The SMS could not be sent.";
+
+        if (
+            result &&
+            result.error
+        ) {
+
+            errorMessage =
+                result.error;
+
+        } else if (
+            result &&
+            result.africaTalking &&
+            result.africaTalking.SMSMessageData &&
+            result.africaTalking.SMSMessageData.Message
+        ) {
+
+            errorMessage =
+                result.africaTalking.SMSMessageData.Message;
+
+        } else if (
+            result &&
+            result.africaTalking &&
+            result.africaTalking.errorMessage
+        ) {
+
+            errorMessage =
+                result.africaTalking.errorMessage;
+
+        } else if (
+            response.status
+        ) {
+
+            errorMessage +=
+                ` Server status: ${response.status}.`;
+
+        }
+
+        throw new Error(
+            errorMessage
+        );
+
+    }
+
+
+    return result;
 
 }
 
@@ -932,11 +1792,10 @@ export function openMessageComposer(
 
 
     const message =
-        type === "arrears"
-
-            ? buildArrearsMessage(data)
-
-            : buildDueMessage(data);
+        buildMessage(
+            type,
+            data
+        );
 
 
     const overlay =
@@ -961,6 +1820,109 @@ export function openMessageComposer(
 
 
     if (
+        type === "application"
+    ) {
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Amount Applied
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.amountApplied ??
+                                data.amount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Weekly Repayment
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.weeklyPayment ??
+                                data.weeklyRepayment ??
+                                data.repayment
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    } else if (
+        type === "approved" ||
+        type === "approved-disbursed" ||
+        type === "disbursed"
+    ) {
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Approved Amount
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.approvedAmount ??
+                                data.amount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding ??
+                                data.balance ??
+                                data.approvedAmount ??
+                                data.amount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    } else if (
         type === "arrears"
     ) {
 
@@ -1007,7 +1969,9 @@ export function openMessageComposer(
 
         `;
 
-    } else {
+    } else if (
+        type === "repayment"
+    ) {
 
         summary = `
 
@@ -1018,13 +1982,94 @@ export function openMessageComposer(
                 <div>
 
                     <span>
-                        Today's Due
+                        Repayment
                     </span>
 
                     <strong>
                         ${escapeHtml(
                             formatKES(
-                                data.due
+                                data.repaymentAmount ||
+                                data.amount ||
+                                data.paidAmount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    } else {
+
+        const due =
+            Math.max(
+                0,
+                Number(
+                    data.due || 0
+                )
+            );
+
+        const paid =
+            Math.max(
+                0,
+                Number(
+                    data.paid || 0
+                )
+            );
+
+        const arrears =
+            Math.max(
+                0,
+                Number(
+                    data.arrears || 0
+                )
+            );
+
+        const remainingDue =
+            Math.max(
+                0,
+                due - paid
+            );
+
+        const totalDue =
+            remainingDue +
+            arrears;
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Amount Due Today
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                totalDue
                             )
                         )}
                     </strong>
@@ -1054,6 +2099,10 @@ export function openMessageComposer(
 
     }
 
+
+    // =====================================================
+    // MODAL
+    // =====================================================
 
     overlay.innerHTML = `
 
@@ -1145,6 +2194,7 @@ export function openMessageComposer(
                         Message
                     </label>
 
+
                     <textarea
                         id="greymus-message-text"
                         maxlength="500"
@@ -1172,19 +2222,15 @@ export function openMessageComposer(
 
                 ${
                     !phone
-
-                    ? `
-
-                        <div
-                            class="greymus-message-error"
-                        >
-                            This client has no valid
-                            phone number.
-                        </div>
-
-                    `
-
-                    : ""
+                        ? `
+                            <div
+                                class="greymus-message-error"
+                            >
+                                This client has no valid
+                                phone number.
+                            </div>
+                        `
+                        : ""
                 }
 
             </div>
@@ -1352,13 +2398,17 @@ export function openMessageComposer(
 
     sendButton?.addEventListener(
         "click",
-        () => {
+        async () => {
 
             const finalMessage =
                 textarea
                     ? textarea.value.trim()
                     : "";
 
+
+            // -------------------------------------------------
+            // PHONE VALIDATION
+            // -------------------------------------------------
 
             if (!phone) {
 
@@ -1370,6 +2420,10 @@ export function openMessageComposer(
 
             }
 
+
+            // -------------------------------------------------
+            // MESSAGE VALIDATION
+            // -------------------------------------------------
 
             if (!finalMessage) {
 
@@ -1384,18 +2438,122 @@ export function openMessageComposer(
             }
 
 
+            // -------------------------------------------------
+            // PREVENT DUPLICATE SUBMISSION
+            // -------------------------------------------------
+
+            if (
+                sendButton.disabled
+            ) {
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // LOCK SEND BUTTON
+            // -------------------------------------------------
+
             sendButton.disabled =
                 true;
 
-
             sendButton.textContent =
-                "Opening SMS…";
+                "Sending…";
 
 
-            openNativeSMS(
-                phone,
-                finalMessage
-            );
+            try {
+
+                // -------------------------------------------------
+                // SEND THROUGH CLOUDFLARE
+                // -------------------------------------------------
+
+                const result =
+                    await sendSMSViaCloudflare(
+                        phone,
+                        finalMessage
+                    );
+
+
+                // -------------------------------------------------
+                // ONLY MARK SENT AFTER SUCCESS
+                // -------------------------------------------------
+
+                markMessageSent(
+                    client,
+                    data,
+                    type
+                );
+
+
+                // -------------------------------------------------
+                // NOTIFY APPLICATION
+                // -------------------------------------------------
+
+                window.dispatchEvent(
+                    new CustomEvent(
+                        "greymus:messaging-state-changed",
+                        {
+                            detail: {
+                                ...data,
+                                messageType:
+                                    type,
+                                smsResult:
+                                    result,
+                                smsSent:
+                                    true
+                            }
+                        }
+                    )
+                );
+
+
+                // -------------------------------------------------
+                // CLOSE COMPOSER
+                // -------------------------------------------------
+
+                closeComposer();
+
+
+                // -------------------------------------------------
+                // SUCCESS MESSAGE
+                // -------------------------------------------------
+
+                alert(
+                    "SMS sent successfully."
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "GREYMUS SMS sending failed:",
+                    error
+                );
+
+
+                // -------------------------------------------------
+                // IMPORTANT:
+                // DO NOT mark the message as sent.
+                // The button remains available for retry.
+                // -------------------------------------------------
+
+                sendButton.disabled =
+                    false;
+
+                sendButton.textContent =
+                    "💬 Send SMS";
+
+
+                alert(
+                    "SMS could not be sent.\n\n" +
+                    (
+                        error.message ||
+                        "Please try again."
+                    )
+                );
+
+            }
 
         }
     );
@@ -1405,17 +2563,211 @@ export function openMessageComposer(
 
 }
 
+
+// =========================================================
+// ENABLE REPAYMENT MESSAGE
+// =========================================================
+//
+// Call AFTER a repayment has been successfully saved
+// and confirmed.
+//
+// =========================================================
+
+export function enableRepaymentMessage(
+    data = {}
+) {
+
+    const client =
+        data.client || {};
+
+    const status =
+        getMessageStatus();
+
+    const key =
+        getMessageStatusKey(
+            client,
+            data,
+            "repayment"
+        );
+
+    delete status[key];
+
+    saveMessageStatus(
+        status
+    );
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "greymus:repayment-message-enabled",
+            {
+                detail: data
+            }
+        )
+    );
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "greymus:messaging-state-changed",
+            {
+                detail: data
+            }
+        )
+    );
+
+
+    return true;
+
+}
+
+
+// =========================================================
+// UPDATE MESSAGING AFTER REPAYMENT
+// =========================================================
+//
+// ✔ Enables repayment confirmation
+// ✔ Due button disappears when today's due is fully paid
+// ✔ Refreshes messaging state
+//
+// =========================================================
+
+export function updateMessagingAfterRepayment(
+    data = {}
+) {
+
+    const due =
+        Math.max(
+            0,
+            Number(
+                data.due || 0
+            )
+        );
+
+    const remainingDue =
+        Math.max(
+            0,
+            Number(
+                data.remainingDue !== undefined
+                    ? data.remainingDue
+                    : due -
+                      Number(
+                          data.paid || 0
+                      )
+            )
+        );
+
+
+    // Mark that a repayment was successfully made.
+    data.repaymentMade =
+        true;
+
+
+    // Enable repayment confirmation.
+    enableRepaymentMessage(
+        data
+    );
+
+
+    // If today's due has been fully paid,
+    // tell the UI to remove the Due button.
+    if (
+        due > 0 &&
+        remainingDue <= 0
+    ) {
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "greymus:due-fully-paid",
+                {
+                    detail: data
+                }
+            )
+        );
+
+    }
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "greymus:messaging-state-changed",
+            {
+                detail: data
+            }
+        )
+    );
+
+
+    return getMessagingState(
+        data
+    );
+
+}
+
+
+// =========================================================
+// CLEAR TODAY'S MESSAGE STATUS
+// =========================================================
+//
+// Useful for testing or admin recovery.
+//
+// =========================================================
+
+export function clearTodayMessageStatus(
+    client,
+    data = {},
+    type
+) {
+
+    const status =
+        getMessageStatus();
+
+    const key =
+        getMessageStatusKey(
+            client,
+            data,
+            type
+        );
+
+    delete status[key];
+
+    saveMessageStatus(
+        status
+    );
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "greymus:messaging-state-changed",
+            {
+                detail: data
+            }
+        )
+    );
+
+}
+
+
 // =========================================================
 // GLOBAL DEBUG ACCESS
 // =========================================================
 
 window.GREYMUS_MESSAGING = {
 
-    openMessageComposer
+    openMessageComposer,
+
+    getMessagingState,
+
+    enableRepaymentMessage,
+
+    updateMessagingAfterRepayment,
+
+    clearTodayMessageStatus
 
 };
 
 
 // =========================================================
 // END OF messaging.js
+// VERSION 5.0
 // =========================================================
