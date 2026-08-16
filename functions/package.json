@@ -1,0 +1,14 @@
+{
+  "name": "greymus-functions",
+  "description": "GREYMUS Loan Financial Hub Firebase Functions",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "africastalking": "^0.7.1",
+    "firebase-admin": "^13.0.2",
+    "firebase-functions": "^6.4.0"
+  },
+  "private": true
+}
