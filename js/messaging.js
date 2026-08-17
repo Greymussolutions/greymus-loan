@@ -1,7 +1,7 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
 // messaging.js
-// VERSION 5.0
+// VERSION 5.1
 //
 // GREYMUS CLIENT MESSAGING
 //
@@ -20,10 +20,11 @@
 // ✔ Due Today is the only reminder when client has due + arrears
 // ✔ Sent message button hidden until next day
 // ✔ Cloudflare Worker SMS API
-// ✔ Africa's Talking Sandbox
+// ✔ Africa's Talking Live
 // ✔ API key remains secured in Cloudflare
 // ✔ Message marked sent ONLY after API success
 // ✔ Prevents duplicate SMS submissions
+// ✔ Africa's Talking diagnostic response displayed after successful send
 // ✔ Every message ends with:
 //
 //      With regards,
@@ -34,22 +35,6 @@
 
 // =========================================================
 // CLOUDFLARE SMS API
-// =========================================================
-//
-// The Africa's Talking API key is NEVER stored here.
-// It remains securely stored as AT_API_KEY
-// inside the Cloudflare Worker.
-//
-// Browser flow:
-//
-// GREYMUS APP
-//      ↓
-// Cloudflare Worker
-//      ↓
-// Africa's Talking
-//      ↓
-// Client
-//
 // =========================================================
 
 const GREYMUS_SMS_API =
@@ -594,11 +579,6 @@ function buildRejectedMessage(data) {
 // =========================================================
 // DUE TODAY
 // =========================================================
-//
-// If arrears exist, they are added to the remaining
-// amount due today and shown as ONE amount.
-//
-// =========================================================
 
 function buildDueMessage(data) {
 
@@ -1052,8 +1032,6 @@ export function getMessagingState(
 
     // =====================================================
     // DUE + ARREARS
-    //
-    // Only Due Today is allowed.
     // =====================================================
 
     if (
@@ -1616,21 +1594,6 @@ function closeComposer() {
 
 // =========================================================
 // SEND SMS THROUGH CLOUDFLARE
-// =========================================================
-//
-// The Cloudflare Worker receives:
-//
-// {
-//     to: "+2547XXXXXXXX",
-//     message: "GREYMUS message"
-// }
-//
-// The Worker then securely adds the Africa's Talking
-// API key and sends the SMS.
-//
-// IMPORTANT:
-// The Africa's Talking API key is NEVER exposed here.
-//
 // =========================================================
 
 async function sendSMSViaCloudflare(
@@ -2515,12 +2478,117 @@ export function openMessageComposer(
                 closeComposer();
 
 
-                // -------------------------------------------------
-                // SUCCESS MESSAGE
-                // -------------------------------------------------
+                // =================================================
+                // DIAGNOSTIC SUCCESS MESSAGE
+                // =================================================
+                //
+                // The Worker now returns the complete
+                // Africa's Talking response.
+                //
+                // This temporarily displays the recipient
+                // status, status code, message ID and cost.
+                //
+                // =================================================
+
+                let diagnosticMessage =
+                    "SMS sent successfully.";
+
+
+                try {
+
+                    const at =
+                        result &&
+                        result.diagnostic &&
+                        result.diagnostic.africaTalkingResponse;
+
+
+                    const smsData =
+                        at &&
+                        at.SMSMessageData;
+
+
+                    const recipients =
+                        smsData &&
+                        smsData.Recipients;
+
+
+                    if (
+                        Array.isArray(
+                            recipients
+                        ) &&
+                        recipients.length > 0
+                    ) {
+
+                        const recipient =
+                            recipients[0];
+
+
+                        diagnosticMessage =
+                            "SMS accepted by Africa's Talking.\n\n" +
+
+                            "Recipient: " +
+                            (
+                                recipient.number ||
+                                phone
+                            ) +
+                            "\n\n" +
+
+                            "Status: " +
+                            (
+                                recipient.status ||
+                                "Not provided"
+                            ) +
+                            "\n\n" +
+
+                            "Status Code: " +
+                            (
+                                recipient.statusCode ??
+                                "Not provided"
+                            ) +
+                            "\n\n" +
+
+                            "Message ID: " +
+                            (
+                                recipient.messageId ||
+                                "Not provided"
+                            ) +
+                            "\n\n" +
+
+                            "Cost: " +
+                            (
+                                recipient.cost ||
+                                "Not provided"
+                            );
+
+                    } else {
+
+                        diagnosticMessage +=
+                            "\n\nAfrica's Talking response:\n" +
+                            JSON.stringify(
+                                at || result,
+                                null,
+                                2
+                            );
+
+                    }
+
+                } catch (
+                    diagnosticError
+                ) {
+
+                    console.error(
+                        "GREYMUS SMS diagnostic error:",
+                        diagnosticError
+                    );
+
+                    diagnosticMessage +=
+                        "\n\nDiagnostic information could not be read.";
+
+                }
+
 
                 alert(
-                    "SMS sent successfully."
+                    diagnosticMessage
                 );
 
 
@@ -2566,11 +2634,6 @@ export function openMessageComposer(
 
 // =========================================================
 // ENABLE REPAYMENT MESSAGE
-// =========================================================
-//
-// Call AFTER a repayment has been successfully saved
-// and confirmed.
-//
 // =========================================================
 
 export function enableRepaymentMessage(
@@ -2624,12 +2687,6 @@ export function enableRepaymentMessage(
 
 // =========================================================
 // UPDATE MESSAGING AFTER REPAYMENT
-// =========================================================
-//
-// ✔ Enables repayment confirmation
-// ✔ Due button disappears when today's due is fully paid
-// ✔ Refreshes messaging state
-//
 // =========================================================
 
 export function updateMessagingAfterRepayment(
@@ -2708,10 +2765,6 @@ export function updateMessagingAfterRepayment(
 // =========================================================
 // CLEAR TODAY'S MESSAGE STATUS
 // =========================================================
-//
-// Useful for testing or admin recovery.
-//
-// =========================================================
 
 export function clearTodayMessageStatus(
     client,
@@ -2769,5 +2822,5 @@ window.GREYMUS_MESSAGING = {
 
 // =========================================================
 // END OF messaging.js
-// VERSION 5.0
+// VERSION 5.1
 // =========================================================
