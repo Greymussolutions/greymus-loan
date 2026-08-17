@@ -1,9 +1,11 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
 // messaging.js
-// VERSION 4.0
+// VERSION 5.0
 //
 // GREYMUS CLIENT MESSAGING
+//
+// NATIVE PHONE SMS VERSION
 //
 // ✔ Loan approved message
 // ✔ Full repayment message
@@ -20,8 +22,11 @@
 // ✔ Dynamic client name
 // ✔ Dynamic amounts
 // ✔ Kenyan phone number formatting
-// ✔ Africa's Talking through Cloudflare Worker
-// ✔ API credentials stay on Cloudflare Worker
+// ✔ Opens the phone's native SMS application
+// ✔ No Africa's Talking
+// ✔ No Cloudflare Worker
+// ✔ No API key
+// ✔ No credit/debit card required
 // ✔ Editable SMS before sending
 // ✔ SMS character counter
 // ✔ No client loan-application message
@@ -32,22 +37,6 @@
 // GREYMUS.
 //
 // =========================================================
-
-
-// =========================================================
-// CLOUDFLARE WORKER URL
-// =========================================================
-//
-// IMPORTANT:
-// Keep the Africa's Talking username and API key
-// inside the Cloudflare Worker.
-//
-// Do NOT put the Africa's Talking API key here.
-//
-// =========================================================
-
-const GREYMUS_SMS_WORKER_URL =
-    "https://greymus-sms-api.gayisi0901.workers.dev";
 
 
 // =========================================================
@@ -91,10 +80,10 @@ function formatMessageDate(value) {
         typeof value.toDate === "function"
     ) {
 
-        date =
-            value.toDate();
+        date = value.toDate();
 
     }
+
 
     // Firebase Timestamp-like object
     else if (
@@ -103,12 +92,12 @@ function formatMessageDate(value) {
         typeof value.seconds === "number"
     ) {
 
-        date =
-            new Date(
-                value.seconds * 1000
-            );
+        date = new Date(
+            value.seconds * 1000
+        );
 
     }
+
 
     // JavaScript Date
     else if (
@@ -119,11 +108,11 @@ function formatMessageDate(value) {
 
     }
 
+
     // String / number
     else {
 
-        date =
-            new Date(value);
+        date = new Date(value);
 
     }
 
@@ -278,16 +267,26 @@ GREYMUS.`;
 
 
 // =========================================================
-// BUILD LOAN APPROVED MESSAGE
+// LOAN APPROVED MESSAGE
 // =========================================================
 //
-// This is used when YOU create/approve a loan.
+// IMPORTANT:
 //
-// The client does NOT apply through the system.
+// GREYMUS is NOT a client loan application system.
+//
+// YOU create/approve the loan yourself.
+//
+// This message is therefore:
+// "Your GREYMUS loan has been approved."
+//
+// It is NOT:
+// "Your loan application was received."
 //
 // =========================================================
 
-function buildLoanApprovedMessage(data = {}) {
+function buildLoanApprovedMessage(
+    data = {}
+) {
 
     const name =
         getClientName(
@@ -392,17 +391,17 @@ function buildLoanApprovedMessage(data = {}) {
 
 
 // =========================================================
-// BUILD FULL REPAYMENT MESSAGE
+// FULL REPAYMENT MESSAGE
 // =========================================================
 //
-// Used when the client has paid the FULL amount due.
+// Used when the client pays the FULL amount due today.
 //
 // Shows:
 //
-// ✔ Amount paid
+// ✔ Amount paid today
 // ✔ Remaining loan balance
-// ✔ Next repayment date
 // ✔ Next repayment amount
+// ✔ Next repayment date
 //
 // =========================================================
 
@@ -471,12 +470,14 @@ function buildFullRepaymentMessage(
             message +=
                 `Your next repayment`;
 
+
             if (nextAmount > 0) {
 
                 message +=
                     ` of ${formatKES(nextAmount)}`;
 
             }
+
 
             message +=
                 ` is due on ${formattedDate}. `;
@@ -499,17 +500,21 @@ function buildFullRepaymentMessage(
 
 
 // =========================================================
-// BUILD PARTIAL REPAYMENT MESSAGE
+// PARTIAL REPAYMENT MESSAGE
 // =========================================================
 //
-// Used when today's installment is NOT fully paid.
+// Example:
+//
+// Today's due = KES 3,000
+// Paid        = KES 1,500
+// Remaining   = KES 1,500
 //
 // Shows:
 //
-// ✔ Amount due today
 // ✔ Amount paid
+// ✔ Today's original due
 // ✔ Remaining amount due today
-// ✔ Overall outstanding loan balance
+// ✔ Remaining loan balance
 //
 // =========================================================
 
@@ -578,16 +583,15 @@ function buildPartialRepaymentMessage(
 
 
 // =========================================================
-// BUILD ARREARS MESSAGE
+// ARREARS MESSAGE
 // =========================================================
 //
-// Used when the client has arrears but no current
-// installment is being included in the message.
+// Used when a client has overdue arrears.
 //
 // Shows:
 //
 // ✔ Arrears
-// ✔ Outstanding loan balance
+// ✔ Current outstanding loan balance
 //
 // =========================================================
 
@@ -634,8 +638,14 @@ function buildArrearsMessage(
 
 
 // =========================================================
-// BUILD DUE + ARREARS MESSAGE
+// DUE TODAY + ARREARS MESSAGE
 // =========================================================
+//
+// Example:
+//
+// Today's due = KES 3,000
+// Arrears     = KES 2,000
+// Total       = KES 5,000
 //
 // Shows:
 //
@@ -707,23 +717,24 @@ function buildDuePlusArrearsMessage(
 
 
 // =========================================================
-// BUILD PARTIAL REPAYMENT + ARREARS MESSAGE
+// PARTIAL REPAYMENT + ARREARS MESSAGE
 // =========================================================
 //
-// Used when:
-//
-// Today's repayment = KES 3,000
-// Arrears = KES 2,000
-// Paid = KES 1,500
-//
-// Message shows:
+// Example:
 //
 // Today's due       = 3,000
-// Amount paid       = 1,500
+// Paid              = 1,500
 // Remaining today   = 1,500
 // Arrears           = 2,000
 // Total payable     = 3,500
-// Outstanding       = loan balance
+//
+// Shows:
+//
+// ✔ Amount paid
+// ✔ Remaining due today
+// ✔ Arrears
+// ✔ Total payable
+// ✔ Outstanding balance
 //
 // =========================================================
 
@@ -810,17 +821,7 @@ function buildPartialRepaymentPlusArrearsMessage(
 
 
 // =========================================================
-// BUILD REPAYMENT MESSAGE AUTOMATICALLY
-// =========================================================
-//
-// repaymentStatus may be:
-//
-// "full"
-// "partial"
-// "arrears"
-// "due-arrears"
-// "partial-arrears"
-//
+// AUTOMATIC REPAYMENT MESSAGE
 // =========================================================
 
 function buildRepaymentMessage(
@@ -878,9 +879,9 @@ function buildRepaymentMessage(
         );
 
 
-    // =====================================================
-    // EXPLICIT PARTIAL + ARREARS
-    // =====================================================
+    // -----------------------------------------------------
+    // PARTIAL + ARREARS
+    // -----------------------------------------------------
 
     if (
         status === "partial-arrears" ||
@@ -894,9 +895,9 @@ function buildRepaymentMessage(
     }
 
 
-    // =====================================================
-    // EXPLICIT DUE + ARREARS
-    // =====================================================
+    // -----------------------------------------------------
+    // DUE + ARREARS
+    // -----------------------------------------------------
 
     if (
         status === "due-arrears" ||
@@ -911,9 +912,9 @@ function buildRepaymentMessage(
     }
 
 
-    // =====================================================
-    // EXPLICIT ARREARS
-    // =====================================================
+    // -----------------------------------------------------
+    // ARREARS
+    // -----------------------------------------------------
 
     if (
         status === "arrears" ||
@@ -927,9 +928,9 @@ function buildRepaymentMessage(
     }
 
 
-    // =====================================================
-    // EXPLICIT PARTIAL
-    // =====================================================
+    // -----------------------------------------------------
+    // PARTIAL
+    // -----------------------------------------------------
 
     if (
         status === "partial"
@@ -942,9 +943,9 @@ function buildRepaymentMessage(
     }
 
 
-    // =====================================================
-    // EXPLICIT FULL
-    // =====================================================
+    // -----------------------------------------------------
+    // FULL
+    // -----------------------------------------------------
 
     if (
         status === "full" ||
@@ -958,9 +959,9 @@ function buildRepaymentMessage(
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // AUTOMATIC DETECTION
-    // =====================================================
+    // -----------------------------------------------------
 
     if (
         amountPaid > 0 &&
@@ -1091,21 +1092,23 @@ function buildMessage(
 
 
 // =========================================================
-// SEND SMS THROUGH CLOUDFLARE WORKER
+// NATIVE PHONE SMS
 // =========================================================
 //
-// The frontend sends:
+// IMPORTANT:
 //
-// {
-//     to: "+2547XXXXXXXX",
-//     message: "Hello..."
-// }
+// This does NOT call Africa's Talking.
 //
-// The Worker handles Africa's Talking.
+// This does NOT call Cloudflare.
+//
+// This opens the SMS application installed on the
+// user's phone.
+//
+// The user then presses the phone's own SEND button.
 //
 // =========================================================
 
-async function sendGreymusSMS(
+function openNativeSMS(
     phone,
     message
 ) {
@@ -1128,76 +1131,563 @@ async function sendGreymusSMS(
     }
 
 
-    const response =
-        await fetch(
-            GREYMUS_SMS_WORKER_URL,
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json"
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        to:
-                            phone,
-
-                        message:
-                            message
-
-                    })
-
-            }
+    const encodedMessage =
+        encodeURIComponent(
+            message
         );
 
 
-    let result = null;
+    const smsUrl =
+        `sms:${phone}?body=${encodedMessage}`;
 
 
-    try {
+    window.location.href =
+        smsUrl;
 
-        result =
-            await response.json();
-
-    } catch {
-
-        result = null;
-
-    }
+}
 
 
-    if (!response.ok) {
+// =========================================================
+// MESSAGE TYPE LABEL
+// =========================================================
 
-        throw new Error(
-            result?.message ||
-            result?.error ||
-            `SMS request failed (${response.status}).`
+function getMessageTypeLabel(
+    data = {}
+) {
+
+    const type =
+        String(
+            data.type ||
+            "repayment"
+        )
+        .toLowerCase()
+        .replace(
+            /_/g,
+            "-"
         );
 
+
+    switch (type) {
+
+        case "approved":
+
+        case "loan-approved":
+
+            return "Loan Approved SMS";
+
+
+        case "arrears":
+
+        case "overdue":
+
+            return "Arrears SMS";
+
+
+        case "due-arrears":
+
+        case "due-plus-arrears":
+
+        case "due-today-arrears":
+
+            return "Due Today + Arrears SMS";
+
+
+        case "partial":
+
+            return "Partial Repayment SMS";
+
+
+        case "partial-arrears":
+
+        case "partial-with-arrears":
+
+            return "Partial Repayment + Arrears SMS";
+
+
+        default:
+
+            return "Repayment SMS";
+
     }
 
+}
+
+
+// =========================================================
+// BUILD SUMMARY
+// =========================================================
+
+function buildSummaryHTML(
+    data = {}
+) {
+
+    const type =
+        String(
+            data.type ||
+            "repayment"
+        )
+        .toLowerCase()
+        .replace(
+            /_/g,
+            "-"
+        );
+
+
+    // -----------------------------------------------------
+    // LOAN APPROVED
+    // -----------------------------------------------------
 
     if (
-        result &&
-        result.success === false
+        type === "approved" ||
+        type === "loan-approved"
     ) {
 
-        throw new Error(
-            result.message ||
-            result.error ||
-            "Africa's Talking could not send the SMS."
-        );
+        return `
+
+            <div class="greymus-message-summary">
+
+                <div>
+
+                    <span>
+                        Approved Amount
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.amount ||
+                                data.loanAmount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding ||
+                                data.totalRepayment
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Weekly Repayment
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.weeklyPayment ||
+                                data.weeklyRepayment ||
+                                data.repayment
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Start Date
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatMessageDate(
+                                data.startDate ||
+                                data.repaymentStartDate ||
+                                data.firstRepaymentDate
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
 
     }
 
 
-    return result;
+    // -----------------------------------------------------
+    // ARREARS
+    // -----------------------------------------------------
+
+    if (
+        type === "arrears" ||
+        type === "overdue"
+    ) {
+
+        return `
+
+            <div class="greymus-message-summary">
+
+                <div>
+
+                    <span>
+                        Arrears
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.arrears ||
+                                data.overdueAmount
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    // -----------------------------------------------------
+    // DUE + ARREARS
+    // -----------------------------------------------------
+
+    if (
+        type === "due-arrears" ||
+        type === "due-plus-arrears" ||
+        type === "due-today-arrears"
+    ) {
+
+        const due =
+            Number(
+                data.dueToday ||
+                data.due ||
+                0
+            );
+
+
+        const arrears =
+            Number(
+                data.arrears ||
+                0
+            );
+
+
+        return `
+
+            <div class="greymus-message-summary">
+
+                <div>
+
+                    <span>
+                        Today's Due
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(due)
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Arrears
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(arrears)
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Total Payable
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.totalPayable ??
+                                (due + arrears)
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    // -----------------------------------------------------
+    // PARTIAL
+    // -----------------------------------------------------
+
+    if (
+        type === "partial" ||
+        type === "partial-arrears" ||
+        type === "partial-with-arrears"
+    ) {
+
+        const due =
+            Number(
+                data.dueToday ||
+                data.due ||
+                0
+            );
+
+
+        const paid =
+            Number(
+                data.amountPaid ||
+                data.paid ||
+                0
+            );
+
+
+        const remaining =
+            Math.max(
+                0,
+                Number(
+                    data.remainingToday ??
+                    (due - paid)
+                )
+            );
+
+
+        const arrears =
+            Number(
+                data.arrears ||
+                0
+            );
+
+
+        return `
+
+            <div class="greymus-message-summary">
+
+                <div>
+
+                    <span>
+                        Amount Paid
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(paid)
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Remaining Today
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(remaining)
+                        )}
+                    </strong>
+
+                </div>
+
+
+                ${
+                    arrears > 0
+
+                    ? `
+
+                        <div>
+
+                            <span>
+                                Arrears
+                            </span>
+
+                            <strong>
+                                ${escapeHtml(
+                                    formatKES(arrears)
+                                )}
+                            </strong>
+
+                        </div>
+
+                    `
+
+                    : ""
+                }
+
+
+                <div>
+
+                    <span>
+                        Outstanding Balance
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    // -----------------------------------------------------
+    // FULL REPAYMENT
+    // -----------------------------------------------------
+
+    return `
+
+        <div class="greymus-message-summary">
+
+            <div>
+
+                <span>
+                    Amount Paid
+                </span>
+
+                <strong>
+                    ${escapeHtml(
+                        formatKES(
+                            data.amountPaid ||
+                            data.paid
+                        )
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Outstanding Balance
+                </span>
+
+                <strong>
+                    ${escapeHtml(
+                        formatKES(
+                            data.outstanding ||
+                            data.balance
+                        )
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Next Repayment
+                </span>
+
+                <strong>
+                    ${escapeHtml(
+                        formatKES(
+                            data.nextRepaymentAmount ||
+                            data.nextDueAmount ||
+                            data.weeklyPayment
+                        )
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Next Date
+                </span>
+
+                <strong>
+                    ${escapeHtml(
+                        formatMessageDate(
+                            data.nextRepaymentDate ||
+                            data.nextDueDate
+                        )
+                    )}
+                </strong>
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
@@ -1254,9 +1744,11 @@ function injectStyles() {
             width:
                 min(100%, 520px);
 
-            max-height: 92vh;
+            max-height:
+                92vh;
 
-            overflow-y: auto;
+            overflow-y:
+                auto;
 
             background:
                 #162235;
@@ -1304,7 +1796,8 @@ function injectStyles() {
 
         .greymus-message-header h2 {
 
-            margin: 0;
+            margin:
+                0;
 
             font-size:
                 22px;
@@ -1657,26 +2150,6 @@ function injectStyles() {
         }
 
 
-        .greymus-message-success {
-
-            padding:
-                12px;
-
-            border-radius:
-                10px;
-
-            background:
-                rgba(16,185,129,.12);
-
-            color:
-                #9ff5d6;
-
-            font-size:
-                13px;
-
-        }
-
-
         @media(max-width:480px){
 
             .greymus-message-overlay {
@@ -1732,533 +2205,6 @@ function closeComposer() {
         overlay.remove();
 
     }
-
-}
-
-
-// =========================================================
-// MESSAGE TYPE LABEL
-// =========================================================
-
-function getMessageTypeLabel(
-    data = {}
-) {
-
-    const type =
-        String(
-            data.type ||
-            "repayment"
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
-        );
-
-
-    switch (type) {
-
-        case "approved":
-
-        case "loan-approved":
-
-            return "Loan Approved SMS";
-
-
-        case "arrears":
-
-        case "overdue":
-
-            return "Arrears SMS";
-
-
-        case "due-arrears":
-
-        case "due-plus-arrears":
-
-        case "due-today-arrears":
-
-            return "Due Today + Arrears SMS";
-
-
-        case "partial":
-
-            return "Partial Repayment SMS";
-
-
-        case "partial-arrears":
-
-        case "partial-with-arrears":
-
-            return "Partial Repayment + Arrears SMS";
-
-
-        default:
-
-            return "Repayment SMS";
-
-    }
-
-}
-
-
-// =========================================================
-// BUILD SUMMARY
-// =========================================================
-
-function buildSummaryHTML(
-    data = {}
-) {
-
-    const type =
-        String(
-            data.type ||
-            "repayment"
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
-        );
-
-
-    if (
-        type === "approved" ||
-        type === "loan-approved"
-    ) {
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-
-                    <span>
-                        Approved Amount
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.amount ||
-                                data.loanAmount
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Outstanding
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding ||
-                                data.totalRepayment
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Weekly Repayment
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.weeklyPayment ||
-                                data.weeklyRepayment ||
-                                data.repayment
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Start Date
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatMessageDate(
-                                data.startDate ||
-                                data.repaymentStartDate ||
-                                data.firstRepaymentDate
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    if (
-        type === "arrears" ||
-        type === "overdue"
-    ) {
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-
-                    <span>
-                        Arrears
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.arrears ||
-                                data.overdueAmount
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Outstanding
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    if (
-        type === "due-arrears" ||
-        type === "due-plus-arrears" ||
-        type === "due-today-arrears"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-
-        const arrears =
-            Number(
-                data.arrears ||
-                0
-            );
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-
-                    <span>
-                        Today's Due
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(due)
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Arrears
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(arrears)
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Total Payable
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.totalPayable ??
-                                (due + arrears)
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Outstanding
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    if (
-        type === "partial" ||
-        type === "partial-arrears" ||
-        type === "partial-with-arrears"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-
-        const paid =
-            Number(
-                data.amountPaid ||
-                data.paid ||
-                0
-            );
-
-
-        const remaining =
-            Math.max(
-                0,
-                Number(
-                    data.remainingToday ??
-                    (due - paid)
-                )
-            );
-
-
-        const arrears =
-            Number(
-                data.arrears ||
-                0
-            );
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-
-                    <span>
-                        Amount Paid
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(paid)
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Remaining Today
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(remaining)
-                        )}
-                    </strong>
-
-                </div>
-
-
-                ${
-                    arrears > 0
-
-                    ? `
-
-                        <div>
-
-                            <span>
-                                Arrears
-                            </span>
-
-                            <strong>
-                                ${escapeHtml(
-                                    formatKES(arrears)
-                                )}
-                            </strong>
-
-                        </div>
-
-                    `
-
-                    : ""
-                }
-
-
-                <div>
-
-                    <span>
-                        Outstanding Balance
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // FULL REPAYMENT
-
-    return `
-
-        <div class="greymus-message-summary">
-
-            <div>
-
-                <span>
-                    Amount Paid
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatKES(
-                            data.amountPaid ||
-                            data.paid
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    Outstanding Balance
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatKES(
-                            data.outstanding ||
-                            data.balance
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    Next Repayment
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatKES(
-                            data.nextRepaymentAmount ||
-                            data.nextDueAmount ||
-                            data.weeklyPayment
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    Next Date
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatMessageDate(
-                            data.nextRepaymentDate ||
-                            data.nextDueDate
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-        </div>
-
-    `;
 
 }
 
@@ -2321,7 +2267,9 @@ export function openMessageComposer(
             aria-modal="true"
         >
 
-            <div class="greymus-message-header">
+            <div
+                class="greymus-message-header"
+            >
 
                 <div>
 
@@ -2349,15 +2297,22 @@ export function openMessageComposer(
             </div>
 
 
-            <div class="greymus-message-body">
+            <div
+                class="greymus-message-body"
+            >
 
-                <div class="greymus-message-field">
+                <div
+                    class="greymus-message-field"
+                >
 
                     <label>
                         Client
                     </label>
 
-                    <div class="greymus-message-readonly">
+
+                    <div
+                        class="greymus-message-readonly"
+                    >
 
                         ${escapeHtml(name)}
 
@@ -2366,13 +2321,18 @@ export function openMessageComposer(
                 </div>
 
 
-                <div class="greymus-message-field">
+                <div
+                    class="greymus-message-field"
+                >
 
                     <label>
                         Phone Number
                     </label>
 
-                    <div class="greymus-message-readonly">
+
+                    <div
+                        class="greymus-message-readonly"
+                    >
 
                         ${escapeHtml(
                             phone ||
@@ -2387,7 +2347,9 @@ export function openMessageComposer(
                 ${buildSummaryHTML(data)}
 
 
-                <div class="greymus-message-field">
+                <div
+                    class="greymus-message-field"
+                >
 
                     <label
                         for="greymus-message-text"
@@ -2402,11 +2364,14 @@ export function openMessageComposer(
                     >${escapeHtml(message)}</textarea>
 
 
-                    <div class="greymus-message-counter">
+                    <div
+                        class="greymus-message-counter"
+                    >
 
                         <span>
                             Edit before sending
                         </span>
+
 
                         <span
                             id="greymus-message-count"
@@ -2424,7 +2389,9 @@ export function openMessageComposer(
 
                     ? `
 
-                        <div class="greymus-message-error">
+                        <div
+                            class="greymus-message-error"
+                        >
 
                             This client has no valid
                             phone number.
@@ -2439,7 +2406,9 @@ export function openMessageComposer(
             </div>
 
 
-            <div class="greymus-message-footer">
+            <div
+                class="greymus-message-footer"
+            >
 
                 <button
                     type="button"
@@ -2594,12 +2563,12 @@ export function openMessageComposer(
 
 
     // =====================================================
-    // SEND SMS
+    // SEND USING PHONE SMS
     // =====================================================
 
     sendButton?.addEventListener(
         "click",
-        async () => {
+        () => {
 
             const finalMessage =
                 textarea
@@ -2631,66 +2600,20 @@ export function openMessageComposer(
             }
 
 
-            sendButton.disabled =
-                true;
+            // -------------------------------------------------
+            // NATIVE PHONE SMS
+            // -------------------------------------------------
+            //
+            // This opens the SMS application on the phone.
+            //
+            // The phone's own SIM/network sends the SMS.
+            //
+            // -------------------------------------------------
 
-
-            sendButton.textContent =
-                "Sending SMS…";
-
-
-            try {
-
-                await sendGreymusSMS(
-                    phone,
-                    finalMessage
-                );
-
-
-                sendButton.textContent =
-                    "SMS Sent ✓";
-
-
-                alert(
-                    "SMS sent successfully."
-                );
-
-
-                setTimeout(
-                    () => {
-
-                        close();
-
-                    },
-                    700
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "GREYMUS SMS ERROR:",
-                    error
-                );
-
-
-                sendButton.disabled =
-                    false;
-
-
-                sendButton.textContent =
-                    "💬 Send SMS";
-
-
-                alert(
-                    "SMS could not be sent.\n\n" +
-                    (
-                        error?.message ||
-                        "Unknown error."
-                    )
-                );
-
-            }
+            openNativeSMS(
+                phone,
+                finalMessage
+            );
 
         }
     );
@@ -2725,7 +2648,7 @@ window.GREYMUS_MESSAGING = {
 
     buildPartialRepaymentPlusArrearsMessage,
 
-    sendGreymusSMS
+    openNativeSMS
 
 };
 
