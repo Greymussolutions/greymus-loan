@@ -1,54 +1,24 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
 // messaging.js
-// VERSION 6.0
+// VERSION 2.0
 //
 // GREYMUS CLIENT MESSAGING
-// SWAHILI VERSION
 //
-// MESSAGE RULES
-//
-// 1. DUE TODAY
-//    - Today's due
-//    - Outstanding loan balance
-//
-// 2. DUE TODAY + ARREARS
-//    - Today's due
-//    - Arrears
-//    - Total currently due
-//    - Outstanding loan balance
-//
-// 3. ARREARS ONLY
-//    - Arrears
-//    - Outstanding loan balance
-//
-// 4. FULL REPAYMENT
-//    - Amount received
-//    - Next repayment date
-//    - Outstanding loan balance
-//
-// 5. PARTIAL REPAYMENT
-//    - Amount received
-//    - Remaining amount due today
-//
-// 6. LOAN APPROVED
-//    - Approved amount
-//    - Weekly repayment
-//    - First repayment date
-//    - Outstanding loan balance
-//
-// IMPORTANT
-//
-// Due Today + Arrears are ONE reminder.
-// If a client is due today and has arrears,
-// the arrears are included in the Due Today reminder.
-//
-// All client messages are in Swahili.
-//
-// Every message ends with:
-//
-// Kwa heshima,
-// GREYMUS.
+// ✔ Due today message
+// ✔ Partial repayment message
+// ✔ Due today + arrears message
+// ✔ Arrears message
+// ✔ Remaining installment amount
+// ✔ Current outstanding loan balance
+// ✔ Dynamic client name
+// ✔ Dynamic amounts
+// ✔ Native phone SMS
+// ✔ No SMS API
+// ✔ No external messaging service
+// ✔ Every message ends with:
+//      With regards,
+//      GREYMUS.
 //
 // =========================================================
 
@@ -75,79 +45,6 @@ function formatKES(value) {
 
 
 // =========================================================
-// FORMAT DATE
-// =========================================================
-
-function formatMessageDate(value) {
-
-    if (!value) {
-        return "";
-    }
-
-    let date;
-
-    // Firebase Timestamp
-    if (
-        value &&
-        typeof value.toDate === "function"
-    ) {
-
-        date = value.toDate();
-
-    }
-
-    // Firebase Timestamp-like object
-    else if (
-        value &&
-        typeof value === "object" &&
-        typeof value.seconds === "number"
-    ) {
-
-        date = new Date(
-            value.seconds * 1000
-        );
-
-    }
-
-    // JavaScript Date
-    else if (
-        value instanceof Date
-    ) {
-
-        date = value;
-
-    }
-
-    // String / number
-    else {
-
-        date = new Date(value);
-
-    }
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return String(value);
-
-    }
-
-    return new Intl.DateTimeFormat(
-        "en-KE",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        }
-    ).format(date);
-
-}
-
-
-// =========================================================
 // GET CLIENT NAME
 // =========================================================
 
@@ -157,7 +54,7 @@ function getClientName(client = {}) {
         client.name ||
         client.clientName ||
         client.fullName ||
-        "Mteja"
+        "Client"
     );
 
 }
@@ -184,16 +81,13 @@ function getClientPhone(client = {}) {
                 ""
             );
 
+
     if (!phone) {
-
         return "";
-
     }
 
-    // Kenya:
-    // 07XXXXXXXX
-    // 01XXXXXXXX
 
+    // Kenya: 07XXXXXXXX
     if (
         phone.startsWith("07") ||
         phone.startsWith("01")
@@ -206,10 +100,8 @@ function getClientPhone(client = {}) {
 
     }
 
-    // Kenya:
-    // 2547XXXXXXXX
-    // 2541XXXXXXXX
 
+    // Kenya: 2547XXXXXXXX
     if (
         phone.startsWith("254")
     ) {
@@ -217,6 +109,7 @@ function getClientPhone(client = {}) {
         return "+" + phone;
 
     }
+
 
     return phone;
 
@@ -230,26 +123,35 @@ function getClientPhone(client = {}) {
 function escapeHtml(value) {
 
     return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+// =========================================================
+// TODAY
+// =========================================================
+
+function getTodayString() {
+
+    const today =
+        new Date();
+
+    return (
+        today.getFullYear() +
+        "-" +
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0") +
+        "-" +
+        String(
+            today.getDate()
+        ).padStart(2, "0")
+    );
 
 }
 
@@ -262,1449 +164,202 @@ function messageSignature() {
 
     return `
 
-Kwa heshima,
+With regards,
 GREYMUS.`;
 
 }
 
 
 // =========================================================
-// LOAN APPROVED MESSAGE
+// BUILD DUE MESSAGE
 // =========================================================
-
-function buildLoanApprovedMessage(
-    data = {}
-) {
-
-    const name =
-        getClientName(
-            data.client
-        );
-
-    const amount =
-        Number(
-            data.amount ||
-            data.loanAmount ||
-            0
-        );
-
-    const outstanding =
-        Number(
-            data.outstanding ||
-            data.totalRepayment ||
-            data.totalLoanRepayment ||
-            0
-        );
-
-    const weeklyPayment =
-        Number(
-            data.weeklyPayment ||
-            data.weeklyRepayment ||
-            data.repayment ||
-            0
-        );
-
-    const startDate =
-        data.startDate ||
-        data.repaymentStartDate ||
-        data.firstRepaymentDate ||
-        "";
-
-    let message =
-        `Habari ${name}, mkopo wako wa GREYMUS umeidhinishwa. `;
-
-    if (amount > 0) {
-
-        message +=
-            `Kiasi cha mkopo kilichoidhinishwa ni ` +
-            `${formatKES(amount)}. `;
-
-    }
-
-    if (weeklyPayment > 0) {
-
-        message +=
-            `Malipo yako ya kila wiki ni ` +
-            `${formatKES(weeklyPayment)}. `;
-
-    }
-
-    if (startDate) {
-
-        const formattedDate =
-            formatMessageDate(
-                startDate
-            );
-
-        if (formattedDate) {
-
-            message +=
-                `Malipo yako ya kwanza ni tarehe ` +
-                `${formattedDate}. `;
-
-        }
-
-    }
-
-    if (outstanding > 0) {
-
-        message +=
-            `Salio lako la mkopo ni ` +
-            `${formatKES(outstanding)}. `;
-
-    }
-
-    return (
-        message +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// FULL REPAYMENT MESSAGE
 //
-// Short message:
-// - Amount received
-// - Next repayment date
-// - Outstanding balance
-// =========================================================
-
-function buildFullRepaymentMessage(
-    data = {}
-) {
-
-    const name =
-        getClientName(
-            data.client
-        );
-
-    const amountPaid =
-        Number(
-            data.amountPaid ||
-            data.paid ||
-            data.paymentAmount ||
-            0
-        );
-
-    const outstanding =
-        Number(
-            data.outstanding ||
-            data.balance ||
-            data.remainingBalance ||
-            0
-        );
-
-    const nextDate =
-        data.nextRepaymentDate ||
-        data.nextDueDate ||
-        data.nextPaymentDate ||
-        "";
-
-    let message =
-        `Habari ${name}, tumepokea malipo yako ya ` +
-        `${formatKES(amountPaid)}. ` +
-        `Malipo yako ya leo yamekamilika. `;
-
-    if (nextDate) {
-
-        const formattedDate =
-            formatMessageDate(
-                nextDate
-            );
-
-        if (formattedDate) {
-
-            message +=
-                `Malipo yako yanayofuata ni tarehe ` +
-                `${formattedDate}. `;
-
-        }
-
-    }
-
-    message +=
-        `Salio lako la mkopo ni ` +
-        `${formatKES(outstanding)}.`;
-
-    return (
-        message +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// PARTIAL REPAYMENT MESSAGE
+// CASE 1:
+// Due today and NOT in arrears.
 //
-// Short message:
-// - Amount received
-// - Remaining amount due today
+// CASE 2:
+// Due today AND client is in arrears.
+//
+// CASE 3:
+// Partial repayment already made.
+//
 // =========================================================
 
-function buildPartialRepaymentMessage(
-    data = {}
-) {
+function buildDueMessage(data) {
 
     const name =
         getClientName(
             data.client
         );
 
-    const amountPaid =
+
+    const due =
         Number(
-            data.amountPaid ||
-            data.paid ||
-            data.paymentAmount ||
-            0
+            data.due || 0
         );
 
-    const dueToday =
+
+    const paid =
         Number(
-            data.dueToday ||
-            data.due ||
-            data.installmentDue ||
-            0
+            data.paid || 0
         );
 
-    const remainingToday =
+
+    const remaining =
         Math.max(
             0,
-            Number(
-                data.remainingToday ??
-                data.remainingDue ??
-                (dueToday - amountPaid)
-            )
+            due - paid
         );
 
-    return (
-        `Habari ${name}, tumepokea malipo yako ya ` +
-        `${formatKES(amountPaid)}. ` +
-        `Kiasi kilichobaki cha malipo ya leo ni ` +
-        `${formatKES(remainingToday)}.` +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// DUE TODAY MESSAGE
-//
-// Short reminder:
-// - Today's due
-// - Outstanding balance
-// =========================================================
-
-function buildDueTodayMessage(
-    data = {}
-) {
-
-    const name =
-        getClientName(
-            data.client
-        );
-
-    const dueToday =
-        Number(
-            data.dueToday ||
-            data.due ||
-            data.installmentDue ||
-            0
-        );
-
-    const outstanding =
-        Number(
-            data.outstanding ||
-            data.balance ||
-            data.remainingBalance ||
-            0
-        );
-
-    return (
-        `Habari ${name}, malipo yako ya GREYMUS ya ` +
-        `${formatKES(dueToday)} yanapaswa kulipwa leo. ` +
-        `Salio lako la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Tafadhali fanya malipo yako kwa wakati.` +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// ARREARS ONLY MESSAGE
-//
-// Used ONLY when:
-// Today's due = 0
-// AND arrears > 0
-//
-// Shows:
-// - Arrears
-// - Outstanding balance
-// =========================================================
-
-function buildArrearsMessage(
-    data = {}
-) {
-
-    const name =
-        getClientName(
-            data.client
-        );
 
     const arrears =
         Number(
-            data.arrears ||
-            data.overdueAmount ||
-            data.overdue ||
-            0
+            data.arrears || 0
         );
+
 
     const outstanding =
         Number(
-            data.outstanding ||
-            data.balance ||
-            data.remainingBalance ||
-            0
-        );
-
-    return (
-        `Habari ${name}, una deni la nyuma la GREYMUS la ` +
-        `${formatKES(arrears)}. ` +
-        `Salio lako la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Tafadhali lipa deni hili haraka iwezekanavyo.` +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// DUE TODAY + ARREARS MESSAGE
-//
-// This is ONE reminder.
-//
-// Shows:
-// - Today's due
-// - Arrears
-// - Total currently due
-// - Outstanding balance
-// =========================================================
-
-function buildDuePlusArrearsMessage(
-    data = {}
-) {
-
-    const name =
-        getClientName(
-            data.client
-        );
-
-    const dueToday =
-        Number(
-            data.dueToday ||
-            data.due ||
-            data.installmentDue ||
-            0
-        );
-
-    const arrears =
-        Number(
-            data.arrears ||
-            data.overdueAmount ||
-            data.overdue ||
-            0
-        );
-
-    const outstanding =
-        Number(
-            data.outstanding ||
-            data.balance ||
-            data.remainingBalance ||
-            0
-        );
-
-    const totalPayable =
-        Number(
-            data.totalPayable ??
-            (dueToday + arrears)
-        );
-
-    return (
-        `Habari ${name}, malipo yako ya GREYMUS ya ` +
-        `${formatKES(dueToday)} yanapaswa kulipwa leo. ` +
-        `Una pia deni la nyuma la ` +
-        `${formatKES(arrears)}. ` +
-        `Jumla ya kiasi kinachodaiwa kwa sasa ni ` +
-        `${formatKES(totalPayable)}. ` +
-        `Salio lako la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Tafadhali fanya malipo yako haraka iwezekanavyo.` +
-        messageSignature()
-    );
-
-}
-
-
-// =========================================================
-// PARTIAL REPAYMENT + ARREARS
-//
-// This remains supported for compatibility,
-// but repayment messages remain short.
-//
-// If a payment is partial and arrears exist,
-// the client is told only:
-// - Amount received
-// - Remaining amount due today
-//
-// The reminder handles arrears separately.
-// =========================================================
-
-function buildPartialRepaymentPlusArrearsMessage(
-    data = {}
-) {
-
-    return buildPartialRepaymentMessage(
-        data
-    );
-
-}
-
-
-// =========================================================
-// AUTOMATIC REPAYMENT MESSAGE
-// =========================================================
-
-function buildRepaymentMessage(
-    data = {}
-) {
-
-    const status =
-        String(
-            data.repaymentStatus ||
-            data.status ||
-            ""
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
-        );
-
-    const dueToday =
-        Number(
-            data.dueToday ||
-            data.due ||
-            data.installmentDue ||
-            0
-        );
-
-    const arrears =
-        Number(
-            data.arrears ||
-            data.overdueAmount ||
-            data.overdue ||
-            0
-        );
-
-    const amountPaid =
-        Number(
-            data.amountPaid ||
-            data.paid ||
-            data.paymentAmount ||
-            0
-        );
-
-    const remainingToday =
-        Math.max(
-            0,
-            Number(
-                data.remainingToday ??
-                data.remainingDue ??
-                (dueToday - amountPaid)
-            )
+            data.outstanding || 0
         );
 
 
-    // -----------------------------------------------------
-    // PARTIAL
-    // -----------------------------------------------------
+    // =====================================================
+    // PARTIAL PAYMENT + ARREARS
+    // =====================================================
 
     if (
-        status === "partial" ||
-        status === "partial-arrears" ||
-        status === "partial-with-arrears"
+        paid > 0 &&
+        remaining > 0 &&
+        arrears > 0
     ) {
 
-        return buildPartialRepaymentMessage(
-            data
+        const totalToPay =
+            remaining +
+            arrears;
+
+
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} was partially paid. ` +
+            `The remaining amount for today's repayment ` +
+            `is ${formatKES(remaining)}. ` +
+            `You also have ${formatKES(arrears)} in arrears. ` +
+            `Your total amount to be paid is ` +
+            `${formatKES(totalToPay)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please make your payment as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
         );
 
     }
 
 
-    // -----------------------------------------------------
-    // FULL
-    // -----------------------------------------------------
+    // =====================================================
+    // PARTIAL PAYMENT WITHOUT ARREARS
+    // =====================================================
 
     if (
-        status === "full" ||
-        status === "paid"
+        paid > 0 &&
+        remaining > 0
     ) {
 
-        return buildFullRepaymentMessage(
-            data
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} was partially paid. ` +
+            `The remaining amount for today's repayment ` +
+            `is ${formatKES(remaining)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please clear the remaining amount as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
         );
 
     }
 
 
-    // -----------------------------------------------------
+    // =====================================================
     // DUE TODAY + ARREARS
-    // -----------------------------------------------------
-
-    if (
-        dueToday > 0 &&
-        arrears > 0
-    ) {
-
-        return buildDuePlusArrearsMessage(
-            data
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // DUE TODAY
-    // -----------------------------------------------------
-
-    if (
-        dueToday > 0
-    ) {
-
-        return buildDueTodayMessage(
-            data
-        );
-
-    }
-
-
-    // -----------------------------------------------------
-    // ARREARS ONLY
-    // -----------------------------------------------------
+    // =====================================================
 
     if (
         arrears > 0
     ) {
 
-        return buildArrearsMessage(
-            data
+        const totalToPay =
+            due +
+            arrears;
+
+
+        return (
+            `Hello ${name}, your GREYMUS repayment ` +
+            `of ${formatKES(due)} is due today. ` +
+            `You also have ${formatKES(arrears)} in arrears. ` +
+            `Your total amount to be paid is ` +
+            `${formatKES(totalToPay)}. ` +
+            `Your current outstanding loan balance is ` +
+            `${formatKES(outstanding)}. ` +
+            `Please make your payment as soon as possible. ` +
+            `Thank you.` +
+            messageSignature()
         );
 
     }
 
 
-    // -----------------------------------------------------
-    // PAYMENT FALLBACK
-    // -----------------------------------------------------
+    // =====================================================
+    // NORMAL DUE TODAY
+    // =====================================================
 
-    if (
-        amountPaid > 0 &&
-        remainingToday > 0
-    ) {
-
-        return buildPartialRepaymentMessage(
-            data
-        );
-
-    }
-
-
-    return buildFullRepaymentMessage(
-        data
+    return (
+        `Hello ${name}, your GREYMUS repayment ` +
+        `of ${formatKES(due)} is due today. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}. ` +
+        `Please make your payment on time. ` +
+        `Thank you.` +
+        messageSignature()
     );
 
 }
 
 
 // =========================================================
-// BUILD MESSAGE
+// BUILD ARREARS MESSAGE
 // =========================================================
 
-function buildMessage(
-    data = {}
-) {
+function buildArrearsMessage(data) {
 
-    const type =
-        String(
-            data.type ||
-            "repayment"
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
+    const name =
+        getClientName(
+            data.client
         );
 
 
-    switch (type) {
-
-        case "approved":
-
-        case "loan-approved":
-
-            return buildLoanApprovedMessage(
-                data
-            );
-
-
-        case "due":
-
-        case "due-today":
-
-            if (
-                Number(
-                    data.arrears ||
-                    data.overdueAmount ||
-                    data.overdue ||
-                    0
-                ) > 0
-            ) {
-
-                return buildDuePlusArrearsMessage(
-                    data
-                );
-
-            }
-
-            return buildDueTodayMessage(
-                data
-            );
-
-
-        case "arrears":
-
-        case "overdue":
-
-            // If the client is also due today,
-            // combine arrears with today's reminder.
-
-            if (
-                Number(
-                    data.dueToday ||
-                    data.due ||
-                    data.installmentDue ||
-                    0
-                ) > 0
-            ) {
-
-                return buildDuePlusArrearsMessage(
-                    data
-                );
-
-            }
-
-            return buildArrearsMessage(
-                data
-            );
-
-
-        case "due-arrears":
-
-        case "due-plus-arrears":
-
-        case "due-today-arrears":
-
-            return buildDuePlusArrearsMessage(
-                data
-            );
-
-
-        case "partial":
-
-        case "partial-arrears":
-
-        case "partial-with-arrears":
-
-            return buildPartialRepaymentMessage(
-                data
-            );
-
-
-        case "full":
-
-        case "paid":
-
-            return buildFullRepaymentMessage(
-                data
-            );
-
-
-        case "repayment":
-
-        default:
-
-            return buildRepaymentMessage(
-                data
-            );
-
-    }
-
-}
-
-
-// =========================================================
-// NATIVE PHONE SMS
-// =========================================================
-//
-// Opens the phone's native SMS application.
-//
-// No Africa's Talking.
-// No Cloudflare.
-// No API.
-// No API key.
-//
-// The user presses SEND in the phone's SMS application.
-// =========================================================
-
-function openNativeSMS(
-    phone,
-    message
-) {
-
-    if (!phone) {
-
-        throw new Error(
-            "Client phone number is missing."
-        );
-
-    }
-
-    if (!message) {
-
-        throw new Error(
-            "Message is empty."
-        );
-
-    }
-
-    const encodedMessage =
-        encodeURIComponent(
-            message
-        );
-
-    const smsUrl =
-        `sms:${phone}?body=${encodedMessage}`;
-
-    window.location.href =
-        smsUrl;
-
-}
-
-
-// =========================================================
-// MESSAGE TYPE LABEL
-// =========================================================
-
-function getMessageTypeLabel(
-    data = {}
-) {
-
-    const type =
-        String(
-            data.type ||
-            "repayment"
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
+    const arrears =
+        Number(
+            data.arrears || 0
         );
 
 
-    switch (type) {
-
-        case "approved":
-
-        case "loan-approved":
-
-            return "SMS ya Uidhinishaji wa Mkopo";
-
-
-        case "due":
-
-        case "due-today":
-
-            if (
-                Number(
-                    data.arrears ||
-                    data.overdueAmount ||
-                    data.overdue ||
-                    0
-                ) > 0
-            ) {
-
-                return "SMS ya Malipo ya Leo + Deni la Nyuma";
-
-            }
-
-            return "SMS ya Kumbusho la Malipo ya Leo";
-
-
-        case "arrears":
-
-        case "overdue":
-
-            if (
-                Number(
-                    data.dueToday ||
-                    data.due ||
-                    data.installmentDue ||
-                    0
-                ) > 0
-            ) {
-
-                return "SMS ya Malipo ya Leo + Deni la Nyuma";
-
-            }
-
-            return "SMS ya Deni la Nyuma";
-
-
-        case "due-arrears":
-
-        case "due-plus-arrears":
-
-        case "due-today-arrears":
-
-            return "SMS ya Malipo ya Leo + Deni la Nyuma";
-
-
-        case "partial":
-
-        case "partial-arrears":
-
-        case "partial-with-arrears":
-
-            return "SMS ya Malipo Sehemu";
-
-
-        case "full":
-
-        case "paid":
-
-            return "SMS ya Malipo Kamili";
-
-
-        default:
-
-            return "SMS ya Malipo";
-
-    }
-
-}
-
-
-// =========================================================
-// BUILD SUMMARY
-// =========================================================
-
-function buildSummaryHTML(
-    data = {}
-) {
-
-    const type =
-        String(
-            data.type ||
-            "repayment"
-        )
-        .toLowerCase()
-        .replace(
-            /_/g,
-            "-"
+    const outstanding =
+        Number(
+            data.outstanding || 0
         );
 
 
-    // -----------------------------------------------------
-    // LOAN APPROVED
-    // -----------------------------------------------------
-
-    if (
-        type === "approved" ||
-        type === "loan-approved"
-    ) {
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-                    <span>
-                        Kiasi Kilichoidhinishwa
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.amount ||
-                                data.loanAmount
-                            )
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Malipo ya Kila Wiki
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.weeklyPayment ||
-                                data.weeklyRepayment ||
-                                data.repayment
-                            )
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Tarehe ya Kwanza ya Malipo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatMessageDate(
-                                data.startDate ||
-                                data.repaymentStartDate ||
-                                data.firstRepaymentDate
-                            )
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Salio la Mkopo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding ||
-                                data.totalRepayment
-                            )
-                        )}
-                    </strong>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // -----------------------------------------------------
-    // DUE TODAY
-    // -----------------------------------------------------
-
-    if (
-        type === "due" ||
-        type === "due-today"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-        const arrears =
-            Number(
-                data.arrears ||
-                data.overdueAmount ||
-                data.overdue ||
-                0
-            );
-
-
-        if (arrears > 0) {
-
-            return `
-
-                <div class="greymus-message-summary">
-
-                    <div>
-                        <span>
-                            Malipo ya Leo
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(due)
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Deni la Nyuma
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(arrears)
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Jumla Inayodaiwa
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(
-                                    data.totalPayable ??
-                                    (due + arrears)
-                                )
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Salio la Mkopo
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(
-                                    data.outstanding
-                                )
-                            )}
-                        </strong>
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-                    <span>
-                        Malipo ya Leo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(due)
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Salio la Mkopo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // -----------------------------------------------------
-    // ARREARS
-    // -----------------------------------------------------
-
-    if (
-        type === "arrears" ||
-        type === "overdue"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-        const arrears =
-            Number(
-                data.arrears ||
-                data.overdueAmount ||
-                data.overdue ||
-                0
-            );
-
-
-        if (due > 0) {
-
-            return `
-
-                <div class="greymus-message-summary">
-
-                    <div>
-                        <span>
-                            Malipo ya Leo
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(due)
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Deni la Nyuma
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(arrears)
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Jumla Inayodaiwa
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(
-                                    data.totalPayable ??
-                                    (due + arrears)
-                                )
-                            )}
-                        </strong>
-                    </div>
-
-
-                    <div>
-                        <span>
-                            Salio la Mkopo
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatKES(
-                                    data.outstanding
-                                )
-                            )}
-                        </strong>
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-                    <span>
-                        Deni la Nyuma
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(arrears)
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Salio la Mkopo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // -----------------------------------------------------
-    // DUE + ARREARS
-    // -----------------------------------------------------
-
-    if (
-        type === "due-arrears" ||
-        type === "due-plus-arrears" ||
-        type === "due-today-arrears"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-        const arrears =
-            Number(
-                data.arrears ||
-                0
-            );
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-                    <span>
-                        Malipo ya Leo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(due)
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Deni la Nyuma
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(arrears)
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Jumla Inayodaiwa
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.totalPayable ??
-                                (due + arrears)
-                            )
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Salio la Mkopo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(
-                                data.outstanding
-                            )
-                        )}
-                    </strong>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // -----------------------------------------------------
-    // PARTIAL
-    // -----------------------------------------------------
-
-    if (
-        type === "partial" ||
-        type === "partial-arrears" ||
-        type === "partial-with-arrears"
-    ) {
-
-        const due =
-            Number(
-                data.dueToday ||
-                data.due ||
-                0
-            );
-
-        const paid =
-            Number(
-                data.amountPaid ||
-                data.paid ||
-                0
-            );
-
-        const remaining =
-            Math.max(
-                0,
-                Number(
-                    data.remainingToday ??
-                    (due - paid)
-                )
-            );
-
-
-        return `
-
-            <div class="greymus-message-summary">
-
-                <div>
-                    <span>
-                        Kiasi Kilicholipwa
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(paid)
-                        )}
-                    </strong>
-                </div>
-
-
-                <div>
-                    <span>
-                        Kilichobaki Leo
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            formatKES(remaining)
-                        )}
-                    </strong>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // -----------------------------------------------------
-    // FULL REPAYMENT
-    // -----------------------------------------------------
-
-    return `
-
-        <div class="greymus-message-summary">
-
-            <div>
-
-                <span>
-                    Kiasi Kilicholipwa
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatKES(
-                            data.amountPaid ||
-                            data.paid
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    Malipo Yanayofuata
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatMessageDate(
-                            data.nextRepaymentDate ||
-                            data.nextDueDate
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    Salio la Mkopo
-                </span>
-
-                <strong>
-                    ${escapeHtml(
-                        formatKES(
-                            data.outstanding ||
-                            data.balance
-                        )
-                    )}
-                </strong>
-
-            </div>
-
-        </div>
-
-    `;
+    return (
+        `Hello ${name}, your GREYMUS loan has an overdue ` +
+        `repayment of ${formatKES(arrears)}. ` +
+        `Your current outstanding loan balance is ` +
+        `${formatKES(outstanding)}. ` +
+        `Please make your outstanding payment as soon as possible. ` +
+        `Thank you.` +
+        messageSignature()
+    );
 
 }
 
@@ -1725,13 +380,16 @@ function injectStyles() {
 
     }
 
+
     const style =
         document.createElement(
             "style"
         );
 
+
     style.id =
         "greymus-messaging-styles";
+
 
     style.textContent = `
 
@@ -1758,11 +416,9 @@ function injectStyles() {
             width:
                 min(100%, 520px);
 
-            max-height:
-                92vh;
+            max-height: 92vh;
 
-            overflow-y:
-                auto;
+            overflow-y: auto;
 
             background:
                 #162235;
@@ -1810,8 +466,7 @@ function injectStyles() {
 
         .greymus-message-header h2 {
 
-            margin:
-                0;
+            margin: 0;
 
             font-size:
                 22px;
@@ -1922,9 +577,6 @@ function injectStyles() {
             font-size:
                 15px;
 
-            box-sizing:
-                border-box;
-
         }
 
 
@@ -2000,7 +652,7 @@ function injectStyles() {
                 100%;
 
             min-height:
-                190px;
+                180px;
 
             resize:
                 vertical;
@@ -2032,9 +684,6 @@ function injectStyles() {
 
             outline:
                 none;
-
-            box-sizing:
-                border-box;
 
         }
 
@@ -2194,6 +843,7 @@ function injectStyles() {
 
     `;
 
+
     document.head.appendChild(
         style
     );
@@ -2212,11 +862,37 @@ function closeComposer() {
             "greymus-message-composer"
         );
 
+
     if (overlay) {
 
         overlay.remove();
 
     }
+
+}
+
+
+// =========================================================
+// OPEN NATIVE SMS
+// =========================================================
+
+function openNativeSMS(
+    phone,
+    message
+) {
+
+    const encoded =
+        encodeURIComponent(
+            message
+        );
+
+
+    const smsUrl =
+        `sms:${phone}?body=${encoded}`;
+
+
+    window.location.href =
+        smsUrl;
 
 }
 
@@ -2235,8 +911,7 @@ export function openMessageComposer(
 
 
     const client =
-        data.client ||
-        {};
+        data.client || {};
 
 
     const name =
@@ -2251,10 +926,17 @@ export function openMessageComposer(
         );
 
 
+    const type =
+        data.type ||
+        "due";
+
+
     const message =
-        buildMessage(
-            data
-        );
+        type === "arrears"
+
+            ? buildArrearsMessage(data)
+
+            : buildDueMessage(data);
 
 
     const overlay =
@@ -2269,6 +951,108 @@ export function openMessageComposer(
 
     overlay.className =
         "greymus-message-overlay";
+
+
+    // =====================================================
+    // SUMMARY
+    // =====================================================
+
+    let summary = "";
+
+
+    if (
+        type === "arrears"
+    ) {
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Arrears
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.arrears
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    } else {
+
+        summary = `
+
+            <div
+                class="greymus-message-summary"
+            >
+
+                <div>
+
+                    <span>
+                        Today's Due
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.due
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            formatKES(
+                                data.outstanding
+                            )
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
 
 
     overlay.innerHTML = `
@@ -2286,13 +1070,11 @@ export function openMessageComposer(
                 <div>
 
                     <h2>
-                        Tuma Ujumbe
+                        Send Message
                     </h2>
 
                     <p>
-                        ${escapeHtml(
-                            getMessageTypeLabel(data)
-                        )}
+                        GREYMUS client SMS
                     </p>
 
                 </div>
@@ -2318,16 +1100,13 @@ export function openMessageComposer(
                 >
 
                     <label>
-                        Mteja
+                        Client
                     </label>
-
 
                     <div
                         class="greymus-message-readonly"
                     >
-
                         ${escapeHtml(name)}
-
                     </div>
 
                 </div>
@@ -2338,25 +1117,22 @@ export function openMessageComposer(
                 >
 
                     <label>
-                        Nambari ya Simu
+                        Phone Number
                     </label>
-
 
                     <div
                         class="greymus-message-readonly"
                     >
-
                         ${escapeHtml(
                             phone ||
-                            "Hakuna nambari ya simu iliyosajiliwa"
+                            "No phone number registered"
                         )}
-
                     </div>
 
                 </div>
 
 
-                ${buildSummaryHTML(data)}
+                ${summary}
 
 
                 <div
@@ -2366,9 +1142,8 @@ export function openMessageComposer(
                     <label
                         for="greymus-message-text"
                     >
-                        Ujumbe
+                        Message
                     </label>
-
 
                     <textarea
                         id="greymus-message-text"
@@ -2381,9 +1156,8 @@ export function openMessageComposer(
                     >
 
                         <span>
-                            Unaweza kuhariri kabla ya kutuma
+                            Edit before sending
                         </span>
-
 
                         <span
                             id="greymus-message-count"
@@ -2404,10 +1178,8 @@ export function openMessageComposer(
                         <div
                             class="greymus-message-error"
                         >
-
-                            Mteja huyu hana nambari
-                            halali ya simu.
-
+                            This client has no valid
+                            phone number.
                         </div>
 
                     `
@@ -2427,7 +1199,7 @@ export function openMessageComposer(
                     class="greymus-message-cancel"
                     id="greymus-message-cancel"
                 >
-                    Ghairi
+                    Cancel
                 </button>
 
 
@@ -2437,7 +1209,7 @@ export function openMessageComposer(
                     id="greymus-message-send"
                     ${phone ? "" : "disabled"}
                 >
-                    💬 Tuma SMS
+                    💬 Send SMS
                 </button>
 
             </div>
@@ -2556,7 +1328,7 @@ export function openMessageComposer(
 
 
     // =====================================================
-    // CHARACTER COUNTER
+    // COUNTER
     // =====================================================
 
     textarea?.addEventListener(
@@ -2575,7 +1347,7 @@ export function openMessageComposer(
 
 
     // =====================================================
-    // SEND USING PHONE SMS
+    // SEND
     // =====================================================
 
     sendButton?.addEventListener(
@@ -2591,7 +1363,7 @@ export function openMessageComposer(
             if (!phone) {
 
                 alert(
-                    "Mteja huyu hana nambari halali ya simu."
+                    "This client does not have a valid phone number."
                 );
 
                 return;
@@ -2602,7 +1374,7 @@ export function openMessageComposer(
             if (!finalMessage) {
 
                 alert(
-                    "Tafadhali andika ujumbe kabla ya kutuma."
+                    "Please enter a message before sending."
                 );
 
                 textarea?.focus();
@@ -2610,6 +1382,14 @@ export function openMessageComposer(
                 return;
 
             }
+
+
+            sendButton.disabled =
+                true;
+
+
+            sendButton.textContent =
+                "Opening SMS…";
 
 
             openNativeSMS(
@@ -2625,38 +1405,17 @@ export function openMessageComposer(
 
 }
 
-
 // =========================================================
 // GLOBAL DEBUG ACCESS
 // =========================================================
 
 window.GREYMUS_MESSAGING = {
 
-    openMessageComposer,
-
-    buildMessage,
-
-    buildLoanApprovedMessage,
-
-    buildRepaymentMessage,
-
-    buildFullRepaymentMessage,
-
-    buildPartialRepaymentMessage,
-
-    buildDueTodayMessage,
-
-    buildArrearsMessage,
-
-    buildDuePlusArrearsMessage,
-
-    buildPartialRepaymentPlusArrearsMessage,
-
-    openNativeSMS
+    openMessageComposer
 
 };
 
 
 // =========================================================
-// END OF messaging.js VERSION 6.0
+// END OF messaging.js
 // =========================================================
