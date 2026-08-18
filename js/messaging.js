@@ -3,23 +3,7 @@
 // MESSAGING.JS
 // SWAHILI CLIENT MESSAGING
 //
-// GREYMUS APP COMPATIBLE VERSION
-// =========================================================
-//
-// MESSAGE TYPES
-//
-// 1. Due today
-// 2. Due today + arrears
-// 3. Arrears only
-// 4. Repayment received
-// 5. Repayment fully clears today's amount
-//
-// IMPORTANT
-//
-// Every client message:
-// - Includes current outstanding loan balance
-// - Ends with "Kwa heshima, GREYMUS."
-// - Uses current GREYMUS loan data
+// SAFE GREYMUS VERSION
 // =========================================================
 
 
@@ -27,21 +11,20 @@
 // FORMAT KES
 // =========================================================
 
-function formatKES(value) {
+function greymusFormatKES(value) {
 
-    const amount = Number(value || 0);
+    var amount = Number(value);
 
-    return new Intl.NumberFormat(
-        "en-KE",
-        {
-            style: "currency",
-            currency: "KES",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }
-    ).format(
-        Number.isFinite(amount) ? amount : 0
-    );
+    if (!isFinite(amount)) {
+        amount = 0;
+    }
+
+    return new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
 
 }
 
@@ -50,13 +33,15 @@ function formatKES(value) {
 // SAFE NUMBER
 // =========================================================
 
-function messagingNumber(value) {
+function greymusNumber(value) {
 
-    const number = Number(value);
+    var number = Number(value);
 
-    return Number.isFinite(number)
-        ? Math.max(0, number)
-        : 0;
+    if (!isFinite(number) || number < 0) {
+        return 0;
+    }
+
+    return number;
 
 }
 
@@ -65,7 +50,9 @@ function messagingNumber(value) {
 // CLIENT NAME
 // =========================================================
 
-function getClientName(client = {}) {
+function greymusClientName(client) {
+
+    client = client || {};
 
     return (
         client.name ||
@@ -82,7 +69,9 @@ function getClientName(client = {}) {
 // CLIENT PHONE
 // =========================================================
 
-function getClientPhone(client = {}) {
+function greymusClientPhone(client) {
+
+    client = client || {};
 
     return (
         client.phone ||
@@ -99,90 +88,54 @@ function getClientPhone(client = {}) {
 // =========================================================
 // OUTSTANDING BALANCE
 // =========================================================
-//
-// GREYMUS records may use different field names.
-// This helper checks the common fields safely.
-//
-// Priority:
-// 1. Explicit outstanding
-// 2. balance
-// 3. loan balance
-// 4. outstandingBalance
-// =========================================================
 
-function getOutstandingBalance(data = {}) {
+function greymusOutstanding(data) {
+
+    data = data || {};
+
+    var loan = data.loan || {};
 
     if (
         data.outstanding !== undefined &&
         data.outstanding !== null
     ) {
-
-        return messagingNumber(
-            data.outstanding
-        );
-
+        return greymusNumber(data.outstanding);
     }
-
 
     if (
         data.outstandingBalance !== undefined &&
         data.outstandingBalance !== null
     ) {
-
-        return messagingNumber(
-            data.outstandingBalance
-        );
-
+        return greymusNumber(data.outstandingBalance);
     }
-
 
     if (
-        data.loan?.outstanding !== undefined &&
-        data.loan?.outstanding !== null
+        loan.outstanding !== undefined &&
+        loan.outstanding !== null
     ) {
-
-        return messagingNumber(
-            data.loan.outstanding
-        );
-
+        return greymusNumber(loan.outstanding);
     }
-
 
     if (
-        data.loan?.outstandingBalance !== undefined &&
-        data.loan?.outstandingBalance !== null
+        loan.outstandingBalance !== undefined &&
+        loan.outstandingBalance !== null
     ) {
-
-        return messagingNumber(
-            data.loan.outstandingBalance
-        );
-
+        return greymusNumber(loan.outstandingBalance);
     }
-
 
     if (
         data.balance !== undefined &&
         data.balance !== null
     ) {
-
-        return messagingNumber(
-            data.balance
-        );
-
+        return greymusNumber(data.balance);
     }
-
 
     if (
-        data.loan?.balance !== undefined &&
-        data.loan?.balance !== null
+        loan.balance !== undefined &&
+        loan.balance !== null
     ) {
-
-        return messagingNumber(
-            data.loan.balance
-        );
-
+        return greymusNumber(loan.balance);
     }
-
 
     return 0;
 
@@ -193,7 +146,7 @@ function getOutstandingBalance(data = {}) {
 // SIGNATURE
 // =========================================================
 
-function messageSignature() {
+function greymusSignature() {
 
     return (
         "\n\n" +
@@ -205,70 +158,101 @@ function messageSignature() {
 
 
 // =========================================================
-// DUE TODAY MESSAGE
+// DUE TODAY
 // =========================================================
 
-function buildDueMessage(data = {}) {
+function greymusDueMessage(data) {
 
-    const name =
-        getClientName(data.client);
+    data = data || {};
 
-    const due =
-        messagingNumber(
-            data.due ??
-            data.dueToday ??
-            data.weeklyPayment ??
-            data.repaymentDue
-        );
+    var client =
+        data.client || {};
 
-    const arrears =
-        messagingNumber(
+    var name =
+        greymusClientName(client);
+
+    var due =
+        data.due;
+
+    if (due === undefined) {
+        due = data.dueToday;
+    }
+
+    if (due === undefined) {
+        due = data.weeklyPayment;
+    }
+
+    if (due === undefined) {
+        due = data.repaymentDue;
+    }
+
+    due =
+        greymusNumber(due);
+
+    var arrears =
+        greymusNumber(
             data.arrears
         );
 
-    const outstanding =
-        getOutstandingBalance(data);
+    var outstanding =
+        greymusOutstanding(data);
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // DUE TODAY + ARREARS
-    // =====================================================
+    // -----------------------------------------------------
 
     if (arrears > 0) {
 
-        const totalDue =
+        var totalDue =
             due + arrears;
 
-
         return (
-            `Habari ${name}, malipo yako ya GREYMUS ya ` +
-            `${formatKES(due)} yanapaswa kulipwa leo. ` +
-            `Pia una deni la nyuma la ` +
-            `${formatKES(arrears)}. ` +
-            `Jumla ya malipo yanayohitajika ni ` +
-            `${formatKES(totalDue)}. ` +
-            `Salio lako la sasa la mkopo ni ` +
-            `${formatKES(outstanding)}. ` +
-            `Tafadhali fanya malipo yako haraka iwezekanavyo. ` +
-            `Asante.` +
-            messageSignature()
-        );
+            "Habari " +
+            name +
+            ", malipo yako ya GREYMUS ya " +
+            greymusFormatKES(due) +
+            " yanapaswa kulipwa leo. " +
 
+            "Pia una deni la nyuma la " +
+            greymusFormatKES(arrears) +
+            ". " +
+
+            "Jumla ya malipo yanayohitajika ni " +
+            greymusFormatKES(totalDue) +
+            ". " +
+
+            "Salio lako la sasa la mkopo ni " +
+            greymusFormatKES(outstanding) +
+            ". " +
+
+            "Tafadhali fanya malipo yako haraka iwezekanavyo. " +
+            "Asante." +
+
+            greymusSignature()
+        );
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // DUE TODAY WITHOUT ARREARS
-    // =====================================================
+    // -----------------------------------------------------
 
     return (
-        `Habari ${name}, malipo yako ya GREYMUS ya ` +
-        `${formatKES(due)} yanapaswa kulipwa leo. ` +
-        `Salio lako la sasa la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Tafadhali fanya malipo yako kwa wakati. ` +
-        `Asante.` +
-        messageSignature()
+        "Habari " +
+        name +
+        ", malipo yako ya GREYMUS ya " +
+        greymusFormatKES(due) +
+        " yanapaswa kulipwa leo. " +
+
+        "Salio lako la sasa la mkopo ni " +
+        greymusFormatKES(outstanding) +
+        ". " +
+
+        "Tafadhali fanya malipo yako kwa wakati. " +
+        "Asante." +
+
+        greymusSignature()
     );
 
 }
@@ -278,99 +262,152 @@ function buildDueMessage(data = {}) {
 // ARREARS ONLY
 // =========================================================
 
-function buildArrearsMessage(data = {}) {
+function greymusArrearsMessage(data) {
 
-    const name =
-        getClientName(data.client);
+    data = data || {};
 
-    const arrears =
-        messagingNumber(
+    var name =
+        greymusClientName(
+            data.client
+        );
+
+    var arrears =
+        greymusNumber(
             data.arrears
         );
 
-    const outstanding =
-        getOutstandingBalance(data);
+    var outstanding =
+        greymusOutstanding(data);
 
 
     return (
-        `Habari ${name}, una deni la nyuma la GREYMUS ` +
-        `la ${formatKES(arrears)}. ` +
-        `Salio lako la sasa la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Tafadhali lipa deni lako haraka iwezekanavyo. ` +
-        `Asante.` +
-        messageSignature()
+        "Habari " +
+        name +
+        ", una deni la nyuma la GREYMUS la " +
+        greymusFormatKES(arrears) +
+        ". " +
+
+        "Salio lako la sasa la mkopo ni " +
+        greymusFormatKES(outstanding) +
+        ". " +
+
+        "Tafadhali lipa deni lako haraka iwezekanavyo. " +
+        "Asante." +
+
+        greymusSignature()
     );
 
 }
 
 
 // =========================================================
-// REPAYMENT RECEIVED MESSAGE
+// REPAYMENT RECEIVED
 // =========================================================
 
-function buildRepaymentReceivedMessage(data = {}) {
+function greymusRepaymentMessage(data) {
 
-    const name =
-        getClientName(data.client);
+    data = data || {};
 
-    const paid =
-        messagingNumber(
-            data.paid ??
-            data.amount ??
-            data.repaymentAmount
+    var name =
+        greymusClientName(
+            data.client
         );
 
-    const previousTotalDue =
-        messagingNumber(
-            data.previousTotalDue ??
-            data.totalDue ??
-            data.dueToday ??
-            data.due
-        );
+    var paid =
+        data.paid;
 
-    const remaining =
-        Math.max(
-            0,
-            previousTotalDue - paid
-        );
+    if (paid === undefined) {
+        paid = data.amount;
+    }
 
-    const outstanding =
-        getOutstandingBalance(data);
+    if (paid === undefined) {
+        paid = data.repaymentAmount;
+    }
+
+    paid =
+        greymusNumber(paid);
 
 
-    // =====================================================
-    // PAYMENT FULLY CLEARS TODAY'S AMOUNT
-    // =====================================================
+    var previousTotalDue =
+        data.previousTotalDue;
+
+    if (previousTotalDue === undefined) {
+        previousTotalDue = data.totalDue;
+    }
+
+    if (previousTotalDue === undefined) {
+        previousTotalDue = data.dueToday;
+    }
+
+    if (previousTotalDue === undefined) {
+        previousTotalDue = data.due;
+    }
+
+    previousTotalDue =
+        greymusNumber(previousTotalDue);
+
+
+    var remaining =
+        previousTotalDue - paid;
+
+    if (remaining < 0) {
+        remaining = 0;
+    }
+
+
+    var outstanding =
+        greymusOutstanding(data);
+
+
+    // -----------------------------------------------------
+    // FULL PAYMENT
+    // -----------------------------------------------------
 
     if (remaining === 0) {
 
         return (
-            `Habari ${name}, tumepokea malipo yako ya ` +
-            `GREYMUS ya ${formatKES(paid)}. ` +
-            `Malipo yako ya leo yamelipwa kikamilifu. ` +
-            `Salio lako la sasa la mkopo ni ` +
-            `${formatKES(outstanding)}. ` +
-            `Asante.` +
-            messageSignature()
+            "Habari " +
+            name +
+            ", tumepokea malipo yako ya GREYMUS ya " +
+            greymusFormatKES(paid) +
+            ". " +
+
+            "Malipo yako ya leo yamelipwa kikamilifu. " +
+
+            "Salio lako la sasa la mkopo ni " +
+            greymusFormatKES(outstanding) +
+            ". " +
+
+            "Asante." +
+
+            greymusSignature()
         );
 
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // PARTIAL PAYMENT
-    // =====================================================
+    // -----------------------------------------------------
 
     return (
-        `Habari ${name}, tumepokea malipo yako ya ` +
-        `GREYMUS ya ${formatKES(paid)}. ` +
-        `Salio lako la malipo ya leo ni ` +
-        `${formatKES(remaining)}. ` +
-        `Salio lako la sasa la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Asante.` +
-        messageSignature()
+        "Habari " +
+        name +
+        ", tumepokea malipo yako ya GREYMUS ya " +
+        greymusFormatKES(paid) +
+        ". " +
+
+        "Salio lako la malipo ya leo ni " +
+        greymusFormatKES(remaining) +
+        ". " +
+
+        "Salio lako la sasa la mkopo ni " +
+        greymusFormatKES(outstanding) +
+        ". " +
+
+        "Asante." +
+
+        greymusSignature()
     );
 
 }
@@ -379,155 +416,174 @@ function buildRepaymentReceivedMessage(data = {}) {
 // =========================================================
 // PAYMENT CONFIRMATION
 // =========================================================
-//
-// Used when the repayment code has already calculated
-// remainingToday.
-//
-// =========================================================
 
-function buildPaymentConfirmation(data = {}) {
+function greymusPaymentConfirmation(data) {
 
-    const name =
-        getClientName(data.client);
+    data = data || {};
 
-    const paid =
-        messagingNumber(
-            data.paid ??
-            data.amount ??
-            data.repaymentAmount
+    var name =
+        greymusClientName(
+            data.client
         );
 
-    const remainingToday =
-        messagingNumber(
-            data.remainingToday ??
-            data.remaining ??
-            data.dueRemaining
-        );
+    var paid =
+        data.paid;
 
-    const outstanding =
-        getOutstandingBalance(data);
+    if (paid === undefined) {
+        paid = data.amount;
+    }
+
+    if (paid === undefined) {
+        paid = data.repaymentAmount;
+    }
+
+    paid =
+        greymusNumber(paid);
 
 
-    // =====================================================
+    var remaining =
+        data.remainingToday;
+
+    if (remaining === undefined) {
+        remaining = data.remaining;
+    }
+
+    if (remaining === undefined) {
+        remaining = data.dueRemaining;
+    }
+
+    remaining =
+        greymusNumber(remaining);
+
+
+    var outstanding =
+        greymusOutstanding(data);
+
+
+    // -----------------------------------------------------
     // FULL PAYMENT
-    // =====================================================
+    // -----------------------------------------------------
 
-    if (remainingToday === 0) {
+    if (remaining === 0) {
 
         return (
-            `Habari ${name}, tumepokea malipo yako ya ` +
-            `GREYMUS ya ${formatKES(paid)}. ` +
-            `Malipo yako ya leo yamelipwa kikamilifu. ` +
-            `Salio lako la sasa la mkopo ni ` +
-            `${formatKES(outstanding)}. ` +
-            `Asante.` +
-            messageSignature()
+            "Habari " +
+            name +
+            ", tumepokea malipo yako ya GREYMUS ya " +
+            greymusFormatKES(paid) +
+            ". " +
+
+            "Malipo yako ya leo yamelipwa kikamilifu. " +
+
+            "Salio lako la sasa la mkopo ni " +
+            greymusFormatKES(outstanding) +
+            ". " +
+
+            "Asante." +
+
+            greymusSignature()
         );
 
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // PARTIAL PAYMENT
-    // =====================================================
+    // -----------------------------------------------------
 
     return (
-        `Habari ${name}, tumepokea malipo yako ya ` +
-        `GREYMUS ya ${formatKES(paid)}. ` +
-        `Salio lako la malipo ya leo ni ` +
-        `${formatKES(remainingToday)}. ` +
-        `Salio lako la sasa la mkopo ni ` +
-        `${formatKES(outstanding)}. ` +
-        `Asante.` +
-        messageSignature()
+        "Habari " +
+        name +
+        ", tumepokea malipo yako ya GREYMUS ya " +
+        greymusFormatKES(paid) +
+        ". " +
+
+        "Salio lako la malipo ya leo ni " +
+        greymusFormatKES(remaining) +
+        ". " +
+
+        "Salio lako la sasa la mkopo ni " +
+        greymusFormatKES(outstanding) +
+        ". " +
+
+        "Asante." +
+
+        greymusSignature()
     );
 
 }
 
 
 // =========================================================
-// MAIN MESSAGE BUILDER
+// MAIN BUILDER
 // =========================================================
 
-function buildMessage(data = {}) {
+function greymusBuildMessage(data) {
 
-    const type =
+    data = data || {};
+
+    var type =
         String(
             data.type || "due"
         ).toLowerCase();
 
 
-    switch (type) {
+    if (type === "repayment") {
 
-        case "repayment":
-
-            return buildRepaymentReceivedMessage(
-                data
-            );
-
-
-        case "payment":
-
-            return buildPaymentConfirmation(
-                data
-            );
-
-
-        case "arrears":
-
-            return buildArrearsMessage(
-                data
-            );
-
-
-        case "due":
-
-        default:
-
-            return buildDueMessage(
-                data
-            );
+        return greymusRepaymentMessage(
+            data
+        );
 
     }
+
+
+    if (type === "payment") {
+
+        return greymusPaymentConfirmation(
+            data
+        );
+
+    }
+
+
+    if (type === "arrears") {
+
+        return greymusArrearsMessage(
+            data
+        );
+
+    }
+
+
+    return greymusDueMessage(
+        data
+    );
 
 }
 
 
 // =========================================================
-// MESSAGE PHONE + TEXT HELPER
-// =========================================================
-//
-// Useful for the HTML messaging button.
-//
-// Example:
-//
-// const message =
-//     GREYMUS_MESSAGING.createClientMessage({
-//         client,
-//         type: "due",
-//         due: 500,
-//         arrears: 0,
-//         outstanding: 4500
-//     });
-//
+// CREATE CLIENT MESSAGE
 // =========================================================
 
-function createClientMessage(data = {}) {
+function greymusCreateClientMessage(data) {
+
+    data = data || {};
 
     return {
 
         phone:
-            getClientPhone(
+            greymusClientPhone(
                 data.client
             ),
 
         name:
-            getClientName(
+            greymusClientName(
                 data.client
             ),
 
         message:
-            buildMessage(
+            greymusBuildMessage(
                 data
             )
 
@@ -537,38 +593,53 @@ function createClientMessage(data = {}) {
 
 
 // =========================================================
-// GLOBAL GREYMUS MESSAGING API
+// GREYMUS GLOBAL API
+// =========================================================
+//
+// IMPORTANT:
+// All internal function names have the GREYMUS prefix.
+// This prevents collisions with other files in your app.
 // =========================================================
 
 window.GREYMUS_MESSAGING = {
 
-    formatKES,
+    formatKES:
+        greymusFormatKES,
 
-    getClientName,
+    getClientName:
+        greymusClientName,
 
-    getClientPhone,
+    getClientPhone:
+        greymusClientPhone,
 
-    getOutstandingBalance,
+    getOutstandingBalance:
+        greymusOutstanding,
 
-    buildDueMessage,
+    buildDueMessage:
+        greymusDueMessage,
 
-    buildArrearsMessage,
+    buildArrearsMessage:
+        greymusArrearsMessage,
 
-    buildRepaymentReceivedMessage,
+    buildRepaymentReceivedMessage:
+        greymusRepaymentMessage,
 
-    buildPaymentConfirmation,
+    buildPaymentConfirmation:
+        greymusPaymentConfirmation,
 
-    buildMessage,
+    buildMessage:
+        greymusBuildMessage,
 
-    createClientMessage
+    createClientMessage:
+        greymusCreateClientMessage
 
 };
 
 
 // =========================================================
-// READY
+// DONE
 // =========================================================
 
 console.log(
-    "GREYMUS Messaging loaded successfully."
+    "GREYMUS messaging loaded."
 );
