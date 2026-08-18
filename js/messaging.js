@@ -1,18 +1,25 @@
 // =========================================================
 // GREYMUS LOAN FINANCIAL HUB
-// SWAHILI CLIENT MESSAGING LOGIC
+// MESSAGING.JS
+// SWAHILI CLIENT MESSAGING
 //
-// MESSAGE RULE
+// GREYMUS APP COMPATIBLE VERSION
+// =========================================================
 //
-// 1. Due today + arrears
-// 2. Due today without arrears
-// 3. Repayment received
-// 4. Repayment fully clears today's amount
-// 5. Arrears only
+// MESSAGE TYPES
 //
-// Payment messages are intentionally short.
-// The system simply confirms the amount received and
-// shows the remaining balance for today.
+// 1. Due today
+// 2. Due today + arrears
+// 3. Arrears only
+// 4. Repayment received
+// 5. Repayment fully clears today's amount
+//
+// IMPORTANT
+//
+// Every client message:
+// - Includes current outstanding loan balance
+// - Ends with "Kwa heshima, GREYMUS."
+// - Uses current GREYMUS loan data
 // =========================================================
 
 
@@ -21,6 +28,8 @@
 // =========================================================
 
 function formatKES(value) {
+
+    const amount = Number(value || 0);
 
     return new Intl.NumberFormat(
         "en-KE",
@@ -31,8 +40,23 @@ function formatKES(value) {
             maximumFractionDigits: 0
         }
     ).format(
-        Number(value || 0)
+        Number.isFinite(amount) ? amount : 0
     );
+
+}
+
+
+// =========================================================
+// SAFE NUMBER
+// =========================================================
+
+function messagingNumber(value) {
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+        ? Math.max(0, number)
+        : 0;
 
 }
 
@@ -47,8 +71,120 @@ function getClientName(client = {}) {
         client.name ||
         client.clientName ||
         client.fullName ||
+        client.full_name ||
         "Mteja"
     );
+
+}
+
+
+// =========================================================
+// CLIENT PHONE
+// =========================================================
+
+function getClientPhone(client = {}) {
+
+    return (
+        client.phone ||
+        client.phoneNumber ||
+        client.mobile ||
+        client.mobileNumber ||
+        client.telephone ||
+        ""
+    );
+
+}
+
+
+// =========================================================
+// OUTSTANDING BALANCE
+// =========================================================
+//
+// GREYMUS records may use different field names.
+// This helper checks the common fields safely.
+//
+// Priority:
+// 1. Explicit outstanding
+// 2. balance
+// 3. loan balance
+// 4. outstandingBalance
+// =========================================================
+
+function getOutstandingBalance(data = {}) {
+
+    if (
+        data.outstanding !== undefined &&
+        data.outstanding !== null
+    ) {
+
+        return messagingNumber(
+            data.outstanding
+        );
+
+    }
+
+
+    if (
+        data.outstandingBalance !== undefined &&
+        data.outstandingBalance !== null
+    ) {
+
+        return messagingNumber(
+            data.outstandingBalance
+        );
+
+    }
+
+
+    if (
+        data.loan?.outstanding !== undefined &&
+        data.loan?.outstanding !== null
+    ) {
+
+        return messagingNumber(
+            data.loan.outstanding
+        );
+
+    }
+
+
+    if (
+        data.loan?.outstandingBalance !== undefined &&
+        data.loan?.outstandingBalance !== null
+    ) {
+
+        return messagingNumber(
+            data.loan.outstandingBalance
+        );
+
+    }
+
+
+    if (
+        data.balance !== undefined &&
+        data.balance !== null
+    ) {
+
+        return messagingNumber(
+            data.balance
+        );
+
+    }
+
+
+    if (
+        data.loan?.balance !== undefined &&
+        data.loan?.balance !== null
+    ) {
+
+        return messagingNumber(
+            data.loan.balance
+        );
+
+    }
+
+
+    return 0;
 
 }
 
@@ -59,16 +195,17 @@ function getClientName(client = {}) {
 
 function messageSignature() {
 
-    return `
-
-Kwa heshima,
-GREYMUS.`;
+    return (
+        "\n\n" +
+        "Kwa heshima,\n" +
+        "GREYMUS."
+    );
 
 }
 
 
 // =========================================================
-// NORMAL DUE TODAY
+// DUE TODAY MESSAGE
 // =========================================================
 
 function buildDueMessage(data = {}) {
@@ -77,22 +214,20 @@ function buildDueMessage(data = {}) {
         getClientName(data.client);
 
     const due =
-        Math.max(
-            0,
-            Number(data.due || 0)
+        messagingNumber(
+            data.due ??
+            data.dueToday ??
+            data.weeklyPayment ??
+            data.repaymentDue
         );
 
     const arrears =
-        Math.max(
-            0,
-            Number(data.arrears || 0)
+        messagingNumber(
+            data.arrears
         );
 
     const outstanding =
-        Math.max(
-            0,
-            Number(data.outstanding || 0)
-        );
+        getOutstandingBalance(data);
 
 
     // =====================================================
@@ -108,7 +243,8 @@ function buildDueMessage(data = {}) {
         return (
             `Habari ${name}, malipo yako ya GREYMUS ya ` +
             `${formatKES(due)} yanapaswa kulipwa leo. ` +
-            `Pia una deni la nyuma la ${formatKES(arrears)}. ` +
+            `Pia una deni la nyuma la ` +
+            `${formatKES(arrears)}. ` +
             `Jumla ya malipo yanayohitajika ni ` +
             `${formatKES(totalDue)}. ` +
             `Salio lako la sasa la mkopo ni ` +
@@ -148,16 +284,12 @@ function buildArrearsMessage(data = {}) {
         getClientName(data.client);
 
     const arrears =
-        Math.max(
-            0,
-            Number(data.arrears || 0)
+        messagingNumber(
+            data.arrears
         );
 
     const outstanding =
-        Math.max(
-            0,
-            Number(data.outstanding || 0)
-        );
+        getOutstandingBalance(data);
 
 
     return (
@@ -174,21 +306,7 @@ function buildArrearsMessage(data = {}) {
 
 
 // =========================================================
-// REPAYMENT RECEIVED
-// =========================================================
-//
-// Example:
-//
-// Received: KES 500
-// Previous total due: KES 1,500
-// Remaining: KES 1,000
-//
-// Message:
-//
-// Habari John, tumepokea malipo yako ya GREYMUS
-// ya KES 500. Salio lako la malipo ya leo ni
-// KES 1,000. Asante.
-//
+// REPAYMENT RECEIVED MESSAGE
 // =========================================================
 
 function buildRepaymentReceivedMessage(data = {}) {
@@ -197,19 +315,19 @@ function buildRepaymentReceivedMessage(data = {}) {
         getClientName(data.client);
 
     const paid =
-        Math.max(
-            0,
-            Number(data.paid || 0)
+        messagingNumber(
+            data.paid ??
+            data.amount ??
+            data.repaymentAmount
         );
 
     const previousTotalDue =
-        Math.max(
-            0,
-            Number(
-                data.previousTotalDue || 0
-            )
+        messagingNumber(
+            data.previousTotalDue ??
+            data.totalDue ??
+            data.dueToday ??
+            data.due
         );
-
 
     const remaining =
         Math.max(
@@ -217,9 +335,12 @@ function buildRepaymentReceivedMessage(data = {}) {
             previousTotalDue - paid
         );
 
+    const outstanding =
+        getOutstandingBalance(data);
+
 
     // =====================================================
-    // FULLY PAID
+    // PAYMENT FULLY CLEARS TODAY'S AMOUNT
     // =====================================================
 
     if (remaining === 0) {
@@ -228,6 +349,8 @@ function buildRepaymentReceivedMessage(data = {}) {
             `Habari ${name}, tumepokea malipo yako ya ` +
             `GREYMUS ya ${formatKES(paid)}. ` +
             `Malipo yako ya leo yamelipwa kikamilifu. ` +
+            `Salio lako la sasa la mkopo ni ` +
+            `${formatKES(outstanding)}. ` +
             `Asante.` +
             messageSignature()
         );
@@ -236,7 +359,7 @@ function buildRepaymentReceivedMessage(data = {}) {
 
 
     // =====================================================
-    // PAYMENT RECEIVED + BALANCE REMAINS
+    // PARTIAL PAYMENT
     // =====================================================
 
     return (
@@ -244,6 +367,8 @@ function buildRepaymentReceivedMessage(data = {}) {
         `GREYMUS ya ${formatKES(paid)}. ` +
         `Salio lako la malipo ya leo ni ` +
         `${formatKES(remaining)}. ` +
+        `Salio lako la sasa la mkopo ni ` +
+        `${formatKES(outstanding)}. ` +
         `Asante.` +
         messageSignature()
     );
@@ -252,19 +377,11 @@ function buildRepaymentReceivedMessage(data = {}) {
 
 
 // =========================================================
-// SHORT REPAYMENT MESSAGE
+// PAYMENT CONFIRMATION
 // =========================================================
 //
-// This function is useful when the application already
-// calculated the remaining balance.
-//
-// Example:
-//
-// buildPaymentConfirmation({
-//     client,
-//     paid: 500,
-//     remainingToday: 1000
-// });
+// Used when the repayment code has already calculated
+// remainingToday.
 //
 // =========================================================
 
@@ -274,19 +391,26 @@ function buildPaymentConfirmation(data = {}) {
         getClientName(data.client);
 
     const paid =
-        Math.max(
-            0,
-            Number(data.paid || 0)
+        messagingNumber(
+            data.paid ??
+            data.amount ??
+            data.repaymentAmount
         );
 
     const remainingToday =
-        Math.max(
-            0,
-            Number(
-                data.remainingToday || 0
-            )
+        messagingNumber(
+            data.remainingToday ??
+            data.remaining ??
+            data.dueRemaining
         );
 
+    const outstanding =
+        getOutstandingBalance(data);
+
+
+    // =====================================================
+    // FULL PAYMENT
+    // =====================================================
 
     if (remainingToday === 0) {
 
@@ -294,6 +418,8 @@ function buildPaymentConfirmation(data = {}) {
             `Habari ${name}, tumepokea malipo yako ya ` +
             `GREYMUS ya ${formatKES(paid)}. ` +
             `Malipo yako ya leo yamelipwa kikamilifu. ` +
+            `Salio lako la sasa la mkopo ni ` +
+            `${formatKES(outstanding)}. ` +
             `Asante.` +
             messageSignature()
         );
@@ -301,11 +427,17 @@ function buildPaymentConfirmation(data = {}) {
     }
 
 
+    // =====================================================
+    // PARTIAL PAYMENT
+    // =====================================================
+
     return (
         `Habari ${name}, tumepokea malipo yako ya ` +
         `GREYMUS ya ${formatKES(paid)}. ` +
         `Salio lako la malipo ya leo ni ` +
         `${formatKES(remainingToday)}. ` +
+        `Salio lako la sasa la mkopo ni ` +
+        `${formatKES(outstanding)}. ` +
         `Asante.` +
         messageSignature()
     );
@@ -314,13 +446,15 @@ function buildPaymentConfirmation(data = {}) {
 
 
 // =========================================================
-// MESSAGE BUILDER
+// MAIN MESSAGE BUILDER
 // =========================================================
 
 function buildMessage(data = {}) {
 
     const type =
-        data.type || "due";
+        String(
+            data.type || "due"
+        ).toLowerCase();
 
 
     switch (type) {
@@ -328,6 +462,13 @@ function buildMessage(data = {}) {
         case "repayment":
 
             return buildRepaymentReceivedMessage(
+                data
+            );
+
+
+        case "payment":
+
+            return buildPaymentConfirmation(
                 data
             );
 
@@ -353,15 +494,81 @@ function buildMessage(data = {}) {
 
 
 // =========================================================
-// GLOBAL DEBUG ACCESS
+// MESSAGE PHONE + TEXT HELPER
+// =========================================================
+//
+// Useful for the HTML messaging button.
+//
+// Example:
+//
+// const message =
+//     GREYMUS_MESSAGING.createClientMessage({
+//         client,
+//         type: "due",
+//         due: 500,
+//         arrears: 0,
+//         outstanding: 4500
+//     });
+//
+// =========================================================
+
+function createClientMessage(data = {}) {
+
+    return {
+
+        phone:
+            getClientPhone(
+                data.client
+            ),
+
+        name:
+            getClientName(
+                data.client
+            ),
+
+        message:
+            buildMessage(
+                data
+            )
+
+    };
+
+}
+
+
+// =========================================================
+// GLOBAL GREYMUS MESSAGING API
 // =========================================================
 
 window.GREYMUS_MESSAGING = {
 
+    formatKES,
+
+    getClientName,
+
+    getClientPhone,
+
+    getOutstandingBalance,
+
     buildDueMessage,
+
     buildArrearsMessage,
+
     buildRepaymentReceivedMessage,
+
     buildPaymentConfirmation,
-    buildMessage
+
+    buildMessage,
+
+    createClientMessage
 
 };
+
+
+// =========================================================
+// READY
+// =========================================================
+
+console.log(
+    "GREYMUS Messaging loaded successfully."
+);
