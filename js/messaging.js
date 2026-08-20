@@ -2639,3 +2639,764 @@ window.GREYMUS_MESSAGING = {
 // =========================================================
 // END OF messaging.js
 // =========================================================
+
+// =========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// MESSAGING OVERRIDE
+// VERSION 7.0
+//
+// PURPOSE
+//
+// ✔ Exact Loan Approval Notice
+// ✔ Exact Loan Disbursement Notice
+// ✔ Automatic Due Today + Arrears
+// ✔ Keeps existing repayment messages
+// ✔ Native phone SMS
+// ✔ Does NOT use Africa's Talking
+// ✔ Does NOT automatically send SMS
+// ✔ Messaging errors cannot break loans.js
+//
+// IMPORTANT
+//
+// Paste this at the VERY BOTTOM of messaging.js
+// =========================================================
+
+
+(function () {
+
+    "use strict";
+
+
+    console.log(
+        "GREYMUS Messaging Override 7.0 loading..."
+    );
+
+
+    // =====================================================
+    // SAFE NUMBER
+    // =====================================================
+
+    function number(value) {
+
+        const n =
+            Number(value);
+
+        return Number.isFinite(n)
+            ? n
+            : 0;
+
+    }
+
+
+    // =====================================================
+    // CLIENT NAME
+    // =====================================================
+
+    function clientName(client = {}) {
+
+        return (
+            client.name ||
+            client.clientName ||
+            client.fullName ||
+            "Client"
+        );
+
+    }
+
+
+    // =====================================================
+    // CLIENT PHONE
+    // =====================================================
+
+    function clientPhone(client = {}) {
+
+        let phone =
+            client.phone ||
+            client.phoneNumber ||
+            client.mobile ||
+            client.mobileNumber ||
+            "";
+
+
+        phone =
+            String(phone)
+                .trim()
+                .replace(
+                    /[\s\-().]/g,
+                    ""
+                );
+
+
+        if (
+            phone.startsWith("07") ||
+            phone.startsWith("01")
+        ) {
+
+            return (
+                "+254" +
+                phone.substring(1)
+            );
+
+        }
+
+
+        if (
+            phone.startsWith("254")
+        ) {
+
+            return "+" + phone;
+
+        }
+
+
+        return phone;
+
+    }
+
+
+    // =====================================================
+    // KES
+    // =====================================================
+
+    function kes(value) {
+
+        return new Intl.NumberFormat(
+            "en-KE",
+            {
+                style: "currency",
+                currency: "KES",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }
+        ).format(
+            number(value)
+        );
+
+    }
+
+
+    // =====================================================
+    // DATE
+    // =====================================================
+
+    function date(value) {
+
+        if (!value) {
+            return "";
+        }
+
+
+        let d;
+
+
+        try {
+
+            if (
+                value &&
+                typeof value.toDate ===
+                "function"
+            ) {
+
+                d =
+                    value.toDate();
+
+            }
+
+            else if (
+                value &&
+                typeof value === "object" &&
+                typeof value.seconds === "number"
+            ) {
+
+                d =
+                    new Date(
+                        value.seconds * 1000
+                    );
+
+            }
+
+            else if (
+                value instanceof Date
+            ) {
+
+                d = value;
+
+            }
+
+            else {
+
+                d =
+                    new Date(value);
+
+            }
+
+
+            if (
+                Number.isNaN(
+                    d.getTime()
+                )
+            ) {
+
+                return String(value);
+
+            }
+
+
+            return new Intl.DateTimeFormat(
+                "en-KE",
+                {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                }
+            ).format(d);
+
+        }
+
+        catch (error) {
+
+            return String(value);
+
+        }
+
+    }
+
+
+    // =====================================================
+    // SIGNATURE
+    // =====================================================
+
+    function signature() {
+
+        return `
+
+With regards,
+GREYMUS.`;
+
+    }
+
+
+    // =====================================================
+    // LOAN APPROVAL MESSAGE
+    // =====================================================
+
+    function loanApproved(data = {}) {
+
+        const client =
+            data.client ||
+            {};
+
+
+        const name =
+            clientName(client);
+
+
+        const amount =
+            number(
+                data.amount ||
+                data.loanAmount
+            );
+
+
+        const interest =
+            number(
+                data.interest
+            );
+
+
+        const duration =
+            number(
+                data.duration ||
+                data.durationWeeks
+            );
+
+
+        const totalRepayment =
+            number(
+                data.totalRepayment ||
+                data.totalLoanRepayment
+            );
+
+
+        const weeklyPayment =
+            number(
+                data.weeklyPayment ||
+                data.weeklyRepayment
+            );
+
+
+        const startDate =
+            data.loanStartDate ||
+            data.startDate ||
+            data.approvalDate ||
+            "";
+
+
+        const firstRepaymentDate =
+            data.firstRepaymentDate ||
+            data.nextRepaymentDate ||
+            "";
+
+
+        return (
+
+            `LOAN APPROVAL NOTICE\n\n` +
+
+            `Dear ${name},\n\n` +
+
+            `We are pleased to inform you that your loan application has been APPROVED.\n\n` +
+
+            `Loan Amount: ${kes(amount)}\n` +
+
+            `Interest: ${interest}% (${duration} weeks)\n` +
+
+            `Total Repayment: ${kes(totalRepayment)}\n` +
+
+            `Weekly Payment: ${kes(weeklyPayment)}\n` +
+
+            `Loan Start Date: ${date(startDate)}\n` +
+
+            `First Repayment Date: ${date(firstRepaymentDate)}\n\n` +
+
+            `Please ensure that your weekly repayments are made on time according to the agreed repayment schedule.\n\n` +
+
+            `Congratulations, and thank you for choosing Greymus Ventures Loan Solutions.` +
+
+            signature()
+
+        );
+
+    }
+
+
+    // =====================================================
+    // LOAN DISBURSEMENT MESSAGE
+    // =====================================================
+
+    function loanDisbursed(data = {}) {
+
+        const client =
+            data.client ||
+            {};
+
+
+        const name =
+            clientName(client);
+
+
+        const amount =
+            number(
+                data.disbursedAmount ||
+                data.amount ||
+                data.loanAmount
+            );
+
+
+        const interest =
+            number(
+                data.interest
+            );
+
+
+        const duration =
+            number(
+                data.duration ||
+                data.durationWeeks
+            );
+
+
+        const totalRepayment =
+            number(
+                data.totalRepayment ||
+                data.totalLoanRepayment
+            );
+
+
+        const weeklyPayment =
+            number(
+                data.weeklyPayment ||
+                data.weeklyRepayment
+            );
+
+
+        const startDate =
+            data.loanStartDate ||
+            data.startDate ||
+            data.disbursementDate ||
+            "";
+
+
+        const firstRepaymentDate =
+            data.firstRepaymentDate ||
+            data.nextRepaymentDate ||
+            "";
+
+
+        return (
+
+            `LOAN DISBURSEMENT NOTICE\n\n` +
+
+            `Dear ${name},\n\n` +
+
+            `We are pleased to confirm that your loan has been successfully disbursed.\n\n` +
+
+            `Disbursed Amount: ${kes(amount)}\n` +
+
+            `Interest: ${interest}% (${duration} weeks)\n` +
+
+            `Total Repayment: ${kes(totalRepayment)}\n` +
+
+            `Weekly Payment: ${kes(weeklyPayment)}\n` +
+
+            `Loan Start Date: ${date(startDate)}\n` +
+
+            `First Repayment Date: ${date(firstRepaymentDate)}\n\n` +
+
+            `Your repayment schedule is now active. Please ensure that all weekly repayments are made on time according to the agreed terms.\n\n` +
+
+            `Thank you for choosing Greymus Ventures Loan Solutions.\n\n` +
+
+            `Loan Status: DISBURSED` +
+
+            signature()
+
+        );
+
+    }
+
+
+    // =====================================================
+    // DUE TODAY + ARREARS
+    // =====================================================
+
+    function dueTodayPlusArrears(data = {}) {
+
+        const client =
+            data.client ||
+            {};
+
+
+        const name =
+            clientName(client);
+
+
+        const due =
+            number(
+                data.dueToday ||
+                data.due ||
+                data.installmentDue ||
+                data.weeklyPayment ||
+                data.weeklyRepayment
+            );
+
+
+        const arrears =
+            number(
+                data.arrears ||
+                data.overdueAmount ||
+                data.overdue
+            );
+
+
+        const outstanding =
+            number(
+                data.outstanding ||
+                data.balance ||
+                data.remainingBalance
+            );
+
+
+        // IMPORTANT:
+        //
+        // If totalPayable was not supplied,
+        // calculate it from:
+        //
+        // Today's Due + Arrears
+
+        const totalDue =
+            number(
+                data.totalPayable
+            ) ||
+            (
+                due +
+                arrears
+            );
+
+
+        return (
+
+            `Hello ${name}, your GREYMUS repayment of ` +
+
+            `${kes(due)} is due today. ` +
+
+            `You still have ${kes(arrears)} in arrears. ` +
+
+            `Your total amount due is ${kes(totalDue)}. ` +
+
+            `Your outstanding balance is ${kes(outstanding)}. ` +
+
+            `Please make your payments as soon as possible ` +
+
+            `to increase your loan limits. ` +
+
+            `Thank you.` +
+
+            signature()
+
+        );
+
+    }
+
+
+    // =====================================================
+    // AUTOMATIC REMINDER SELECTION
+    // =====================================================
+    //
+    // THIS IS THE IMPORTANT PART.
+    //
+    // If:
+    //
+    // dueToday > 0
+    // AND
+    // arrears > 0
+    //
+    // the system MUST use:
+    //
+    // Due Today + Arrears
+    //
+    // It must NOT send ordinary Due Today.
+    //
+    // =====================================================
+
+    function buildReminder(data = {}) {
+
+        const due =
+            number(
+                data.dueToday ||
+                data.due ||
+                data.installmentDue ||
+                data.weeklyPayment ||
+                data.weeklyRepayment
+            );
+
+
+        const arrears =
+            number(
+                data.arrears ||
+                data.overdueAmount ||
+                data.overdue
+            );
+
+
+        if (
+            due > 0 &&
+            arrears > 0
+        ) {
+
+            return {
+                type:
+                    "due-today-plus-arrears",
+
+                message:
+                    dueTodayPlusArrears(data)
+            };
+
+        }
+
+
+        // Ordinary due-today reminder
+
+        if (
+            due > 0
+        ) {
+
+            const name =
+                clientName(
+                    data.client || {}
+                );
+
+
+            const outstanding =
+                number(
+                    data.outstanding ||
+                    data.balance ||
+                    data.remainingBalance
+                );
+
+
+            return {
+
+                type:
+                    "due-today",
+
+                message:
+
+                    `Hello ${name}, your GREYMUS repayment of ` +
+
+                    `${kes(due)} is due today. ` +
+
+                    `Your outstanding balance is ` +
+
+                    `${kes(outstanding)}. ` +
+
+                    `Please make your payment on time. ` +
+
+                    `Thank you.` +
+
+                    signature()
+
+            };
+
+        }
+
+
+        // If there is no payment due today,
+        // but there are arrears, use arrears reminder.
+
+        if (
+            arrears > 0
+        ) {
+
+            const name =
+                clientName(
+                    data.client || {}
+                );
+
+
+            const outstanding =
+                number(
+                    data.outstanding ||
+                    data.balance ||
+                    data.remainingBalance
+                );
+
+
+            return {
+
+                type:
+                    "arrears",
+
+                message:
+
+                    `Hello ${name}, your loan has ` +
+
+                    `${kes(arrears)} in arrears. ` +
+
+                    `Your outstanding balance is ` +
+
+                    `${kes(outstanding)}. ` +
+
+                    `Please make your payments as soon as possible ` +
+
+                    `to increase your loan limits. ` +
+
+                    `Thank you.` +
+
+                    signature()
+
+            };
+
+        }
+
+
+        return null;
+
+    }
+
+
+    // =====================================================
+    // NATIVE SMS
+    // =====================================================
+
+    function sendSMS(
+        client,
+        message
+    ) {
+
+        const phone =
+            clientPhone(client);
+
+
+        if (!phone) {
+
+            alert(
+                "This client does not have a valid phone number."
+            );
+
+            return false;
+
+        }
+
+
+        if (!message) {
+
+            alert(
+                "Message could not be generated."
+            );
+
+            return false;
+
+        }
+
+
+        const url =
+            `sms:${phone}?body=${encodeURIComponent(message)}`;
+
+
+        window.location.href =
+            url;
+
+
+        return true;
+
+    }
+
+
+    // =====================================================
+    // PUBLIC OVERRIDE
+    // =====================================================
+
+    window.GREYMUS_MESSAGE_OVERRIDE = {
+
+        loanApproved,
+
+        loanDisbursed,
+
+        dueTodayPlusArrears,
+
+        buildReminder,
+
+        sendSMS
+
+    };
+
+
+    // =====================================================
+    // GLOBAL TEST FUNCTIONS
+    // =====================================================
+
+    window.buildGreymusLoanApprovedMessage =
+        loanApproved;
+
+
+    window.buildGreymusLoanDisbursedMessage =
+        loanDisbursed;
+
+
+    window.buildGreymusReminder =
+        buildReminder;
+
+
+    // =====================================================
+    // READY
+    // =====================================================
+
+    window.GREYMUS_MESSAGING_OVERRIDE_READY =
+        true;
+
+
+    console.log(
+        "GREYMUS Messaging Override 7.0 READY"
+    );
+
+})();
