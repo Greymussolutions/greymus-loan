@@ -1222,171 +1222,187 @@ function updateDashboard(){
             }
 
 
+            // ==========================================================
+// TODAY'S COLLECTION
+// ==========================================================
+//
+// IMPORTANT GREYMUS RULE:
+//
+// A client whose installment is due TODAY must remain
+// on Today's Collection for the ENTIRE calendar day.
+//
+// This means:
+//
+// ✔ Unpaid today       → shown
+// ✔ Partially paid     → shown
+// ✔ Fully paid today   → shown
+// ✔ Tomorrow           → not shown
+// ✔ Yesterday          → not shown
+// ✔ Completed loan     → not shown
+//
+// A fully paid client disappears automatically when
+// todayString() changes to the next calendar day.
+// ==========================================================
+
+if(
+    outstanding > 0 &&
+    schedule.length > 0
+){
+
+    schedule.forEach(
+        item => {
+
+            const dueDate =
+                normalizeDate(
+                    item.dueDate
+                );
+
+
             // ==================================================
-            // TODAY'S COLLECTION
+            // STRICT CALENDAR-DATE CHECK
+            // ==================================================
             //
-            // THIS IS THE MAIN FIX.
+            // Only today's installment belongs in Today's
+            // Collection.
             //
-            // We only accept:
-            //
-            // dueDate === today
-            //
-            // Nothing else.
-            //
-            // Therefore:
-            //
-            // ✔ Tomorrow = excluded
-            // ✔ Yesterday = excluded
-            // ✔ Completed loan = excluded
-            // ✔ Balance zero = excluded
-            // ✔ Fully paid installment = excluded
-            // ✔ Partial payment = included
-            // ✔ Unpaid installment = included
+            // Do NOT remove it because it has been paid.
             // ==================================================
 
             if(
-                outstanding > 0 &&
-                schedule.length > 0
+                dueDate !== today
             ){
 
-                schedule.forEach(
-                    item => {
-
-                        const dueDate =
-                            normalizeDate(
-                                item.dueDate
-                            );
-
-
-                        // ------------------------------------------
-                        // STRICT TODAY CHECK
-                        // ------------------------------------------
-
-                        if(
-                            dueDate !== today
-                        ){
-
-                            return;
-
-                        }
-
-
-                        const due =
-                            Number(
-                                item.amount || 0
-                            );
-
-
-                        const paid =
-                            Number(
-                                item.paidAmount || 0
-                            );
-
-
-                        if(
-                            due <= 0
-                        ){
-
-                            return;
-
-                        }
-
-
-                        // ------------------------------------------
-                        // FULLY PAID TODAY
-                        //
-                        // Do NOT show as due.
-                        // ------------------------------------------
-
-                        if(
-                            paid >= due
-                        ){
-
-                            return;
-
-                        }
-
-
-                        const unpaidToday =
-                            Math.max(
-                                0,
-                                due - paid
-                            );
-
-
-                        // ------------------------------------------
-                        // EXPECTED
-                        //
-                        // The original scheduled amount is the
-                        // expected collection.
-                        // ------------------------------------------
-
-                        expectedToday +=
-                            due;
-
-
-                        // ------------------------------------------
-                        // COLLECTED
-                        //
-                        // Amount already paid toward this
-                        // installment.
-                        // ------------------------------------------
-
-                        collectedToday +=
-                            Math.min(
-                                paid,
-                                due
-                            );
-
-
-                        // ------------------------------------------
-                        // CLIENT DUE TODAY
-                        // ------------------------------------------
-
-                        clientsDueToday.push({
-
-                            client:
-                                loan.clientName ||
-                                "Unknown Client",
-
-                            clientId:
-                                loan.clientId ||
-                                "",
-
-                            loanId:
-                                loan.id,
-
-                            loan,
-
-                            dueDate:
-                                item.dueDate,
-
-                            due,
-
-                            paid,
-
-                            balance:
-                                unpaidToday,
-
-                            outstanding,
-
-                            arrears:
-                                loanArrearsAmount,
-
-                            status:
-                                paid > 0
-                                    ? "Partial"
-                                    : "Pending"
-
-                        });
-
-                    }
-                );
+                return;
 
             }
 
+
+            const due =
+                Number(
+                    item.amount || 0
+                );
+
+
+            const paid =
+                Number(
+                    item.paidAmount || 0
+                );
+
+
+            if(
+                due <= 0
+            ){
+
+                return;
+
+            }
+
+
+            // ==================================================
+            // REMAINING AMOUNT
+            // ==================================================
+
+            const remaining =
+                Math.max(
+                    0,
+                    due - paid
+                );
+
+
+            // ==================================================
+            // EXPECTED TODAY
+            // ==================================================
+            //
+            // The scheduled amount remains today's expected
+            // collection regardless of whether it has already
+            // been paid.
+            // ==================================================
+
+            expectedToday +=
+                due;
+
+
+            // ==================================================
+            // COLLECTED TODAY
+            // ==================================================
+            //
+            // Never count more than the scheduled installment.
+            // ==================================================
+
+            collectedToday +=
+                Math.min(
+                    Math.max(
+                        0,
+                        paid
+                    ),
+                    due
+                );
+
+
+            // ==================================================
+            // ADD CLIENT TO TODAY'S LIST
+            // ==================================================
+            //
+            // IMPORTANT:
+            //
+            // There is NO:
+            //
+            // if(paid >= due) return;
+            //
+            // Therefore a fully paid client remains visible
+            // until the calendar changes to tomorrow.
+            // ==================================================
+
+            clientsDueToday.push({
+
+                client:
+                    loan.clientName ||
+                    "Unknown Client",
+
+                clientId:
+                    loan.clientId ||
+                    "",
+
+                loanId:
+                    loan.id,
+
+                loan,
+
+                dueDate:
+                    item.dueDate,
+
+                due,
+
+                paid,
+
+                balance:
+                    remaining,
+
+                outstanding,
+
+                arrears:
+                    loanArrearsAmount,
+
+                status:
+
+                    paid >= due
+
+                        ? "Paid"
+
+                        : paid > 0
+
+                            ? "Partial"
+
+                            : "Pending"
+
+            });
+
         }
-    );// ==========================================================
+    );
+
+}
+
+// ==========================================================
 // REPEAT CLIENT COUNT
 // ==========================================================
 
@@ -1915,17 +1931,19 @@ if(todayDueList){
 
 
                 const remainingDue =
-                    Math.max(
-                        0,
-                        totalDue -
-                        paidToday
-                    );
+    Math.max(
+        0,
+        client.due -
+        paidToday
+    );
 
 
                 const statusLabel =
-                    client.status === "Partial"
-                        ? "Partial"
-                        : "Pending";
+    client.status === "Paid"
+        ? "Paid"
+        : client.status === "Partial"
+            ? "Partial"
+            : "Pending";
 
 
                 todayDueList.innerHTML += `
