@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.3
+// VERSION 4.4
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
@@ -27,7 +27,8 @@
 // ✔ Today's Due + Arrears Visible Together
 // ✔ PARTIAL PAYMENT STAYS IN TODAY'S LIST
 // ✔ FULL PAYMENT STAYS IN TODAY'S LIST UNTIL NEXT DAY
-// ✔ Today's List Changes Only When Calendar Date Changes
+// ✔ COMPLETED/OFFSET LOANS EXCLUDED FROM TODAY'S COLLECTION
+// ✔ TODAY'S LIST CHANGES ONLY WHEN CALENDAR DATE CHANGES
 // ✔ Auto Refresh
 // ✔ Firestore Realtime Sync
 // ✔ ACTIVE LOANS INCLUDED IN OUTSTANDING PORTFOLIO
@@ -852,20 +853,54 @@ function updateDashboard(){
 // TODAY'S COLLECTION
 // ==========================================
 //
-// IMPORTANT BEHAVIOR:
+// IMPORTANT:
 //
-// Today's list is based on the INSTALLMENT
-// DUE DATE, not the payment status.
+// ONLY THE CURRENT LOAN CAN GENERATE A
+// TODAY'S COLLECTION ENTRY.
 //
-// Therefore:
+// Valid current loan statuses:
 //
-// Pending  -> stays today
-// Partial  -> stays today
-// Paid     -> stays today
+// ✔ Approved
+// ✔ Active
+// ✔ Arrears
 //
-// The client disappears automatically only
-// when the calendar date becomes tomorrow.
+// Completed loans are old/offset loans and
+// MUST NOT appear in Today's Collection.
+//
+// This is important for repeat borrowers:
+//
+// Example:
+//
+// Old loan:
+//   Status: Completed
+//   Installment due: August 20
+//   Paid: KES 3,600
+//
+// New loan:
+//   Status: Active
+//   First installment due: August 21
+//
+// On August 20 the client MUST NOT appear
+// in Today's Collection.
+//
+// On August 21 the current Active loan
+// becomes eligible.
 // ==========================================
+
+        const isCurrentLoanForCollection =
+            status === "Approved" ||
+            status === "Active" ||
+            status === "Arrears";
+
+
+        if(
+            !isCurrentLoanForCollection
+        ){
+
+            return;
+
+        }
+
 
         if(
             Array.isArray(
@@ -2170,6 +2205,7 @@ export {
 // ==========================================
 // END OF FILE
 // ==========================================
+
 
 // ==========================================
 // DASHBOARD MESSAGE BUTTONS
