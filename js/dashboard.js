@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.4
+// VERSION 4.5
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
@@ -20,7 +20,7 @@
 // ✔ Approved Loans
 // ✔ Rejected Loans
 // ✔ Arrears Count
-// ✔ Arrears Amount (Missed Installments Only)
+// ✔ Arrears Amount
 // ✔ Clients in Arrears List
 // ✔ Today's Collection
 // ✔ Today's Due List
@@ -28,17 +28,21 @@
 // ✔ PARTIAL PAYMENT STAYS IN TODAY'S LIST
 // ✔ FULL PAYMENT STAYS IN TODAY'S LIST UNTIL NEXT DAY
 // ✔ COMPLETED/OFFSET LOANS EXCLUDED FROM TODAY'S COLLECTION
-// ✔ TODAY'S LIST CHANGES ONLY WHEN CALENDAR DATE CHANGES
-// ✔ Auto Refresh
-// ✔ Firestore Realtime Sync
+// ✔ AUTOMATIC MIDNIGHT RESET
+// ✔ DATE CHANGE DETECTION
+// ✔ AUTO REFRESH
+// ✔ FIRESTORE REALTIME SYNC
 // ✔ ACTIVE LOANS INCLUDED IN OUTSTANDING PORTFOLIO
 // ✔ OUTSTANDING PORTFOLIO RECONCILES WITH PRINCIPAL + INTEREST
+// ✔ MESSAGE BUTTONS
+// ✔ SAFE DATE COMPARISON
 //
-// STATUS: ✅ CORRECTED
+// STATUS: CORRECTED
 // ==========================================
 
 
 import { db } from "./firebase.js";
+
 import { openMessageComposer } from "./messaging.js";
 
 import {
@@ -200,6 +204,19 @@ function currency(value){
 // ==========================================
 // DATE HELPERS
 // ==========================================
+//
+// IMPORTANT
+//
+// All dashboard "today" calculations use
+// the browser's LOCAL calendar date.
+//
+// The dashboard does NOT depend on a
+// hard-coded date.
+//
+// At midnight, todayString() automatically
+// changes to the new date.
+//
+// ==========================================
 
 function todayString(){
 
@@ -223,17 +240,178 @@ function todayString(){
 }
 
 
+// ==========================================
+// NORMALIZE FIRESTORE / SCHEDULE DATE
+// ==========================================
+//
+// Converts common date formats into:
+//
+// YYYY-MM-DD
+//
+// Supports:
+//
+// YYYY-MM-DD
+// YYYY-MM-DDTHH:mm:ss
+// JavaScript Date
+// Firestore Timestamp-like objects
+// ==========================================
+
+function normalizeDateString(value){
+
+    if(!value){
+
+        return "";
+
+    }
+
+
+    // Already YYYY-MM-DD
+    if(
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            value
+        )
+    ){
+
+        return value;
+
+    }
+
+
+    // ISO date/time string
+    if(
+        typeof value === "string"
+    ){
+
+        const directMatch =
+            value.match(
+                /^(\d{4}-\d{2}-\d{2})/
+            );
+
+
+        if(directMatch){
+
+            return directMatch[1];
+
+        }
+
+    }
+
+
+    // Firestore Timestamp
+    if(
+        typeof value?.toDate === "function"
+    ){
+
+        const date =
+            value.toDate();
+
+        return formatDateObject(
+            date
+        );
+
+    }
+
+
+    // Firestore timestamp object
+    if(
+        typeof value === "object" &&
+        Number.isFinite(
+            Number(value.seconds)
+        )
+    ){
+
+        const date =
+            new Date(
+                Number(value.seconds) * 1000
+            );
+
+        return formatDateObject(
+            date
+        );
+
+    }
+
+
+    // JavaScript Date / numeric date
+    const date =
+        new Date(value);
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return "";
+
+    }
+
+
+    return formatDateObject(
+        date
+    );
+
+}
+
+
+// ==========================================
+// FORMAT DATE OBJECT
+// ==========================================
+
+function formatDateObject(date){
+
+    if(
+        !(date instanceof Date) ||
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return "";
+
+    }
+
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+// ==========================================
+// MONTH KEY
+// ==========================================
+
 function monthKey(date){
 
-    const d =
-        new Date(date);
+    const normalized =
+        normalizeDateString(date);
 
-    return (
-        d.getFullYear() +
-        "-" +
-        String(
-            d.getMonth() + 1
-        ).padStart(2, "0")
+
+    if(!normalized){
+
+        return "";
+
+    }
+
+
+    return normalized.slice(
+        0,
+        7
     );
 
 }
@@ -244,85 +422,140 @@ function monthKey(date){
 // ==========================================
 
 
+// ==========================================
 // CLIENTS
+// ==========================================
+
 onSnapshot(
 
-    collection(db, "clients"),
+    collection(
+        db,
+        "clients"
+    ),
 
     snapshot => {
 
         clients = [];
 
-        snapshot.forEach(doc => {
+        snapshot.forEach(
+            doc => {
 
-            clients.push({
+                clients.push({
 
-                id: doc.id,
+                    id:
+                        doc.id,
 
-                ...doc.data()
+                    ...doc.data()
 
-            });
+                });
 
-        });
+            }
+        );
 
         updateDashboard();
+
+    },
+
+    error => {
+
+        console.error(
+            "Clients listener error:",
+            error
+        );
 
     }
 
 );
 
 
+// ==========================================
 // LOANS
+// ==========================================
+
 onSnapshot(
 
-    collection(db, "loans"),
+    collection(
+        db,
+        "loans"
+    ),
 
     snapshot => {
 
         loans = [];
 
-        snapshot.forEach(doc => {
+        snapshot.forEach(
+            doc => {
 
-            loans.push({
+                loans.push({
 
-                id: doc.id,
+                    id:
+                        doc.id,
 
-                ...doc.data()
+                    ...doc.data()
 
-            });
+                });
 
-        });
+            }
+        );
 
         updateDashboard();
+
+    },
+
+    error => {
+
+        console.error(
+            "Loans listener error:",
+            error
+        );
 
     }
 
 );
 
 
+// ==========================================
 // REPAYMENTS
+// ==========================================
 // Backward compatibility
+// ==========================================
+
 onSnapshot(
 
-    collection(db, "repayments"),
+    collection(
+        db,
+        "repayments"
+    ),
 
     snapshot => {
 
         repayments = [];
 
-        snapshot.forEach(doc => {
+        snapshot.forEach(
+            doc => {
 
-            repayments.push({
+                repayments.push({
 
-                id: doc.id,
+                    id:
+                        doc.id,
 
-                ...doc.data()
+                    ...doc.data()
 
-            });
+                });
 
-        });
+            }
+        );
 
         updateDashboard();
+
+    },
+
+    error => {
+
+        console.error(
+            "Repayments listener error:",
+            error
+        );
 
     }
 
@@ -402,531 +635,505 @@ function updateDashboard(){
 // LOOP THROUGH LOANS
 // ==========================================
 
-    loans.forEach(loan => {
+    loans.forEach(
+        loan => {
 
-        totalLoansIssued++;
-
-
-        const status =
-            loan.status || "Pending";
+            totalLoansIssued++;
 
 
-        const principal =
-            Number(
-                loan.amount || 0
-            );
+            const status =
+                loan.status ||
+                "Pending";
 
 
-        const processingFee =
-            Number(
-                loan.processingFee || 0
-            );
+            const principal =
+                Number(
+                    loan.amount || 0
+                );
 
 
-        const totalRepayment =
-            Number(
-                loan.totalRepayment ||
-                principal
-            );
+            const processingFee =
+                Number(
+                    loan.processingFee || 0
+                );
 
 
-        const amountPaid =
-            Number(
-                loan.amountPaid || 0
-            );
+            const totalRepayment =
+                Number(
+                    loan.totalRepayment ||
+                    principal
+                );
 
 
-        const outstanding =
-            Number(
-                loan.balance ??
-                principal
-            );
+            const amountPaid =
+                Number(
+                    loan.amountPaid || 0
+                );
+
+
+            const outstanding =
+                Number(
+                    loan.balance ??
+                    principal
+                );
 
 
 // ==========================================
 // OUTSTANDING PRINCIPAL / INTEREST
 // ==========================================
 
-        let remainingPrincipal = 0;
+            let remainingPrincipal = 0;
 
-        let remainingInterest = 0;
-
-
-        if(
-            totalRepayment > 0 &&
-            outstanding > 0
-        ){
-
-            const principalRatio =
-                principal /
-                totalRepayment;
+            let remainingInterest = 0;
 
 
-            remainingPrincipal =
-                outstanding *
-                principalRatio;
+            if(
+                totalRepayment > 0 &&
+                outstanding > 0
+            ){
+
+                const principalRatio =
+                    principal /
+                    totalRepayment;
 
 
-            remainingInterest =
-                outstanding -
-                remainingPrincipal;
+                remainingPrincipal =
+                    outstanding *
+                    principalRatio;
 
-        }
+
+                remainingInterest =
+                    outstanding -
+                    remainingPrincipal;
+
+            }
 
 
 // ==========================================
 // APPROVAL DATE
 // ==========================================
 
-        const approvalDate =
-            new Date(
-                loan.approvalDate ||
-                loan.createdAt ||
-                Date.now()
-            );
+            const approvalDate =
+                new Date(
+                    loan.approvalDate ||
+                    loan.createdAt ||
+                    Date.now()
+                );
 
 
 // ==========================================
 // INTEREST / INCOME
 // ==========================================
 
-        const interest =
-            Math.max(
-                0,
-                totalRepayment -
-                principal
-            );
+            const interest =
+                Math.max(
+                    0,
+                    totalRepayment -
+                    principal
+                );
 
 
-        const earnedInterest =
-            totalRepayment > 0
+            const earnedInterest =
+                totalRepayment > 0
 
-            ? (
-                amountPaid /
-                totalRepayment
-            ) * interest
+                    ? (
+                        amountPaid /
+                        totalRepayment
+                    ) * interest
 
-            : 0;
+                    : 0;
 
 
-        const income =
-            processingFee +
-            earnedInterest;
+            const income =
+                processingFee +
+                earnedInterest;
 
 
 // ==========================================
 // OUTSTANDING PORTFOLIO
 // ==========================================
-//
-// IMPORTANT:
-//
-// These same statuses are used for:
-//
-// 1. Current Outstanding Portfolio
-// 2. Outstanding Principal
-// 3. Outstanding Interest
-//
-// Therefore:
-//
-// Outstanding Portfolio
-// = Outstanding Principal
-// + Outstanding Interest
-//
-// Active loans MUST be included here.
-// ==========================================
 
-        const isOutstandingLoan =
-            status === "Approved" ||
-            status === "Active" ||
-            status === "Arrears";
+            const isOutstandingLoan =
+                status === "Approved" ||
+                status === "Active" ||
+                status === "Arrears";
 
 
-        if(isOutstandingLoan){
+            if(
+                isOutstandingLoan
+            ){
 
-            outstandingPrincipal +=
-                remainingPrincipal;
+                outstandingPrincipal +=
+                    remainingPrincipal;
 
-            outstandingInterest +=
-                remainingInterest;
+                outstandingInterest +=
+                    remainingInterest;
 
+                currentPortfolio +=
+                    outstanding;
 
-            currentPortfolio +=
-                outstanding;
-
-        }
+            }
 
 
 // ==========================================
 // TOTAL PORTFOLIO
 // ==========================================
 
-        totalPortfolio +=
-            principal;
-
-
-        if(
-
-            approvalDate.getMonth() ===
-                currentMonth &&
-
-            approvalDate.getFullYear() ===
-                currentYear
-
-        ){
-
-            monthlyPortfolio +=
-                principal;
-
-        }else{
-
-            previousPortfolio +=
+            totalPortfolio +=
                 principal;
 
 
-            const monthName =
-                approvalDate.toLocaleString(
-                    "en-US",
-                    {
-                        month: "long"
-                    }
-                );
+            if(
+
+                approvalDate.getMonth() ===
+                    currentMonth &&
+
+                approvalDate.getFullYear() ===
+                    currentYear
+
+            ){
+
+                monthlyPortfolio +=
+                    principal;
+
+            }else{
+
+                previousPortfolio +=
+                    principal;
 
 
-            const year =
-                approvalDate.getFullYear();
+                const monthName =
+                    approvalDate.toLocaleString(
+                        "en-US",
+                        {
+                            month: "long"
+                        }
+                    );
 
 
-            const key =
-                `${monthName} ${year}`;
+                const year =
+                    approvalDate.getFullYear();
 
 
-            previousMonthsPortfolio[key] =
-                (
-                    previousMonthsPortfolio[key]
-                    || 0
-                ) + principal;
+                const key =
+                    `${monthName} ${year}`;
 
-        }
+
+                previousMonthsPortfolio[key] =
+                    (
+                        previousMonthsPortfolio[key]
+                        || 0
+                    ) + principal;
+
+            }
 
 
 // ==========================================
 // INCOME
 // ==========================================
 
-        totalIncome +=
-            income;
-
-
-        if(
-
-            approvalDate.getMonth() ===
-                currentMonth &&
-
-            approvalDate.getFullYear() ===
-                currentYear
-
-        ){
-
-            monthlyIncome +=
-                income;
-
-        }else{
-
-            previousIncome +=
+            totalIncome +=
                 income;
 
 
-            const monthName =
-                approvalDate.toLocaleString(
-                    "en-US",
-                    {
-                        month: "long"
-                    }
-                );
+            if(
+
+                approvalDate.getMonth() ===
+                    currentMonth &&
+
+                approvalDate.getFullYear() ===
+                    currentYear
+
+            ){
+
+                monthlyIncome +=
+                    income;
+
+            }else{
+
+                previousIncome +=
+                    income;
 
 
-            const year =
-                approvalDate.getFullYear();
+                const monthName =
+                    approvalDate.toLocaleString(
+                        "en-US",
+                        {
+                            month: "long"
+                        }
+                    );
 
 
-            const key =
-                `${monthName} ${year}`;
+                const year =
+                    approvalDate.getFullYear();
 
 
-            previousMonthsIncome[key] =
-                (
-                    previousMonthsIncome[key]
-                    || 0
-                ) + income;
+                const key =
+                    `${monthName} ${year}`;
 
-        }
+
+                previousMonthsIncome[key] =
+                    (
+                        previousMonthsIncome[key]
+                        || 0
+                    ) + income;
+
+            }
 
 
 // ==========================================
 // REPEAT CLIENTS
 // ==========================================
 
-        const clientId =
-            loan.clientId ||
-            loan.clientName;
+            const clientId =
+                loan.clientId ||
+                loan.clientName ||
+                loan.id;
 
 
-        repeatTracker[clientId] =
-            (
-                repeatTracker[clientId]
-                || 0
-            ) + 1;
+            repeatTracker[clientId] =
+                (
+                    repeatTracker[clientId]
+                    || 0
+                ) + 1;
 
 
 // ==========================================
 // CALCULATE MISSED INSTALLMENTS
 // ==========================================
 
-        let missedWeeks = 0;
+            let missedWeeks = 0;
 
-        let overdueAmount = 0;
-
-
-        if(
-            Array.isArray(
-                loan.repaymentSchedule
-            )
-        ){
-
-            loan.repaymentSchedule.forEach(
-                item => {
-
-                    const dueDateObj =
-                        new Date(
-                            item.dueDate
-                        );
+            let overdueAmount = 0;
 
 
-                    const dueDate =
-                        `${dueDateObj.getFullYear()}-${
-                            String(
-                                dueDateObj.getMonth() + 1
-                            ).padStart(2, "0")
-                        }-${
-                            String(
-                                dueDateObj.getDate()
-                            ).padStart(2, "0")
-                        }`;
+            if(
+                Array.isArray(
+                    loan.repaymentSchedule
+                )
+            ){
+
+                loan.repaymentSchedule.forEach(
+                    item => {
+
+                        const dueDate =
+                            normalizeDateString(
+                                item.dueDate
+                            );
 
 
-                    const due =
-                        Number(
-                            item.amount || 0
-                        );
+                        const due =
+                            Number(
+                                item.amount || 0
+                            );
 
 
-                    const paid =
-                        Number(
-                            item.paidAmount || 0
-                        );
+                        const paid =
+                            Number(
+                                item.paidAmount || 0
+                            );
 
 
-                    if(
+                        if(
 
-                        dueDate < today &&
+                            dueDate &&
+                            dueDate < today &&
+                            paid < due
 
-                        paid < due
+                        ){
 
-                    ){
+                            missedWeeks++;
 
-                        missedWeeks++;
+                            overdueAmount +=
+                                Math.max(
+                                    due - paid,
+                                    0
+                                );
 
-                        overdueAmount +=
-                            due - paid;
+                        }
 
                     }
+                );
 
-                }
-            );
-
-        }
+            }
 
 
 // ==========================================
 // LOAN STATUS COUNTS
 // ==========================================
 
-        switch(status){
+            switch(status){
 
-            case "Pending":
+                case "Pending":
 
-                pending++;
+                    pending++;
 
-                break;
-
-
-            case "Approved":
-
-                approved++;
-
-                activeLoans++;
-
-                break;
+                    break;
 
 
-            case "Active":
+                case "Approved":
 
-                activeLoans++;
+                    approved++;
 
-                break;
+                    activeLoans++;
 
-
-            case "Arrears":
-
-                arrears++;
-
-                activeLoans++;
+                    break;
 
 
-                if(
-                    missedWeeks > 0
-                ){
+                case "Active":
 
-                    arrearsAmount +=
-                        overdueAmount;
+                    activeLoans++;
 
-
-                    arrearsClients.push({
-
-                        client:
-                            loan.clientName ||
-                            "Unknown Client",
-
-                        clientId:
-                            loan.clientId || "",
-
-                        loanId:
-                            loan.id,
-
-                        loan,
-
-                        weeks:
-                            missedWeeks,
-
-                        amount:
-                            overdueAmount,
-
-                        outstanding:
-                            Number(loan.balance || 0),
-
-                        dueDate:
-                            loan.repaymentSchedule?.find(
-                                item =>
-                                    item.dueDate &&
-                                    item.dueDate < today
-                            )?.dueDate ||
-                            loan.nextRepaymentDate ||
-                            ""
-
-                    });
-
-                }
-
-                break;
+                    break;
 
 
-            case "Completed":
+                case "Arrears":
 
-                completedLoans++;
+                    arrears++;
+
+                    activeLoans++;
 
 
-                if(
-                    loan.loanType ===
-                    "historical"
-                ){
+                    if(
+                        missedWeeks > 0
+                    ){
 
-                    historicalLoans++;
+                        arrearsAmount +=
+                            overdueAmount;
 
-                }
 
-                break;
+                        const firstOverdue =
+                            (
+                                loan.repaymentSchedule ||
+                                []
+                            ).find(
+                                item => {
 
-        }
+                                    const itemDate =
+                                        normalizeDateString(
+                                            item.dueDate
+                                        );
+
+                                    return (
+                                        itemDate &&
+                                        itemDate < today
+                                    );
+
+                                }
+                            );
+
+
+                        arrearsClients.push({
+
+                            client:
+                                loan.clientName ||
+                                "Unknown Client",
+
+                            clientId:
+                                loan.clientId ||
+                                "",
+
+                            loanId:
+                                loan.id,
+
+                            loan,
+
+                            weeks:
+                                missedWeeks,
+
+                            amount:
+                                overdueAmount,
+
+                            outstanding:
+                                Number(
+                                    loan.balance || 0
+                                ),
+
+                            dueDate:
+                                firstOverdue?.dueDate ||
+                                loan.nextRepaymentDate ||
+                                ""
+
+                        });
+
+                    }
+
+                    break;
+
+
+                case "Rejected":
+
+                    rejected++;
+
+                    break;
+
+
+                case "Completed":
+
+                    completedLoans++;
+
+
+                    if(
+                        loan.loanType ===
+                        "historical"
+                    ){
+
+                        historicalLoans++;
+
+                    }
+
+                    break;
+
+            }
 
 
 // ==========================================
 // TODAY'S COLLECTION
 // ==========================================
 //
-// IMPORTANT:
+// Only Approved, Active and Arrears loans
+// can generate today's collection.
 //
-// ONLY THE CURRENT LOAN CAN GENERATE A
-// TODAY'S COLLECTION ENTRY.
+// Completed loans are excluded.
 //
-// Valid current loan statuses:
-//
-// ✔ Approved
-// ✔ Active
-// ✔ Arrears
-//
-// Completed loans are old/offset loans and
-// MUST NOT appear in Today's Collection.
-//
-// This is important for repeat borrowers:
-//
-// Example:
-//
-// Old loan:
-//   Status: Completed
-//   Installment due: August 20
-//   Paid: KES 3,600
-//
-// New loan:
-//   Status: Active
-//   First installment due: August 21
-//
-// On August 20 the client MUST NOT appear
-// in Today's Collection.
-//
-// On August 21 the current Active loan
-// becomes eligible.
+// The date is always recalculated using
+// todayString(), so after midnight the old
+// day's entries disappear automatically.
 // ==========================================
 
-        const isCurrentLoanForCollection =
-            status === "Approved" ||
-            status === "Active" ||
-            status === "Arrears";
+            const isCurrentLoanForCollection =
+                status === "Approved" ||
+                status === "Active" ||
+                status === "Arrears";
 
 
-        if(
-            !isCurrentLoanForCollection
-        ){
+            if(
+                !isCurrentLoanForCollection
+            ){
 
-            return;
+                return;
 
-        }
+            }
 
 
-        if(
-            Array.isArray(
-                loan.repaymentSchedule
-            )
-        ){
+            if(
+                !Array.isArray(
+                    loan.repaymentSchedule
+                )
+            ){
+
+                return;
+
+            }
+
 
             loan.repaymentSchedule.forEach(
                 item => {
 
-                    const dueDateObj =
-                        new Date(
+                    const dueDate =
+                        normalizeDateString(
                             item.dueDate
                         );
-
-
-                    const dueDate =
-                        `${dueDateObj.getFullYear()}-${
-                            String(
-                                dueDateObj.getMonth() + 1
-                            ).padStart(2, "0")
-                        }-${
-                            String(
-                                dueDateObj.getDate()
-                            ).padStart(2, "0")
-                        }`;
 
 
                     if(
@@ -976,7 +1183,8 @@ function updateDashboard(){
                             "Unknown Client",
 
                         clientId:
-                            loan.clientId || "",
+                            loan.clientId ||
+                            "",
 
                         loanId:
                             loan.id,
@@ -993,24 +1201,24 @@ function updateDashboard(){
                         balance,
 
                         outstanding:
-                            Number(loan.balance || 0),
+                            Number(
+                                loan.balance || 0
+                            ),
 
                         arrears:
-                            status === "Arrears"
-                                ? overdueAmount
-                                : 0,
+                            overdueAmount,
 
                         status:
 
                             paid >= due
 
-                            ? "Paid"
+                                ? "Paid"
 
-                            : paid > 0
+                                : paid > 0
 
-                            ? "Partial"
+                                    ? "Partial"
 
-                            : "Pending"
+                                    : "Pending"
 
                     });
 
@@ -1018,8 +1226,7 @@ function updateDashboard(){
             );
 
         }
-
-    });
+    );
 
 
 // ==========================================
@@ -1031,7 +1238,9 @@ function updateDashboard(){
     ).forEach(
         count => {
 
-            if(count > 1){
+            if(
+                count > 1
+            ){
 
                 repeatLoans++;
 
@@ -1143,6 +1352,23 @@ function updateDashboard(){
 
             }
         );
+
+
+        if(
+            Object.keys(
+                previousMonthsPortfolio
+            ).length === 0
+        ){
+
+            previousMonthsList.innerHTML = `
+
+                <p>
+                    No previous months portfolio records.
+                </p>
+
+            `;
+
+        }
 
     }
 
@@ -1448,14 +1674,14 @@ function updateDashboard(){
     const collectionRate =
         expectedToday > 0
 
-        ? Math.round(
-            (
-                collectedToday /
-                expectedToday
-            ) * 100
-        )
+            ? Math.round(
+                (
+                    collectedToday /
+                    expectedToday
+                ) * 100
+            )
 
-        : 0;
+            : 0;
 
 
     if(clientsDueTodayElement){
@@ -1625,7 +1851,10 @@ function updateDashboard(){
 // ==========================================
 
 
-// Total Outstanding Portfolio
+// ==========================================
+// TOTAL OUTSTANDING PORTFOLIO
+// ==========================================
+
 function getTotalOutstandingBalance(){
 
     return loans.reduce(
@@ -1664,7 +1893,10 @@ function getTotalOutstandingBalance(){
 }
 
 
-// Completed Loans
+// ==========================================
+// COMPLETED LOANS
+// ==========================================
+
 function getCompletedLoans(){
 
     return loans.filter(
@@ -1675,7 +1907,10 @@ function getCompletedLoans(){
 }
 
 
-// Total Collected
+// ==========================================
+// TOTAL COLLECTED
+// ==========================================
+
 function getTotalCollected(){
 
     let total = 0;
@@ -1712,7 +1947,10 @@ function getTotalCollected(){
 }
 
 
-// Average Loan Amount
+// ==========================================
+// AVERAGE LOAN AMOUNT
+// ==========================================
+
 function getAverageLoanAmount(){
 
     if(
@@ -1746,7 +1984,10 @@ function getAverageLoanAmount(){
 }
 
 
-// Refresh Dashboard
+// ==========================================
+// REFRESH DASHBOARD
+// ==========================================
+
 function refreshDashboard(){
 
     updateDashboard();
@@ -1754,7 +1995,10 @@ function refreshDashboard(){
 }
 
 
-// Dashboard Summary
+// ==========================================
+// DASHBOARD SUMMARY
+// ==========================================
+
 function dashboardSummary(){
 
     console.log(
@@ -1767,6 +2011,11 @@ function dashboardSummary(){
 
     console.log(
         "===================================="
+    );
+
+    console.log(
+        "Dashboard Date:",
+        todayString()
     );
 
     console.log(
@@ -1933,7 +2182,8 @@ if(
         () => {
 
             loanSummaryContent
-                .classList.toggle(
+                .classList
+                .toggle(
                     "hidden"
                 );
 
@@ -2054,15 +2304,19 @@ if(
         "click",
         () => {
 
-            todayDueContent.classList.toggle(
-                "hidden"
-            );
+            todayDueContent
+                .classList
+                .toggle(
+                    "hidden"
+                );
 
 
             const isHidden =
-                todayDueContent.classList.contains(
-                    "hidden"
-                );
+                todayDueContent
+                    .classList
+                    .contains(
+                        "hidden"
+                    );
 
 
             todayDueButton.textContent =
@@ -2112,7 +2366,9 @@ previousPortfolioCard?.addEventListener(
 
         previousPortfolioModal
             ?.classList
-            .remove("hidden");
+            .remove(
+                "hidden"
+            );
 
     }
 );
@@ -2124,7 +2380,9 @@ closePreviousPortfolio?.addEventListener(
 
         previousPortfolioModal
             ?.classList
-            .add("hidden");
+            .add(
+                "hidden"
+            );
 
     }
 );
@@ -2140,7 +2398,9 @@ previousIncomeCard?.addEventListener(
 
         previousIncomeModal
             ?.classList
-            .remove("hidden");
+            .remove(
+                "hidden"
+            );
 
     }
 );
@@ -2152,7 +2412,9 @@ closePreviousIncome?.addEventListener(
 
         previousIncomeModal
             ?.classList
-            .add("hidden");
+            .add(
+                "hidden"
+            );
 
     }
 );
@@ -2161,6 +2423,17 @@ closePreviousIncome?.addEventListener(
 // ==========================================
 // AUTO REFRESH
 // ==========================================
+//
+// Normal refresh every minute.
+//
+// This is NOT the midnight reset itself.
+// The midnight scheduler below handles the
+// calendar-day transition precisely.
+// ==========================================
+
+const DASHBOARD_REFRESH_INTERVAL =
+    60 * 1000;
+
 
 setInterval(
     () => {
@@ -2168,8 +2441,177 @@ setInterval(
         refreshDashboard();
 
     },
-    60000
+    DASHBOARD_REFRESH_INTERVAL
 );
+
+
+// ==========================================
+// AUTOMATIC MIDNIGHT RESET
+// ==========================================
+//
+// IMPORTANT
+//
+// The dashboard is NOT storing "today"
+// collection values permanently.
+//
+// Instead, Today's Collection is rebuilt
+// from today's actual calendar date.
+//
+// This scheduler makes sure that when the
+// browser reaches midnight:
+//
+// Yesterday's collection:
+//     disappears from Today's Collection
+//
+// Today's collection:
+//     appears automatically
+//
+// Historical data:
+//     remains untouched
+//
+// Portfolio:
+//     remains untouched
+//
+// Income:
+//     remains untouched
+//
+// Arrears:
+//     remains calculated
+//
+// ==========================================
+
+let dashboardDate =
+    todayString();
+
+let midnightTimer = null;
+
+
+// ==========================================
+// CHECK FOR DATE CHANGE
+// ==========================================
+
+function checkDashboardDate(){
+
+    const currentDate =
+        todayString();
+
+
+    if(
+        currentDate !==
+        dashboardDate
+    ){
+
+        console.log(
+            "GREYMUS Dashboard date changed:",
+            dashboardDate,
+            "→",
+            currentDate
+        );
+
+
+        dashboardDate =
+            currentDate;
+
+
+        // Immediately rebuild dashboard
+        // using the new calendar date.
+        updateDashboard();
+
+    }
+
+}
+
+
+// ==========================================
+// SCHEDULE NEXT MIDNIGHT
+// ==========================================
+
+function scheduleMidnightRefresh(){
+
+    if(midnightTimer){
+
+        clearTimeout(
+            midnightTimer
+        );
+
+    }
+
+
+    const now =
+        new Date();
+
+
+    const nextMidnight =
+        new Date(
+            now
+        );
+
+
+    nextMidnight.setHours(
+        24,
+        0,
+        0,
+        50
+    );
+
+
+    const millisecondsUntilMidnight =
+        Math.max(
+            1000,
+            nextMidnight.getTime() -
+            now.getTime()
+        );
+
+
+    midnightTimer =
+        setTimeout(
+            () => {
+
+                // Check the date first.
+                checkDashboardDate();
+
+
+                // Force another complete refresh.
+                refreshDashboard();
+
+
+                // Schedule the following midnight.
+                scheduleMidnightRefresh();
+
+            },
+            millisecondsUntilMidnight
+        );
+
+}
+
+
+// ==========================================
+// BACKUP DATE CHECK
+// ==========================================
+//
+// If the device/browser sleeps at midnight,
+// the timeout above may execute late.
+//
+// This backup check guarantees that the
+// dashboard catches the new date as soon as
+// JavaScript becomes active again.
+// ==========================================
+
+setInterval(
+    () => {
+
+        checkDashboardDate();
+
+    },
+    30 * 1000
+);
+
+
+// ==========================================
+// START MIDNIGHT SYSTEM
+// ==========================================
+
+scheduleMidnightRefresh();
 
 
 // ==========================================
@@ -2180,34 +2622,6 @@ refreshDashboard();
 
 
 // ==========================================
-// EXPORTS
-// ==========================================
-
-export {
-
-    currency,
-
-    refreshDashboard,
-
-    dashboardSummary,
-
-    getTotalOutstandingBalance,
-
-    getCompletedLoans,
-
-    getTotalCollected,
-
-    getAverageLoanAmount
-
-};
-
-
-// ==========================================
-// END OF FILE
-// ==========================================
-
-
-// ==========================================
 // DASHBOARD MESSAGE BUTTONS
 // ==========================================
 //
@@ -2215,15 +2629,18 @@ export {
 //
 // ✔ Message button in Today's Due list
 // ✔ Message button in Arrears list
-// ✔ Finds the selected loan
-// ✔ Finds the selected client
+// ✔ Finds selected loan
+// ✔ Finds selected client
 // ✔ Finds today's repayment
 // ✔ Calculates arrears
 // ✔ Opens messaging.js composer
 //
 // IMPORTANT:
-// Uses todayString()
-// NOT today()
+//
+// All repayment dates are normalized before
+// comparison. This prevents a Timestamp,
+// ISO date/time or YYYY-MM-DD value from
+// causing today's message lookup to fail.
 // ==========================================
 
 document.addEventListener(
@@ -2236,8 +2653,10 @@ document.addEventListener(
             );
 
 
-        if (!button) {
+        if(!button){
+
             return;
+
         }
 
 
@@ -2259,11 +2678,12 @@ document.addEventListener(
         const loan =
             loans.find(
                 item =>
-                    item.id === loanId
+                    item.id ===
+                    loanId
             );
 
 
-        if (!loan) {
+        if(!loan){
 
             alert(
                 "The selected loan could not be found."
@@ -2281,11 +2701,12 @@ document.addEventListener(
         const client =
             clients.find(
                 item =>
-                    item.id === loan.clientId
+                    item.id ===
+                    loan.clientId
             );
 
 
-        if (!client) {
+        if(!client){
 
             alert(
                 "The client for this loan could not be found."
@@ -2296,13 +2717,13 @@ document.addEventListener(
         }
 
 
-        // ==========================================
-        // ARREARS MESSAGE
-        // ==========================================
+// ==========================================
+// ARREARS MESSAGE
+// ==========================================
 
-        if (
+        if(
             type === "arrears"
-        ) {
+        ){
 
             const today =
                 todayString();
@@ -2315,27 +2736,17 @@ document.addEventListener(
                 ).filter(
                     item => {
 
-                        if (!item.dueDate) {
-                            return false;
-                        }
-
-
-                        const dueDateObj =
-                            new Date(
+                        const dueDate =
+                            normalizeDateString(
                                 item.dueDate
                             );
 
 
-                        const dueDate =
-                            `${dueDateObj.getFullYear()}-${
-                                String(
-                                    dueDateObj.getMonth() + 1
-                                ).padStart(2, "0")
-                            }-${
-                                String(
-                                    dueDateObj.getDate()
-                                ).padStart(2, "0")
-                            }`;
+                        if(!dueDate){
+
+                            return false;
+
+                        }
 
 
                         const due =
@@ -2351,17 +2762,20 @@ document.addEventListener(
 
 
                         return (
+
                             dueDate < today &&
+
                             paid < due
+
                         );
 
                     }
                 );
 
 
-            // ======================================
-            // TOTAL ARREARS
-            // ======================================
+// ==========================================
+// TOTAL ARREARS
+// ==========================================
 
             const arrearsAmount =
                 overdueItems.reduce(
@@ -2395,9 +2809,9 @@ document.addEventListener(
                 );
 
 
-            // ======================================
-            // OPEN MESSAGE COMPOSER
-            // ======================================
+// ==========================================
+// OPEN MESSAGE COMPOSER
+// ==========================================
 
             openMessageComposer({
 
@@ -2431,9 +2845,9 @@ document.addEventListener(
         }
 
 
-        // ==========================================
-        // TODAY'S DUE MESSAGE
-        // ==========================================
+// ==========================================
+// TODAY'S DUE MESSAGE
+// ==========================================
 
         const today =
             todayString();
@@ -2444,12 +2858,19 @@ document.addEventListener(
                 loan.repaymentSchedule ||
                 []
             ).find(
-                item =>
-                    item.dueDate === today
+                item => {
+
+                    return (
+                        normalizeDateString(
+                            item.dueDate
+                        ) === today
+                    );
+
+                }
             );
 
 
-        if (!dueItem) {
+        if(!dueItem){
 
             alert(
                 "Today's repayment could not be found for this loan."
@@ -2460,9 +2881,9 @@ document.addEventListener(
         }
 
 
-        // ==========================================
-        // OPEN MESSAGE COMPOSER
-        // ==========================================
+// ==========================================
+// OPEN MESSAGE COMPOSER
+// ==========================================
 
         openMessageComposer({
 
@@ -2493,5 +2914,28 @@ document.addEventListener(
 
 
 // ==========================================
-// END OF DASHBOARD MESSAGE BUTTONS
+// EXPORTS
+// ==========================================
+
+export {
+
+    currency,
+
+    refreshDashboard,
+
+    dashboardSummary,
+
+    getTotalOutstandingBalance,
+
+    getCompletedLoans,
+
+    getTotalCollected,
+
+    getAverageLoanAmount
+
+};
+
+
+// ==========================================
+// END OF FILE
 // ==========================================
