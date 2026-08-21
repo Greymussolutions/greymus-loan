@@ -1,17 +1,7 @@
 // ==========================================================
 // GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS
-// CLEAN REBUILD — PART 1/16
-//
-// IMPORTANT
-// ----------------------------------------------------------
-// This rebuild keeps loan operations independent from
-// messaging.js. Messaging can fail without breaking:
-// - Loan approval
-// - Repayment saving
-// - Loan balances
-// - Repayment schedules
-// - Firestore records
+// LOANS.JS — PART 1/16
+// CORE IMPORTS, STATE, DOM SELECTORS & BASIC HELPERS
 // ==========================================================
 
 
@@ -26,10 +16,10 @@ import {
 import {
     collection,
     addDoc,
+    deleteDoc,
     doc,
     getDocs,
     updateDoc,
-    deleteDoc,
     onSnapshot,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -43,11 +33,6 @@ let loans = [];
 
 let clients = [];
 
-
-// ==========================================================
-// UI STATE
-// ==========================================================
-
 let loanDetailsOpen =
     false;
 
@@ -60,11 +45,6 @@ let selectedLoanId =
 let directLoanRepaymentMode =
     false;
 
-
-// ==========================================================
-// REPAYMENT STATE
-// ==========================================================
-
 let repaymentSaving =
     false;
 
@@ -73,22 +53,84 @@ let repaymentSubmissionStarted =
 
 
 // ==========================================================
-// REALTIME LISTENER STATE
-// ==========================================================
-
-let loansRealtimeUnsubscribe =
-    null;
-
-let loansModuleInitialized =
-    false;
-
-let overdueCheckRunning =
-    false;
-
-
-// ==========================================================
 // DOM SELECTORS
 // ==========================================================
+
+// Loan form
+
+const loanForm =
+    document.getElementById(
+        "loan-form"
+    );
+
+const loanClient =
+    document.getElementById(
+        "loan-client"
+    );
+
+const loanAmount =
+    document.getElementById(
+        "loan-amount"
+    );
+
+const loanInterest =
+    document.getElementById(
+        "loan-interest"
+    );
+
+const loanDuration =
+    document.getElementById(
+        "loan-duration"
+    );
+
+const loanProcessingFee =
+    document.getElementById(
+        "loan-processing-fee"
+    );
+
+const loanWeeklyPayment =
+    document.getElementById(
+        "loan-weekly-payment"
+    );
+
+const loanTotalRepayment =
+    document.getElementById(
+        "loan-total-repayment"
+    );
+
+const loanPaid =
+    document.getElementById(
+        "loan-paid"
+    );
+
+const loanBalance =
+    document.getElementById(
+        "loan-balance"
+    );
+
+const loanType =
+    document.getElementById(
+        "loan-type"
+    );
+
+const loanStartDate =
+    document.getElementById(
+        "loan-start-date"
+    );
+
+
+// Loan table
+
+const loansTableBody =
+    document.getElementById(
+        "loans-table-body"
+    ) ||
+    document.querySelector(
+        "#loans-table tbody"
+    );
+
+
+// Loan search and filters
 
 const loanSearch =
     document.getElementById(
@@ -111,9 +153,20 @@ const loanYearFilter =
     );
 
 
-// ==========================================================
-// REPAYMENT FORM SELECTORS
-// ==========================================================
+// Loan modal
+
+const loanModal =
+    document.getElementById(
+        "loan-modal"
+    );
+
+
+// Repayment modal
+
+const repaymentModal =
+    document.getElementById(
+        "repayment-modal"
+    );
 
 const repaymentForm =
     document.getElementById(
@@ -152,7 +205,7 @@ const repaymentNotes =
 
 
 // ==========================================================
-// TODAY
+// DATE HELPERS
 // ==========================================================
 
 function today() {
@@ -164,7 +217,6 @@ function today() {
     const year =
         date.getFullYear();
 
-
     const month =
         String(
             date.getMonth() + 1
@@ -172,7 +224,6 @@ function today() {
             2,
             "0"
         );
-
 
     const day =
         String(
@@ -190,95 +241,6 @@ function today() {
 
 
 // ==========================================================
-// MONTH KEY
-// ==========================================================
-
-function monthKey(
-    date = new Date()
-) {
-
-    const year =
-        date.getFullYear();
-
-
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return (
-        `${year}-${month}`
-    );
-}
-
-
-// ==========================================================
-// DATE NORMALIZATION
-// ==========================================================
-
-function normalizeDateValue(
-    value
-) {
-
-    if (!value) {
-        return null;
-    }
-
-
-    if (
-        value instanceof Date
-    ) {
-
-        return value;
-    }
-
-
-    if (
-        typeof value?.toDate ===
-        "function"
-    ) {
-
-        try {
-
-            return value.toDate();
-
-        } catch (
-            error
-        ) {
-
-            console.error(
-                "Firestore date conversion error:",
-                error
-            );
-        }
-    }
-
-
-    const parsed =
-        new Date(
-            value
-        );
-
-
-    if (
-        Number.isNaN(
-            parsed.getTime()
-        )
-    ) {
-
-        return null;
-    }
-
-
-    return parsed;
-}
-
-
-// ==========================================================
 // FORMAT DATE
 // ==========================================================
 
@@ -286,33 +248,43 @@ function formatDate(
     date
 ) {
 
-    const parsed =
-        normalizeDateValue(
-            date
-        );
+    if (!date) {
+        return "";
+    }
 
 
-    if (!parsed) {
+    const value =
+        date instanceof Date
+            ? date
+            : new Date(
+                date
+            );
+
+
+    if (
+        Number.isNaN(
+            value.getTime()
+        )
+    ) {
+
         return "";
     }
 
 
     const year =
-        parsed.getFullYear();
-
+        value.getFullYear();
 
     const month =
         String(
-            parsed.getMonth() + 1
+            value.getMonth() + 1
         ).padStart(
             2,
             "0"
         );
 
-
     const day =
         String(
-            parsed.getDate()
+            value.getDate()
         ).padStart(
             2,
             "0"
@@ -326,7 +298,7 @@ function formatDate(
 
 
 // ==========================================================
-// CURRENCY
+// CURRENCY FORMATTER
 // ==========================================================
 
 function currency(
@@ -335,8 +307,16 @@ function currency(
 
     const value =
         Number(
-            amount || 0
+            amount
         );
+
+
+    const safeValue =
+        Number.isFinite(
+            value
+        )
+            ? value
+            : 0;
 
 
     return new Intl.NumberFormat(
@@ -352,23 +332,19 @@ function currency(
                 0,
 
             maximumFractionDigits:
-                2
+                0
         }
     ).format(
-        Number.isFinite(
-            value
-        )
-            ? value
-            : 0
+        safeValue
     );
 }
 
 
 // ==========================================================
-// SAFE NUMBER
+// NUMBER SAFETY
 // ==========================================================
 
-function safeNumber(
+function numberValue(
     value,
     fallback = 0
 ) {
@@ -396,14 +372,16 @@ function roundToNearestFive(
 ) {
 
     const value =
-        safeNumber(
+        numberValue(
             amount
         );
 
 
-    return Math.round(
-        value / 5
-    ) * 5;
+    return (
+        Math.round(
+            value / 5
+        ) * 5
+    );
 }
 
 
@@ -417,69 +395,45 @@ function normalizeLoanStatus(
 
     const value =
         String(
-            status || ""
+            status ||
+            ""
         )
             .trim()
             .toLowerCase();
 
 
-    if (
-        value ===
-        "pending"
+    switch (
+        value
     ) {
 
-        return "Pending";
+        case "pending":
+            return "Pending";
+
+        case "approved":
+            return "Active";
+
+        case "active":
+            return "Active";
+
+        case "arrears":
+            return "Arrears";
+
+        case "overdue":
+            return "Arrears";
+
+        case "completed":
+            return "Completed";
+
+        case "complete":
+            return "Completed";
+
+        case "rejected":
+            return "Rejected";
+
+        default:
+            return status ||
+                "";
     }
-
-
-    if (
-        value ===
-        "approved" ||
-        value ===
-        "active"
-    ) {
-
-        return "Active";
-    }
-
-
-    if (
-        value ===
-        "arrears" ||
-        value ===
-        "overdue"
-    ) {
-
-        return "Arrears";
-    }
-
-
-    if (
-        value ===
-        "completed" ||
-        value ===
-        "complete" ||
-        value ===
-        "paid"
-    ) {
-
-        return "Completed";
-    }
-
-
-    if (
-        value ===
-        "rejected"
-    ) {
-
-        return "Rejected";
-    }
-
-
-    return (
-        status ||
-        "Active"
-    );
 }
 
 
@@ -502,22 +456,116 @@ function isRunningLoan(
         );
 
 
-    /*
-     * Pending loans are still part of
-     * the loan pipeline and must remain
-     * available to the existing workflow.
-     *
-     * Completed and rejected loans are
-     * excluded from the active running
-     * loan table.
-     */
+    if (
+        status ===
+            "Completed" ||
+
+        status ===
+            "Rejected"
+    ) {
+
+        return false;
+    }
+
 
     return (
-        status !==
-            "Completed" &&
+        numberValue(
+            loan.balance
+        ) > 0
+    );
+}
 
-        status !==
-            "Rejected"
+
+// ==========================================================
+// SAFE FIRESTORE DATE
+// ==========================================================
+
+function firestoreDateToDate(
+    value
+) {
+
+    if (!value) {
+        return null;
+    }
+
+
+    if (
+        typeof value.toDate ===
+        "function"
+    ) {
+
+        try {
+
+            return value.toDate();
+
+        } catch (error) {
+
+            console.warn(
+                "Firestore date conversion failed:",
+                error
+            );
+        }
+    }
+
+
+    if (
+        value instanceof Date
+    ) {
+
+        return value;
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    return Number.isNaN(
+        date.getTime()
+    )
+        ? null
+        : date;
+}
+
+
+// ==========================================================
+// LOAN DATE
+// ==========================================================
+
+function getLoanDate(
+    loan
+) {
+
+    if (!loan) {
+        return null;
+    }
+
+
+    if (
+        loan.approvalDate
+    ) {
+
+        const approval =
+            new Date(
+                loan.approvalDate
+            );
+
+
+        if (
+            !Number.isNaN(
+                approval.getTime()
+            )
+        ) {
+
+            return approval;
+        }
+    }
+
+
+    return firestoreDateToDate(
+        loan.createdAt
     );
 }
 
@@ -534,7 +582,7 @@ function isAdmin() {
                 "userRole"
             ) ||
             localStorage.getItem(
-                "USER_ROLE"
+                "role"
             ) ||
             ""
         )
@@ -554,14 +602,14 @@ function isAdmin() {
 
 
     const adminEmail =
-        String(
-            typeof ADMIN_EMAIL !==
-            "undefined"
-                ? ADMIN_EMAIL
-                : ""
-        )
-            .trim()
-            .toLowerCase();
+        typeof ADMIN_EMAIL !==
+        "undefined"
+            ? String(
+                ADMIN_EMAIL
+            )
+                .trim()
+                .toLowerCase()
+            : "";
 
 
     return (
@@ -569,74 +617,586 @@ function isAdmin() {
         role === "administrator" ||
         (
             adminEmail &&
-            email === adminEmail
+            email ===
+                adminEmail
         )
     );
 }
 
 
 // ==========================================================
-// SAFE CLIENT NAME
+// HISTORY LOGGER
 // ==========================================================
 
-function getClientName(
-    client
+async function logHistory(
+    action,
+    category,
+    details = {}
 ) {
 
-    if (!client) {
-        return "Unnamed Client";
+    try {
+
+        await addDoc(
+            collection(
+                db,
+                "history"
+            ),
+            {
+
+                action:
+                    action ||
+                    "",
+
+                category:
+                    category ||
+                    "",
+
+                details:
+                    details ||
+                    {},
+
+                performedBy:
+                    localStorage.getItem(
+                        "userName"
+                    ) ||
+                    localStorage.getItem(
+                        "userEmail"
+                    ) ||
+                    "Unknown Officer",
+
+                createdAt:
+                    serverTimestamp(),
+
+                timestamp:
+                    new Date()
+                        .toISOString()
+            }
+        );
+
+    } catch (error) {
+
+        /*
+         * History must never break
+         * a successful financial operation.
+         */
+
+        console.error(
+            "History logging error:",
+            error
+        );
+    }
+}
+
+
+// ==========================================================
+// SAFE ELEMENT HELPER
+// ==========================================================
+
+function setElementValue(
+    element,
+    value
+) {
+
+    if (!element) {
+        return;
     }
 
 
+    element.value =
+        value ??
+        "";
+}
+
+
+// ==========================================================
+// END OF PART 1/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 2/16
+// LOAN NUMBER, CALCULATOR & REPAYMENT SCHEDULE
+// ==========================================================
+
+
+// ==========================================================
+// GENERATE LOAN NUMBER
+// ==========================================================
+
+function generateLoanNumber() {
+
+    const timestamp =
+        Date.now()
+            .toString()
+            .slice(-8);
+
+
+    const random =
+        Math.floor(
+            100 +
+            Math.random() *
+            900
+        );
+
+
     return (
-        client.name ||
-        client.fullName ||
-        client.clientName ||
-        "Unnamed Client"
+        `GL-${timestamp}-${random}`
     );
 }
 
 
 // ==========================================================
-// SAFE CLIENT PHONE
+// CALCULATE LOAN VALUES
 // ==========================================================
 
-function getClientPhone(
-    client
-) {
+function calculateLoan() {
 
-    if (!client) {
-        return "";
+    const amount =
+        numberValue(
+            loanAmount?.value
+        );
+
+
+    const interestRate =
+        numberValue(
+            loanInterest?.value
+        );
+
+
+    const duration =
+        Math.max(
+            Math.floor(
+                numberValue(
+                    loanDuration?.value,
+                    1
+                )
+            ),
+            1
+        );
+
+
+    const processingFee =
+        numberValue(
+            loanProcessingFee?.value
+        );
+
+
+    if (
+        amount <= 0
+    ) {
+
+        setElementValue(
+            loanWeeklyPayment,
+            ""
+        );
+
+        setElementValue(
+            loanTotalRepayment,
+            ""
+        );
+
+        return {
+            amount: 0,
+            interest: 0,
+            processingFee,
+            totalRepayment: 0,
+            weeklyPayment: 0
+        };
     }
 
 
-    return (
-        client.phone ||
-        client.phoneNumber ||
-        client.mobile ||
-        ""
+    const interestAmount =
+        amount *
+        (
+            interestRate /
+            100
+        );
+
+
+    const totalRepayment =
+        amount +
+        interestAmount;
+
+
+    const weeklyPayment =
+        roundToNearestFive(
+            totalRepayment /
+            duration
+        );
+
+
+    setElementValue(
+        loanWeeklyPayment,
+        weeklyPayment
+    );
+
+
+    setElementValue(
+        loanTotalRepayment,
+        totalRepayment
+    );
+
+
+    if (loanBalance) {
+
+        const paid =
+            numberValue(
+                loanPaid?.value
+            );
+
+
+        loanBalance.value =
+            Math.max(
+                totalRepayment -
+                paid,
+                0
+            );
+    }
+
+
+    return {
+
+        amount,
+
+        interest:
+            interestAmount,
+
+        processingFee,
+
+        totalRepayment,
+
+        weeklyPayment,
+
+        duration
+    };
+}
+
+
+// ==========================================================
+// CALCULATOR INPUT EVENTS
+// ==========================================================
+
+[
+    loanAmount,
+    loanInterest,
+    loanDuration,
+    loanProcessingFee,
+    loanPaid
+]
+    .forEach(
+        element => {
+
+            element?.addEventListener(
+                "input",
+                calculateLoan
+            );
+
+        }
+    );
+
+
+// ==========================================================
+// GENERATE REPAYMENT SCHEDULE
+// ==========================================================
+
+function generateRepaymentSchedule(
+    startDate,
+    duration,
+    weeklyPayment,
+    totalRepayment
+) {
+
+    const start =
+        startDate instanceof Date
+            ? new Date(
+                startDate
+            )
+            : new Date(
+                startDate
+            );
+
+
+    if (
+        Number.isNaN(
+            start.getTime()
+        )
+    ) {
+
+        return [];
+    }
+
+
+    const installments =
+        Math.max(
+            Math.floor(
+                numberValue(
+                    duration,
+                    1
+                )
+            ),
+            1
+        );
+
+
+    const total =
+        Math.max(
+            numberValue(
+                totalRepayment
+            ),
+            0
+        );
+
+
+    const standardPayment =
+        Math.max(
+            numberValue(
+                weeklyPayment
+            ),
+            0
+        );
+
+
+    const schedule =
+        [];
+
+
+    let allocated =
+        0;
+
+
+    for (
+        let index = 0;
+        index < installments;
+        index++
+    ) {
+
+        const dueDate =
+            new Date(
+                start
+            );
+
+
+        dueDate.setDate(
+            dueDate.getDate() +
+            (
+                (index + 1) *
+                7
+            )
+        );
+
+
+        let amount =
+            standardPayment;
+
+
+        /*
+         * Make the final installment absorb
+         * any rounding difference.
+         */
+
+        if (
+            index ===
+            installments - 1
+        ) {
+
+            amount =
+                Math.max(
+                    total -
+                    allocated,
+                    0
+                );
+        }
+
+
+        amount =
+            Math.round(
+                amount *
+                100
+            ) / 100;
+
+
+        allocated +=
+            amount;
+
+
+        schedule.push({
+
+            installment:
+                index + 1,
+
+            dueDate:
+                formatDate(
+                    dueDate
+                ),
+
+            amount,
+
+            paidAmount:
+                0,
+
+            remainingAmount:
+                amount,
+
+            paid:
+                false,
+
+            status:
+                "Pending",
+
+            paidDate:
+                null,
+
+            paymentHistory:
+                []
+        });
+    }
+
+
+    return schedule;
+}
+
+
+// ==========================================================
+// CALCULATE CURRENT SCHEDULE BALANCE
+// ==========================================================
+
+function calculateScheduleBalance(
+    schedule = []
+) {
+
+    if (
+        !Array.isArray(
+            schedule
+        )
+    ) {
+
+        return 0;
+    }
+
+
+    return schedule.reduce(
+        (
+            total,
+            item
+        ) => {
+
+            const amount =
+                numberValue(
+                    item.amount
+                );
+
+
+            const paid =
+                numberValue(
+                    item.paidAmount
+                );
+
+
+            return (
+                total +
+                Math.max(
+                    amount -
+                    paid,
+                    0
+                )
+            );
+        },
+        0
     );
 }
 
 
 // ==========================================================
-// FIND CLIENT
+// GET REMAINING INSTALLMENTS
 // ==========================================================
 
-function getClientById(
-    clientId
+function getRemainingInstallments(
+    schedule = []
 ) {
 
-    if (!clientId) {
+    if (
+        !Array.isArray(
+            schedule
+        )
+    ) {
+
+        return 0;
+    }
+
+
+    return schedule.filter(
+        item => {
+
+            const remaining =
+                numberValue(
+                    item.remainingAmount ??
+                    (
+                        numberValue(
+                            item.amount
+                        ) -
+                        numberValue(
+                            item.paidAmount
+                        )
+                    )
+                );
+
+
+            return (
+                !item.paid &&
+                remaining >
+                0
+            );
+        }
+    ).length;
+}
+
+
+// ==========================================================
+// GET NEXT REPAYMENT
+// ==========================================================
+
+function getNextRepayment(
+    schedule = []
+) {
+
+    if (
+        !Array.isArray(
+            schedule
+        )
+    ) {
+
         return null;
     }
 
 
     return (
-        clients.find(
-            client =>
-                client.id ===
-                clientId
+        schedule.find(
+            item => {
+
+                if (
+                    item.paid
+                ) {
+                    return false;
+                }
+
+
+                const remaining =
+                    numberValue(
+                        item.remainingAmount ??
+                        (
+                            numberValue(
+                                item.amount
+                            ) -
+                            numberValue(
+                                item.paidAmount
+                            )
+                        )
+                    );
+
+
+                return (
+                    remaining >
+                    0
+                );
+            }
         ) ||
         null
     );
@@ -644,7 +1204,640 @@ function getClientById(
 
 
 // ==========================================================
-// FIND LOAN
+// GET LOAN BALANCE FROM SCHEDULE
+// ==========================================================
+
+function getScheduleOutstandingBalance(
+    schedule = []
+) {
+
+    return Math.max(
+        calculateScheduleBalance(
+            schedule
+        ),
+        0
+    );
+}
+
+
+// ==========================================================
+// END OF PART 2/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 3/16
+// CLIENT LOADING, LOAN LOADING & DATA NORMALIZATION
+// ==========================================================
+
+
+// ==========================================================
+// LOAD CLIENTS
+// ==========================================================
+
+async function loadClients() {
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "clients"
+                )
+            );
+
+
+        clients =
+            snapshot.docs.map(
+                clientDoc => ({
+
+                    id:
+                        clientDoc.id,
+
+                    ...clientDoc.data()
+                })
+            );
+
+
+        return clients;
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load clients:",
+            error
+        );
+
+
+        clients =
+            [];
+
+
+        return [];
+    }
+}
+
+
+// ==========================================================
+// NORMALIZE REPAYMENT SCHEDULE
+// ==========================================================
+
+function normalizeRepaymentSchedule(
+    schedule
+) {
+
+    if (
+        !Array.isArray(
+            schedule
+        )
+    ) {
+
+        return [];
+    }
+
+
+    return schedule.map(
+        (
+            item,
+            index
+        ) => {
+
+            const amount =
+                numberValue(
+                    item?.amount
+                );
+
+
+            const paidAmount =
+                numberValue(
+                    item?.paidAmount
+                );
+
+
+            const remainingAmount =
+                Math.max(
+                    numberValue(
+                        item?.remainingAmount,
+                        amount -
+                        paidAmount
+                    ),
+                    0
+                );
+
+
+            const paid =
+                item?.paid ===
+                    true ||
+                remainingAmount <=
+                    0;
+
+
+            let paymentHistory =
+                Array.isArray(
+                    item?.paymentHistory
+                )
+                    ? item.paymentHistory
+                    : [];
+
+
+            paymentHistory =
+                paymentHistory.map(
+                    record => ({
+
+                        ...record,
+
+                        amount:
+                            numberValue(
+                                record?.amount
+                            ),
+
+                        paymentId:
+                            record?.paymentId ||
+                            "",
+
+                        repaymentDocId:
+                            record?.repaymentDocId ||
+                            null
+                    })
+                );
+
+
+            return {
+
+                ...item,
+
+                installment:
+                    item?.installment ??
+                    index + 1,
+
+                dueDate:
+                    item?.dueDate ||
+                    "",
+
+                amount,
+
+                paidAmount:
+                    Math.min(
+                        paidAmount,
+                        amount
+                    ),
+
+                remainingAmount:
+                    paid
+                        ? 0
+                        : remainingAmount,
+
+                paid,
+
+                status:
+                    paid
+                        ? "Paid"
+                        : (
+                            paidAmount > 0
+                                ? "Partial"
+                                : "Pending"
+                        ),
+
+                paidDate:
+                    item?.paidDate ||
+                    null,
+
+                paymentHistory
+            };
+        }
+    );
+}
+
+
+// ==========================================================
+// NORMALIZE LOAN RECORD
+// ==========================================================
+
+function normalizeLoan(
+    id,
+    data = {}
+) {
+
+    const schedule =
+        normalizeRepaymentSchedule(
+            data.repaymentSchedule
+        );
+
+
+    const amount =
+        numberValue(
+            data.amount
+        );
+
+
+    const totalRepayment =
+        numberValue(
+            data.totalRepayment
+        );
+
+
+    const amountPaid =
+        numberValue(
+            data.amountPaid
+        );
+
+
+    let balance;
+
+
+    if (
+        data.balance !==
+        undefined &&
+        data.balance !==
+        null
+    ) {
+
+        balance =
+            Math.max(
+                numberValue(
+                    data.balance
+                ),
+                0
+            );
+
+    } else if (
+        totalRepayment >
+        0
+    ) {
+
+        balance =
+            Math.max(
+                totalRepayment -
+                amountPaid,
+                0
+            );
+
+    } else {
+
+        balance =
+            getScheduleOutstandingBalance(
+                schedule
+            );
+    }
+
+
+    const remainingInstallments =
+        schedule.length
+            ? getRemainingInstallments(
+                schedule
+            )
+            : numberValue(
+                data.remainingInstallments
+            );
+
+
+    const nextRepayment =
+        schedule.length
+            ? getNextRepayment(
+                schedule
+            )
+            : null;
+
+
+    let status =
+        normalizeLoanStatus(
+            data.status
+        );
+
+
+    /*
+     * Older records may not have a status.
+     */
+
+    if (!status) {
+
+        status =
+            balance <= 0
+                ? "Completed"
+                : "Active";
+    }
+
+
+    if (
+        balance <=
+        0
+    ) {
+
+        status =
+            "Completed";
+    }
+
+
+    return {
+
+        id,
+
+        ...data,
+
+        clientId:
+            data.clientId ||
+            "",
+
+        clientName:
+            data.clientName ||
+            "",
+
+        clientPhone:
+            data.clientPhone ||
+            data.phone ||
+            "",
+
+        loanNumber:
+            data.loanNumber ||
+            "",
+
+        loanType:
+            data.loanType ||
+            "New",
+
+        amount,
+
+        processingFee:
+            numberValue(
+                data.processingFee
+            ),
+
+        interest:
+            numberValue(
+                data.interest
+            ),
+
+        duration:
+            numberValue(
+                data.duration,
+                1
+            ),
+
+        weeklyPayment:
+            numberValue(
+                data.weeklyPayment
+            ),
+
+        totalRepayment,
+
+        openingBalance:
+            numberValue(
+                data.openingBalance,
+                totalRepayment
+            ),
+
+        amountPaid,
+
+        balance,
+
+        approvalDate:
+            data.approvalDate ||
+            "",
+
+        dueDate:
+            data.dueDate ||
+            "",
+
+        repaymentSchedule:
+            schedule,
+
+        nextRepaymentDate:
+            nextRepayment?.dueDate ||
+            data.nextRepaymentDate ||
+            "-",
+
+        remainingInstallments,
+
+        status,
+
+        completed:
+            balance <= 0 ||
+            data.completed === true,
+
+        totalIncome:
+            numberValue(
+                data.totalIncome
+            ),
+
+        createdBy:
+            data.createdBy ||
+            "",
+
+        createdAt:
+            data.createdAt ||
+            null,
+
+        updatedAt:
+            data.updatedAt ||
+            null
+    };
+}
+
+
+// ==========================================================
+// LOAD LOANS
+// ==========================================================
+
+async function loadLoans() {
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "loans"
+                )
+            );
+
+
+        loans =
+            snapshot.docs.map(
+                loanDoc =>
+                    normalizeLoan(
+                        loanDoc.id,
+                        loanDoc.data()
+                    )
+            );
+
+
+        populateYearFilter();
+
+
+        if (
+            !loanDetailsOpen
+        ) {
+
+            renderLoans(
+                getFilteredLoans()
+            );
+        }
+
+
+        return loans;
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load loans:",
+            error
+        );
+
+
+        /*
+         * Do NOT replace a working
+         * in-memory loan list with an
+         * empty list if Firebase temporarily
+         * fails.
+         */
+
+        if (
+            !Array.isArray(
+                loans
+            )
+        ) {
+
+            loans =
+                [];
+        }
+
+
+        return loans;
+    }
+}
+
+
+// ==========================================================
+// REALTIME LOAN LISTENER
+// ==========================================================
+
+let loansRealtimeUnsubscribe =
+    null;
+
+
+function startLoansRealtimeListener() {
+
+    /*
+     * Prevent duplicate Firestore
+     * listeners.
+     */
+
+    if (
+        loansRealtimeUnsubscribe
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        loansRealtimeUnsubscribe =
+            onSnapshot(
+                collection(
+                    db,
+                    "loans"
+                ),
+
+                snapshot => {
+
+                    loans =
+                        snapshot.docs.map(
+                            loanDoc =>
+                                normalizeLoan(
+                                    loanDoc.id,
+                                    loanDoc.data()
+                                )
+                        );
+
+
+                    populateYearFilter();
+
+
+                    if (
+                        loanDetailsOpen
+                    ) {
+
+                        const currentLoan =
+                            loans.find(
+                                loan =>
+                                    loan.id ===
+                                    selectedLoanId
+                            );
+
+
+                        if (
+                            currentLoan
+                        ) {
+
+                            renderLoanDetailsPage(
+                                currentLoan
+                            );
+
+                        } else {
+
+                            closeLoanDetailsPage();
+                        }
+
+
+                    } else {
+
+                        renderLoans(
+                            getFilteredLoans()
+                        );
+                    }
+                },
+
+                error => {
+
+                    console.error(
+                        "Loans realtime listener error:",
+                        error
+                    );
+                }
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to start loans realtime listener:",
+            error
+        );
+    }
+}
+
+
+// ==========================================================
+// STOP REALTIME LISTENER
+// ==========================================================
+
+function stopLoansRealtimeListener() {
+
+    if (
+        typeof loansRealtimeUnsubscribe ===
+        "function"
+    ) {
+
+        try {
+
+            loansRealtimeUnsubscribe();
+
+        } catch (error) {
+
+            console.error(
+                "Error stopping loan listener:",
+                error
+            );
+        }
+    }
+
+
+    loansRealtimeUnsubscribe =
+        null;
+}
+
+
+// ==========================================================
+// GET LOAN BY ID
 // ==========================================================
 
 function getLoanById(
@@ -668,49 +1861,23 @@ function getLoanById(
 
 
 // ==========================================================
-// NEXT UNPAID INSTALLMENT
+// GET CLIENT BY ID
 // ==========================================================
 
-function getNextRepayment(
-    schedule = []
+function getClientById(
+    id
 ) {
 
-    if (
-        !Array.isArray(
-            schedule
-        )
-    ) {
-
+    if (!id) {
         return null;
     }
 
 
     return (
-        schedule.find(
-            installment => {
-
-                if (
-                    installment.paid ===
-                    true
-                ) {
-
-                    return false;
-                }
-
-
-                const remaining =
-                    safeNumber(
-                        installment.remainingAmount,
-                        safeNumber(
-                            installment.amount
-                        )
-                    );
-
-
-                return (
-                    remaining > 0
-                );
-            }
+        clients.find(
+            client =>
+                client.id ===
+                id
         ) ||
         null
     );
@@ -718,213 +1885,81 @@ function getNextRepayment(
 
 
 // ==========================================================
-// GET REMAINING SCHEDULE AMOUNT
-// ==========================================================
-
-function getScheduleOutstanding(
-    schedule = []
-) {
-
-    if (
-        !Array.isArray(
-            schedule
-        )
-    ) {
-
-        return 0;
-    }
-
-
-    return schedule.reduce(
-        (
-            total,
-            installment
-        ) => {
-
-            const amount =
-                safeNumber(
-                    installment.amount
-                );
-
-
-            const paid =
-                safeNumber(
-                    installment.paidAmount
-                );
-
-
-            return (
-                total +
-                Math.max(
-                    amount -
-                    paid,
-                    0
-                )
-            );
-        },
-        0
-    );
-}
-
-
-// ==========================================================
-// GET CURRENT LOAN BALANCE
-// ==========================================================
-
-function getLoanBalance(
-    loan
-) {
-
-    if (!loan) {
-        return 0;
-    }
-
-
-    if (
-        Number.isFinite(
-            Number(
-                loan.balance
-            )
-        )
-    ) {
-
-        return Math.max(
-            Number(
-                loan.balance
-            ),
-            0
-        );
-    }
-
-
-    const total =
-        safeNumber(
-            loan.totalRepayment
-        );
-
-
-    const paid =
-        safeNumber(
-            loan.amountPaid
-        );
-
-
-    return Math.max(
-        total -
-        paid,
-        0
-    );
-}
-
-
-// ==========================================================
-// PUBLIC HELPERS WILL BE EXPORTED
-// AT THE END OF PART 16
-// ==========================================================
-
-
-// ==========================================================
-// END OF PART 1/16
-// ==========================================================// ==========================================================
-// GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS — PART 2/16
-// LOAN CALCULATION + REPAYMENT SCHEDULE
-// ==========================================================
-
-
-// ==========================================================
-// LOAN CALCULATOR SELECTORS
-// ==========================================================
-
-const loanAmountInput =
-    document.getElementById(
-        "loan-amount"
-    );
-
-const loanInterestInput =
-    document.getElementById(
-        "loan-interest"
-    );
-
-const loanDurationInput =
-    document.getElementById(
-        "loan-duration"
-    );
-
-const loanFeeInput =
-    document.getElementById(
-        "loan-processing-fee"
-    );
-
-const loanPaidInput =
-    document.getElementById(
-        "loan-paid"
-    );
-
-const loanBalanceInput =
-    document.getElementById(
-        "loan-balance"
-    );
-
-const loanWeeklyPaymentInput =
-    document.getElementById(
-        "loan-weekly-payment"
-    );
-
-const loanTotalRepaymentInput =
-    document.getElementById(
-        "loan-total-repayment"
-    );
-
-
-// ==========================================================
-// CALCULATE LOAN
-// ==========================================================
+// END OF PART 3/16
+// ==========================================================// ==========================================
+// PART 4/16
+// LOAN CALCULATOR + REPAYMENT SCHEDULE
+// ==========================================
 
 function calculateLoan() {
 
     const amount =
-        safeNumber(
-            loanAmountInput?.value
+        Number(
+            loanAmount?.value || 0
         );
-
 
     const interestRate =
-        safeNumber(
-            loanInterestInput?.value
+        Number(
+            loanInterest?.value || 0
         );
-
 
     const duration =
-        Math.max(
-            Math.floor(
-                safeNumber(
-                    loanDurationInput?.value,
-                    0
-                )
-            ),
-            0
+        Number(
+            loanDuration?.value || 0
         );
-
 
     const processingFee =
-        Math.max(
-            safeNumber(
-                loanFeeInput?.value
-            ),
-            0
+        Number(
+            loanProcessingFee?.value || 0
         );
 
 
-    /*
-     * Interest is calculated on the
-     * principal amount.
-     */
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        if (loanInterestAmount) {
+            loanInterestAmount.value = "";
+        }
+
+        if (loanTotalRepayment) {
+            loanTotalRepayment.value = "";
+        }
+
+        if (loanWeeklyPayment) {
+            loanWeeklyPayment.value = "";
+        }
+
+        return;
+    }
+
+
+    const safeInterestRate =
+        Number.isFinite(interestRate) &&
+        interestRate >= 0
+            ? interestRate
+            : 0;
+
+
+    const safeDuration =
+        Number.isFinite(duration) &&
+        duration > 0
+            ? duration
+            : 1;
+
+
+    const safeProcessingFee =
+        Number.isFinite(processingFee) &&
+        processingFee >= 0
+            ? processingFee
+            : 0;
+
 
     const interestAmount =
         amount *
         (
-            interestRate /
+            safeInterestRate /
             100
         );
 
@@ -934,194 +1969,209 @@ function calculateLoan() {
         interestAmount;
 
 
-    const rawWeeklyPayment =
-        duration > 0
-            ? totalRepayment /
-              duration
-            : 0;
-
-
     const weeklyPayment =
         roundToNearestFive(
-            rawWeeklyPayment
+            totalRepayment /
+            safeDuration
         );
 
 
-    const paid =
-        Math.min(
-            Math.max(
-                safeNumber(
-                    loanPaidInput?.value
-                ),
-                0
-            ),
-            totalRepayment
-        );
+    if (loanInterestAmount) {
+
+        loanInterestAmount.value =
+            currency(
+                interestAmount
+            );
+    }
 
 
-    const balance =
-        Math.max(
-            totalRepayment -
-            paid,
-            0
-        );
+    if (loanTotalRepayment) {
+
+        loanTotalRepayment.value =
+            currency(
+                totalRepayment
+            );
+    }
+
+
+    if (loanWeeklyPayment) {
+
+        loanWeeklyPayment.value =
+            currency(
+                weeklyPayment
+            );
+    }
 
 
     /*
-     * Update calculator outputs
-     * without throwing errors if a
-     * particular HTML input does
-     * not exist.
+     * Processing fee is deliberately kept
+     * separate from the repayment amount.
+     *
+     * It is a business income/fee field and
+     * must not silently increase the client's
+     * scheduled repayment.
      */
 
-    if (
-        loanWeeklyPaymentInput
-    ) {
+    if (loanProcessingFee) {
 
-        loanWeeklyPaymentInput.value =
-            weeklyPayment;
+        loanProcessingFee.value =
+            safeProcessingFee;
     }
-
-
-    if (
-        loanTotalRepaymentInput
-    ) {
-
-        loanTotalRepaymentInput.value =
-            totalRepayment;
-    }
-
-
-    if (
-        loanBalanceInput
-    ) {
-
-        loanBalanceInput.value =
-            balance;
-    }
-
-
-    return {
-
-        amount,
-
-        interestRate,
-
-        interestAmount,
-
-        duration,
-
-        processingFee,
-
-        totalRepayment,
-
-        weeklyPayment,
-
-        paid,
-
-        balance
-    };
 }
 
 
-// ==========================================================
-// CALCULATOR EVENT LISTENERS
-// ==========================================================
+// ==========================================
+// ROUND WEEKLY PAYMENT
+// ==========================================
 
-[
-    loanAmountInput,
+function roundToNearestFive(
+    value
+) {
 
-    loanInterestInput,
+    const number =
+        Number(value);
 
-    loanDurationInput,
 
-    loanFeeInput,
+    if (
+        !Number.isFinite(number)
+    ) {
 
-    loanPaidInput
-]
-    .forEach(
-        input => {
+        return 0;
+    }
 
-            input?.addEventListener(
-                "input",
-                calculateLoan
-            );
 
-            input?.addEventListener(
-                "change",
-                calculateLoan
-            );
-        }
+    return Math.round(
+        number / 5
+    ) * 5;
+}
+
+
+// ==========================================
+// DATE NORMALIZATION
+// ==========================================
+
+function normalizeLoanDate(
+    value
+) {
+
+    if (!value) {
+        return null;
+    }
+
+
+    if (
+        value instanceof Date
+    ) {
+
+        return new Date(
+            value.getTime()
+        );
+    }
+
+
+    if (
+        typeof value?.toDate ===
+        "function"
+    ) {
+
+        return value.toDate();
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return null;
+    }
+
+
+    return date;
+}
+
+
+// ==========================================
+// ADD DAYS
+// ==========================================
+
+function addDays(
+    date,
+    days
+) {
+
+    const result =
+        normalizeLoanDate(
+            date
+        );
+
+
+    if (!result) {
+        return null;
+    }
+
+
+    result.setDate(
+        result.getDate() +
+        Number(days || 0)
     );
 
 
-// ==========================================================
+    return result;
+}
+
+
+// ==========================================
 // GENERATE REPAYMENT SCHEDULE
-// ==========================================================
+// ==========================================
 
 function generateRepaymentSchedule(
-    approvalDate,
+    startDate,
     duration,
     weeklyPayment,
     totalRepayment
 ) {
 
-    const startDate =
-        normalizeDateValue(
-            approvalDate
-        );
-
-
-    if (!startDate) {
-
-        return [];
-    }
+    const safeStartDate =
+        normalizeLoanDate(
+            startDate
+        ) ||
+        new Date();
 
 
     const installments =
         Math.max(
-            Math.floor(
-                safeNumber(
-                    duration
-                )
+            Number(duration || 0),
+            0
+        );
+
+
+    const total =
+        Math.max(
+            Number(
+                totalRepayment || 0
             ),
             0
         );
 
 
     if (
-        installments <=
-        0
+        installments <= 0 ||
+        total <= 0
     ) {
 
         return [];
     }
 
 
-    const total =
-        Math.max(
-            safeNumber(
-                totalRepayment
-            ),
-            0
-        );
-
-
-    /*
-     * The normal weekly payment is
-     * rounded to the nearest five.
-     *
-     * The final installment is adjusted
-     * so the complete schedule exactly
-     * equals totalRepayment.
-     */
-
-    const standardPayment =
-        Math.max(
-            roundToNearestFive(
-                weeklyPayment
-            ),
-            0
+    const baseWeekly =
+        Number(
+            weeklyPayment || 0
         );
 
 
@@ -1129,7 +2179,7 @@ function generateRepaymentSchedule(
         [];
 
 
-    let scheduledTotal =
+    let allocated =
         0;
 
 
@@ -1140,24 +2190,19 @@ function generateRepaymentSchedule(
     ) {
 
         const dueDate =
-            new Date(
-                startDate
+            addDays(
+                safeStartDate,
+                (index + 1) * 7
             );
 
 
         /*
-         * First repayment is one week
-         * after approval.
+         * The final installment receives
+         * the exact remaining amount.
+         *
+         * This prevents rounding from leaving
+         * a small artificial balance.
          */
-
-        dueDate.setDate(
-            dueDate.getDate() +
-            (
-                (index + 1) *
-                7
-            )
-        );
-
 
         let installmentAmount;
 
@@ -1167,49 +2212,42 @@ function generateRepaymentSchedule(
             installments - 1
         ) {
 
-            /*
-             * Final installment absorbs
-             * any rounding difference.
-             */
-
             installmentAmount =
                 Math.max(
                     total -
-                    scheduledTotal,
+                    allocated,
                     0
                 );
 
         } else {
 
             installmentAmount =
-                standardPayment;
-
-
-            /*
-             * Prevent the schedule from
-             * exceeding the total repayment.
-             */
-
-            const remainingBeforeFinal =
-                Math.max(
-                    total -
-                    scheduledTotal,
-                    0
-                );
+                baseWeekly;
 
 
             if (
-                installmentAmount >
-                remainingBeforeFinal
+                installmentAmount <= 0
             ) {
 
                 installmentAmount =
-                    remainingBeforeFinal;
+                    total /
+                    installments;
             }
+
+
+            installmentAmount =
+                Math.min(
+                    installmentAmount,
+                    Math.max(
+                        total -
+                        allocated,
+                        0
+                    )
+                );
         }
 
 
-        scheduledTotal +=
+        allocated +=
             installmentAmount;
 
 
@@ -1247,998 +2285,15 @@ function generateRepaymentSchedule(
     }
 
 
-    /*
-     * If rounding produced a tiny
-     * discrepancy, correct the final
-     * installment.
-     */
-
-    if (
-        schedule.length
-    ) {
-
-        const difference =
-            Number(
-                (
-                    total -
-                    scheduledTotal
-                ).toFixed(
-                    2
-                )
-            );
-
-
-        if (
-            Math.abs(
-                difference
-            ) > 0.001
-        ) {
-
-            const last =
-                schedule[
-                    schedule.length - 1
-                ];
-
-
-            last.amount =
-                Math.max(
-                    last.amount +
-                    difference,
-                    0
-                );
-
-
-            last.remainingAmount =
-                Math.max(
-                    last.amount -
-                    safeNumber(
-                        last.paidAmount
-                    ),
-                    0
-                );
-        }
-    }
-
-
-    return schedule;
-}
-
-
-// ==========================================================
-// NORMALIZE EXISTING REPAYMENT SCHEDULE
-// ==========================================================
-//
-// Older loans may not contain all the
-// fields used by the current repayment
-// system. This function upgrades them
-// safely in memory.
-// ==========================================================
-
-function normalizeRepaymentSchedule(
-    schedule
-) {
-
-    if (
-        !Array.isArray(
-            schedule
-        )
-    ) {
-
-        return [];
-    }
-
-
-    return schedule.map(
-        (
-            installment,
-            index
-        ) => {
-
-            const amount =
-                Math.max(
-                    safeNumber(
-                        installment.amount
-                    ),
-                    0
-                );
-
-
-            const paidAmount =
-                Math.min(
-                    Math.max(
-                        safeNumber(
-                            installment.paidAmount
-                        ),
-                        0
-                    ),
-                    amount
-                );
-
-
-            const remainingAmount =
-                Math.max(
-                    amount -
-                    paidAmount,
-                    0
-                );
-
-
-            const paid =
-                remainingAmount <=
-                0;
-
-
-            return {
-
-                ...installment,
-
-                installment:
-                    installment.installment ||
-                    index + 1,
-
-                dueDate:
-                    installment.dueDate ||
-                    "",
-
-                amount,
-
-                paidAmount,
-
-                remainingAmount,
-
-                paid,
-
-                status:
-                    paid
-                        ? "Paid"
-                        : (
-                            paidAmount > 0
-                                ? "Partial"
-                                : "Pending"
-                        ),
-
-                paidDate:
-                    paid
-                        ? (
-                            installment.paidDate ||
-                            null
-                        )
-                        : null,
-
-                paymentHistory:
-                    Array.isArray(
-                        installment.paymentHistory
-                    )
-                        ? installment.paymentHistory
-                        : []
-            };
-        }
-    );
-}
-
-
-// ==========================================================
-// CALCULATE REMAINING INSTALLMENTS
-// ==========================================================
-
-function calculateRemainingInstallments(
-    schedule
-) {
-
-    const normalized =
-        normalizeRepaymentSchedule(
-            schedule
-        );
-
-
-    return normalized.filter(
-        installment =>
-            !installment.paid &&
-            safeNumber(
-                installment.remainingAmount
-            ) > 0
-    ).length;
-}
-
-
-// ==========================================================
-// GET NEXT REPAYMENT DATE
-// ==========================================================
-
-function getNextRepaymentDate(
-    schedule
-) {
-
-    const next =
-        getNextRepayment(
-            normalizeRepaymentSchedule(
-                schedule
-            )
-        );
-
-
-    return next?.dueDate ||
-        "-";
-}
-
-
-// ==========================================================
-// CALCULATE LOAN BALANCE FROM SCHEDULE
-// ==========================================================
-
-function calculateScheduleBalance(
-    schedule
-) {
-
-    return getScheduleOutstanding(
-        normalizeRepaymentSchedule(
-            schedule
-        )
-    );
-}
-
-
-// ==========================================================
-// END OF PART 2/16
-// ==========================================================// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS
-// PART 3/16
-// ==========================================
-//
-// LOAN CALCULATIONS
-// REPAYMENT SCHEDULE
-// DATE HELPERS
-// CURRENCY HELPERS
-//
-// IMPORTANT:
-// This part is designed to work with the
-// existing GREYMUS loans.js structure.
-// ==========================================
-
-
-// ==========================================
-// DATE HELPERS
-// ==========================================
-
-function today() {
-
-    const date =
-        new Date();
-
-    const year =
-        date.getFullYear();
-
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-    const day =
-        String(
-            date.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-    return (
-        `${year}-${month}-${day}`
-    );
-}
-
-
-// ==========================================
-// FORMAT DATE
-// ==========================================
-
-function formatDate(
-    date
-) {
-
-    if (!date) {
-        return "";
-    }
-
-
-    const value =
-        date instanceof Date
-            ? date
-            : new Date(date);
-
-
-    if (
-        Number.isNaN(
-            value.getTime()
-        )
-    ) {
-        return "";
-    }
-
-
-    const year =
-        value.getFullYear();
-
-    const month =
-        String(
-            value.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-    const day =
-        String(
-            value.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return (
-        `${year}-${month}-${day}`
-    );
-}
-
-
-// ==========================================
-// PARSE FIRESTORE / DATE VALUE
-// ==========================================
-
-function parseLoanDate(
-    value
-) {
-
-    if (!value) {
-        return null;
-    }
-
-
-    if (
-        value instanceof Date
-    ) {
-
-        return value;
-    }
-
-
-    if (
-        typeof value.toDate ===
-        "function"
-    ) {
-
-        try {
-
-            return value.toDate();
-
-        } catch (error) {
-
-            console.warn(
-                "Unable to convert Firestore date:",
-                error
-            );
-        }
-    }
-
-
-    if (
-        typeof value ===
-        "number"
-    ) {
-
-        const date =
-            new Date(value);
-
-        return Number.isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
-    }
-
-
-    if (
-        typeof value ===
-        "string"
-    ) {
-
-        const date =
-            new Date(value);
-
-        return Number.isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
-    }
-
-
-    return null;
-}
-
-
-// ==========================================
-// CURRENCY
-// ==========================================
-
-function currency(
-    amount
-) {
-
-    const value =
-        Number(
-            amount || 0
-        );
-
-
-    return new Intl.NumberFormat(
-        "en-KE",
-        {
-            style:
-                "currency",
-
-            currency:
-                "KES",
-
-            minimumFractionDigits:
-                0,
-
-            maximumFractionDigits:
-                0
-        }
-    ).format(
-        Number.isFinite(value)
-            ? value
-            : 0
-    );
-}
-
-
-// ==========================================
-// NUMERIC SAFETY
-// ==========================================
-
-function safeNumber(
-    value,
-    fallback = 0
-) {
-
-    const number =
-        Number(value);
-
-
-    return Number.isFinite(
-        number
-    )
-        ? number
-        : fallback;
-}
-
-
-// ==========================================
-// ROUND TO NEAREST FIVE
-// ==========================================
-
-function roundToNearestFive(
-    value
-) {
-
-    const number =
-        safeNumber(
-            value
-        );
-
-
-    if (
-        number <= 0
-    ) {
-
-        return 0;
-    }
-
-
-    return (
-        Math.round(
-            number / 5
-        ) * 5
-    );
-}
-
-
-// ==========================================
-// LOAN INTEREST CALCULATION
-// ==========================================
-
-function calculateInterestAmount(
-    principal,
-    interestRate
-) {
-
-    const amount =
-        safeNumber(
-            principal
-        );
-
-    const rate =
-        safeNumber(
-            interestRate
-        );
-
-
-    if (
-        amount <= 0 ||
-        rate <= 0
-    ) {
-
-        return 0;
-    }
-
-
-    return (
-        amount *
-        rate /
-        100
-    );
-}
-
-
-// ==========================================
-// LOAN CALCULATOR
-// ==========================================
-
-function calculateLoan() {
-
-    /*
-     * Keep this function tolerant of
-     * different HTML versions.
-     *
-     * Missing fields must never crash
-     * loans.js.
-     */
-
-    const amountInput =
-        document.getElementById(
-            "loan-amount"
-        );
-
-
-    const interestInput =
-        document.getElementById(
-            "loan-interest"
-        );
-
-
-    const durationInput =
-        document.getElementById(
-            "loan-duration"
-        );
-
-
-    const feeInput =
-        document.getElementById(
-            "loan-processing-fee"
-        ) ||
-        document.getElementById(
-            "loan-fee"
-        );
-
-
-    const interestOutput =
-        document.getElementById(
-            "loan-interest-amount"
-        );
-
-
-    const repaymentOutput =
-        document.getElementById(
-            "loan-repayment"
-        );
-
-
-    const weeklyOutput =
-        document.getElementById(
-            "loan-weekly-payment"
-        );
-
-
-    const balanceOutput =
-        document.getElementById(
-            "loan-balance"
-        );
-
-
-    const amount =
-        safeNumber(
-            amountInput?.value
-        );
-
-
-    const interestRate =
-        safeNumber(
-            interestInput?.value
-        );
-
-
-    const duration =
-        Math.max(
-            Math.floor(
-                safeNumber(
-                    durationInput?.value
-                )
-            ),
-            0
-        );
-
-
-    const processingFee =
-        Math.max(
-            safeNumber(
-                feeInput?.value
-            ),
-            0
-        );
-
-
-    const interest =
-        calculateInterestAmount(
-            amount,
-            interestRate
-        );
-
-
-    const totalRepayment =
-        amount +
-        interest;
-
-
-    const weeklyPayment =
-        duration > 0
-            ? roundToNearestFive(
-                totalRepayment /
-                duration
-            )
-            : 0;
-
-
-    if (interestOutput) {
-
-        interestOutput.value =
-            currency(
-                interest
-            );
-    }
-
-
-    if (repaymentOutput) {
-
-        repaymentOutput.value =
-            currency(
-                totalRepayment
-            );
-    }
-
-
-    if (weeklyOutput) {
-
-        weeklyOutput.value =
-            currency(
-                weeklyPayment
-            );
-    }
-
-
-    if (balanceOutput) {
-
-        balanceOutput.value =
-            currency(
-                totalRepayment
-            );
-    }
-
-
-    /*
-     * Return the calculation so other
-     * parts of loans.js can use exactly
-     * the same figures.
-     */
-
-    return {
-
-        amount,
-
-        interestRate,
-
-        interest,
-
-        processingFee,
-
-        duration,
-
-        weeklyPayment,
-
-        totalRepayment,
-
-        balance:
-            totalRepayment,
-
-        amountPaid:
-            0
-    };
-}
-
-
-// ==========================================
-// GENERATE LOAN NUMBER
-// ==========================================
-
-function generateLoanNumber() {
-
-    const timestamp =
-        Date.now()
-            .toString()
-            .slice(
-                -8
-            );
-
-
-    const random =
-        Math.floor(
-            Math.random() *
-            900
-        ) +
-        100;
-
-
-    return (
-        `GL-${timestamp}-${random}`
-    );
-}
-
-
-// ==========================================
-// ADD DAYS
-// ==========================================
-
-function addDays(
-    date,
-    days
-) {
-
-    const result =
-        new Date(
-            date
-        );
-
-
-    result.setDate(
-        result.getDate() +
-        Number(days || 0)
-    );
-
-
-    return result;
-}
-
-
-// ==========================================
-// GENERATE REPAYMENT SCHEDULE
-// ==========================================
-
-function generateRepaymentSchedule(
-    startDate,
-    duration,
-    weeklyPayment,
-    totalRepayment
-) {
-
-    const start =
-        parseLoanDate(
-            startDate
-        );
-
-
-    if (!start) {
-        return [];
-    }
-
-
-    const installments =
-        Math.max(
-            Math.floor(
-                safeNumber(
-                    duration
-                )
-            ),
-            0
-        );
-
-
-    if (
-        installments <= 0
-    ) {
-
-        return [];
-    }
-
-
-    const total =
-        Math.max(
-            safeNumber(
-                totalRepayment
-            ),
-            0
-        );
-
-
-    if (
-        total <= 0
-    ) {
-
-        return [];
-    }
-
-
-    /*
-     * Use the requested weekly payment,
-     * but make sure the final installment
-     * exactly reconciles the total.
-     */
-
-    let standardPayment =
-        Math.max(
-            safeNumber(
-                weeklyPayment
-            ),
-            0
-        );
-
-
-    if (
-        standardPayment <= 0
-    ) {
-
-        standardPayment =
-            total /
-            installments;
-    }
-
-
-    standardPayment =
-        roundToNearestFive(
-            standardPayment
-        );
-
-
-    /*
-     * If rounding would make the normal
-     * installment larger than the total,
-     * fall back to the exact amount.
-     */
-
-    if (
-        standardPayment <= 0
-    ) {
-
-        standardPayment =
-            total /
-            installments;
-    }
-
-
-    const schedule =
-        [];
-
-
-    let allocated =
-        0;
-
-
-    for (
-        let index = 0;
-        index < installments;
-        index++
-    ) {
-
-        const dueDate =
-            addDays(
-                start,
-                (index + 1) * 7
-            );
-
-
-        let amount;
-
-
-        if (
-            index ===
-            installments - 1
-        ) {
-
-            /*
-             * Final installment absorbs any
-             * rounding difference.
-             */
-
-            amount =
-                Math.max(
-                    total -
-                    allocated,
-                    0
-                );
-
-        } else {
-
-            amount =
-                Math.min(
-                    standardPayment,
-                    Math.max(
-                        total -
-                        allocated,
-                        0
-                    )
-                );
-        }
-
-
-        allocated +=
-            amount;
-
-
-        schedule.push({
-
-            installment:
-                index + 1,
-
-            dueDate:
-                formatDate(
-                    dueDate
-                ),
-
-            amount:
-                Number(
-                    amount.toFixed(
-                        2
-                    )
-                ),
-
-            paidAmount:
-                0,
-
-            remainingAmount:
-                Number(
-                    amount.toFixed(
-                        2
-                    )
-                ),
-
-            paid:
-                false,
-
-            status:
-                "Pending",
-
-            paidDate:
-                null,
-
-            paymentHistory:
-                []
-        });
-    }
-
-
     return schedule;
 }
 
 
 // ==========================================
-// GET NEXT UNPAID INSTALLMENT
+// GET NEXT REPAYMENT
 // ==========================================
 
-function getNextRepayment(
+function getNextUnpaidInstallment(
     schedule = []
 ) {
 
@@ -2254,34 +2309,15 @@ function getNextRepayment(
 
     return (
         schedule.find(
-            installment => {
+            installment =>
 
-                if (
-                    installment.paid ===
-                    true
-                ) {
+                !installment.paid &&
 
-                    return false;
-                }
-
-
-                const amount =
-                    safeNumber(
-                        installment.amount
-                    );
-
-
-                const paidAmount =
-                    safeNumber(
-                        installment.paidAmount
-                    );
-
-
-                return (
-                    amount -
-                    paidAmount
-                ) > 0.01;
-            }
+                Number(
+                    installment.remainingAmount ??
+                    installment.amount ??
+                    0
+                ) > 0
         ) ||
         null
     );
@@ -2289,10 +2325,10 @@ function getNextRepayment(
 
 
 // ==========================================
-// GET REMAINING SCHEDULE BALANCE
+// CALCULATE SCHEDULE BALANCE
 // ==========================================
 
-function getScheduleBalance(
+function getScheduleOutstanding(
     schedule = []
 ) {
 
@@ -2313,25 +2349,23 @@ function getScheduleBalance(
         ) => {
 
             const amount =
-                safeNumber(
-                    installment.amount
-                );
-
-
-            const paid =
-                safeNumber(
-                    installment.paidAmount
-                );
-
-
-            return (
-                total +
-                Math.max(
-                    amount -
-                    paid,
+                Number(
+                    installment.remainingAmount ??
                     0
-                )
-            );
+                );
+
+
+            return total +
+                (
+                    Number.isFinite(
+                        amount
+                    )
+                        ? Math.max(
+                            amount,
+                            0
+                        )
+                        : 0
+                );
         },
         0
     );
@@ -2339,147 +2373,79 @@ function getScheduleBalance(
 
 
 // ==========================================
-// COUNT REMAINING INSTALLMENTS
+// LOAN STATUS NORMALIZATION
 // ==========================================
 
-function countRemainingInstallments(
-    schedule = []
+function normalizeLoanStatus(
+    status
 ) {
 
-    if (
-        !Array.isArray(
-            schedule
+    const value =
+        String(
+            status ||
+            ""
         )
-    ) {
+            .trim()
+            .toLowerCase();
 
-        return 0;
+
+    if (
+        value ===
+            "pending"
+    ) {
+        return "Pending";
     }
 
 
-    return schedule.filter(
-        installment => {
-
-            const amount =
-                safeNumber(
-                    installment.amount
-                );
-
-
-            const paid =
-                safeNumber(
-                    installment.paidAmount
-                );
-
-
-            return (
-                !installment.paid &&
-                amount -
-                paid >
-                0.01
-            );
-        }
-    ).length;
-}
-
-
-// ==========================================
-// NORMALIZE SCHEDULE
-// ==========================================
-
-function normalizeRepaymentSchedule(
-    schedule
-) {
-
     if (
-        !Array.isArray(
-            schedule
-        )
+        value ===
+            "active" ||
+        value ===
+            "approved"
     ) {
-
-        return [];
+        return "Active";
     }
 
 
-    return schedule.map(
-        (
-            installment,
-            index
-        ) => {
-
-            const amount =
-                Math.max(
-                    safeNumber(
-                        installment.amount
-                    ),
-                    0
-                );
+    if (
+        value ===
+            "arrears" ||
+        value ===
+            "overdue"
+    ) {
+        return "Arrears";
+    }
 
 
-            const paidAmount =
-                Math.min(
-                    Math.max(
-                        safeNumber(
-                            installment.paidAmount
-                        ),
-                        0
-                    ),
-                    amount
-                );
+    if (
+        value ===
+            "completed" ||
+        value ===
+            "complete" ||
+        value ===
+            "paid"
+    ) {
+        return "Completed";
+    }
 
 
-            const remainingAmount =
-                Math.max(
-                    amount -
-                    paidAmount,
-                    0
-                );
+    if (
+        value ===
+            "rejected"
+    ) {
+        return "Rejected";
+    }
 
 
-            const paid =
-                remainingAmount <=
-                0.01;
-
-
-            return {
-
-                ...installment,
-
-                installment:
-                    installment.installment ||
-                    index + 1,
-
-                amount,
-
-                paidAmount,
-
-                remainingAmount,
-
-                paid,
-
-                status:
-                    paid
-                        ? "Paid"
-                        : (
-                            paidAmount >
-                            0
-                                ? "Partial"
-                                : "Pending"
-                        ),
-
-                paymentHistory:
-                    Array.isArray(
-                        installment.paymentHistory
-                    )
-                        ? installment.paymentHistory
-                        : []
-            };
-        }
+    return (
+        status ||
+        "Pending"
     );
 }
 
 
 // ==========================================
-// IS RUNNING LOAN
+// RUNNING LOAN CHECK
 // ==========================================
 
 function isRunningLoan(
@@ -2497,39 +2463,16 @@ function isRunningLoan(
         );
 
 
-    /*
-     * Pending loans remain visible in the
-     * main pipeline because they still need
-     * processing.
-     */
-
     if (
         status ===
-        "Pending"
-    ) {
-
-        return true;
-    }
-
-
-    /*
-     * Rejected loans are not active loans.
-     */
-
-    if (
+            "Pending" ||
         status ===
-        "Rejected"
+            "Rejected"
     ) {
 
         return false;
     }
 
-
-    /*
-     * Completed loans remain useful for
-     * history, but are excluded from the
-     * active running-loans list.
-     */
 
     if (
         status ===
@@ -2540,930 +2483,11 @@ function isRunningLoan(
     }
 
 
-    return true;
-}
-
-
-// ==========================================
-// END OF PART 3/16
-// ==========================================// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS
-// PART 4/16
-// ==========================================
-//
-// LOAN DATA NORMALIZATION
-// FIRESTORE LOAN LOADING
-// CLIENT LOADING
-// STATUS HELPERS
-// REALTIME DATA SAFETY
-// ==========================================
-
-
-// ==========================================
-// NORMALIZE LOAN STATUS
-// ==========================================
-
-function normalizeLoanStatus(
-    status
-) {
-
-    const value =
-        String(
-            status ||
-            ""
-        )
-            .trim()
-            .toLowerCase();
-
-
-    switch (value) {
-
-        case "pending":
-            return "Pending";
-
-        case "approved":
-            return "Active";
-
-        case "active":
-            return "Active";
-
-        case "running":
-            return "Active";
-
-        case "arrears":
-            return "Arrears";
-
-        case "overdue":
-            return "Arrears";
-
-        case "completed":
-            return "Completed";
-
-        case "complete":
-            return "Completed";
-
-        case "rejected":
-            return "Rejected";
-
-        case "cancelled":
-            return "Rejected";
-
-        case "canceled":
-            return "Rejected";
-
-        default:
-            return status
-                ? String(status)
-                : "Pending";
-    }
-}
-
-
-// ==========================================
-// CONVERT FIRESTORE DATE
-// ==========================================
-
-function getFirestoreDate(
-    value
-) {
-
-    if (!value) {
-        return null;
-    }
-
-
-    if (
-        value instanceof Date
-    ) {
-
-        return value;
-    }
-
-
-    if (
-        typeof value.toDate ===
-        "function"
-    ) {
-
-        try {
-
-            return value.toDate();
-
-        } catch (error) {
-
-            return null;
-        }
-    }
-
-
-    if (
-        typeof value ===
-        "string"
-    ) {
-
-        const date =
-            new Date(value);
-
-
-        return Number.isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
-    }
-
-
-    if (
-        typeof value ===
-        "number"
-    ) {
-
-        const date =
-            new Date(value);
-
-
-        return Number.isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
-    }
-
-
-    return null;
-}
-
-
-// ==========================================
-// GET LOAN DATE
-// ==========================================
-
-function getLoanDate(
-    loan
-) {
-
-    if (!loan) {
-        return new Date();
-    }
-
-
-    const approvalDate =
-        getFirestoreDate(
-            loan.approvalDate
-        );
-
-
-    if (approvalDate) {
-        return approvalDate;
-    }
-
-
-    const createdDate =
-        getFirestoreDate(
-            loan.createdAt
-        );
-
-
-    if (createdDate) {
-        return createdDate;
-    }
-
-
-    return new Date();
-}
-
-
-// ==========================================
-// NORMALIZE LOAN RECORD
-// ==========================================
-
-function normalizeLoanRecord(
-    data,
-    id
-) {
-
-    const loan =
-        data || {};
-
-
-    const schedule =
-        normalizeRepaymentSchedule(
-            loan.repaymentSchedule
-        );
-
-
-    const amount =
-        Math.max(
-            safeNumber(
-                loan.amount
-            ),
+    return (
+        Number(
+            loan.balance ??
             0
-        );
-
-
-    const totalRepayment =
-        Math.max(
-            safeNumber(
-                loan.totalRepayment
-            ),
-            amount
-        );
-
-
-    const amountPaid =
-        Math.min(
-            Math.max(
-                safeNumber(
-                    loan.amountPaid
-                ),
-                0
-            ),
-            totalRepayment
-        );
-
-
-    /*
-     * Older loan records may not have a
-     * balance field. Reconstruct it safely.
-     */
-
-    let balance =
-        loan.balance !==
-        undefined &&
-        loan.balance !==
-        null
-            ? safeNumber(
-                loan.balance
-            )
-            : (
-                totalRepayment -
-                amountPaid
-            );
-
-
-    balance =
-        Math.max(
-            Math.min(
-                balance,
-                totalRepayment
-            ),
-            0
-        );
-
-
-    /*
-     * If the schedule exists and has a
-     * reliable remaining balance, use it
-     * only when the stored balance is
-     * missing or clearly inconsistent.
-     */
-
-    if (
-        Array.isArray(
-            schedule
-        ) &&
-        schedule.length &&
-        (
-            loan.balance ===
-            undefined ||
-            loan.balance ===
-            null
-        )
-    ) {
-
-        balance =
-            Math.min(
-                getScheduleBalance(
-                    schedule
-                ),
-                totalRepayment
-            );
-    }
-
-
-    let status =
-        normalizeLoanStatus(
-            loan.status
-        );
-
-
-    if (
-        balance <=
-        0.01 &&
-        totalRepayment > 0
-    ) {
-
-        status =
-            "Completed";
-    }
-
-
-    return {
-
-        ...loan,
-
-        id,
-
-        clientId:
-            loan.clientId ||
-            "",
-
-        clientName:
-            loan.clientName ||
-            "",
-
-        clientPhone:
-            loan.clientPhone ||
-            loan.phone ||
-            "",
-
-        loanNumber:
-            loan.loanNumber ||
-            id,
-
-        loanType:
-            loan.loanType ||
-            "New",
-
-        amount,
-
-        processingFee:
-            Math.max(
-                safeNumber(
-                    loan.processingFee
-                ),
-                0
-            ),
-
-        interest:
-            Math.max(
-                safeNumber(
-                    loan.interest
-                ),
-                0
-            ),
-
-        duration:
-            Math.max(
-                Math.floor(
-                    safeNumber(
-                        loan.duration
-                    )
-                ),
-                0
-            ),
-
-        repayment:
-            safeNumber(
-                loan.repayment
-            ),
-
-        weeklyPayment:
-            Math.max(
-                safeNumber(
-                    loan.weeklyPayment
-                ),
-                0
-            ),
-
-        totalRepayment,
-
-        openingBalance:
-            safeNumber(
-                loan.openingBalance,
-                totalRepayment
-            ),
-
-        amountPaid,
-
-        balance,
-
-        approvalDate:
-            loan.approvalDate ||
-            "",
-
-        dueDate:
-            loan.dueDate ||
-            "",
-
-        repaymentSchedule:
-            schedule,
-
-        nextRepaymentDate:
-            loan.nextRepaymentDate ||
-            (
-                getNextRepayment(
-                    schedule
-                )?.dueDate ||
-                "-"
-            ),
-
-        remainingInstallments:
-            loan.remainingInstallments !==
-            undefined
-                ? Math.max(
-                    Math.floor(
-                        safeNumber(
-                            loan.remainingInstallments
-                        )
-                    ),
-                    0
-                )
-                : countRemainingInstallments(
-                    schedule
-                ),
-
-        status,
-
-        completed:
-            status ===
-            "Completed",
-
-        totalIncome:
-            Math.max(
-                safeNumber(
-                    loan.totalIncome
-                ),
-                0
-            ),
-
-        createdBy:
-            loan.createdBy ||
-            "",
-
-        createdAt:
-            loan.createdAt ||
-            null,
-
-        updatedAt:
-            loan.updatedAt ||
-            null
-    };
-}
-
-
-// ==========================================
-// LOAD CLIENTS
-// ==========================================
-
-async function loadClients() {
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "clients"
-                )
-            );
-
-
-        clients =
-            snapshot.docs.map(
-                clientDoc => {
-
-                    const data =
-                        clientDoc.data() ||
-                        {};
-
-
-                    return {
-
-                        ...data,
-
-                        id:
-                            clientDoc.id,
-
-                        name:
-                            data.name ||
-                            data.clientName ||
-                            "",
-
-                        phone:
-                            data.phone ||
-                            data.phoneNumber ||
-                            data.mobile ||
-                            ""
-                    };
-                }
-            );
-
-
-        /*
-         * Keep repayment selectors in sync
-         * after clients have loaded.
-         */
-
-        populateFabClientSelector?.();
-
-
-        return clients;
-
-    } catch (error) {
-
-        console.error(
-            "Failed to load clients:",
-            error
-        );
-
-
-        /*
-         * Do not destroy the existing
-         * client data if a refresh fails.
-         */
-
-        return clients;
-    }
-}
-
-
-// ==========================================
-// LOAD LOANS
-// ==========================================
-
-async function loadLoans() {
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "loans"
-                )
-            );
-
-
-        const loadedLoans =
-            snapshot.docs.map(
-                loanDoc => {
-
-                    return normalizeLoanRecord(
-                        loanDoc.data(),
-                        loanDoc.id
-                    );
-                }
-            );
-
-
-        /*
-         * Replace the local array only after
-         * Firestore successfully returned data.
-         */
-
-        loans =
-            loadedLoans;
-
-
-        populateYearFilter();
-
-
-        /*
-         * Refresh the visible table only when
-         * the loan details page is not blocking
-         * the normal loan list.
-         */
-
-        if (
-            !loanDetailsOpen
-        ) {
-
-            filterLoans();
-        }
-
-
-        /*
-         * Keep repayment selectors synchronized
-         * with the newest balances.
-         */
-
-        populateFabClientSelector?.();
-
-
-        return loans;
-
-    } catch (error) {
-
-        console.error(
-            "Failed to load loans:",
-            error
-        );
-
-
-        /*
-         * Never replace valid existing data
-         * with an empty array after a failed
-         * Firestore request.
-         */
-
-        return loans;
-    }
-}
-
-
-// ==========================================
-// REFRESH SINGLE LOAN FROM FIRESTORE
-// ==========================================
-
-async function refreshLoan(
-    id
-) {
-
-    if (!id) {
-        return null;
-    }
-
-
-    try {
-
-        const loanRef =
-            doc(
-                db,
-                "loans",
-                id
-            );
-
-
-        const snapshot =
-            await getDoc(
-                loanRef
-            );
-
-
-        if (
-            !snapshot.exists()
-        ) {
-
-            loans =
-                loans.filter(
-                    loan =>
-                        loan.id !==
-                        id
-                );
-
-
-            return null;
-        }
-
-
-        const updatedLoan =
-            normalizeLoanRecord(
-                snapshot.data(),
-                snapshot.id
-            );
-
-
-        const index =
-            loans.findIndex(
-                loan =>
-                    loan.id ===
-                    id
-            );
-
-
-        if (
-            index >=
-            0
-        ) {
-
-            loans[index] =
-                updatedLoan;
-
-        } else {
-
-            loans.push(
-                updatedLoan
-            );
-        }
-
-
-        populateYearFilter();
-
-
-        if (
-            !loanDetailsOpen
-        ) {
-
-            filterLoans();
-        }
-
-
-        return updatedLoan;
-
-    } catch (error) {
-
-        console.error(
-            "Failed to refresh loan:",
-            error
-        );
-
-
-        return null;
-    }
-}
-
-
-// ==========================================
-// FIND LOAN SAFELY
-// ==========================================
-
-function findLoan(
-    id
-) {
-
-    if (!id) {
-        return null;
-    }
-
-
-    return (
-        loans.find(
-            loan =>
-                loan.id ===
-                id
-        ) ||
-        null
-    );
-}
-
-
-// ==========================================
-// GET CLIENT BY ID
-// ==========================================
-
-function getClientById(
-    id
-) {
-
-    if (!id) {
-        return null;
-    }
-
-
-    return (
-        clients.find(
-            client =>
-                client.id ===
-                id
-        ) ||
-        null
-    );
-}
-
-
-// ==========================================
-// GET CLIENT NAME
-// ==========================================
-
-function getLoanClientName(
-    loan
-) {
-
-    if (!loan) {
-        return "";
-    }
-
-
-    const client =
-        getClientById(
-            loan.clientId
-        );
-
-
-    return (
-        client?.name ||
-        loan.clientName ||
-        ""
-    );
-}
-
-
-// ==========================================
-// GET CLIENT PHONE
-// ==========================================
-
-function getLoanClientPhone(
-    loan
-) {
-
-    if (!loan) {
-        return "";
-    }
-
-
-    const client =
-        getClientById(
-            loan.clientId
-        );
-
-
-    return (
-        client?.phone ||
-        client?.phoneNumber ||
-        loan.clientPhone ||
-        loan.phone ||
-        ""
-    );
-}
-
-
-// ==========================================
-// CHECK WHETHER LOAN HAS BALANCE
-// ==========================================
-
-function hasOutstandingBalance(
-    loan
-) {
-
-    if (!loan) {
-        return false;
-    }
-
-
-    return (
-        safeNumber(
-            loan.balance
-        ) >
-        0.01
-    );
-}
-
-
-// ==========================================
-// CHECK ACTIVE LOAN
-// ==========================================
-
-function isActiveLoan(
-    loan
-) {
-
-    if (!loan) {
-        return false;
-    }
-
-
-    const status =
-        normalizeLoanStatus(
-            loan.status
-        );
-
-
-    return (
-        (
-            status ===
-            "Active"
-        ) ||
-        (
-            status ===
-            "Arrears"
-        )
-    ) &&
-    hasOutstandingBalance(
-        loan
-    );
-}
-
-
-// ==========================================
-// CHECK PENDING LOAN
-// ==========================================
-
-function isPendingLoan(
-    loan
-) {
-
-    return (
-        !!loan &&
-        normalizeLoanStatus(
-            loan.status
-        ) ===
-        "Pending"
-    );
-}
-
-
-// ==========================================
-// CHECK COMPLETED LOAN
-// ==========================================
-
-function isCompletedLoan(
-    loan
-) {
-
-    return (
-        !!loan &&
-        (
-            normalizeLoanStatus(
-                loan.status
-            ) ===
-            "Completed" ||
-            safeNumber(
-                loan.balance
-            ) <=
-            0.01
-        )
+        ) > 0
     );
 }
 
@@ -3471,25 +2495,13 @@ function isCompletedLoan(
 // ==========================================
 // END OF PART 4/16
 // ==========================================// ==========================================
-// GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS
 // PART 5/16
-// ==========================================
-//
-// FILTERS
-// OVERDUE / ARREARS STATUS
-// LOAN APPROVAL
-// LOAN DELETE
-//
-// IMPORTANT:
-// This part replaces the conflicting versions
-// previously provided for these functions.
-// Do not duplicate these functions later.
+// LOAN FILTERS + OVERDUE STATUS
 // ==========================================
 
 
 // ==========================================
-// FILTERS
+// POPULATE YEAR FILTER
 // ==========================================
 
 function populateYearFilter() {
@@ -3499,54 +2511,65 @@ function populateYearFilter() {
     }
 
 
-    const years = [
-        ...new Set(
-            loans.map(
-                loan => {
+    const years =
+        [
+            ...new Set(
+                loans
+                    .map(
+                        loan => {
 
-                    const date =
-                        getLoanDate(
-                            loan
-                        );
+                            const date =
+                                normalizeLoanDate(
+                                    loan.approvalDate
+                                ) ||
+                                normalizeLoanDate(
+                                    loan.createdAt
+                                );
 
 
-                    return date.getFullYear();
-                }
+                            return date
+                                ? date.getFullYear()
+                                : null;
+                        }
+                    )
+                    .filter(
+                        year =>
+                            year !== null
+                    )
             )
-        )
-    ]
-        .filter(
-            year =>
-                Number.isFinite(
-                    year
-                )
-        )
-        .sort(
-            (
-                a,
-                b
-            ) =>
-                b - a
-        );
+        ]
+            .sort(
+                (a, b) =>
+                    b - a
+            );
 
 
-    loanYearFilter.innerHTML =
-        `
-            <option value="ALL">
-                All
-            </option>
-        `;
+    loanYearFilter.innerHTML = `
+        <option value="ALL">
+            All
+        </option>
+    `;
 
 
     years.forEach(
         year => {
 
-            loanYearFilter.innerHTML +=
-                `
-                    <option value="${year}">
-                        ${year}
-                    </option>
-                `;
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                String(year);
+
+            option.textContent =
+                String(year);
+
+
+            loanYearFilter.appendChild(
+                option
+            );
         }
     );
 }
@@ -3559,15 +2582,18 @@ function populateYearFilter() {
 function getFilteredLoans() {
 
     let filtered =
-        [...loans];
+        Array.isArray(loans)
+            ? [...loans]
+            : [];
 
 
     /*
-     * The main loans list should show
-     * running/pending loans only.
+     * The main loans table shows only
+     * currently running loans.
      *
-     * Completed loans remain available
-     * through history/details where required.
+     * Pending loans are intentionally kept
+     * available to the pipeline/details
+     * logic and are not destroyed here.
      */
 
     filtered =
@@ -3586,17 +2612,17 @@ function getFilteredLoans() {
         "";
 
 
-    const selectedStatus =
+    const status =
         loanFilter?.value ||
         "ALL";
 
 
-    const selectedMonth =
+    const month =
         loanMonthFilter?.value ||
         "ALL";
 
 
-    const selectedYear =
+    const year =
         loanYearFilter?.value ||
         "ALL";
 
@@ -3614,17 +2640,6 @@ function getFilteredLoans() {
                     const clientName =
                         String(
                             loan.clientName ||
-                            getLoanClientName(
-                                loan
-                            ) ||
-                            ""
-                        )
-                            .toLowerCase();
-
-
-                    const loanId =
-                        String(
-                            loan.id ||
                             ""
                         )
                             .toLowerCase();
@@ -3638,14 +2653,24 @@ function getFilteredLoans() {
                             .toLowerCase();
 
 
+                    const loanId =
+                        String(
+                            loan.id ||
+                            ""
+                        )
+                            .toLowerCase();
+
+
                     return (
                         clientName.includes(
                             keyword
                         ) ||
-                        loanId.includes(
+
+                        loanNumber.includes(
                             keyword
                         ) ||
-                        loanNumber.includes(
+
+                        loanId.includes(
                             keyword
                         )
                     );
@@ -3659,9 +2684,15 @@ function getFilteredLoans() {
     // ------------------------------------------
 
     if (
-        selectedStatus !==
+        status !==
         "ALL"
     ) {
+
+        const wantedStatus =
+            normalizeLoanStatus(
+                status
+            );
+
 
         filtered =
             filtered.filter(
@@ -3669,9 +2700,7 @@ function getFilteredLoans() {
                     normalizeLoanStatus(
                         loan.status
                     ) ===
-                    normalizeLoanStatus(
-                        selectedStatus
-                    )
+                    wantedStatus
             );
     }
 
@@ -3681,10 +2710,8 @@ function getFilteredLoans() {
     // ------------------------------------------
 
     if (
-        selectedMonth !==
-            "ALL" ||
-        selectedYear !==
-            "ALL"
+        month !== "ALL" ||
+        year !== "ALL"
     ) {
 
         filtered =
@@ -3692,26 +2719,32 @@ function getFilteredLoans() {
                 loan => {
 
                     const date =
-                        getLoanDate(
-                            loan
+                        normalizeLoanDate(
+                            loan.approvalDate
+                        ) ||
+                        normalizeLoanDate(
+                            loan.createdAt
                         );
 
 
+                    if (!date) {
+                        return false;
+                    }
+
+
                     const monthMatch =
-                        selectedMonth ===
-                            "ALL" ||
+                        month === "ALL" ||
                         date.getMonth() ===
                             Number(
-                                selectedMonth
+                                month
                             );
 
 
                     const yearMatch =
-                        selectedYear ===
-                            "ALL" ||
+                        year === "ALL" ||
                         date.getFullYear() ===
                             Number(
-                                selectedYear
+                                year
                             );
 
 
@@ -3729,20 +2762,21 @@ function getFilteredLoans() {
 
 
 // ==========================================
-// FILTER LOANS
+// APPLY LOAN FILTERS
 // ==========================================
 
 function filterLoans() {
 
     /*
-     * Never redraw the loan table over the
-     * full-screen loan details page.
+     * Never re-render the table while the
+     * full-screen loan details page is open.
+     *
+     * This prevents the details page from
+     * being replaced by the table during
+     * realtime refreshes.
      */
 
-    if (
-        loanDetailsOpen
-    ) {
-
+    if (loanDetailsOpen) {
         return;
     }
 
@@ -3758,7 +2792,7 @@ function filterLoans() {
 
 
 // ==========================================
-// FILTER EVENTS
+// FILTER EVENT LISTENERS
 // ==========================================
 
 loanSearch?.addEventListener(
@@ -3786,110 +2820,6 @@ loanYearFilter?.addEventListener(
 
 
 // ==========================================
-// GET FIRST UNPAID INSTALLMENT
-// ==========================================
-
-function getFirstUnpaidInstallment(
-    loan
-) {
-
-    if (!loan) {
-        return null;
-    }
-
-
-    const schedule =
-        normalizeRepaymentSchedule(
-            loan.repaymentSchedule
-        );
-
-
-    return getNextRepayment(
-        schedule
-    );
-}
-
-
-// ==========================================
-// DETERMINE LOAN ARREARS
-// ==========================================
-
-function loanHasArrears(
-    loan
-) {
-
-    if (!loan) {
-        return false;
-    }
-
-
-    if (
-        isCompletedLoan(
-            loan
-        )
-    ) {
-
-        return false;
-    }
-
-
-    const schedule =
-        normalizeRepaymentSchedule(
-            loan.repaymentSchedule
-        );
-
-
-    const todayDate =
-        today();
-
-
-    /*
-     * Arrears exist when the earliest
-     * unpaid installment is already
-     * past its due date.
-     */
-
-    const overdueInstallment =
-        schedule.find(
-            installment => {
-
-                if (
-                    installment.paid
-                ) {
-
-                    return false;
-                }
-
-
-                const remaining =
-                    safeNumber(
-                        installment.remainingAmount
-                    );
-
-
-                if (
-                    remaining <=
-                    0.01
-                ) {
-
-                    return false;
-                }
-
-
-                return (
-                    installment.dueDate &&
-                    installment.dueDate <
-                    todayDate
-                );
-            }
-        );
-
-
-    return !!overdueInstallment;
-}
-
-
-// ==========================================
 // CHECK OVERDUE LOANS
 // ==========================================
 
@@ -3899,19 +2829,20 @@ async function checkOverdueLoans() {
         today();
 
 
-    /*
-     * Work on a snapshot so Firestore
-     * updates do not interfere with the
-     * current loop.
-     */
+    if (
+        !Array.isArray(
+            loans
+        ) ||
+        !loans.length
+    ) {
 
-    const loanSnapshot =
-        [...loans];
+        return;
+    }
 
 
     for (
         const loan
-        of loanSnapshot
+        of loans
     ) {
 
         if (!loan?.id) {
@@ -3926,15 +2857,18 @@ async function checkOverdueLoans() {
 
 
         /*
-         * These statuses do not need
-         * automatic overdue processing.
+         * Pending, rejected and completed
+         * loans do not need automatic
+         * arrears processing.
          */
 
         if (
             currentStatus ===
                 "Pending" ||
+
             currentStatus ===
                 "Rejected" ||
+
             currentStatus ===
                 "Completed"
         ) {
@@ -3944,79 +2878,88 @@ async function checkOverdueLoans() {
 
 
         const schedule =
-            normalizeRepaymentSchedule(
+            Array.isArray(
                 loan.repaymentSchedule
-            );
+            )
+                ? loan.repaymentSchedule
+                : [];
 
 
-        /*
-         * No schedule means there is no
-         * installment that can currently
-         * be marked overdue.
-         */
+        let nextRepayment =
+            null;
 
-        if (
-            schedule.length ===
-            0
+
+        let hasArrears =
+            false;
+
+
+        for (
+            const installment
+            of schedule
         ) {
 
-            continue;
+            const remaining =
+                Number(
+                    installment.remainingAmount ??
+                    (
+                        Number(
+                            installment.amount ||
+                            0
+                        ) -
+                        Number(
+                            installment.paidAmount ||
+                            0
+                        )
+                    )
+                );
+
+
+            if (
+                installment.paid ||
+                remaining <= 0
+            ) {
+
+                continue;
+            }
+
+
+            nextRepayment =
+                installment.dueDate;
+
+
+            if (
+                String(
+                    installment.dueDate ||
+                    ""
+                ) <
+                todayDate
+            ) {
+
+                hasArrears =
+                    true;
+            }
+
+
+            /*
+             * The earliest unpaid installment
+             * determines the current repayment
+             * position.
+             */
+
+            break;
         }
-
-
-        const nextInstallment =
-            getNextRepayment(
-                schedule
-            );
-
-
-        const nextRepayment =
-            nextInstallment
-                ? nextInstallment.dueDate
-                : null;
-
-
-        const arrears =
-            schedule.some(
-                installment => {
-
-                    if (
-                        installment.paid
-                    ) {
-
-                        return false;
-                    }
-
-
-                    const remaining =
-                        safeNumber(
-                            installment.remainingAmount
-                        );
-
-
-                    return (
-                        remaining >
-                        0.01 &&
-                        installment.dueDate &&
-                        installment.dueDate <
-                        todayDate
-                    );
-                }
-            );
 
 
         let newStatus;
 
 
-        if (
-            !nextInstallment
-        ) {
+        if (!nextRepayment) {
 
             newStatus =
                 "Completed";
 
         } else if (
-            arrears
+            hasArrears
         ) {
 
             newStatus =
@@ -4030,13 +2973,31 @@ async function checkOverdueLoans() {
 
 
         const remainingInstallments =
-            countRemainingInstallments(
-                schedule
-            );
+            schedule.filter(
+                installment => {
+
+                    const remaining =
+                        Number(
+                            installment.remainingAmount ??
+                            (
+                                Number(
+                                    installment.amount ||
+                                    0
+                                ) -
+                                Number(
+                                    installment.paidAmount ||
+                                    0
+                                )
+                            )
+                        );
 
 
-        const completed =
-            !nextInstallment;
+                    return (
+                        !installment.paid &&
+                        remaining > 0
+                    );
+                }
+            ).length;
 
 
         /*
@@ -4044,7 +3005,9 @@ async function checkOverdueLoans() {
          */
 
         if (
-            currentStatus ===
+            normalizeLoanStatus(
+                loan.status
+            ) ===
                 newStatus &&
 
             String(
@@ -4060,12 +3023,7 @@ async function checkOverdueLoans() {
                 loan.remainingInstallments ||
                 0
             ) ===
-                remainingInstallments &&
-
-            Boolean(
-                loan.completed
-            ) ===
-                completed
+                remainingInstallments
         ) {
 
             continue;
@@ -4085,49 +3043,21 @@ async function checkOverdueLoans() {
                     status:
                         newStatus,
 
-                    completed,
+                    completed:
+                        newStatus ===
+                        "Completed",
 
                     nextRepaymentDate:
                         nextRepayment ||
                         "-",
 
-                    remainingInstallments,
+                    remainingInstallments:
+                        remainingInstallments,
 
                     updatedAt:
                         serverTimestamp()
                 }
             );
-
-
-            /*
-             * Update the local record immediately
-             * so the interface reflects the change
-             * without waiting for another full load.
-             */
-
-            const localLoan =
-                loans.find(
-                    item =>
-                        item.id ===
-                        loan.id
-                );
-
-
-            if (localLoan) {
-
-                localLoan.status =
-                    newStatus;
-
-                localLoan.completed =
-                    completed;
-
-                localLoan.nextRepaymentDate =
-                    nextRepayment ||
-                    "-";
-
-                localLoan.remainingInstallments =
-                    remainingInstallments;
-            }
 
         } catch (error) {
 
@@ -4137,479 +3067,28 @@ async function checkOverdueLoans() {
             );
         }
     }
+}
 
+
+// ==========================================
+// REFRESH FILTER OPTIONS
+// ==========================================
+
+function refreshLoanFilters() {
+
+    populateYearFilter();
 
     /*
-     * Refresh the visible list after all
-     * status checks have completed.
+     * Do not call filterLoans() here if the
+     * loan details page is currently open.
+     * filterLoans() itself is protected, but
+     * keeping this explicit makes the refresh
+     * behavior predictable.
      */
 
-    if (
-        !loanDetailsOpen
-    ) {
+    if (!loanDetailsOpen) {
 
         filterLoans();
-    }
-}
-
-
-// ==========================================
-// APPROVE LOAN
-// ==========================================
-
-async function approveLoan(
-    id
-) {
-
-    const loan =
-        loans.find(
-            item =>
-                item.id ===
-                id
-        );
-
-
-    if (
-        !loan ||
-        normalizeLoanStatus(
-            loan.status
-        ) !==
-        "Pending"
-    ) {
-
-        alert(
-            "Loan is already active or has been processed."
-        );
-
-        return;
-    }
-
-
-    if (
-        !confirm(
-            `Approve loan ${
-                loan.loanNumber ||
-                ""
-            } for ${
-                loan.clientName ||
-                getLoanClientName(
-                    loan
-                ) ||
-                "client"
-            }?`
-        )
-    ) {
-
-        return;
-    }
-
-
-    try {
-
-        // ------------------------------------------
-        // APPROVAL DATE
-        // ------------------------------------------
-
-        const approvalDate =
-            new Date();
-
-
-        // ------------------------------------------
-        // REPAYMENT SCHEDULE
-        // ------------------------------------------
-
-        const schedule =
-            generateRepaymentSchedule(
-                approvalDate,
-                loan.duration,
-                loan.weeklyPayment,
-                loan.totalRepayment
-            );
-
-
-        const nextRepayment =
-            schedule.length
-                ? schedule[0].dueDate
-                : "-";
-
-
-        // ------------------------------------------
-        // UPDATE FIRESTORE
-        // ------------------------------------------
-
-        await updateDoc(
-            doc(
-                db,
-                "loans",
-                loan.id
-            ),
-            {
-
-                approvalDate:
-                    formatDate(
-                        approvalDate
-                    ),
-
-                repaymentSchedule:
-                    schedule,
-
-                nextRepaymentDate:
-                    nextRepayment,
-
-                remainingInstallments:
-                    schedule.length,
-
-                status:
-                    "Active",
-
-                completed:
-                    false,
-
-                updatedAt:
-                    serverTimestamp()
-            }
-        );
-
-
-        // ------------------------------------------
-        // UPDATE LOCAL LOAN
-        // ------------------------------------------
-
-        loan.approvalDate =
-            formatDate(
-                approvalDate
-            );
-
-        loan.repaymentSchedule =
-            schedule;
-
-        loan.nextRepaymentDate =
-            nextRepayment;
-
-        loan.remainingInstallments =
-            schedule.length;
-
-        loan.status =
-            "Active";
-
-        loan.completed =
-            false;
-
-
-        // ------------------------------------------
-        // HISTORY
-        // ------------------------------------------
-
-        try {
-
-            await logHistory(
-                "Loan Approved",
-                "Loan",
-                {
-
-                    loanId:
-                        loan.loanNumber,
-
-                    client:
-                        loan.clientName,
-
-                    amount:
-                        loan.amount,
-
-                    newStatus:
-                        "Active"
-                }
-            );
-
-        } catch (historyError) {
-
-            /*
-             * History must never make an
-             * already-approved loan appear
-             * unsuccessful.
-             */
-
-            console.error(
-                "Loan approval history error:",
-                historyError
-            );
-        }
-
-
-        // ------------------------------------------
-        // SAFE CLIENT MESSAGE
-        // ------------------------------------------
-
-        try {
-
-            /*
-             * Build the approved version of the
-             * loan so messaging.js receives the
-             * newly-created repayment schedule
-             * and Active status.
-             */
-
-            const approvedLoan = {
-
-                ...loan,
-
-                approvalDate:
-                    formatDate(
-                        approvalDate
-                    ),
-
-                repaymentSchedule:
-                    schedule,
-
-                nextRepaymentDate:
-                    nextRepayment,
-
-                remainingInstallments:
-                    schedule.length,
-
-                status:
-                    "Active",
-
-                completed:
-                    false
-            };
-
-
-            const payload =
-                buildLoanMessagingPayload(
-                    approvedLoan,
-                    {
-
-                        messageType:
-                            "loan-approved",
-
-                        balance:
-                            Number(
-                                approvedLoan.balance ||
-                                approvedLoan.totalRepayment ||
-                                0
-                            )
-                    }
-                );
-
-
-            if (payload) {
-
-                await callMessagingModule(
-                    payload
-                );
-            }
-
-        } catch (messageError) {
-
-            console.error(
-                "Loan approval message failed:",
-                messageError
-            );
-        }
-
-
-        // ------------------------------------------
-        // REFRESH UI
-        // ------------------------------------------
-
-        populateYearFilter();
-
-
-        if (
-            !loanDetailsOpen
-        ) {
-
-            filterLoans();
-        }
-
-
-        alert(
-            "Loan approved successfully. Status is now Active."
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Loan approval error:",
-            error
-        );
-
-
-        alert(
-            "Failed to approve loan."
-        );
-    }
-}
-
-
-// ==========================================
-// DELETE LOAN
-// ==========================================
-
-async function deleteLoan(
-    id
-) {
-
-    if (
-        !isAdmin()
-    ) {
-
-        alert(
-            "Only the Administrator can delete loans."
-        );
-
-        return;
-    }
-
-
-    const loan =
-        loans.find(
-            item =>
-                item.id ===
-                id
-        );
-
-
-    if (!loan) {
-
-        alert(
-            "Loan not found."
-        );
-
-        return;
-    }
-
-
-    /*
-     * Only pending loans can be deleted.
-     * Active, arrears and completed loans
-     * are protected from accidental deletion.
-     */
-
-    if (
-        normalizeLoanStatus(
-            loan.status
-        ) !==
-        "Pending"
-    ) {
-
-        alert(
-            "Only pending loans can be deleted."
-        );
-
-        return;
-    }
-
-
-    if (
-        !confirm(
-            `Delete loan for ${
-                loan.clientName ||
-                getLoanClientName(
-                    loan
-                ) ||
-                "this client"
-            }?`
-        )
-    ) {
-
-        return;
-    }
-
-
-    try {
-
-        await deleteDoc(
-            doc(
-                db,
-                "loans",
-                loan.id
-            )
-        );
-
-
-        /*
-         * Remove the deleted loan locally
-         * immediately.
-         */
-
-        loans =
-            loans.filter(
-                item =>
-                    item.id !==
-                    loan.id
-            );
-
-
-        try {
-
-            await logHistory(
-                "Loan Deleted",
-                "Loan",
-                {
-
-                    loanId:
-                        loan.loanNumber,
-
-                    client:
-                        loan.clientName,
-
-                    amount:
-                        loan.amount
-                }
-            );
-
-        } catch (historyError) {
-
-            console.error(
-                "Loan deletion history error:",
-                historyError
-            );
-        }
-
-
-        /*
-         * Close details if the deleted loan
-         * happened to be open.
-         */
-
-        if (
-            loanDetailsOpen &&
-            selectedLoanId ===
-                loan.id
-        ) {
-
-            closeLoanDetailsPage();
-        }
-
-
-        populateYearFilter();
-
-
-        if (
-            !loanDetailsOpen
-        ) {
-
-            filterLoans();
-        }
-
-
-        alert(
-            "Loan deleted successfully."
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Loan deletion error:",
-            error
-        );
-
-
-        alert(
-            "Failed to delete loan."
-        );
     }
 }
 
@@ -4620,23 +3099,19 @@ async function deleteLoan(
 // PART 6/16
 // REPAYMENT SUBMISSION
 // ==========================================
-//
-// SAFE VERSION
-//
-// This section:
-// 1. Validates the selected loan
-// 2. Prevents duplicate repayment submissions
-// 3. Applies payment to earliest unpaid installments
-// 4. Supports arrears + today's installment
-// 5. Recalculates balance/status
-// 6. Saves repayment to Firestore
-// 7. Links repayment ID to schedule
-// 8. Records history
-//
-// Messaging is NOT allowed to break the
-// financial transaction.
+
+
+// ==========================================
+// REPAYMENT SUBMISSION STATE
 // ==========================================
 
+let repaymentSaving =
+    false;
+
+
+// ==========================================
+// REPAYMENT FORM SUBMISSION
+// ==========================================
 
 repaymentForm?.addEventListener(
     "submit",
@@ -4645,42 +3120,26 @@ repaymentForm?.addEventListener(
         event.preventDefault();
 
 
-        // ==========================================
-        // DUPLICATE SUBMISSION PROTECTION
-        // ==========================================
+        /*
+         * Prevent duplicate submissions.
+         */
 
         if (repaymentSaving) {
             return;
         }
 
 
-        // ==========================================
-        // DETERMINE SELECTED LOAN
-        // ==========================================
+        // ------------------------------------------
+        // FIND SELECTED LOAN
+        // ------------------------------------------
 
         const selectedRepaymentLoanId =
             directLoanRepaymentMode
                 ? (
                     selectedLoanId ||
-                    repaymentLoanId?.value ||
-                    ""
+                    repaymentLoanId?.value
                 )
-                : (
-                    repaymentLoanId?.value ||
-                    ""
-                );
-
-
-        if (!selectedRepaymentLoanId) {
-
-            alert(
-                directLoanRepaymentMode
-                    ? "The selected loan could not be found."
-                    : "Please select a client with an outstanding loan."
-            );
-
-            return;
-        }
+                : repaymentLoanId?.value;
 
 
         const loan =
@@ -4694,42 +3153,18 @@ repaymentForm?.addEventListener(
         if (!loan) {
 
             alert(
-                "The selected loan could not be found."
+                directLoanRepaymentMode
+                    ? "The selected loan could not be found."
+                    : "Please select a client with an outstanding loan."
             );
 
             return;
         }
 
 
-        // ==========================================
-        // VALIDATE LOAN BALANCE
-        // ==========================================
-
-        const currentBalance =
-            Number(
-                loan.balance ||
-                0
-            );
-
-
-        if (
-            !Number.isFinite(
-                currentBalance
-            ) ||
-            currentBalance <= 0
-        ) {
-
-            alert(
-                "This loan has no outstanding balance."
-            );
-
-            return;
-        }
-
-
-        // ==========================================
-        // READ PAYMENT
-        // ==========================================
+        // ------------------------------------------
+        // VALIDATE PAYMENT
+        // ------------------------------------------
 
         const payment =
             Number(
@@ -4753,9 +3188,28 @@ repaymentForm?.addEventListener(
         }
 
 
-        // ==========================================
-        // PAYMENT CANNOT EXCEED BALANCE
-        // ==========================================
+        const currentBalance =
+            Math.max(
+                Number(
+                    loan.balance ||
+                    0
+                ),
+                0
+            );
+
+
+        if (
+            currentBalance <=
+            0
+        ) {
+
+            alert(
+                "This loan has no outstanding balance."
+            );
+
+            return;
+        }
+
 
         if (
             payment >
@@ -4763,34 +3217,18 @@ repaymentForm?.addEventListener(
         ) {
 
             alert(
-                "Payment cannot exceed the outstanding balance."
+                `Payment cannot exceed ${currency(
+                    currentBalance
+                )}.`
             );
 
             return;
         }
 
 
-        // ==========================================
-        // PAYMENT DATE
-        // ==========================================
-
-        const paymentDate =
-            repaymentDate?.value ||
-            today();
-
-
-        // ==========================================
-        // PAYMENT NOTES
-        // ==========================================
-
-        const paymentNotes =
-            repaymentNotes?.value ||
-            "";
-
-
-        // ==========================================
-        // CONFIRM REPAYMENT
-        // ==========================================
+        // ------------------------------------------
+        // CONFIRM PAYMENT
+        // ------------------------------------------
 
         if (
             !confirm(
@@ -4804,16 +3242,12 @@ repaymentForm?.addEventListener(
         }
 
 
-        // ==========================================
-        // LOCK SUBMISSION
-        // ==========================================
-
         repaymentSaving =
             true;
 
 
         const saveButton =
-            repaymentForm?.querySelector(
+            repaymentForm.querySelector(
                 'button[type="submit"]'
             );
 
@@ -4854,18 +3288,28 @@ repaymentForm?.addEventListener(
             if (!schedule.length) {
 
                 throw new Error(
-                    "This loan does not have a repayment schedule."
+                    "This loan has no repayment schedule."
                 );
             }
 
 
-            // ==========================================
-            // APPLY PAYMENT
-            // ==========================================
-
             let remainingPayment =
                 payment;
 
+
+            const repaymentDateValue =
+                repaymentDate?.value ||
+                today();
+
+
+            const repaymentNotesValue =
+                repaymentNotes?.value ||
+                "";
+
+
+            // ==========================================
+            // APPLY PAYMENT FROM EARLIEST UNPAID
+            // ==========================================
 
             for (
                 const installment
@@ -4874,7 +3318,7 @@ repaymentForm?.addEventListener(
 
                 if (
                     remainingPayment <=
-                    0.001
+                    0.01
                 ) {
 
                     break;
@@ -4903,13 +3347,9 @@ repaymentForm?.addEventListener(
                     );
 
 
-                // ------------------------------------------
-                // ALREADY COMPLETED INSTALLMENT
-                // ------------------------------------------
-
                 if (
                     installmentRemaining <=
-                    0.001
+                    0.01
                 ) {
 
                     installment.paid =
@@ -4918,9 +3358,6 @@ repaymentForm?.addEventListener(
                     installment.status =
                         "Paid";
 
-                    installment.paidAmount =
-                        installmentAmount;
-
                     installment.remainingAmount =
                         0;
 
@@ -4928,41 +3365,25 @@ repaymentForm?.addEventListener(
                 }
 
 
-                // ------------------------------------------
-                // APPLY PAYMENT TO THIS INSTALLMENT
-                // ------------------------------------------
-
-                const appliedAmount =
+                const applied =
                     Math.min(
                         remainingPayment,
                         installmentRemaining
                     );
 
 
-                const newPaidAmount =
-                    alreadyPaid +
-                    appliedAmount;
-
-
-                const newRemainingAmount =
-                    Math.max(
-                        installmentAmount -
-                        newPaidAmount,
-                        0
-                    );
-
-
                 installment.paidAmount =
-                    newPaidAmount;
+                    alreadyPaid +
+                    applied;
 
 
                 installment.remainingAmount =
-                    newRemainingAmount;
+                    Math.max(
+                        installmentAmount -
+                        installment.paidAmount,
+                        0
+                    );
 
-
-                // ------------------------------------------
-                // PAYMENT HISTORY
-                // ------------------------------------------
 
                 if (
                     !Array.isArray(
@@ -4975,37 +3396,35 @@ repaymentForm?.addEventListener(
                 }
 
 
-                const paymentId =
-                    `PAY-${Date.now()}-${Math.random()
-                        .toString(36)
-                        .slice(2, 9)}`;
+                const paymentRecord = {
 
-
-                installment.paymentHistory.push({
-
-                    paymentId,
+                    paymentId:
+                        `PAY-${Date.now()}-${Math.random()
+                            .toString(36)
+                            .slice(2, 8)}`,
 
                     amount:
-                        appliedAmount,
+                        applied,
 
                     date:
-                        paymentDate,
+                        repaymentDateValue,
 
                     notes:
-                        paymentNotes,
+                        repaymentNotesValue,
 
                     repaymentDocId:
                         null
-                });
+                };
 
 
-                // ------------------------------------------
-                // INSTALLMENT STATUS
-                // ------------------------------------------
+                installment.paymentHistory.push(
+                    paymentRecord
+                );
+
 
                 if (
-                    newRemainingAmount <=
-                    0.001
+                    installment.remainingAmount <=
+                    0.01
                 ) {
 
                     installment.paid =
@@ -5018,7 +3437,7 @@ repaymentForm?.addEventListener(
                         0;
 
                     installment.paidDate =
-                        paymentDate;
+                        repaymentDateValue;
 
                 } else {
 
@@ -5034,12 +3453,12 @@ repaymentForm?.addEventListener(
 
 
                 remainingPayment -=
-                    appliedAmount;
+                    applied;
             }
 
 
             // ==========================================
-            // VERIFY FULL PAYMENT WAS ALLOCATED
+            // VERIFY FULL PAYMENT ALLOCATION
             // ==========================================
 
             if (
@@ -5054,7 +3473,7 @@ repaymentForm?.addEventListener(
 
 
             // ==========================================
-            // CALCULATE NEW TOTAL PAID
+            // CALCULATE NEW LOAN TOTALS
             // ==========================================
 
             const oldAmountPaid =
@@ -5069,13 +3488,12 @@ repaymentForm?.addEventListener(
                 payment;
 
 
-            // ==========================================
-            // CALCULATE NEW BALANCE
-            // ==========================================
-
             const totalRepayment =
-                Number(
-                    loan.totalRepayment ||
+                Math.max(
+                    Number(
+                        loan.totalRepayment ||
+                        0
+                    ),
                     0
                 );
 
@@ -5089,49 +3507,38 @@ repaymentForm?.addEventListener(
 
 
             // ==========================================
-            // FIND NEXT UNPAID INSTALLMENT
+            // FIND NEXT INSTALLMENT
             // ==========================================
 
             const nextInstallment =
-                schedule.find(
-                    installment => {
-
-                        const remaining =
-                            Number(
-                                installment.remainingAmount ||
-                                0
-                            );
-
-                        return (
-                            !installment.paid &&
-                            remaining >
-                            0.001
-                        );
-                    }
+                getNextUnpaidInstallment(
+                    schedule
                 );
 
 
             const nextRepaymentDate =
                 nextInstallment
-                    ? (
-                        nextInstallment.dueDate ||
-                        "-"
-                    )
-                    : "-";
+                    ? nextInstallment.dueDate
+                    : null;
 
-
-            // ==========================================
-            // REMAINING INSTALLMENTS
-            // ==========================================
 
             const remainingInstallments =
                 schedule.filter(
-                    installment =>
-                        !installment.paid &&
-                        Number(
-                            installment.remainingAmount ||
-                            0
-                        ) > 0.001
+                    installment => {
+
+                        const remaining =
+                            Number(
+                                installment.remainingAmount ??
+                                0
+                            );
+
+
+                        return (
+                            !installment.paid &&
+                            remaining >
+                            0.01
+                        );
+                    }
                 ).length;
 
 
@@ -5152,9 +3559,9 @@ repaymentForm?.addEventListener(
                     "Completed";
 
             } else if (
-                nextRepaymentDate !== "-" &&
+                nextRepaymentDate &&
                 nextRepaymentDate <
-                    today()
+                today()
             ) {
 
                 newStatus =
@@ -5168,15 +3575,7 @@ repaymentForm?.addEventListener(
 
 
             // ==========================================
-            // INCOME CALCULATION
-            // ==========================================
-            //
-            // Income here represents the interest
-            // portion of repayments.
-            //
-            // Processing fee is preserved separately
-            // and is NOT repeatedly added on every
-            // repayment.
+            // CALCULATE REPAYMENT INTEREST
             // ==========================================
 
             const totalInterest =
@@ -5235,7 +3634,8 @@ repaymentForm?.addEventListener(
                         schedule,
 
                     nextRepaymentDate:
-                        nextRepaymentDate,
+                        nextRepaymentDate ||
+                        "-",
 
                     remainingInstallments:
                         remainingInstallments,
@@ -5284,10 +3684,10 @@ repaymentForm?.addEventListener(
                             payment,
 
                         date:
-                            paymentDate,
+                            repaymentDateValue,
 
                         notes:
-                            paymentNotes,
+                            repaymentNotesValue,
 
                         balanceBefore:
                             currentBalance,
@@ -5315,85 +3715,122 @@ repaymentForm?.addEventListener(
 
 
             // ==========================================
-            // LINK REPAYMENT DOCUMENT ID
+            // LINK REPAYMENT DOCUMENT
             // ==========================================
 
-            let repaymentLinked =
+            let linked =
                 false;
 
 
             /*
-             * Only the payment records created by
-             * THIS repayment should receive the new
-             * repayment document ID.
-             *
-             * We identify them by the absence of
-             * repaymentDocId and work backwards from
-             * the schedule.
+             * The payment record is identified by
+             * its unique paymentId rather than by
+             * simply selecting the first unlinked
+             * record.
              */
 
+            const paymentIds =
+                new Set();
+
+
             for (
-                let s =
-                    schedule.length - 1;
-                s >= 0;
-                s--
+                const installment
+                of schedule
             ) {
-
-                const installment =
-                    schedule[s];
-
 
                 if (
                     !Array.isArray(
                         installment.paymentHistory
                     )
                 ) {
-
                     continue;
                 }
 
 
                 for (
-                    let p =
-                        installment.paymentHistory.length - 1;
-                    p >= 0;
-                    p--
+                    const record
+                    of installment.paymentHistory
+                ) {
+
+                    if (
+                        record &&
+                        record.paymentId
+                    ) {
+
+                        paymentIds.add(
+                            record.paymentId
+                        );
+                    }
+                }
+            }
+
+
+            /*
+             * Find the newest payment record
+             * belonging to this submission.
+             */
+
+            outerLoop:
+            for (
+                let i =
+                    schedule.length -
+                    1;
+                i >= 0;
+                i--
+            ) {
+
+                const history =
+                    schedule[i]
+                        ?.paymentHistory;
+
+
+                if (
+                    !Array.isArray(
+                        history
+                    )
+                ) {
+                    continue;
+                }
+
+
+                for (
+                    let j =
+                        history.length -
+                        1;
+                    j >= 0;
+                    j--
                 ) {
 
                     const record =
-                        installment
-                            .paymentHistory[p];
+                        history[j];
 
 
                     if (
                         record &&
                         record.paymentId &&
-                        !record.repaymentDocId
+                        !record.repaymentDocId &&
+                        paymentIds.has(
+                            record.paymentId
+                        )
                     ) {
 
                         record.repaymentDocId =
                             repaymentRef.id;
 
-                        repaymentLinked =
+                        linked =
                             true;
 
-                        /*
-                         * Continue linking all newly
-                         * created records from this
-                         * repayment.
-                         */
+                        break outerLoop;
                     }
                 }
             }
 
 
             // ==========================================
-            // SAVE LINKED SCHEDULE
+            // SAVE PAYMENT LINK
             // ==========================================
 
-            if (
-                repaymentLinked
-            ) {
+            if (linked) {
 
                 await updateDoc(
                     doc(
@@ -5414,105 +3851,144 @@ repaymentForm?.addEventListener(
 
 
             // ==========================================
-            // RECORD HISTORY
+            // HISTORY
             // ==========================================
+
+            await logHistory(
+                "Repayment Received",
+                "Repayment",
+                {
+
+                    loanId:
+                        loan.loanNumber ||
+                        loan.id,
+
+                    client:
+                        loan.clientName,
+
+                    amount:
+                        payment,
+
+                    previousBalance:
+                        currentBalance,
+
+                    newBalance:
+                        newBalance,
+
+                    status:
+                        newStatus
+                }
+            );
+
+
+            // ==========================================
+            // UPDATE LOCAL LOAN OBJECT
+            // ==========================================
+
+            /*
+             * This keeps the current UI accurate
+             * immediately, without waiting for the
+             * Firestore listener.
+             */
+
+            Object.assign(
+                loan,
+                {
+
+                    amountPaid:
+                        newAmountPaid,
+
+                    balance:
+                        newBalance,
+
+                    totalIncome:
+                        newTotalIncome,
+
+                    repaymentSchedule:
+                        schedule,
+
+                    nextRepaymentDate:
+                        nextRepaymentDate ||
+                        "-",
+
+                    remainingInstallments:
+                        remainingInstallments,
+
+                    status:
+                        newStatus,
+
+                    completed:
+                        newBalance <=
+                        0.01
+                }
+            );
+
+
+            // ==========================================
+            // SAFE REPAYMENT MESSAGE
+            // ==========================================
+
+            /*
+             * Messaging happens ONLY after all
+             * financial records have succeeded.
+             *
+             * Messaging can never roll back or
+             * break the repayment transaction.
+             */
 
             try {
 
-                await logHistory(
-                    "Repayment Received",
-                    "Repayment",
-                    {
-
-                        loanId:
-                            loan.loanNumber ||
-                            loan.id,
-
-                        client:
-                            loan.clientName ||
-                            "",
-
-                        amount:
-                            payment,
-
-                        previousBalance:
-                            currentBalance,
-
-                        newBalance:
-                            newBalance,
-
-                        status:
-                            newStatus
-                    }
+                await sendLoanRepaymentMessage(
+                    loan.id,
+                    payment,
+                    currentBalance,
+                    newBalance,
+                    newStatus
                 );
 
-            } catch (historyError) {
-
-                /*
-                 * History failure must not turn a
-                 * successfully saved repayment into
-                 * a failed repayment.
-                 */
+            } catch (messageError) {
 
                 console.error(
-                    "Repayment history error:",
-                    historyError
+                    "Repayment message failed:",
+                    messageError
                 );
             }
 
 
             // ==========================================
-            // UPDATE LOCAL LOAN DATA
-            // ==========================================
-            //
-            // This keeps the UI immediately
-            // consistent without waiting for the
-            // Firestore listener.
+            // REFRESH UI
             // ==========================================
 
-            const localLoan =
-                loans.find(
-                    item =>
-                        item.id ===
-                        loan.id
+            if (
+                typeof refreshLoanTable ===
+                "function"
+            ) {
+
+                refreshLoanTable();
+            }
+
+
+            if (
+                loanDetailsOpen &&
+                selectedLoanId ===
+                    loan.id
+            ) {
+
+                renderLoanDetailsPage(
+                    loan
                 );
-
-
-            if (localLoan) {
-
-                localLoan.amountPaid =
-                    newAmountPaid;
-
-                localLoan.balance =
-                    newBalance;
-
-                localLoan.totalIncome =
-                    newTotalIncome;
-
-                localLoan.repaymentSchedule =
-                    schedule;
-
-                localLoan.nextRepaymentDate =
-                    nextRepaymentDate;
-
-                localLoan.remainingInstallments =
-                    remainingInstallments;
-
-                localLoan.status =
-                    newStatus;
-
-                localLoan.completed =
-                    newBalance <=
-                    0.01;
             }
 
 
             // ==========================================
-            // SUCCESS
+            // CLOSE MODAL
             // ==========================================
+
+            closeRepaymentModal();
+
 
             alert(
-                `Repayment of ${currency(
+                `✅ Repayment of ${currency(
                     payment
                 )} recorded successfully.`
             );
@@ -5530,15 +4006,11 @@ repaymentForm?.addEventListener(
                 "Failed to save repayment.\n\n" +
                 (
                     error?.message ||
-                    "Unknown error."
+                    "Please try again."
                 )
             );
 
         } finally {
-
-            // ==========================================
-            // RELEASE SUBMISSION LOCK
-            // ==========================================
 
             repaymentSaving =
                 false;
@@ -5563,24 +4035,33 @@ repaymentForm?.addEventListener(
 // PART 7/16
 // FAB REPAYMENT SELECTORS
 // ==========================================
-//
-// This section handles:
-// 1. FAB Add Repayment
-// 2. Client selection
-// 3. Outstanding loan selection
-// 4. Automatic loan selection when only one
-// 5. Loading the selected loan into repayment form
-//
-// IMPORTANT:
-// This section does NOT save repayments.
-// ==========================================
 
 
 // ==========================================
-// FAB REPAYMENT CLICK HANDLER
+// SETUP FAB ADD REPAYMENT
 // ==========================================
 
 function setupFabAddRepayment() {
+
+    /*
+     * Use one delegated listener so the FAB
+     * continues working even if the dashboard
+     * or loan table is re-rendered.
+     */
+
+    if (
+        document.body.dataset
+            .greymusFabRepaymentSetup ===
+        "true"
+    ) {
+        return;
+    }
+
+
+    document.body.dataset
+        .greymusFabRepaymentSetup =
+        "true";
+
 
     document.addEventListener(
         "click",
@@ -5632,23 +4113,21 @@ function createFabRepaymentSelectors(
     if (container) {
 
         /*
-         * Make sure the existing container
-         * remains inside the current form.
+         * If the form was replaced by another
+         * render, make sure the existing
+         * container belongs to this form.
          */
 
         if (
-            container.parentElement !==
+            container.parentElement ===
             form
         ) {
 
-            form.insertBefore(
-                container,
-                form.firstElementChild
-            );
+            return container;
         }
 
 
-        return container;
+        container.remove();
     }
 
 
@@ -5678,10 +4157,9 @@ function createFabRepaymentSelectors(
                 Client
             </label>
 
-
             <select
                 id="fab-repayment-client-select"
-                autocomplete="off"
+                required
             >
 
                 <option value="">
@@ -5705,10 +4183,8 @@ function createFabRepaymentSelectors(
                 Loan
             </label>
 
-
             <select
                 id="fab-repayment-loan-select"
-                autocomplete="off"
             >
 
                 <option value="">
@@ -5727,13 +4203,15 @@ function createFabRepaymentSelectors(
     );
 
 
-    // ==========================================
-    // CLIENT SELECT CHANGE
-    // ==========================================
-
     const clientSelector =
         document.getElementById(
             "fab-repayment-client-select"
+        );
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
         );
 
 
@@ -5746,16 +4224,6 @@ function createFabRepaymentSelectors(
             );
         }
     );
-
-
-    // ==========================================
-    // LOAN SELECT CHANGE
-    // ==========================================
-
-    const loanSelector =
-        document.getElementById(
-            "fab-repayment-loan-select"
-        );
 
 
     loanSelector?.addEventListener(
@@ -5888,9 +4356,15 @@ function populateFabClientSelector() {
     }
 
 
-    createFabRepaymentSelectors(
-        repaymentForm
-    );
+    const container =
+        createFabRepaymentSelectors(
+            repaymentForm
+        );
+
+
+    if (!container) {
+        return;
+    }
 
 
     const clientSelector =
@@ -5915,71 +4389,47 @@ function populateFabClientSelector() {
     `;
 
 
-    // ==========================================
-    // SORT CLIENTS
-    // ==========================================
-
     const sortedClients =
-        [...clients].sort(
-            (a, b) =>
-                String(
-                    a.name ||
-                    ""
-                ).localeCompare(
+        Array.isArray(clients)
+            ? [...clients].sort(
+                (a, b) =>
                     String(
-                        b.name ||
+                        a?.name ||
                         ""
+                    ).localeCompare(
+                        String(
+                            b?.name ||
+                            ""
+                        )
                     )
-                )
-        );
+            )
+            : [];
 
-
-    // ==========================================
-    // ADD CLIENTS
-    // ==========================================
 
     sortedClients.forEach(
         client => {
 
-            const clientLoans =
-                loans.filter(
-                    loan => {
-
-                        const sameClient =
-                            String(
-                                loan.clientId ||
-                                ""
-                            ) ===
-                            String(
-                                client.id ||
-                                ""
-                            );
+            if (!client?.id) {
+                return;
+            }
 
 
-                        const balance =
-                            Number(
-                                loan.balance ||
-                                0
-                            );
+            const hasOutstandingLoan =
+                loans.some(
+                    loan =>
 
+                        loan?.clientId ===
+                            client.id &&
 
-                        const status =
-                            normalizeLoanStatus(
-                                loan.status
-                            );
+                        Number(
+                            loan.balance ||
+                            0
+                        ) > 0 &&
 
-
-                        return (
-                            sameClient &&
-                            balance > 0 &&
-                            status !==
-                                "Completed" &&
-                            status !==
-                                "Rejected" &&
-                            status !==
-                                "Pending"
-                        );
-                    }
+                        normalizeLoanStatus(
+                            loan.status
+                        ) !==
+                            "Completed"
                 );
 
 
@@ -5993,22 +4443,22 @@ function populateFabClientSelector() {
                 client.id;
 
 
-            const clientName =
+            option.textContent =
                 client.name ||
                 "Unnamed Client";
 
 
+            /*
+             * Keep clients without loans visible
+             * but prevent them from being selected.
+             */
+
             if (
-                clientLoans.length
+                !hasOutstandingLoan
             ) {
 
-                option.textContent =
-                    clientName;
-
-            } else {
-
-                option.textContent =
-                    `${clientName} — No outstanding loan`;
+                option.textContent +=
+                    " — No outstanding loan";
 
                 option.disabled =
                     true;
@@ -6022,23 +4472,24 @@ function populateFabClientSelector() {
     );
 
 
-    // ==========================================
-    // RESTORE PREVIOUS CLIENT
-    // ==========================================
+    if (previousValue) {
 
-    if (
-        previousValue &&
-        Array.from(
-            clientSelector.options
-        ).some(
-            option =>
-                option.value ===
-                previousValue
-        )
-    ) {
+        const matchingOption =
+            Array.from(
+                clientSelector.options
+            ).find(
+                option =>
+                    option.value ===
+                    previousValue &&
+                    !option.disabled
+            );
 
-        clientSelector.value =
-            previousValue;
+
+        if (matchingOption) {
+
+            clientSelector.value =
+                previousValue;
+        }
     }
 }
 
@@ -6074,9 +4525,10 @@ function openFabRepaymentSelector() {
     }
 
 
-    // ==========================================
-    // NORMAL FAB MODE
-    // ==========================================
+    /*
+     * FAB mode means the user chooses
+     * the client first.
+     */
 
     directLoanRepaymentMode =
         false;
@@ -6086,24 +4538,19 @@ function openFabRepaymentSelector() {
         null;
 
 
-    // ==========================================
-    // RESET FORM
-    // ==========================================
+    /*
+     * Reset only repayment fields.
+     *
+     * Do NOT reset the entire page or
+     * loan table.
+     */
 
-    form.reset();
+    if (
+        typeof clearRepaymentFields ===
+        "function"
+    ) {
 
-
-    if (repaymentLoanId) {
-
-        repaymentLoanId.value =
-            "";
-    }
-
-
-    if (repaymentBalance) {
-
-        repaymentBalance.value =
-            "";
+        clearRepaymentFields();
     }
 
 
@@ -6128,9 +4575,23 @@ function openFabRepaymentSelector() {
     }
 
 
-    // ==========================================
-    // CREATE SELECTORS
-    // ==========================================
+    if (repaymentLoanId) {
+
+        repaymentLoanId.value =
+            "";
+    }
+
+
+    const balanceField =
+        repaymentBalance;
+
+
+    if (balanceField) {
+
+        balanceField.value =
+            "";
+    }
+
 
     createFabRepaymentSelectors(
         form
@@ -6143,13 +4604,15 @@ function openFabRepaymentSelector() {
     populateFabClientSelector();
 
 
-    // ==========================================
-    // RESET LOAN SELECTOR
-    // ==========================================
-
     const loanGroup =
         document.getElementById(
             "fab-repayment-loan-group"
+        );
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
         );
 
 
@@ -6158,12 +4621,6 @@ function openFabRepaymentSelector() {
         loanGroup.style.display =
             "none";
     }
-
-
-    const loanSelector =
-        document.getElementById(
-            "fab-repayment-loan-select"
-        );
 
 
     if (loanSelector) {
@@ -6176,13 +4633,14 @@ function openFabRepaymentSelector() {
     }
 
 
-    // ==========================================
-    // OPEN MODAL
-    // ==========================================
-
     modal.style.position =
         "fixed";
 
+
+    /*
+     * Keep the repayment modal above the
+     * full-screen loan details/table layers.
+     */
 
     modal.style.zIndex =
         "100001";
@@ -6199,18 +4657,10 @@ function openFabRepaymentSelector() {
     );
 
 
-    // ==========================================
-    // FOCUS CLIENT SELECTOR
-    // ==========================================
-
     setTimeout(
         () => {
 
-            document
-                .getElementById(
-                    "fab-repayment-client-select"
-                )
-                ?.focus();
+            repaymentAmount?.focus();
 
         },
         100
@@ -6238,136 +4688,126 @@ function loadLoansForSelectedClient(
         );
 
 
-    // ==========================================
-    // RESET LOAN SELECTOR
-    // ==========================================
+    if (
+        !loanSelector ||
+        !loanGroup
+    ) {
 
-    if (loanSelector) {
-
-        loanSelector.innerHTML = `
-            <option value="">
-                Select Loan
-            </option>
-        `;
-    }
-
-
-    if (loanGroup) {
-
-        loanGroup.style.display =
-            "none";
-    }
-
-
-    clearRepaymentFields();
-
-
-    if (!clientId) {
         return;
     }
 
 
-    // ==========================================
-    // FIND OUTSTANDING LOANS
-    // ==========================================
+    loanSelector.innerHTML = `
+        <option value="">
+            Select Loan
+        </option>
+    `;
+
+
+    if (!clientId) {
+
+        loanGroup.style.display =
+            "none";
+
+
+        clearRepaymentFields();
+
+        return;
+    }
+
 
     const clientLoans =
         loans
             .filter(
-                loan => {
+                loan =>
 
-                    const sameClient =
-                        String(
-                            loan.clientId ||
-                            ""
-                        ) ===
-                        String(
-                            clientId ||
-                            ""
-                        );
+                    loan?.clientId ===
+                        clientId &&
 
+                    Number(
+                        loan.balance ||
+                        0
+                    ) > 0 &&
 
-                    const balance =
-                        Number(
-                            loan.balance ||
-                            0
-                        );
-
-
-                    const status =
-                        normalizeLoanStatus(
-                            loan.status
-                        );
-
-
-                    return (
-                        sameClient &&
-                        balance > 0 &&
-                        status !==
-                            "Completed" &&
-                        status !==
-                            "Rejected" &&
-                        status !==
-                            "Pending"
-                    );
-                }
+                    normalizeLoanStatus(
+                        loan.status
+                    ) !==
+                        "Completed"
             )
             .sort(
                 (a, b) => {
 
                     const dateA =
-                        new Date(
-                            a.approvalDate ||
-                            a.createdAt ||
-                            0
-                        );
+                        normalizeLoanDate(
+                            a.approvalDate
+                        ) ||
+                        normalizeLoanDate(
+                            a.createdAt
+                        ) ||
+                        new Date(0);
 
 
                     const dateB =
-                        new Date(
-                            b.approvalDate ||
-                            b.createdAt ||
-                            0
-                        );
+                        normalizeLoanDate(
+                            b.approvalDate
+                        ) ||
+                        normalizeLoanDate(
+                            b.createdAt
+                        ) ||
+                        new Date(0);
 
 
-                    return dateB -
-                        dateA;
+                    return (
+                        dateB -
+                        dateA
+                    );
                 }
             );
 
 
-    // ==========================================
-    // NO OUTSTANDING LOANS
-    // ==========================================
-
     if (
-        clientLoans.length ===
-        0
+        !clientLoans.length
     ) {
 
+        loanGroup.style.display =
+            "none";
+
+
+        clearRepaymentFields();
+
+
+        const client =
+            clients.find(
+                item =>
+                    item.id ===
+                    clientId
+            );
+
+
         alert(
-            "This client has no outstanding loan."
+            `${
+                client?.name ||
+                "This client"
+            } has no outstanding loan.`
         );
+
 
         return;
     }
 
 
-    // ==========================================
-    // ONE OUTSTANDING LOAN
-    // ==========================================
+    /*
+     * Exactly one outstanding loan:
+     * select it automatically.
+     */
 
     if (
         clientLoans.length ===
         1
     ) {
 
-        if (loanSelector) {
-
-            loanSelector.value =
-                clientLoans[0].id;
-        }
+        loanGroup.style.display =
+            "none";
 
 
         fillRepaymentFromSelectedLoan(
@@ -6379,9 +4819,730 @@ function loadLoansForSelectedClient(
     }
 
 
-    // ==========================================
-    // MULTIPLE OUTSTANDING LOANS
-    // ==========================================
+    /*
+     * Multiple outstanding loans:
+     * require the user to choose one.
+     */
+
+    loanGroup.style.display =
+        "";
+
+
+    clientLoans.forEach(
+        loan => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                loan.id;
+
+
+            option.textContent =
+                `${
+                    loan.loanNumber ||
+                    "Loan"
+                } — Balance ${
+                    currency(
+                        Number(
+                            loan.balance ||
+                            0
+                        )
+                    )
+                }`;
+
+
+            loanSelector.appendChild(
+                option
+            );
+        }
+    );
+
+
+    clearRepaymentFields();
+}
+
+
+// ==========================================
+// END OF PART 7/16
+// ==========================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 8/16
+// REPAYMENT MODAL + FAB REPAYMENT FLOW
+// ==========================================================
+
+
+// ==========================================================
+// CREATE FAB REPAYMENT SELECTORS
+// ==========================================================
+
+function createFabRepaymentSelectors(form) {
+
+    if (!form) {
+        return null;
+    }
+
+    let container =
+        document.getElementById(
+            "fab-repayment-selectors"
+        );
+
+    if (container) {
+        return container;
+    }
+
+    container =
+        document.createElement("div");
+
+    container.id =
+        "fab-repayment-selectors";
+
+    container.className =
+        "fab-repayment-selectors";
+
+    container.innerHTML = `
+
+        <div class="fab-repayment-selector-group">
+
+            <label
+                for="fab-repayment-client-select"
+            >
+                Client
+            </label>
+
+            <select
+                id="fab-repayment-client-select"
+            >
+
+                <option value="">
+                    Select Client
+                </option>
+
+            </select>
+
+        </div>
+
+        <div
+            class="fab-repayment-selector-group"
+            id="fab-repayment-loan-group"
+            style="display:none;"
+        >
+
+            <label
+                for="fab-repayment-loan-select"
+            >
+                Loan
+            </label>
+
+            <select
+                id="fab-repayment-loan-select"
+            >
+
+                <option value="">
+                    Select Loan
+                </option>
+
+            </select>
+
+        </div>
+    `;
+
+    /*
+     * Insert only once.
+     *
+     * This is important because loans.js may
+     * initialize more than once during Firebase
+     * refreshes. Recreating this container can
+     * break the repayment modal.
+     */
+
+    form.insertBefore(
+        container,
+        form.firstElementChild
+    );
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    if (clientSelector) {
+
+        clientSelector.addEventListener(
+            "change",
+            event => {
+
+                loadLoansForSelectedClient(
+                    event.target.value
+                );
+            }
+        );
+    }
+
+
+    if (loanSelector) {
+
+        loanSelector.addEventListener(
+            "change",
+            event => {
+
+                const id =
+                    event.target.value;
+
+                if (!id) {
+                    clearRepaymentFields();
+                    return;
+                }
+
+                fillRepaymentFromSelectedLoan(
+                    id
+                );
+            }
+        );
+    }
+
+
+    return container;
+}
+
+
+// ==========================================================
+// HIDE FAB REPAYMENT SELECTORS
+// ==========================================================
+
+function hideFabRepaymentSelectors() {
+
+    const container =
+        document.getElementById(
+            "fab-repayment-selectors"
+        );
+
+    if (container) {
+
+        container.style.display =
+            "none";
+    }
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    if (clientSelector) {
+
+        clientSelector.disabled =
+            true;
+    }
+
+
+    if (loanSelector) {
+
+        loanSelector.disabled =
+            true;
+    }
+}
+
+
+// ==========================================================
+// SHOW FAB REPAYMENT SELECTORS
+// ==========================================================
+
+function showFabRepaymentSelectors() {
+
+    const container =
+        document.getElementById(
+            "fab-repayment-selectors"
+        );
+
+    if (container) {
+
+        container.style.display =
+            "";
+    }
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+
+    if (clientSelector) {
+
+        clientSelector.disabled =
+            false;
+    }
+
+
+    if (loanSelector) {
+
+        loanSelector.disabled =
+            false;
+    }
+}
+
+
+// ==========================================================
+// POPULATE FAB CLIENT SELECTOR
+// ==========================================================
+
+function populateFabClientSelector() {
+
+    if (!repaymentForm) {
+        return;
+    }
+
+
+    const clientSelector =
+        document.getElementById(
+            "fab-repayment-client-select"
+        );
+
+
+    if (!clientSelector) {
+        return;
+    }
+
+
+    const previousValue =
+        clientSelector.value;
+
+
+    clientSelector.innerHTML = `
+        <option value="">
+            Select Client
+        </option>
+    `;
+
+
+    const sortedClients =
+        [...clients].sort(
+            (a, b) =>
+                String(
+                    a.name || ""
+                ).localeCompare(
+                    String(
+                        b.name || ""
+                    )
+                )
+        );
+
+
+    sortedClients.forEach(
+        client => {
+
+            const outstandingLoans =
+                loans.filter(
+                    loan => {
+
+                        const balance =
+                            Number(
+                                loan.balance ||
+                                0
+                            );
+
+                        const status =
+                            normalizeLoanStatus(
+                                loan.status
+                            );
+
+                        return (
+                            loan.clientId ===
+                                client.id &&
+
+                            balance > 0 &&
+
+                            status !==
+                                "Completed" &&
+
+                            status !==
+                                "Rejected"
+                        );
+                    }
+                );
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                client.id;
+
+
+            option.textContent =
+                client.name ||
+                "Unnamed Client";
+
+
+            /*
+             * Keep clients visible even when
+             * they have no outstanding loan.
+             *
+             * They are disabled rather than
+             * removed, which prevents confusion
+             * when searching for a client.
+             */
+
+            if (
+                outstandingLoans.length ===
+                0
+            ) {
+
+                option.textContent =
+                    `${
+                        client.name ||
+                        "Unnamed Client"
+                    } — No outstanding loan`;
+
+                option.disabled =
+                    true;
+            }
+
+
+            clientSelector.appendChild(
+                option
+            );
+        }
+    );
+
+
+    if (previousValue) {
+
+        const option =
+            [...clientSelector.options]
+                .find(
+                    item =>
+                        item.value ===
+                        previousValue
+                );
+
+        if (
+            option &&
+            !option.disabled
+        ) {
+
+            clientSelector.value =
+                previousValue;
+        }
+    }
+}
+
+
+// ==========================================================
+// OPEN FAB REPAYMENT SELECTOR
+// ==========================================================
+
+function openFabRepaymentSelector() {
+
+    const modal =
+        document.getElementById(
+            "repayment-modal"
+        );
+
+    const form =
+        document.getElementById(
+            "repayment-form"
+        );
+
+
+    if (
+        !modal ||
+        !form
+    ) {
+
+        alert(
+            "Repayment form is unavailable."
+        );
+
+        return;
+    }
+
+
+    /*
+     * This is normal FAB mode.
+     *
+     * The user selects:
+     *
+     * Client
+     *    ↓
+     * Outstanding loan
+     *    ↓
+     * Repayment amount
+     */
+
+    directLoanRepaymentMode =
+        false;
+
+    selectedLoanId =
+        null;
+
+
+    /*
+     * Reset only repayment fields.
+     *
+     * Do NOT reset the loans table or
+     * loan-details state.
+     */
+
+    repaymentForm?.reset();
+
+
+    if (repaymentLoanId) {
+
+        repaymentLoanId.value =
+            "";
+    }
+
+
+    if (repaymentBalance) {
+
+        repaymentBalance.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    createFabRepaymentSelectors(
+        form
+    );
+
+    showFabRepaymentSelectors();
+
+    populateFabClientSelector();
+
+
+    const loanGroup =
+        document.getElementById(
+            "fab-repayment-loan-group"
+        );
+
+    if (loanGroup) {
+
+        loanGroup.style.display =
+            "none";
+    }
+
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+    if (loanSelector) {
+
+        loanSelector.innerHTML = `
+            <option value="">
+                Select Loan
+            </option>
+        `;
+    }
+
+
+    /*
+     * Keep the modal above any loan details
+     * overlay without changing the table.
+     */
+
+    modal.style.position =
+        "fixed";
+
+    modal.style.zIndex =
+        "100001";
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    setTimeout(
+        () => {
+
+            repaymentAmount?.focus();
+
+        },
+        100
+    );
+}
+
+
+// ==========================================================
+// LOAD OUTSTANDING LOANS FOR CLIENT
+// ==========================================================
+
+function loadLoansForSelectedClient(
+    clientId
+) {
+
+    const loanSelector =
+        document.getElementById(
+            "fab-repayment-loan-select"
+        );
+
+    const loanGroup =
+        document.getElementById(
+            "fab-repayment-loan-group"
+        );
+
+
+    if (!clientId) {
+
+        if (loanSelector) {
+
+            loanSelector.innerHTML = `
+                <option value="">
+                    Select Loan
+                </option>
+            `;
+        }
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+        clearRepaymentFields();
+
+        return;
+    }
+
+
+    const clientLoans =
+        loans.filter(
+            loan => {
+
+                const balance =
+                    Number(
+                        loan.balance ||
+                        0
+                    );
+
+                const status =
+                    normalizeLoanStatus(
+                        loan.status
+                    );
+
+                return (
+                    loan.clientId ===
+                        clientId &&
+
+                    balance > 0 &&
+
+                    status !==
+                        "Completed" &&
+
+                    status !==
+                        "Rejected"
+                );
+            }
+        );
+
+
+    if (
+        clientLoans.length ===
+        0
+    ) {
+
+        clearRepaymentFields();
+
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+
+        return;
+    }
+
+
+    /*
+     * One outstanding loan:
+     * select it automatically.
+     */
+
+    if (
+        clientLoans.length ===
+        1
+    ) {
+
+        if (loanSelector) {
+
+            loanSelector.innerHTML = `
+                <option value="${clientLoans[0].id}">
+                    ${
+                        clientLoans[0].loanNumber ||
+                        "Loan"
+                    } — ${
+                        currency(
+                            clientLoans[0].balance ||
+                            0
+                        )
+                    } balance
+                </option>
+            `;
+
+            loanSelector.value =
+                clientLoans[0].id;
+        }
+
+
+        if (loanGroup) {
+
+            loanGroup.style.display =
+                "none";
+        }
+
+
+        fillRepaymentFromSelectedLoan(
+            clientLoans[0].id
+        );
+
+        return;
+    }
+
+
+    /*
+     * Multiple outstanding loans:
+     * require explicit loan selection.
+     */
 
     if (loanGroup) {
 
@@ -6392,66 +5553,74 @@ function loadLoansForSelectedClient(
 
     if (loanSelector) {
 
-        clientLoans.forEach(
-            loan => {
+        loanSelector.innerHTML = `
+            <option value="">
+                Select Loan
+            </option>
+        `;
 
-                const option =
-                    document.createElement(
-                        "option"
+
+        clientLoans
+            .sort(
+                (a, b) => {
+
+                    const dateA =
+                        new Date(
+                            a.approvalDate ||
+                            a.createdAt?.toDate?.() ||
+                            0
+                        );
+
+                    const dateB =
+                        new Date(
+                            b.approvalDate ||
+                            b.createdAt?.toDate?.() ||
+                            0
+                        );
+
+                    return (
+                        dateB -
+                        dateA
                     );
+                }
+            )
+            .forEach(
+                loan => {
 
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
 
-                option.value =
-                    loan.id;
+                    option.value =
+                        loan.id;
 
-
-                option.textContent =
-                    `${
-                        loan.loanNumber ||
-                        "Loan"
-                    } — Balance ${
-                        currency(
-                            Number(
+                    option.textContent =
+                        `${
+                            loan.loanNumber ||
+                            "Loan"
+                        } — Balance ${
+                            currency(
                                 loan.balance ||
                                 0
                             )
-                        )
-                    }`;
+                        }`;
 
-
-                loanSelector.appendChild(
-                    option
-                );
-            }
-        );
+                    loanSelector.appendChild(
+                        option
+                    );
+                }
+            );
     }
+
+
+    clearRepaymentFields();
 }
 
 
-// ==========================================
-// END OF PART 7/16
-// ==========================================// ==========================================
-// PART 8/16
-// REPAYMENT FORM + LOAN DETAILS INTEGRATION
-// ==========================================
-//
-// This section handles:
-// 1. Loading a selected loan into repayment form
-// 2. Clearing repayment fields safely
-// 3. Opening repayment from Loan Details
-// 4. Closing repayment modal
-// 5. Backdrop / ESC closing
-// 6. Repayment input validation
-// 7. Read-only client and balance fields
-//
-// IMPORTANT:
-// This section does NOT save repayments.
-// ==========================================
-
-
-// ==========================================
-// FILL REPAYMENT FROM SELECTED LOAN
-// ==========================================
+// ==========================================================
+// FILL REPAYMENT FORM FROM SELECTED LOAN
+// ==========================================================
 
 function fillRepaymentFromSelectedLoan(
     id
@@ -6473,31 +5642,9 @@ function fillRepaymentFromSelectedLoan(
     }
 
 
-    const balance =
-        Number(
-            loan.balance ||
-            0
-        );
+    selectedLoanId =
+        loan.id;
 
-
-    if (
-        balance <=
-        0
-    ) {
-
-        clearRepaymentFields();
-
-        alert(
-            "This loan has no outstanding balance."
-        );
-
-        return;
-    }
-
-
-    // ==========================================
-    // STORE LOAN ID
-    // ==========================================
 
     if (repaymentLoanId) {
 
@@ -6505,14 +5652,6 @@ function fillRepaymentFromSelectedLoan(
             loan.id;
     }
 
-
-    selectedLoanId =
-        loan.id;
-
-
-    // ==========================================
-    // CLIENT DISPLAY
-    // ==========================================
 
     if (repaymentClient) {
 
@@ -6522,54 +5661,32 @@ function fillRepaymentFromSelectedLoan(
         ) {
 
             repaymentClient.value =
-                loan.clientId ||
-                "";
+                loan.clientId || "";
 
         } else {
 
             repaymentClient.value =
-                loan.clientName ||
-                "";
+                loan.clientName || "";
         }
     }
 
-
-    // ==========================================
-    // BALANCE DISPLAY
-    // ==========================================
 
     if (repaymentBalance) {
 
         repaymentBalance.value =
             currency(
-                balance
+                Number(
+                    loan.balance ||
+                    0
+                )
             );
     }
 
-
-    // ==========================================
-    // DEFAULT DATE
-    // ==========================================
-
-    if (repaymentDate) {
-
-        repaymentDate.value =
-            today();
-    }
-
-
-    // ==========================================
-    // RESET PAYMENT INPUT
-    // ==========================================
 
     if (repaymentAmount) {
 
         repaymentAmount.value =
             "";
-
-        repaymentAmount.setCustomValidity(
-            ""
-        );
     }
 
 
@@ -6578,12 +5695,19 @@ function fillRepaymentFromSelectedLoan(
         repaymentNotes.value =
             "";
     }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
 }
 
 
-// ==========================================
+// ==========================================================
 // CLEAR REPAYMENT FIELDS
-// ==========================================
+// ==========================================================
 
 function clearRepaymentFields() {
 
@@ -6601,41 +5725,58 @@ function clearRepaymentFields() {
     }
 
 
-    if (
-        repaymentAmount &&
-        typeof repaymentAmount
-            .setCustomValidity ===
-            "function"
-    ) {
+    if (repaymentAmount) {
 
-        repaymentAmount.setCustomValidity(
-            ""
-        );
+        repaymentAmount.value =
+            "";
     }
 
 
-    /*
-     * Do not clear selectedLoanId here.
-     *
-     * It may be required to return to the
-     * currently open Loan Details page.
-     */
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentClient) {
+
+        if (
+            repaymentClient.tagName ===
+            "SELECT"
+        ) {
+
+            repaymentClient.value =
+                "";
+
+        } else {
+
+            repaymentClient.value =
+                "";
+        }
+    }
 }
 
 
-// ==========================================
-// OPEN REPAYMENT FROM LOAN DETAILS
-// ==========================================
+// ==========================================================
+// END OF PART 8/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 9/16
+// DIRECT REPAYMENT + MODAL CONTROLS
+// ==========================================================
 
-function openRepaymentForLoan(
-    id
-) {
+
+// ==========================================================
+// OPEN REPAYMENT DIRECTLY FROM LOAN DETAILS
+// ==========================================================
+
+function openRepaymentForLoan(id) {
 
     const loan =
         loans.find(
             item =>
-                item.id ===
-                id
+                item.id === id
         );
 
 
@@ -6656,10 +5797,7 @@ function openRepaymentForLoan(
         );
 
 
-    if (
-        balance <=
-        0
-    ) {
+    if (balance <= 0) {
 
         alert(
             "This loan has no outstanding balance."
@@ -6669,15 +5807,10 @@ function openRepaymentForLoan(
     }
 
 
-    // ==========================================
-    // GET MODAL + FORM
-    // ==========================================
-
     const modal =
         document.getElementById(
             "repayment-modal"
         );
-
 
     const form =
         document.getElementById(
@@ -6698,40 +5831,36 @@ function openRepaymentForLoan(
     }
 
 
-    // ==========================================
-    // DIRECT LOAN MODE
-    // ==========================================
+    /*
+     * DIRECT LOAN MODE
+     *
+     * The user opened repayment from
+     * a specific loan, so no client/loan
+     * selection is required.
+     */
 
     directLoanRepaymentMode =
         true;
-
 
     selectedLoanId =
         loan.id;
 
 
-    // ==========================================
-    // PREPARE FAB SELECTORS
-    // ==========================================
+    /*
+     * Make sure the selector container
+     * exists before hiding it.
+     */
 
     createFabRepaymentSelectors(
         form
     );
 
-
     hideFabRepaymentSelectors();
 
 
-    // ==========================================
-    // RESET FORM
-    // ==========================================
-
-    form.reset();
-
-
-    // ==========================================
-    // RESTORE SELECTED LOAN
-    // ==========================================
+    /*
+     * Populate the hidden loan ID.
+     */
 
     if (repaymentLoanId) {
 
@@ -6739,6 +5868,10 @@ function openRepaymentForLoan(
             loan.id;
     }
 
+
+    /*
+     * Populate client display.
+     */
 
     if (repaymentClient) {
 
@@ -6748,17 +5881,19 @@ function openRepaymentForLoan(
         ) {
 
             repaymentClient.value =
-                loan.clientId ||
-                "";
+                loan.clientId || "";
 
         } else {
 
             repaymentClient.value =
-                loan.clientName ||
-                "";
+                loan.clientName || "";
         }
     }
 
+
+    /*
+     * Populate current balance.
+     */
 
     if (repaymentBalance) {
 
@@ -6769,14 +5904,22 @@ function openRepaymentForLoan(
     }
 
 
+    /*
+     * Always use today's date when
+     * opening a new repayment.
+     */
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
     if (repaymentAmount) {
 
         repaymentAmount.value =
             "";
-
-        repaymentAmount.setCustomValidity(
-            ""
-        );
     }
 
 
@@ -6787,39 +5930,28 @@ function openRepaymentForLoan(
     }
 
 
-    if (repaymentDate) {
-
-        repaymentDate.value =
-            today();
-    }
-
-
-    // ==========================================
-    // SHOW MODAL ABOVE LOAN DETAILS
-    // ==========================================
+    /*
+     * Open modal above loan details.
+     *
+     * Do not modify loanDetailsOpen.
+     * Do not close the loans table.
+     */
 
     modal.style.position =
         "fixed";
 
-
     modal.style.zIndex =
         "100001";
-
 
     modal.classList.remove(
         "hidden"
     );
-
 
     modal.setAttribute(
         "aria-hidden",
         "false"
     );
 
-
-    // ==========================================
-    // FOCUS PAYMENT FIELD
-    // ==========================================
 
     setTimeout(
         () => {
@@ -6832,9 +5964,9 @@ function openRepaymentForLoan(
 }
 
 
-// ==========================================
+// ==========================================================
 // CLOSE REPAYMENT MODAL
-// ==========================================
+// ==========================================================
 
 function closeRepaymentModal() {
 
@@ -6849,53 +5981,56 @@ function closeRepaymentModal() {
     }
 
 
+    /*
+     * Remember whether repayment was
+     * opened from Loan Details.
+     */
+
+    const wasDirectMode =
+        directLoanRepaymentMode;
+
+    const returnLoanId =
+        selectedLoanId;
+
+
     modal.classList.add(
         "hidden"
     );
-
 
     modal.setAttribute(
         "aria-hidden",
         "true"
     );
 
-
     modal.style.zIndex =
         "";
 
-
-    // ==========================================
-    // REMEMBER WHETHER DETAILS WERE OPEN
-    // ==========================================
-
-    const wasDirectLoanMode =
-        directLoanRepaymentMode;
+    modal.style.position =
+        "";
 
 
-    const returnLoanId =
-        selectedLoanId;
-
-
-    // ==========================================
-    // RETURN TO NORMAL MODE
-    // ==========================================
+    /*
+     * Return to normal repayment mode.
+     */
 
     directLoanRepaymentMode =
         false;
 
 
-    // ==========================================
-    // RESET FORM VALUES
-    // ==========================================
+    /*
+     * Clear only repayment fields.
+     *
+     * This is deliberately isolated from
+     * the loans table.
+     */
+
+    clearRepaymentFields();
+
 
     if (repaymentAmount) {
 
         repaymentAmount.value =
             "";
-
-        repaymentAmount.setCustomValidity(
-            ""
-        );
     }
 
 
@@ -6913,31 +6048,25 @@ function closeRepaymentModal() {
     }
 
 
-    clearRepaymentFields();
-
-
-    // ==========================================
-    // RESTORE FAB SELECTORS
-    // ==========================================
+    /*
+     * Restore FAB selectors for the
+     * next normal repayment.
+     */
 
     showFabRepaymentSelectors();
 
 
     /*
-     * If the modal came from Loan Details,
-     * keep selectedLoanId so the details page
-     * can remain associated with the same loan.
+     * If repayment was opened from Loan
+     * Details, refresh ONLY that loan's
+     * details after the modal closes.
      */
 
     if (
-        wasDirectLoanMode &&
+        wasDirectMode &&
         returnLoanId &&
         loanDetailsOpen
     ) {
-
-        selectedLoanId =
-            returnLoanId;
-
 
         const updatedLoan =
             loans.find(
@@ -6949,27 +6078,17 @@ function closeRepaymentModal() {
 
         if (updatedLoan) {
 
-            try {
-
-                renderLoanDetailsPage(
-                    updatedLoan
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Loan details refresh error:",
-                    error
-                );
-            }
+            renderLoanDetailsPage(
+                updatedLoan
+            );
         }
     }
 }
 
 
-// ==========================================
-// REPAYMENT MODAL CLOSE BUTTONS
-// ==========================================
+// ==========================================================
+// REPAYMENT MODAL CLOSE BUTTON
+// ==========================================================
 
 document.addEventListener(
     "click",
@@ -6999,9 +6118,9 @@ document.addEventListener(
 );
 
 
-// ==========================================
-// REPAYMENT BACKDROP
-// ==========================================
+// ==========================================================
+// REPAYMENT MODAL BACKDROP
+// ==========================================================
 
 document
     .getElementById(
@@ -7022,9 +6141,9 @@ document
     );
 
 
-// ==========================================
-// ESCAPE KEY
-// ==========================================
+// ==========================================================
+// ESCAPE KEY — CLOSE REPAYMENT MODAL
+// ==========================================================
 
 document.addEventListener(
     "keydown",
@@ -7055,23 +6174,13 @@ document.addEventListener(
 
             return;
         }
-
-
-        if (
-            loanDetailsOpen &&
-            typeof closeLoanDetailsPage ===
-                "function"
-        ) {
-
-            closeLoanDetailsPage();
-        }
     }
 );
 
 
-// ==========================================
+// ==========================================================
 // REPAYMENT DATE DEFAULT
-// ==========================================
+// ==========================================================
 
 if (repaymentDate) {
 
@@ -7080,346 +6189,9 @@ if (repaymentDate) {
 }
 
 
-// ==========================================
+// ==========================================================
 // REPAYMENT AMOUNT INPUT SAFETY
-// ==========================================
-
-if (repaymentAmount) {
-
-    repaymentAmount.setAttribute(
-        "inputmode",
-        "decimal"
-    );
-
-
-    repaymentAmount.setAttribute(
-        "min",
-        "0"
-    );
-
-
-    repaymentAmount.addEventListener(
-        "input",
-        () => {
-
-            const loanId =
-                directLoanRepaymentMode
-                    ? (
-                        selectedLoanId ||
-                        repaymentLoanId?.value ||
-                        ""
-                    )
-                    : (
-                        repaymentLoanId?.value ||
-                        ""
-                    );
-
-
-            if (!loanId) {
-
-                repaymentAmount.setCustomValidity(
-                    ""
-                );
-
-                return;
-            }
-
-
-            const loan =
-                loans.find(
-                    item =>
-                        item.id ===
-                        loanId
-                );
-
-
-            if (!loan) {
-
-                repaymentAmount.setCustomValidity(
-                    ""
-                );
-
-                return;
-            }
-
-
-            const amount =
-                Number(
-                    repaymentAmount.value ||
-                    0
-                );
-
-
-            const balance =
-                Number(
-                    loan.balance ||
-                    0
-                );
-
-
-            if (
-                amount >
-                balance + 0.01
-            ) {
-
-                repaymentAmount.setCustomValidity(
-                    `Payment cannot exceed ${currency(
-                        balance
-                    )}.`
-                );
-
-            } else {
-
-                repaymentAmount.setCustomValidity(
-                    ""
-                );
-            }
-        }
-    );
-}
-
-
-// ==========================================
-// CLIENT DISPLAY READ-ONLY
-// ==========================================
-
-if (repaymentClient) {
-
-    if (
-        repaymentClient.tagName !==
-        "SELECT"
-    ) {
-
-        repaymentClient.readOnly =
-            true;
-    }
-}
-
-
-// ==========================================
-// BALANCE DISPLAY READ-ONLY
-// ==========================================
-
-if (repaymentBalance) {
-
-    repaymentBalance.readOnly =
-        true;
-}
-
-
-// ==========================================
-// REPAYMENT LOAN ID CHANGE
-// ==========================================
-
-repaymentLoanId
-    ?.addEventListener(
-        "change",
-        event => {
-
-            const id =
-                event.target.value;
-
-
-            if (!id) {
-
-                clearRepaymentFields();
-
-                return;
-            }
-
-
-            fillRepaymentFromSelectedLoan(
-                id
-            );
-        }
-    );
-
-
-// ==========================================
-// END OF PART 8/16
-// ==========================================// ==========================================
-// PART 9/16
-// REPAYMENT MODAL SAFETY + MESSAGING BRIDGE
-// ==========================================
-
-
-// ==========================================
-// CLOSE REPAYMENT MODAL
-// ==========================================
-
-function closeRepaymentModal() {
-
-    const modal =
-        document.getElementById(
-            "repayment-modal"
-        );
-
-    if (!modal) {
-        return;
-    }
-
-
-    modal.classList.add(
-        "hidden"
-    );
-
-    modal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
-
-    modal.style.zIndex = "";
-
-
-    // ------------------------------------------
-    // RETURN TO NORMAL REPAYMENT MODE
-    // ------------------------------------------
-
-    directLoanRepaymentMode =
-        false;
-
-
-    /*
-     * IMPORTANT:
-     *
-     * Do NOT clear selectedLoanId here.
-     *
-     * When repayment was opened from
-     * Loan Details, it is still needed
-     * to return to the correct loan.
-     */
-
-    clearRepaymentFields();
-
-
-    if (repaymentAmount) {
-
-        repaymentAmount.value =
-            "";
-    }
-
-
-    if (repaymentNotes) {
-
-        repaymentNotes.value =
-            "";
-    }
-
-
-    if (repaymentDate) {
-
-        repaymentDate.value =
-            today();
-    }
-
-
-    showFabRepaymentSelectors();
-}
-
-
-// ==========================================
-// REPAYMENT CLOSE BUTTONS
-// ==========================================
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const closeButton =
-            event.target.closest(
-                "#close-repayment-modal, " +
-                ".close-repayment-modal, " +
-                "[data-close=\"repayment-modal\"], " +
-                "[data-modal-close=\"repayment-modal\"]"
-            );
-
-
-        if (!closeButton) {
-            return;
-        }
-
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        closeRepaymentModal();
-    }
-);
-
-
-// ==========================================
-// REPAYMENT BACKDROP CLOSE
-// ==========================================
-
-document
-    .getElementById(
-        "repayment-modal"
-    )
-    ?.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target.id ===
-                "repayment-modal"
-            ) {
-
-                closeRepaymentModal();
-            }
-        }
-    );
-
-
-// ==========================================
-// ESCAPE KEY
-// ==========================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key !==
-            "Escape"
-        ) {
-            return;
-        }
-
-
-        const modal =
-            document.getElementById(
-                "repayment-modal"
-            );
-
-
-        if (
-            modal &&
-            !modal.classList.contains(
-                "hidden"
-            )
-        ) {
-
-            closeRepaymentModal();
-        }
-    }
-);
-
-
-// ==========================================
-// REPAYMENT DATE DEFAULT
-// ==========================================
-
-if (repaymentDate) {
-
-    repaymentDate.value =
-        today();
-}
-
-
-// ==========================================
-// REPAYMENT AMOUNT INPUT SAFETY
-// ==========================================
+// ==========================================================
 
 if (repaymentAmount) {
 
@@ -7432,22 +6204,19 @@ if (repaymentAmount) {
         "min",
         "0"
     );
+
+    repaymentAmount.setAttribute(
+        "step",
+        "0.01"
+    );
 }
 
 
-// ==========================================
+// ==========================================================
 // CLIENT DISPLAY SAFETY
-// ==========================================
+// ==========================================================
 
 if (repaymentClient) {
-
-    /*
-     * Client must never be manually
-     * changed when it is a text field.
-     *
-     * The client comes from the selected
-     * Firestore loan.
-     */
 
     if (
         repaymentClient.tagName !==
@@ -7460,9 +6229,9 @@ if (repaymentClient) {
 }
 
 
-// ==========================================
+// ==========================================================
 // BALANCE DISPLAY SAFETY
-// ==========================================
+// ==========================================================
 
 if (repaymentBalance) {
 
@@ -7471,9 +6240,9 @@ if (repaymentBalance) {
 }
 
 
-// ==========================================
-// REPAYMENT LOAN CHANGE
-// ==========================================
+// ==========================================================
+// REPAYMENT LOAN-ID CHANGE
+// ==========================================================
 
 repaymentLoanId
     ?.addEventListener(
@@ -7499,9 +6268,9 @@ repaymentLoanId
     );
 
 
-// ==========================================
+// ==========================================================
 // REPAYMENT AMOUNT VALIDATION
-// ==========================================
+// ==========================================================
 
 repaymentAmount
     ?.addEventListener(
@@ -7557,8 +6326,8 @@ repaymentAmount
 
 
             if (
-                Number.isFinite(amount) &&
-                amount > balance
+                amount >
+                balance
             ) {
 
                 repaymentAmount.setCustomValidity(
@@ -7577,9 +6346,9 @@ repaymentAmount
     );
 
 
-// ==========================================
+// ==========================================================
 // REPAYMENT SUBMISSION LOCK
-// ==========================================
+// ==========================================================
 
 let repaymentSubmissionStarted =
     false;
@@ -7591,12 +6360,11 @@ repaymentForm
         event => {
 
             /*
-             * This listener does NOT save
-             * the repayment.
+             * This listener does NOT perform
+             * the financial save.
              *
-             * It only blocks a second
-             * submit event while the main
-             * repayment handler is running.
+             * It only blocks accidental
+             * duplicate browser submissions.
              */
 
             if (
@@ -7604,6 +6372,7 @@ repaymentForm
             ) {
 
                 event.preventDefault();
+
                 event.stopImmediatePropagation();
 
                 return;
@@ -7615,13 +6384,8 @@ repaymentForm
 
 
             /*
-             * Release the browser-level
-             * protection after a short
-             * period.
-             *
-             * The main repaymentSaving
-             * variable remains responsible
-             * for the actual save protection.
+             * Give the main async repayment
+             * handler time to complete.
              */
 
             setTimeout(
@@ -7633,34 +6397,428 @@ repaymentForm
                 },
                 3000
             );
-
         },
         true
     );
 
 
-// ==========================================
+// ==========================================================
+// END OF PART 9/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 10/16
 // SAFE MESSAGING BRIDGE
-// ==========================================
+// ==========================================================
 
-/*
- * Messaging is completely isolated from
- * the financial transaction.
- *
- * loans.js remains fully functional even
- * when messaging.js:
- *
- * - is missing
- * - has an error
- * - has no phone number
- * - cannot open native SMS
- * - throws an exception
- *
- * IMPORTANT:
- *
- * This function does NOT directly modify
- * Firestore.
- */
+
+// ==========================================================
+// GET CLIENT DATA FOR MESSAGING
+// ==========================================================
+
+function getLoanClientForMessaging(loan) {
+
+    if (!loan) {
+        return null;
+    }
+
+
+    const client =
+        Array.isArray(clients)
+            ? clients.find(
+                item =>
+                    item.id ===
+                    loan.clientId
+            )
+            : null;
+
+
+    return {
+
+        id:
+            client?.id ||
+            loan.clientId ||
+            "",
+
+        name:
+            client?.name ||
+            loan.clientName ||
+            "",
+
+        phone:
+            client?.phone ||
+            client?.phoneNumber ||
+            client?.mobile ||
+            loan.clientPhone ||
+            loan.phone ||
+            ""
+    };
+}
+
+
+// ==========================================================
+// NORMALIZE PHONE NUMBER
+// ==========================================================
+
+function normalizeMessagingPhone(phone) {
+
+    if (
+        phone === null ||
+        phone === undefined
+    ) {
+        return "";
+    }
+
+
+    let value =
+        String(phone).trim();
+
+
+    if (!value) {
+        return "";
+    }
+
+
+    value =
+        value.replace(
+            /[\s().-]/g,
+            ""
+        );
+
+
+    /*
+     * Kenyan local formats:
+     *
+     * 07XXXXXXXX
+     * 01XXXXXXXX
+     *
+     * become:
+     *
+     * +2547XXXXXXXX
+     * +2541XXXXXXXX
+     */
+
+    if (
+        /^0[17]\d{8}$/.test(
+            value
+        )
+    ) {
+
+        value =
+            "+254" +
+            value.substring(1);
+    }
+
+
+    /*
+     * 254XXXXXXXXX
+     * becomes:
+     *
+     * +254XXXXXXXXX
+     */
+
+    if (
+        /^254[17]\d{8}$/.test(
+            value
+        )
+    ) {
+
+        value =
+            "+" +
+            value;
+    }
+
+
+    return value;
+}
+
+
+// ==========================================================
+// GET CLIENT PHONE
+// ==========================================================
+
+function getLoanClientPhone(loan) {
+
+    const client =
+        getLoanClientForMessaging(
+            loan
+        );
+
+
+    return normalizeMessagingPhone(
+        client?.phone
+    );
+}
+
+
+// ==========================================================
+// BUILD LOAN MESSAGING PAYLOAD
+// ==========================================================
+
+function buildLoanMessagingPayload(
+    loan,
+    options = {}
+) {
+
+    if (!loan) {
+        return null;
+    }
+
+
+    const client =
+        getLoanClientForMessaging(
+            loan
+        );
+
+
+    const phone =
+        normalizeMessagingPhone(
+            options.phone ||
+            client?.phone
+        );
+
+
+    return {
+
+        loanId:
+            loan.id ||
+            "",
+
+        loanNumber:
+            loan.loanNumber ||
+            "",
+
+        clientId:
+            client?.id ||
+            "",
+
+        clientName:
+            client?.name ||
+            "",
+
+        clientPhone:
+            phone,
+
+        phone:
+            phone,
+
+        loanAmount:
+            Number(
+                loan.amount ||
+                0
+            ),
+
+        amount:
+            Number(
+                options.amount ??
+                0
+            ),
+
+        paymentAmount:
+            Number(
+                options.paymentAmount ??
+                options.amount ??
+                0
+            ),
+
+        totalRepayment:
+            Number(
+                loan.totalRepayment ||
+                0
+            ),
+
+        amountPaid:
+            Number(
+                loan.amountPaid ||
+                0
+            ),
+
+        balance:
+            Number(
+                options.balance ??
+                loan.balance ??
+                0
+            ),
+
+        previousBalance:
+            Number(
+                options.previousBalance ??
+                0
+            ),
+
+        weeklyPayment:
+            Number(
+                loan.weeklyPayment ||
+                0
+            ),
+
+        nextRepaymentDate:
+            loan.nextRepaymentDate ||
+            "",
+
+        dueDate:
+            options.dueDate ||
+            loan.nextRepaymentDate ||
+            "",
+
+        status:
+            options.status ||
+            loan.status ||
+            "",
+
+        messageType:
+            options.messageType ||
+            options.type ||
+            "",
+
+        type:
+            options.messageType ||
+            options.type ||
+            ""
+    };
+}
+
+
+// ==========================================================
+// FIND MESSAGING FUNCTION
+// ==========================================================
+
+function getMessagingFunction() {
+
+    if (
+        typeof window ===
+        "undefined"
+    ) {
+        return null;
+    }
+
+
+    /*
+     * Support the different messaging
+     * exports used by the existing
+     * GREYMUS messaging versions.
+     */
+
+    const sources = [
+
+        window.GREYMUS_MESSAGING,
+
+        window.greymusMessaging,
+
+        window
+    ];
+
+
+    for (
+        const source
+        of sources
+    ) {
+
+        if (!source) {
+            continue;
+        }
+
+
+        const functionNames = [
+
+            "sendLoanMessage",
+
+            "sendClientMessage",
+
+            "sendMessage",
+
+            "openNativeSms",
+
+            "openClientSms"
+        ];
+
+
+        for (
+            const name
+            of functionNames
+        ) {
+
+            if (
+                typeof source[name] ===
+                "function"
+            ) {
+
+                return {
+
+                    fn:
+                        source[name],
+
+                    owner:
+                        source
+                };
+            }
+        }
+    }
+
+
+    return null;
+}
+
+
+// ==========================================================
+// CALL MESSAGING MODULE SAFELY
+// ==========================================================
+
+async function callMessagingModule(
+    payload
+) {
+
+    try {
+
+        if (!payload) {
+            return false;
+        }
+
+
+        const messenger =
+            getMessagingFunction();
+
+
+        if (!messenger) {
+
+            console.warn(
+                "GREYMUS messaging module is unavailable. Financial operation continues."
+            );
+
+            return false;
+        }
+
+
+        /*
+         * Do not let messaging errors
+         * propagate into loan operations.
+         */
+
+        await Promise.resolve(
+            messenger.fn.call(
+                messenger.owner,
+                payload
+            )
+        );
+
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "GREYMUS messaging error:",
+            error
+        );
+
+
+        return false;
+    }
+}
+
+
+// ==========================================================
+// SAFE GENERAL LOAN MESSAGE
+// ==========================================================
 
 async function sendLoanMessageSafely(
     loanId,
@@ -7689,163 +6847,32 @@ async function sendLoanMessageSafely(
         }
 
 
-        const client =
-            getLoanClientForMessaging
-                ? getLoanClientForMessaging(
-                    loan
-                )
-                : null;
-
-
-        /*
-         * Build one consistent payload
-         * for messaging.js.
-         */
-
-        const payload = {
-
-            loanId:
-                loan.id,
-
-            loanNumber:
-                loan.loanNumber ||
-                "",
-
-            loan:
+        const payload =
+            buildLoanMessagingPayload(
                 loan,
+                {
 
-            clientId:
-                client?.id ||
-                loan.clientId ||
-                "",
+                    ...extraData,
 
-            clientName:
-                client?.name ||
-                loan.clientName ||
-                "",
-
-            clientPhone:
-                extraData.clientPhone ||
-                extraData.phone ||
-                client?.phone ||
-                loan.clientPhone ||
-                loan.phone ||
-                "",
-
-            phone:
-                extraData.clientPhone ||
-                extraData.phone ||
-                client?.phone ||
-                loan.clientPhone ||
-                loan.phone ||
-                "",
-
-            amount:
-                Number(
-                    extraData.amount ||
-                    0
-                ),
-
-            paymentAmount:
-                Number(
-                    extraData.paymentAmount ||
-                    extraData.amount ||
-                    0
-                ),
-
-            balance:
-                Number(
-                    extraData.balance ??
-                    loan.balance ??
-                    0
-                ),
-
-            previousBalance:
-                Number(
-                    extraData.previousBalance ||
-                    0
-                ),
-
-            status:
-                extraData.status ||
-                loan.status ||
-                "",
-
-            messageType:
-                messageType,
-
-            type:
-                messageType
-        };
-
-
-        /*
-         * Find the messaging function
-         * without assuming one exact
-         * messaging.js version.
-         */
-
-        const messenger =
-            typeof window !==
-                "undefined"
-                ? (
-                    window.GREYMUS_MESSAGING ||
-                    window.greymusMessaging ||
-                    window
-                )
-                : null;
-
-
-        if (!messenger) {
-
-            console.warn(
-                "Messaging module unavailable. Financial operation continues."
+                    messageType:
+                        messageType
+                }
             );
 
+
+        if (!payload) {
             return false;
         }
 
 
-        const messagingFunction =
-            messenger.sendLoanMessage ||
-            messenger.sendClientMessage ||
-            messenger.sendMessage ||
-            messenger.openNativeSms ||
-            messenger.openClientSms;
-
-
-        if (
-            typeof messagingFunction !==
-            "function"
-        ) {
-
-            console.warn(
-                "No compatible messaging function found. Financial operation continues."
-            );
-
-            return false;
-        }
-
-
-        await Promise.resolve(
-            messagingFunction.call(
-                messenger,
-                payload
-            )
+        return await callMessagingModule(
+            payload
         );
-
-
-        return true;
 
     } catch (error) {
 
-        /*
-         * NEVER throw the messaging error
-         * back into loan processing.
-         */
-
         console.error(
-            "GREYMUS messaging integration error:",
+            "Safe loan messaging error:",
             error
         );
 
@@ -7855,11 +6882,67 @@ async function sendLoanMessageSafely(
 }
 
 
-// ==========================================
-// SAFE REPAYMENT MESSAGE
-// ==========================================
+// ==========================================================
+// SEND LOAN APPROVAL MESSAGE
+// ==========================================================
 
-async function sendRepaymentMessageSafely(
+async function sendLoanApprovalMessage(
+    loanId
+) {
+
+    try {
+
+        const loan =
+            loans.find(
+                item =>
+                    item.id ===
+                    loanId
+            );
+
+
+        if (!loan) {
+            return false;
+        }
+
+
+        const balance =
+            Number(
+                loan.balance ??
+                loan.totalRepayment ??
+                0
+            );
+
+
+        return await sendLoanMessageSafely(
+            loanId,
+            "loan-approved",
+            {
+
+                balance:
+                    balance,
+
+                status:
+                    "Active"
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Loan approval messaging error:",
+            error
+        );
+
+        return false;
+    }
+}
+
+
+// ==========================================================
+// SEND REPAYMENT MESSAGE
+// ==========================================================
+
+async function sendLoanRepaymentMessage(
     loanId,
     paymentAmount,
     previousBalance,
@@ -7869,14 +6952,20 @@ async function sendRepaymentMessageSafely(
 
     try {
 
+        const numericBalance =
+            Number(
+                newBalance ||
+                0
+            );
+
+
         let messageType =
             "partial";
 
 
         if (
-            Number(
-                newBalance
-            ) <= 0
+            numericBalance <=
+            0
         ) {
 
             messageType =
@@ -7909,675 +6998,11 @@ async function sendRepaymentMessageSafely(
                     previousBalance,
 
                 balance:
-                    newBalance,
+                    numericBalance,
 
                 status:
                     status
             }
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Safe repayment messaging error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// END OF PART 9/16
-// ==========================================// ==========================================
-// PART 10/16
-// MESSAGING CLIENT DATA + PHONE NORMALIZATION
-// ==========================================
-
-
-// ==========================================
-// GET CLIENT FOR MESSAGING
-// ==========================================
-
-function getLoanClientForMessaging(
-    loan
-) {
-
-    if (!loan) {
-        return null;
-    }
-
-
-    const client =
-        Array.isArray(clients)
-            ? clients.find(
-                item =>
-                    item.id ===
-                    loan.clientId
-            )
-            : null;
-
-
-    /*
-     * Prefer the current client record.
-     *
-     * If the client is not yet available
-     * in memory, safely fall back to the
-     * information stored on the loan.
-     */
-
-    return {
-
-        id:
-            client?.id ||
-            loan.clientId ||
-            "",
-
-        name:
-            client?.name ||
-            loan.clientName ||
-            "",
-
-        phone:
-            client?.phone ||
-            client?.phoneNumber ||
-            loan.clientPhone ||
-            loan.phone ||
-            ""
-    };
-}
-
-
-// ==========================================
-// NORMALIZE KENYAN PHONE NUMBER
-// ==========================================
-
-function normalizeMessagingPhone(
-    phone
-) {
-
-    if (
-        phone ===
-        null ||
-        phone ===
-        undefined
-    ) {
-
-        return "";
-    }
-
-
-    let value =
-        String(
-            phone
-        ).trim();
-
-
-    if (!value) {
-        return "";
-    }
-
-
-    /*
-     * Remove common formatting characters.
-     */
-
-    value =
-        value.replace(
-            /[\s().-]/g,
-            ""
-        );
-
-
-    /*
-     * Kenyan local format:
-     *
-     * 07XXXXXXXX
-     * 01XXXXXXXX
-     *
-     * becomes:
-     *
-     * +2547XXXXXXXX
-     * +2541XXXXXXXX
-     */
-
-    if (
-        /^0[17]\d{8}$/.test(
-            value
-        )
-    ) {
-
-        value =
-            "+254" +
-            value.substring(
-                1
-            );
-    }
-
-
-    /*
-     * Kenyan international format
-     * without the plus sign.
-     */
-
-    else if (
-        /^254[17]\d{8}$/.test(
-            value
-        )
-    ) {
-
-        value =
-            "+" +
-            value;
-    }
-
-
-    /*
-     * If the number is already in
-     * +254 format, leave it unchanged.
-     */
-
-    return value;
-}
-
-
-// ==========================================
-// GET CURRENT CLIENT PHONE
-// ==========================================
-
-function getLoanClientPhone(
-    loan
-) {
-
-    const client =
-        getLoanClientForMessaging(
-            loan
-        );
-
-
-    return normalizeMessagingPhone(
-        client?.phone
-    );
-}
-
-
-// ==========================================
-// BUILD STANDARD LOAN MESSAGE PAYLOAD
-// ==========================================
-
-function buildLoanMessagingPayload(
-    loan,
-    options = {}
-) {
-
-    if (!loan) {
-        return null;
-    }
-
-
-    const client =
-        getLoanClientForMessaging(
-            loan
-        );
-
-
-    const phone =
-        normalizeMessagingPhone(
-            options.phone ||
-            client?.phone
-        );
-
-
-    return {
-
-        /*
-         * Loan identity
-         */
-
-        loanId:
-            loan.id,
-
-        loanNumber:
-            loan.loanNumber ||
-            "",
-
-
-        /*
-         * Client identity
-         */
-
-        clientId:
-            client?.id ||
-            loan.clientId ||
-            "",
-
-        clientName:
-            client?.name ||
-            loan.clientName ||
-            "",
-
-        clientPhone:
-            phone,
-
-        phone:
-            phone,
-
-
-        /*
-         * Financial information
-         */
-
-        loanAmount:
-            Number(
-                loan.amount ||
-                0
-            ),
-
-        amount:
-            Number(
-                options.amount ||
-                0
-            ),
-
-        paymentAmount:
-            Number(
-                options.paymentAmount ||
-                options.amount ||
-                0
-            ),
-
-        totalRepayment:
-            Number(
-                loan.totalRepayment ||
-                0
-            ),
-
-        amountPaid:
-            Number(
-                loan.amountPaid ||
-                0
-            ),
-
-        balance:
-            Number(
-                options.balance ??
-                loan.balance ??
-                0
-            ),
-
-        previousBalance:
-            Number(
-                options.previousBalance ||
-                0
-            ),
-
-        weeklyPayment:
-            Number(
-                loan.weeklyPayment ||
-                0
-            ),
-
-
-        /*
-         * Dates
-         */
-
-        nextRepaymentDate:
-            loan.nextRepaymentDate ||
-            "",
-
-        dueDate:
-            options.dueDate ||
-            loan.nextRepaymentDate ||
-            "",
-
-
-        /*
-         * Status / message type
-         */
-
-        status:
-            options.status ||
-            loan.status ||
-            "",
-
-        messageType:
-            options.messageType ||
-            "",
-
-        type:
-            options.messageType ||
-            ""
-    };
-}
-
-
-// ==========================================
-// FIND MESSAGING FUNCTION
-// ==========================================
-
-function getMessagingFunction() {
-
-    try {
-
-        if (
-            typeof window ===
-            "undefined"
-        ) {
-
-            return null;
-        }
-
-
-        /*
-         * Support messaging.js versions
-         * that expose a namespace.
-         */
-
-        const messenger =
-            window.GREYMUS_MESSAGING ||
-            window.greymusMessaging;
-
-
-        if (messenger) {
-
-            return {
-
-                context:
-                    messenger,
-
-                function:
-                    messenger.sendLoanMessage ||
-                    messenger.sendClientMessage ||
-                    messenger.sendMessage ||
-                    messenger.openNativeSms ||
-                    messenger.openClientSms
-            };
-        }
-
-
-        /*
-         * Also support versions that
-         * expose functions directly on
-         * window.
-         */
-
-        return {
-
-            context:
-                window,
-
-            function:
-                window.sendLoanMessage ||
-                window.sendClientMessage ||
-                window.sendMessage ||
-                window.openNativeSms ||
-                window.openClientSms
-        };
-
-    } catch (error) {
-
-        console.error(
-            "Unable to locate messaging module:",
-            error
-        );
-
-        return null;
-    }
-}
-
-
-// ==========================================
-// CALL MESSAGING.JS SAFELY
-// ==========================================
-
-async function callMessagingModule(
-    payload
-) {
-
-    try {
-
-        if (!payload) {
-
-            return false;
-        }
-
-
-        const messaging =
-            getMessagingFunction();
-
-
-        if (
-            !messaging ||
-            typeof messaging.function !==
-                "function"
-        ) {
-
-            console.warn(
-                "GREYMUS messaging.js is unavailable. Continuing without messaging."
-            );
-
-            return false;
-        }
-
-
-        /*
-         * Call messaging.js with the
-         * complete standardized payload.
-         *
-         * Any error is caught locally.
-         */
-
-        await Promise.resolve(
-            messaging.function.call(
-                messaging.context,
-                payload
-            )
-        );
-
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "GREYMUS messaging call failed:",
-            error
-        );
-
-
-        /*
-         * Messaging must NEVER break:
-         *
-         * - loan approval
-         * - repayment saving
-         * - balance calculation
-         * - Firestore updates
-         */
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// SEND LOAN APPROVAL MESSAGE
-// ==========================================
-
-async function sendLoanApprovalMessage(
-    loanId
-) {
-
-    try {
-
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
-        if (!loan) {
-
-            return false;
-        }
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                loan,
-                {
-
-                    messageType:
-                        "loan-approved",
-
-                    balance:
-                        Number(
-                            loan.balance ||
-                            loan.totalRepayment ||
-                            0
-                        ),
-
-                    status:
-                        loan.status ||
-                        "Active"
-                }
-            );
-
-
-        if (!payload) {
-
-            return false;
-        }
-
-
-        return await callMessagingModule(
-            payload
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Loan approval messaging error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// SEND REPAYMENT MESSAGE
-// ==========================================
-
-async function sendLoanRepaymentMessage(
-    loanId,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    try {
-
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
-        if (!loan) {
-
-            return false;
-        }
-
-
-        let messageType =
-            "partial";
-
-
-        /*
-         * Fully cleared loan.
-         */
-
-        if (
-            Number(
-                newBalance
-            ) <= 0
-        ) {
-
-            messageType =
-                "full";
-        }
-
-
-        /*
-         * Payment made while the loan
-         * still has arrears.
-         */
-
-        else if (
-            normalizeLoanStatus(
-                status
-            ) ===
-            "Arrears"
-        ) {
-
-            messageType =
-                "partial-arrears";
-        }
-
-
-        /*
-         * Normal partial repayment.
-         */
-
-        else {
-
-            messageType =
-                "partial";
-        }
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                loan,
-                {
-
-                    messageType:
-                        messageType,
-
-                    amount:
-                        paymentAmount,
-
-                    paymentAmount:
-                        paymentAmount,
-
-                    previousBalance:
-                        previousBalance,
-
-                    balance:
-                        newBalance,
-
-                    status:
-                        status
-                }
-            );
-
-
-        if (!payload) {
-
-            return false;
-        }
-
-
-        return await callMessagingModule(
-            payload
         );
 
     } catch (error) {
@@ -8592,127 +7017,842 @@ async function sendLoanRepaymentMessage(
 }
 
 
-// ==========================================
+// ==========================================================
 // END OF PART 10/16
-// ==========================================// ==========================================
-// PART 11/16
-// APPROVAL MESSAGE + REPAYMENT MESSAGE HELPERS
-// ==========================================
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 11/16
+// REPAYMENT SUBMISSION
+// ==========================================================
 
 
-// ==========================================
-// BUILD APPROVED LOAN SNAPSHOT
-// ==========================================
+// ==========================================================
+// REPAYMENT SUBMISSION
+// ==========================================================
 
-function buildApprovedLoanSnapshot(
-    loan,
-    approvalDate,
-    schedule
-) {
+repaymentForm?.addEventListener(
+    "submit",
+    async event => {
 
-    if (!loan) {
-        return null;
-    }
+        event.preventDefault();
 
 
-    return {
-
-        ...loan,
-
-        approvalDate:
-            formatDate(
-                approvalDate
-            ),
-
-        repaymentSchedule:
-            schedule,
-
-        nextRepaymentDate:
-            schedule?.length
-                ? schedule[0].dueDate
-                : "-",
-
-        remainingInstallments:
-            schedule?.length ||
-            0,
-
-        status:
-            "Active",
-
-        completed:
-            false
-    };
-}
-
-
-// ==========================================
-// SEND APPROVAL MESSAGE SAFELY
-// ==========================================
-
-async function sendApprovalMessageSafely(
-    loan,
-    approvalDate,
-    schedule
-) {
-
-    try {
-
-        if (!loan) {
-            return false;
+        if (repaymentSaving) {
+            return;
         }
 
 
-        const approvedLoan =
-            buildApprovedLoanSnapshot(
-                loan,
-                approvalDate,
-                schedule
+        const loanId =
+            directLoanRepaymentMode
+                ? (
+                    selectedLoanId ||
+                    repaymentLoanId?.value
+                )
+                : repaymentLoanId?.value;
+
+
+        const loan =
+            loans.find(
+                item =>
+                    item.id ===
+                    loanId
             );
 
 
-        if (!approvedLoan) {
-            return false;
+        if (!loan) {
+
+            alert(
+                directLoanRepaymentMode
+                    ? "The selected loan could not be found."
+                    : "Please select a client with an outstanding loan."
+            );
+
+            return;
+        }
+
+
+        const payment =
+            Number(
+                repaymentAmount?.value ||
+                0
+            );
+
+
+        if (
+            !Number.isFinite(payment) ||
+            payment <= 0
+        ) {
+
+            alert(
+                "Enter a valid repayment amount."
+            );
+
+            repaymentAmount?.focus();
+
+            return;
+        }
+
+
+        const currentBalance =
+            Number(
+                loan.balance ||
+                0
+            );
+
+
+        if (currentBalance <= 0) {
+
+            alert(
+                "This loan has no outstanding balance."
+            );
+
+            return;
+        }
+
+
+        if (
+            payment >
+            currentBalance
+        ) {
+
+            alert(
+                "Payment cannot exceed the outstanding balance."
+            );
+
+            return;
+        }
+
+
+        if (
+            !confirm(
+                `Confirm repayment of ${currency(
+                    payment
+                )} for ${loan.clientName || "this client"}?`
+            )
+        ) {
+            return;
+        }
+
+
+        repaymentSaving =
+            true;
+
+
+        const saveButton =
+            repaymentForm.querySelector(
+                'button[type="submit"]'
+            );
+
+
+        const originalButtonText =
+            saveButton?.innerHTML ||
+            "Save Repayment";
+
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+            saveButton.innerHTML =
+                "Saving...";
+        }
+
+
+        try {
+
+            // ==================================================
+            // COPY REPAYMENT SCHEDULE
+            // ==================================================
+
+            const schedule =
+                Array.isArray(
+                    loan.repaymentSchedule
+                )
+                    ? JSON.parse(
+                        JSON.stringify(
+                            loan.repaymentSchedule
+                        )
+                    )
+                    : [];
+
+
+            if (!schedule.length) {
+
+                throw new Error(
+                    "This loan does not have a repayment schedule."
+                );
+            }
+
+
+            let remainingPayment =
+                payment;
+
+
+            // ==================================================
+            // APPLY PAYMENT TO EARLIEST UNPAID INSTALLMENTS
+            // ==================================================
+
+            for (
+                const installment
+                of schedule
+            ) {
+
+                if (
+                    remainingPayment <=
+                    0.009
+                ) {
+                    break;
+                }
+
+
+                const installmentAmount =
+                    Number(
+                        installment.amount ||
+                        0
+                    );
+
+
+                const alreadyPaid =
+                    Number(
+                        installment.paidAmount ||
+                        0
+                    );
+
+
+                const remainingAmount =
+                    Math.max(
+                        installmentAmount -
+                        alreadyPaid,
+                        0
+                    );
+
+
+                if (
+                    remainingAmount <=
+                    0
+                ) {
+
+                    installment.paid =
+                        true;
+
+                    installment.status =
+                        "Paid";
+
+                    installment.remainingAmount =
+                        0;
+
+                    continue;
+                }
+
+
+                const applied =
+                    Math.min(
+                        remainingPayment,
+                        remainingAmount
+                    );
+
+
+                installment.paidAmount =
+                    alreadyPaid +
+                    applied;
+
+
+                installment.remainingAmount =
+                    Math.max(
+                        installmentAmount -
+                        installment.paidAmount,
+                        0
+                    );
+
+
+                if (
+                    !Array.isArray(
+                        installment.paymentHistory
+                    )
+                ) {
+
+                    installment.paymentHistory =
+                        [];
+                }
+
+
+                const paymentRecord = {
+
+                    paymentId:
+                        `PAY-${Date.now()}-${Math.random()
+                            .toString(36)
+                            .slice(2, 8)}`,
+
+                    amount:
+                        applied,
+
+                    date:
+                        repaymentDate?.value ||
+                        today(),
+
+                    notes:
+                        repaymentNotes?.value ||
+                        "",
+
+                    repaymentDocId:
+                        null
+                };
+
+
+                installment.paymentHistory.push(
+                    paymentRecord
+                );
+
+
+                if (
+                    installment.remainingAmount <=
+                    0.009
+                ) {
+
+                    installment.remainingAmount =
+                        0;
+
+                    installment.paid =
+                        true;
+
+                    installment.status =
+                        "Paid";
+
+                    installment.paidDate =
+                        paymentRecord.date;
+
+                } else {
+
+                    installment.paid =
+                        false;
+
+                    installment.status =
+                        "Partial";
+
+                    installment.paidDate =
+                        null;
+                }
+
+
+                remainingPayment -=
+                    applied;
+            }
+
+
+            // ==================================================
+            // VERIFY FULL PAYMENT ALLOCATION
+            // ==================================================
+
+            if (
+                remainingPayment >
+                0.01
+            ) {
+
+                throw new Error(
+                    "The repayment could not be fully allocated to the loan schedule."
+                );
+            }
+
+
+            // ==================================================
+            // CALCULATE NEW LOAN TOTALS
+            // ==================================================
+
+            const previousAmountPaid =
+                Number(
+                    loan.amountPaid ||
+                    0
+                );
+
+
+            const newAmountPaid =
+                previousAmountPaid +
+                payment;
+
+
+            const totalRepayment =
+                Number(
+                    loan.totalRepayment ||
+                    0
+                );
+
+
+            const newBalance =
+                Math.max(
+                    totalRepayment -
+                    newAmountPaid,
+                    0
+                );
+
+
+            // ==================================================
+            // FIND NEXT UNPAID INSTALLMENT
+            // ==================================================
+
+            const nextInstallment =
+                schedule.find(
+                    installment => {
+
+                        return (
+                            !installment.paid &&
+                            Number(
+                                installment.remainingAmount ||
+                                0
+                            ) > 0
+                        );
+                    }
+                );
+
+
+            const nextRepaymentDate =
+                nextInstallment
+                    ? nextInstallment.dueDate
+                    : null;
+
+
+            const remainingInstallments =
+                schedule.filter(
+                    installment =>
+                        !installment.paid
+                ).length;
+
+
+            // ==================================================
+            // DETERMINE NEW STATUS
+            // ==================================================
+
+            let newStatus =
+                "Active";
+
+
+            if (
+                newBalance <=
+                0
+            ) {
+
+                newStatus =
+                    "Completed";
+
+            } else if (
+                nextRepaymentDate &&
+                nextRepaymentDate <
+                    today()
+            ) {
+
+                newStatus =
+                    "Arrears";
+
+            } else {
+
+                newStatus =
+                    "Active";
+            }
+
+
+            // ==================================================
+            // CALCULATE REPAYMENT INCOME
+            // ==================================================
+
+            const totalInterest =
+                Math.max(
+                    totalRepayment -
+                    Number(
+                        loan.amount ||
+                        0
+                    ),
+                    0
+                );
+
+
+            const interestRatio =
+                totalRepayment > 0
+                    ? totalInterest /
+                      totalRepayment
+                    : 0;
+
+
+            const repaymentInterest =
+                payment *
+                interestRatio;
+
+
+            const newTotalIncome =
+                Number(
+                    loan.totalIncome ||
+                    0
+                ) +
+                repaymentInterest;
+
+
+            // ==================================================
+            // UPDATE LOAN
+            // ==================================================
+
+            await updateDoc(
+                doc(
+                    db,
+                    "loans",
+                    loan.id
+                ),
+                {
+
+                    amountPaid:
+                        newAmountPaid,
+
+                    balance:
+                        newBalance,
+
+                    totalIncome:
+                        newTotalIncome,
+
+                    repaymentSchedule:
+                        schedule,
+
+                    nextRepaymentDate:
+                        nextRepaymentDate ||
+                        "-",
+
+                    remainingInstallments:
+                        remainingInstallments,
+
+                    status:
+                        newStatus,
+
+                    completed:
+                        newBalance <=
+                        0,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
+
+            // ==================================================
+            // CREATE REPAYMENT RECORD
+            // ==================================================
+
+            const repaymentRef =
+                await addDoc(
+                    collection(
+                        db,
+                        "repayments"
+                    ),
+                    {
+
+                        loanId:
+                            loan.id,
+
+                        loanNumber:
+                            loan.loanNumber ||
+                            "",
+
+                        clientId:
+                            loan.clientId ||
+                            "",
+
+                        clientName:
+                            loan.clientName ||
+                            "",
+
+                        amount:
+                            payment,
+
+                        date:
+                            repaymentDate?.value ||
+                            today(),
+
+                        notes:
+                            repaymentNotes?.value ||
+                            "",
+
+                        balanceBefore:
+                            currentBalance,
+
+                        balanceAfter:
+                            newBalance,
+
+                        recordedBy:
+                            localStorage.getItem(
+                                "userName"
+                            ) ||
+                            localStorage.getItem(
+                                "userEmail"
+                            ) ||
+                            "Unknown Officer",
+
+                        createdAt:
+                            serverTimestamp(),
+
+                        timestamp:
+                            new Date()
+                                .toISOString()
+                    }
+                );
+
+
+            // ==================================================
+            // LINK REPAYMENT DOCUMENT TO PAYMENT RECORD
+            // ==================================================
+
+            let paymentLinked =
+                false;
+
+
+            for (
+                const installment
+                of schedule
+            ) {
+
+                if (
+                    !Array.isArray(
+                        installment.paymentHistory
+                    )
+                ) {
+                    continue;
+                }
+
+
+                for (
+                    const record
+                    of installment.paymentHistory
+                ) {
+
+                    if (
+                        record.paymentId &&
+                        !record.repaymentDocId &&
+                        !paymentLinked
+                    ) {
+
+                        record.repaymentDocId =
+                            repaymentRef.id;
+
+                        paymentLinked =
+                            true;
+                    }
+                }
+            }
+
+
+            if (paymentLinked) {
+
+                await updateDoc(
+                    doc(
+                        db,
+                        "loans",
+                        loan.id
+                    ),
+                    {
+
+                        repaymentSchedule:
+                            schedule,
+
+                        updatedAt:
+                            serverTimestamp()
+                    }
+                );
+            }
+
+
+            // ==================================================
+            // HISTORY
+            // ==================================================
+
+            await logHistory(
+                "Repayment Received",
+                "Repayment",
+                {
+
+                    loanId:
+                        loan.loanNumber ||
+                        loan.id,
+
+                    client:
+                        loan.clientName ||
+                        "",
+
+                    amount:
+                        payment,
+
+                    previousBalance:
+                        currentBalance,
+
+                    newBalance:
+                        newBalance,
+
+                    status:
+                        newStatus
+                }
+            );
+
+
+            // ==================================================
+            // END OF PART 11
+            // ==================================================
+
+        } catch (error) {
+
+            console.error(
+                "Repayment save error:",
+                error
+            );
+
+
+            alert(
+                "Failed to save repayment.\n\n" +
+                (
+                    error?.message ||
+                    "Unknown error."
+                )
+            );
+
+        } finally {
+
+            repaymentSaving =
+                false;
+
+
+            if (saveButton) {
+
+                saveButton.disabled =
+                    false;
+
+                saveButton.innerHTML =
+                    originalButtonText;
+            }
+        }
+    }
+);
+
+
+// ==========================================================
+// END OF PART 11/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 12/16
+// REPAYMENT → CLIENT MESSAGE INTEGRATION
+//
+// IMPORTANT:
+// Financial processing is completed BEFORE messaging.
+// Messaging errors can NEVER cancel a successful repayment.
+// ==========================================================
+
+
+// ==========================================================
+// REPAYMENT MESSAGE AFTER SUCCESSFUL TRANSACTION
+// ==========================================================
+
+async function triggerRepaymentClientMessage(
+    loan,
+    paymentAmount,
+    previousBalance,
+    newBalance,
+    newStatus
+) {
+
+    if (!loan) {
+        return false;
+    }
+
+
+    try {
+
+        /*
+         * Determine the correct message type.
+         *
+         * full:
+         * Loan has been completely cleared.
+         *
+         * partial-arrears:
+         * Payment was received but the loan remains
+         * in arrears.
+         *
+         * partial:
+         * Normal partial repayment.
+         */
+
+        let messageType =
+            "partial";
+
+
+        if (
+            Number(newBalance) <= 0
+        ) {
+
+            messageType =
+                "full";
+
+        } else if (
+            normalizeLoanStatus(
+                newStatus
+            ) === "Arrears"
+        ) {
+
+            messageType =
+                "partial-arrears";
         }
 
 
         /*
-         * IMPORTANT:
-         *
-         * The approval message is called
-         * ONLY after Firestore has already
-         * successfully changed the loan to
-         * Active.
+         * Build the message payload using the
+         * updated financial information.
          */
 
         const payload =
             buildLoanMessagingPayload(
-                approvedLoan,
+                loan,
                 {
 
                     messageType:
-                        "loan-approved",
+                        messageType,
 
-                    status:
-                        "Active",
-
-                    balance:
+                    amount:
                         Number(
-                            approvedLoan.balance ||
-                            approvedLoan.totalRepayment ||
+                            paymentAmount ||
                             0
                         ),
 
-                    dueDate:
-                        approvedLoan
-                            .nextRepaymentDate
+                    paymentAmount:
+                        Number(
+                            paymentAmount ||
+                            0
+                        ),
+
+                    previousBalance:
+                        Number(
+                            previousBalance ||
+                            0
+                        ),
+
+                    balance:
+                        Number(
+                            newBalance ||
+                            0
+                        ),
+
+                    status:
+                        newStatus
                 }
             );
 
 
         if (!payload) {
+
+            console.warn(
+                "Repayment message skipped: payload unavailable."
+            );
+
             return false;
         }
 
+
+        /*
+         * Messaging is optional.
+         *
+         * The repayment is already successful,
+         * so any messaging error is isolated.
+         */
 
         return await callMessagingModule(
             payload
@@ -8721,7 +7861,7 @@ async function sendApprovalMessageSafely(
     } catch (error) {
 
         console.error(
-            "Safe approval message error:",
+            "Repayment client message error:",
             error
         );
 
@@ -8730,167 +7870,51 @@ async function sendApprovalMessageSafely(
 }
 
 
-// ==========================================
-// DETERMINE REPAYMENT MESSAGE TYPE
-// ==========================================
+// ==========================================================
+// LOAN APPROVAL → CLIENT MESSAGE
+// ==========================================================
 
-function getRepaymentMessageType(
-    newBalance,
-    status
-) {
-
-    const balance =
-        Number(
-            newBalance ||
-            0
-        );
-
-
-    /*
-     * Loan completely cleared.
-     */
-
-    if (
-        balance <=
-        0
-    ) {
-
-        return "full";
-    }
-
-
-    /*
-     * Payment made while loan remains
-     * in arrears.
-     */
-
-    if (
-        normalizeLoanStatus(
-            status
-        ) ===
-        "Arrears"
-    ) {
-
-        return "partial-arrears";
-    }
-
-
-    /*
-     * Normal partial repayment.
-     */
-
-    return "partial";
-}
-
-
-// ==========================================
-// BUILD REPAYMENT MESSAGE PAYLOAD
-// ==========================================
-
-function buildRepaymentMessagePayload(
-    loan,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
+async function triggerLoanApprovalClientMessage(
+    loan
 ) {
 
     if (!loan) {
-        return null;
+        return false;
     }
 
 
-    const messageType =
-        getRepaymentMessageType(
-            newBalance,
-            status
-        );
-
-
-    return buildLoanMessagingPayload(
-        loan,
-        {
-
-            messageType:
-                messageType,
-
-            amount:
-                paymentAmount,
-
-            paymentAmount:
-                paymentAmount,
-
-            previousBalance:
-                previousBalance,
-
-            balance:
-                newBalance,
-
-            status:
-                status
-        }
-    );
-}
-
-
-// ==========================================
-// SEND REPAYMENT MESSAGE SAFELY
-// ==========================================
-
-async function sendRepaymentMessageAfterSave(
-    loanId,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
     try {
 
-        /*
-         * Get the latest local loan.
-         */
-
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
-        if (!loan) {
-
-            console.warn(
-                "Repayment message skipped: loan not found.",
-                loanId
-            );
-
-            return false;
-        }
-
-
         const payload =
-            buildRepaymentMessagePayload(
+            buildLoanMessagingPayload(
                 loan,
-                paymentAmount,
-                previousBalance,
-                newBalance,
-                status
+                {
+
+                    messageType:
+                        "loan-approved",
+
+                    balance:
+                        Number(
+                            loan.balance ??
+                            loan.totalRepayment ??
+                            0
+                        ),
+
+                    status:
+                        "Active"
+                }
             );
 
 
         if (!payload) {
+
+            console.warn(
+                "Approval message skipped: payload unavailable."
+            );
+
             return false;
         }
 
-
-        /*
-         * Messaging is intentionally isolated.
-         *
-         * Failure here does not affect the
-         * repayment already saved to Firestore.
-         */
 
         return await callMessagingModule(
             payload
@@ -8899,7 +7923,7 @@ async function sendRepaymentMessageAfterSave(
     } catch (error) {
 
         console.error(
-            "Post-repayment messaging error:",
+            "Loan approval client message error:",
             error
         );
 
@@ -8908,30 +7932,39 @@ async function sendRepaymentMessageAfterSave(
 }
 
 
-// ==========================================
-// PUBLIC MESSAGE HELPER
-// ==========================================
+// ==========================================================
+// SAFE MESSAGE BRIDGE
+// ==========================================================
 
-async function sendClientLoanMessage(
-    loanId,
-    messageType,
+async function safelyNotifyLoanClient(
+    loan,
     options = {}
 ) {
 
+    /*
+     * This function intentionally catches ALL
+     * messaging errors.
+     *
+     * Never throw a messaging exception back
+     * into repayment or loan approval logic.
+     */
+
     try {
 
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
         if (!loan) {
+            return false;
+        }
+
+
+        const messageType =
+            options.messageType ||
+            "";
+
+
+        if (!messageType) {
 
             console.warn(
-                "Cannot send client message: loan not found."
+                "Client notification skipped: message type missing."
             );
 
             return false;
@@ -8963,7 +7996,7 @@ async function sendClientLoanMessage(
     } catch (error) {
 
         console.error(
-            "Client loan message error:",
+            "Safe client notification error:",
             error
         );
 
@@ -8972,12 +8005,20 @@ async function sendClientLoanMessage(
 }
 
 
-// ==========================================
-// MESSAGE CURRENT LOAN STATUS
-// ==========================================
+// ==========================================================
+// PUBLIC COMPATIBILITY HELPERS
+// ==========================================================
 
-async function messageCurrentLoanStatus(
-    loanId
+/*
+ * These wrappers allow older sections of loans.js
+ * to continue calling the messaging layer without
+ * requiring messaging.js to expose one exact API.
+ */
+
+async function sendLoanMessageSafely(
+    loanId,
+    messageType,
+    extraData = {}
 ) {
 
     try {
@@ -8995,57 +8036,21 @@ async function messageCurrentLoanStatus(
         }
 
 
-        const status =
-            normalizeLoanStatus(
-                loan.status
-            );
-
-
-        let messageType =
-            "partial";
-
-
-        if (
-            status ===
-            "Arrears"
-        ) {
-
-            messageType =
-                "arrears";
-        }
-
-
-        if (
-            status ===
-            "Completed"
-        ) {
-
-            messageType =
-                "full";
-        }
-
-
-        return await sendClientLoanMessage(
-            loan.id,
-            messageType,
+        return await safelyNotifyLoanClient(
+            loan,
             {
 
-                balance:
-                    Number(
-                        loan.balance ||
-                        0
-                    ),
+                ...extraData,
 
-                status:
-                    loan.status ||
-                    ""
+                messageType:
+                    messageType
             }
         );
 
     } catch (error) {
 
         console.error(
-            "Loan status messaging error:",
+            "sendLoanMessageSafely error:",
             error
         );
 
@@ -9054,76 +8059,7 @@ async function messageCurrentLoanStatus(
 }
 
 
-// ==========================================
-// OPTIONAL GLOBAL BRIDGE
-// ==========================================
-
-/*
- * These functions are exposed only as
- * safe bridges for messaging.js or other
- * UI modules.
- *
- * They do not directly modify Firestore.
- */
-
-if (
-    typeof window !==
-    "undefined"
-) {
-
-    window.GREYMUS_LOAN_MESSAGING = {
-
-        getClient:
-            getLoanClientForMessaging,
-
-        getPhone:
-            getLoanClientPhone,
-
-        buildPayload:
-            buildLoanMessagingPayload,
-
-        sendLoanApproval:
-            sendLoanApprovalMessage,
-
-        sendRepayment:
-            sendLoanRepaymentMessage,
-
-        sendMessage:
-            sendClientLoanMessage,
-
-        messageStatus:
-            messageCurrentLoanStatus
-    };
-}
-
-
-// ==========================================
-// END OF PART 11/16
-// ==========================================// ==========================================
-// PART 12/16
-// REPAYMENT → CLIENT MESSAGE INTEGRATION
-// ==========================================
-
-
-// ==========================================
-// SEND REPAYMENT MESSAGE AFTER SUCCESS
-// ==========================================
-
-/*
- * IMPORTANT:
- *
- * This function must ONLY be called after:
- *
- * 1. Loan has been updated
- * 2. Repayment document has been saved
- * 3. Repayment schedule has been saved
- * 4. History has been recorded
- *
- * Messaging failure NEVER reverses or
- * interrupts the financial transaction.
- */
-
-async function processRepaymentClientMessage(
+async function sendRepaymentMessageSafely(
     loanId,
     paymentAmount,
     previousBalance,
@@ -9142,415 +8078,12 @@ async function processRepaymentClientMessage(
 
 
         if (!loan) {
-
-            console.warn(
-                "Repayment message skipped: loan not found."
-            );
-
             return false;
         }
 
 
-        /*
-         * Build the message type from the
-         * FINAL loan state.
-         */
-
-        const messageType =
-            getRepaymentMessageType(
-                newBalance,
-                status
-            );
-
-
-        /*
-         * Build a fresh snapshot.
-         *
-         * This is important because the
-         * local loan object may still contain
-         * the old balance immediately after
-         * Firestore update.
-         */
-
-        const messagingLoan = {
-
-            ...loan,
-
-            amountPaid:
-                Number(
-                    loan.amountPaid ||
-                    0
-                ),
-
-            balance:
-                Number(
-                    newBalance ||
-                    0
-                ),
-
-            status:
-                status ||
-                loan.status ||
-                "",
-
-            nextRepaymentDate:
-                loan.nextRepaymentDate ||
-                "-",
-
-            remainingInstallments:
-                Number(
-                    loan.remainingInstallments ||
-                    0
-                )
-        };
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                messagingLoan,
-                {
-
-                    messageType:
-                        messageType,
-
-                    amount:
-                        paymentAmount,
-
-                    paymentAmount:
-                        paymentAmount,
-
-                    previousBalance:
-                        previousBalance,
-
-                    balance:
-                        newBalance,
-
-                    status:
-                        status
-                }
-            );
-
-
-        if (!payload) {
-
-            return false;
-        }
-
-
-        /*
-         * callMessagingModule() catches
-         * messaging.js errors internally.
-         */
-
-        return await callMessagingModule(
-            payload
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Post-repayment client message error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// REPAYMENT MESSAGE TYPE DETAILS
-// ==========================================
-
-function getRepaymentMessageDetails(
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    const payment =
-        Number(
-            paymentAmount ||
-            0
-        );
-
-
-    const before =
-        Number(
-            previousBalance ||
-            0
-        );
-
-
-    const after =
-        Number(
-            newBalance ||
-            0
-        );
-
-
-    const normalizedStatus =
-        normalizeLoanStatus(
-            status
-        );
-
-
-    let messageType =
-        "partial";
-
-
-    if (
-        after <=
-        0
-    ) {
-
-        messageType =
-            "full";
-
-    } else if (
-        normalizedStatus ===
-        "Arrears"
-    ) {
-
-        messageType =
-            "partial-arrears";
-    }
-
-
-    return {
-
-        messageType,
-
-        paymentAmount:
-            payment,
-
-        previousBalance:
-            before,
-
-        newBalance:
-            after,
-
-        status:
-            status || ""
-    };
-}
-
-
-// ==========================================
-// REPAYMENT MESSAGE WRAPPER
-// ==========================================
-
-async function sendRepaymentClientMessage(
-    loanId,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    try {
-
-        const details =
-            getRepaymentMessageDetails(
-                paymentAmount,
-                previousBalance,
-                newBalance,
-                status
-            );
-
-
-        return await processRepaymentClientMessage(
-            loanId,
-
-            details.paymentAmount,
-
-            details.previousBalance,
-
-            details.newBalance,
-
-            details.status
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Repayment client message wrapper error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// APPROVAL → CLIENT MESSAGE
-// ==========================================
-
-async function processLoanApprovalClientMessage(
-    loanId,
-    approvalDate,
-    schedule
-) {
-
-    try {
-
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
-        if (!loan) {
-
-            console.warn(
-                "Approval message skipped: loan not found."
-            );
-
-            return false;
-        }
-
-
-        /*
-         * Construct the approved state
-         * without waiting for a realtime
-         * Firestore listener.
-         */
-
-        const approvedLoan = {
-
-            ...loan,
-
-            approvalDate:
-                formatDate(
-                    approvalDate
-                ),
-
-            repaymentSchedule:
-                Array.isArray(
-                    schedule
-                )
-                    ? schedule
-                    : [],
-
-            nextRepaymentDate:
-                schedule?.length
-                    ? schedule[0].dueDate
-                    : "-",
-
-            remainingInstallments:
-                schedule?.length ||
-                0,
-
-            status:
-                "Active",
-
-            completed:
-                false
-        };
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                approvedLoan,
-                {
-
-                    messageType:
-                        "loan-approved",
-
-                    status:
-                        "Active",
-
-                    balance:
-                        Number(
-                            approvedLoan.balance ||
-                            approvedLoan.totalRepayment ||
-                            0
-                        ),
-
-                    dueDate:
-                        approvedLoan.nextRepaymentDate
-                }
-            );
-
-
-        if (!payload) {
-
-            return false;
-        }
-
-
-        return await callMessagingModule(
-            payload
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Loan approval client message error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// SAFE APPROVAL MESSAGE WRAPPER
-// ==========================================
-
-async function sendLoanApprovalMessageSafely(
-    loanId,
-    approvalDate,
-    schedule
-) {
-
-    try {
-
-        return await processLoanApprovalClientMessage(
-            loanId,
-            approvalDate,
-            schedule
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Safe loan approval message error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// MESSAGE AFTER REPAYMENT
-// ==========================================
-
-async function notifyClientAfterRepayment(
-    loanId,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    /*
-     * Deliberately do not throw.
-     *
-     * The repayment is already complete.
-     */
-
-    try {
-
-        await sendRepaymentClientMessage(
-            loanId,
+        return await triggerRepaymentClientMessage(
+            loan,
             paymentAmount,
             previousBalance,
             newBalance,
@@ -9560,693 +8093,49 @@ async function notifyClientAfterRepayment(
     } catch (error) {
 
         console.error(
-            "Client repayment notification failed:",
+            "sendRepaymentMessageSafely error:",
             error
         );
+
+        return false;
     }
 }
 
 
-// ==========================================
-// MESSAGE AFTER LOAN APPROVAL
-// ==========================================
-
-async function notifyClientAfterLoanApproval(
-    loanId,
-    approvalDate,
-    schedule
-) {
-
-    /*
-     * Deliberately do not throw.
-     */
-
-    try {
-
-        await sendLoanApprovalMessageSafely(
-            loanId,
-            approvalDate,
-            schedule
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Client approval notification failed:",
-            error
-        );
-    }
-}
-
-
-// ==========================================
-// IMPORTANT INTEGRATION NOTE
-// ==========================================
-
-/*
- * DO NOT create another repaymentForm
- * submit listener in this part.
- *
- * The main repayment submission handler
- * from the earlier part remains the ONLY
- * handler responsible for saving repayments.
- *
- * After the repayment has successfully
- * been saved and history recorded, call:
- *
- * notifyClientAfterRepayment(
- *     loan.id,
- *     payment,
- *     currentBalance,
- *     newBalance,
- *     newStatus
- * );
- *
- * This keeps:
- *
- * REPAYMENT
- *    ↓
- * FIRESTORE
- *    ↓
- * HISTORY
- *    ↓
- * MESSAGING.JS
- *
- * Messaging cannot break the repayment.
- */
-
-
-// ==========================================
-// IMPORTANT APPROVAL INTEGRATION NOTE
-// ==========================================
-
-/*
- * After the loan approval update and
- * approval history have succeeded, call:
- *
- * notifyClientAfterLoanApproval(
- *     loan.id,
- *     approvalDate,
- *     schedule
- * );
- *
- * The loan remains Active even if SMS
- * messaging fails.
- */
-
-
-// ==========================================
+// ==========================================================
 // END OF PART 12/16
-// ==========================================// ==========================================
-// PART 13/16
-// LOAN APPROVAL + REPAYMENT MESSAGE HOOKS
-// ==========================================
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 13/16
+// LOAN DETAILS + REPAYMENT ACTIONS
+// ==========================================================
 
 
-// ==========================================
-// APPROVAL MESSAGE HOOK
-// ==========================================
+// ==========================================================
+// GET LOAN DETAILS BY ID
+// ==========================================================
 
-async function runLoanApprovalMessageHook(
-    loan,
-    approvalDate,
-    schedule
-) {
+function getLoanDetailsById(id) {
 
-    try {
-
-        if (!loan) {
-            return false;
-        }
-
-
-        /*
-         * The loan must already have been
-         * approved before this function
-         * is called.
-         */
-
-        const approvedLoan = {
-
-            ...loan,
-
-            approvalDate:
-                formatDate(
-                    approvalDate
-                ),
-
-            repaymentSchedule:
-                Array.isArray(
-                    schedule
-                )
-                    ? schedule
-                    : [],
-
-            nextRepaymentDate:
-                Array.isArray(schedule) &&
-                schedule.length
-                    ? schedule[0].dueDate
-                    : "-",
-
-            remainingInstallments:
-                Array.isArray(schedule)
-                    ? schedule.length
-                    : 0,
-
-            status:
-                "Active",
-
-            completed:
-                false
-        };
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                approvedLoan,
-                {
-
-                    messageType:
-                        "loan-approved",
-
-                    status:
-                        "Active",
-
-                    balance:
-                        Number(
-                            approvedLoan.balance ||
-                            approvedLoan.totalRepayment ||
-                            0
-                        ),
-
-                    dueDate:
-                        approvedLoan
-                            .nextRepaymentDate
-                }
-            );
-
-
-        if (!payload) {
-            return false;
-        }
-
-
-        return await callMessagingModule(
-            payload
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Loan approval messaging hook error:",
-            error
-        );
-
-        return false;
+    if (!id) {
+        return null;
     }
+
+    return loans.find(
+        loan =>
+            loan.id === id
+    ) || null;
 }
 
 
-// ==========================================
-// REPAYMENT MESSAGE HOOK
-// ==========================================
-
-async function runRepaymentMessageHook(
-    loan,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    try {
-
-        if (!loan) {
-            return false;
-        }
-
-
-        /*
-         * Determine the correct message
-         * from the FINAL repayment result.
-         */
-
-        const messageType =
-            getRepaymentMessageType(
-                newBalance,
-                status
-            );
-
-
-        /*
-         * Create a fresh loan snapshot so
-         * messaging.js receives the new
-         * balance rather than the old one.
-         */
-
-        const updatedLoan = {
-
-            ...loan,
-
-            amountPaid:
-                Number(
-                    loan.amountPaid ||
-                    0
-                ),
-
-            balance:
-                Number(
-                    newBalance ||
-                    0
-                ),
-
-            status:
-                status ||
-                loan.status ||
-                "",
-
-            completed:
-                Number(
-                    newBalance ||
-                    0
-                ) <= 0
-        };
-
-
-        const payload =
-            buildLoanMessagingPayload(
-                updatedLoan,
-                {
-
-                    messageType:
-                        messageType,
-
-                    amount:
-                        paymentAmount,
-
-                    paymentAmount:
-                        paymentAmount,
-
-                    previousBalance:
-                        previousBalance,
-
-                    balance:
-                        newBalance,
-
-                    status:
-                        status
-                }
-            );
-
-
-        if (!payload) {
-            return false;
-        }
-
-
-        return await callMessagingModule(
-            payload
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Repayment messaging hook error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// FINAL REPAYMENT NOTIFICATION
-// ==========================================
-
-async function notifyRepaymentSuccessfullySaved(
-    loan,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    try {
-
-        /*
-         * Messaging happens only after the
-         * financial transaction has succeeded.
-         */
-
-        await runRepaymentMessageHook(
-            loan,
-            paymentAmount,
-            previousBalance,
-            newBalance,
-            status
-        );
-
-    } catch (error) {
-
-        /*
-         * Never allow a messaging problem
-         * to turn a successful repayment
-         * into a failed repayment.
-         */
-
-        console.error(
-            "Final repayment notification error:",
-            error
-        );
-    }
-}
-
-
-// ==========================================
-// FINAL APPROVAL NOTIFICATION
-// ==========================================
-
-async function notifyLoanApprovedSuccessfully(
-    loan,
-    approvalDate,
-    schedule
-) {
-
-    try {
-
-        /*
-         * Messaging is secondary to the
-         * successful loan approval.
-         */
-
-        await runLoanApprovalMessageHook(
-            loan,
-            approvalDate,
-            schedule
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Final loan approval notification error:",
-            error
-        );
-    }
-}
-
-
-// ==========================================
-// SAFE LOAN APPROVAL OPERATION
-// ==========================================
-
-async function approveLoanWithMessaging(
-    id
-) {
-
-    const loan =
-        loans.find(
-            item =>
-                item.id ===
-                id
-        );
-
-
-    if (
-        !loan ||
-        normalizeLoanStatus(
-            loan.status
-        ) !==
-            "Pending"
-    ) {
-
-        alert(
-            "Loan is already active or has been processed."
-        );
-
-        return false;
-    }
-
-
-    if (
-        !confirm(
-            `Approve loan ${
-                loan.loanNumber || ""
-            } for ${
-                loan.clientName || ""
-            }?`
-        )
-    ) {
-
-        return false;
-    }
-
-
-    try {
-
-        const approvalDate =
-            new Date();
-
-
-        const schedule =
-            generateRepaymentSchedule(
-                approvalDate,
-                loan.duration,
-                loan.weeklyPayment,
-                loan.totalRepayment
-            );
-
-
-        /*
-         * FIRST:
-         * Save the actual loan approval.
-         */
-
-        await updateDoc(
-            doc(
-                db,
-                "loans",
-                loan.id
-            ),
-            {
-
-                approvalDate:
-                    formatDate(
-                        approvalDate
-                    ),
-
-                repaymentSchedule:
-                    schedule,
-
-                nextRepaymentDate:
-                    schedule.length
-                        ? schedule[0].dueDate
-                        : "-",
-
-                remainingInstallments:
-                    schedule.length,
-
-                status:
-                    "Active",
-
-                completed:
-                    false,
-
-                updatedAt:
-                    serverTimestamp()
-            }
-        );
-
-
-        /*
-         * SECOND:
-         * Record approval history.
-         */
-
-        await logHistory(
-            "Loan Approved",
-            "Loan",
-            {
-
-                loanId:
-                    loan.loanNumber,
-
-                client:
-                    loan.clientName,
-
-                amount:
-                    loan.amount,
-
-                newStatus:
-                    "Active"
-            }
-        );
-
-
-        /*
-         * THIRD:
-         * Send the client message.
-         *
-         * This is deliberately last.
-         */
-
-        const approvedLoan = {
-
-            ...loan,
-
-            approvalDate:
-                formatDate(
-                    approvalDate
-                ),
-
-            repaymentSchedule:
-                schedule,
-
-            nextRepaymentDate:
-                schedule.length
-                    ? schedule[0].dueDate
-                    : "-",
-
-            remainingInstallments:
-                schedule.length,
-
-            status:
-                "Active",
-
-            completed:
-                false
-        };
-
-
-        await notifyLoanApprovedSuccessfully(
-            approvedLoan,
-            approvalDate,
-            schedule
-        );
-
-
-        alert(
-            "Loan approved successfully. Status is now Active."
-        );
-
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "Loan approval failed:",
-            error
-        );
-
-
-        alert(
-            "Failed to approve loan."
-        );
-
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// REPAYMENT SUCCESS HOOK
-// ==========================================
-
-async function completeRepaymentNotification(
-    loanId,
-    paymentAmount,
-    previousBalance,
-    newBalance,
-    status
-) {
-
-    try {
-
-        const loan =
-            loans.find(
-                item =>
-                    item.id ===
-                    loanId
-            );
-
-
-        if (!loan) {
-            return false;
-        }
-
-
-        /*
-         * Create the final loan state
-         * received by messaging.js.
-         */
-
-        const finalLoan = {
-
-            ...loan,
-
-            balance:
-                Number(
-                    newBalance ||
-                    0
-                ),
-
-            status:
-                status ||
-                loan.status ||
-                "",
-
-            completed:
-                Number(
-                    newBalance ||
-                    0
-                ) <= 0
-        };
-
-
-        await notifyRepaymentSuccessfullySaved(
-            finalLoan,
-            paymentAmount,
-            previousBalance,
-            newBalance,
-            status
-        );
-
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "Repayment completion hook error:",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-// ==========================================
-// END OF PART 13/16
-// ==========================================// ==========================================
-// LOAN DETAILS PAGE
-// PART 14/16
-// ==========================================
-
-
-// ==========================================
-// OPEN LOAN DETAILS
-// ==========================================
+// ==========================================================
+// OPEN LOAN DETAILS PAGE
+// ==========================================================
 
 function openLoanDetailsPage(id) {
 
     const loan =
-        loans.find(
-            item =>
-                item.id === id
-        );
+        getLoanDetailsById(id);
 
     if (!loan) {
 
@@ -10257,16 +8146,11 @@ function openLoanDetailsPage(id) {
         return;
     }
 
-
     selectedLoanId =
         loan.id;
 
-    previousLoansOpen =
-        !loanDetailsOpen;
-
     loanDetailsOpen =
         true;
-
 
     renderLoanDetailsPage(
         loan
@@ -10274,59 +8158,9 @@ function openLoanDetailsPage(id) {
 }
 
 
-// ==========================================
-// CLOSE LOAN DETAILS PAGE
-// ==========================================
-
-function closeLoanDetailsPage() {
-
-    loanDetailsOpen =
-        false;
-
-    selectedLoanId =
-        null;
-
-
-    const detailsPage =
-        document.getElementById(
-            "loan-details-page"
-        );
-
-
-    if (detailsPage) {
-
-        detailsPage.classList.add(
-            "hidden"
-        );
-
-        detailsPage.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-    }
-
-
-    const loansSection =
-        document.getElementById(
-            "loans-section"
-        );
-
-
-    if (loansSection) {
-
-        loansSection.classList.remove(
-            "hidden"
-        );
-    }
-
-
-    filterLoans();
-}
-
-
-// ==========================================
+// ==========================================================
 // RENDER LOAN DETAILS PAGE
-// ==========================================
+// ==========================================================
 
 function renderLoanDetailsPage(
     loan
@@ -10336,28 +8170,19 @@ function renderLoanDetailsPage(
         return;
     }
 
-
-    const detailsPage =
+    const container =
         document.getElementById(
             "loan-details-page"
         );
 
-
-    if (!detailsPage) {
+    if (!container) {
 
         console.warn(
-            "Loan details page element was not found."
+            "Loan details container not found."
         );
 
         return;
     }
-
-
-    selectedLoanId =
-        loan.id;
-
-    loanDetailsOpen =
-        true;
 
 
     const schedule =
@@ -10368,53 +8193,21 @@ function renderLoanDetailsPage(
             : [];
 
 
-    const amount =
+    const balance =
         Number(
-            loan.amount ||
-            0
-        );
-
-
-    const totalRepayment =
-        Number(
-            loan.totalRepayment ||
-            0
+            loan.balance || 0
         );
 
 
     const amountPaid =
         Number(
-            loan.amountPaid ||
-            0
+            loan.amountPaid || 0
         );
 
 
-    const balance =
-        Math.max(
-            Number(
-                loan.balance ??
-                totalRepayment -
-                amountPaid
-            ),
-            0
-        );
-
-
-    const processingFee =
+    const totalRepayment =
         Number(
-            loan.processingFee ||
-            0
-        );
-
-
-    const interest =
-        Number(
-            loan.interest ||
-            Math.max(
-                totalRepayment -
-                amount,
-                0
-            )
+            loan.totalRepayment || 0
         );
 
 
@@ -10429,8 +8222,8 @@ function renderLoanDetailsPage(
             item =>
                 !item.paid &&
                 Number(
-                    item.remainingAmount ??
-                    item.amount ??
+                    item.remainingAmount ||
+                    item.amount ||
                     0
                 ) > 0
         );
@@ -10442,646 +8235,338 @@ function renderLoanDetailsPage(
         "-";
 
 
-    const client =
-        getLoanClientForMessaging(
-            loan
-        );
+    container.innerHTML = `
 
+        <div class="loan-details-header">
 
-    const clientPhone =
-        normalizeMessagingPhone(
-            client?.phone
-        );
-
-
-    // ==========================================
-    // SCHEDULE HTML
-    // ==========================================
-
-    const scheduleHtml =
-        schedule.length
-            ? schedule
-                .map(
-                    (item, index) => {
-
-                        const installmentAmount =
-                            Number(
-                                item.amount ||
-                                0
-                            );
-
-
-                        const paidAmount =
-                            Number(
-                                item.paidAmount ||
-                                0
-                            );
-
-
-                        const remainingAmount =
-                            Math.max(
-                                Number(
-                                    item.remainingAmount ??
-                                    installmentAmount -
-                                    paidAmount
-                                ),
-                                0
-                            );
-
-
-                        let installmentStatus =
-                            item.status ||
-                            (
-                                item.paid
-                                    ? "Paid"
-                                    : (
-                                        paidAmount >
-                                        0
-                                            ? "Partial"
-                                            : "Pending"
-                                    )
-                            );
-
-
-                        const normalizedItemStatus =
-                            String(
-                                installmentStatus
-                            ).toLowerCase();
-
-
-                        if (
-                            !item.paid &&
-                            item.dueDate &&
-                            item.dueDate <
-                                today() &&
-                            remainingAmount > 0
-                        ) {
-
-                            installmentStatus =
-                                "Arrears";
-                        }
-
-
-                        return `
-                            <div
-                                class="repayment-schedule-card"
-                                data-installment-index="${index}"
-                            >
-
-                                <div
-                                    class="repayment-schedule-header"
-                                >
-
-                                    <strong>
-                                        Installment ${
-                                            index + 1
-                                        }
-                                    </strong>
-
-                                    <span
-                                        class="schedule-status ${normalizedItemStatus}"
-                                    >
-                                        ${
-                                            installmentStatus
-                                        }
-                                    </span>
-
-                                </div>
-
-
-                                <div
-                                    class="repayment-schedule-row"
-                                >
-
-                                    <span>
-                                        Due Date
-                                    </span>
-
-                                    <strong>
-                                        ${
-                                            item.dueDate ||
-                                            "-"
-                                        }
-                                    </strong>
-
-                                </div>
-
-
-                                <div
-                                    class="repayment-schedule-row"
-                                >
-
-                                    <span>
-                                        Amount
-                                    </span>
-
-                                    <strong>
-                                        ${
-                                            currency(
-                                                installmentAmount
-                                            )
-                                        }
-                                    </strong>
-
-                                </div>
-
-
-                                <div
-                                    class="repayment-schedule-row"
-                                >
-
-                                    <span>
-                                        Paid
-                                    </span>
-
-                                    <strong>
-                                        ${
-                                            currency(
-                                                paidAmount
-                                            )
-                                        }
-                                    </strong>
-
-                                </div>
-
-
-                                <div
-                                    class="repayment-schedule-row"
-                                >
-
-                                    <span>
-                                        Remaining
-                                    </span>
-
-                                    <strong>
-                                        ${
-                                            currency(
-                                                remainingAmount
-                                            )
-                                        }
-                                    </strong>
-
-                                </div>
-
-                            </div>
-                        `;
-                    }
-                )
-                .join("")
-            : `
-                <div
-                    class="empty-state"
-                >
-                    No repayment schedule available.
-                </div>
-            `;
-
-
-    // ==========================================
-    // LOAN DETAILS CONTENT
-    // ==========================================
-
-    detailsPage.innerHTML = `
-
-        <div
-            class="loan-details-wrapper"
-        >
-
-            <div
-                class="loan-details-topbar"
+            <button
+                type="button"
+                class="loan-details-back"
+                id="loan-details-back"
             >
+                ← Back
+            </button>
 
-                <button
-                    type="button"
-                    class="back-button"
-                    data-action="close-loan-details"
-                    aria-label="Back to loans"
-                >
-                    ← Back
-                </button>
+            <div>
 
+                <h2>
+                    Loan Details
+                </h2>
 
-                <div
-                    class="loan-details-actions"
-                >
-
+                <div class="loan-details-client-name">
                     ${
-                        status ===
-                        "Pending"
-                            ? `
-                                <button
-                                    type="button"
-                                    class="btn btn-primary"
-                                    data-action="approve-loan"
-                                    data-loan-id="${loan.id}"
-                                >
-                                    Approve Loan
-                                </button>
-                            `
-                            : ""
+                        loan.clientName ||
+                        "Unnamed Client"
                     }
-
-
-                    ${
-                        balance > 0 &&
-                        status !==
-                        "Pending"
-                            ? `
-                                <button
-                                    type="button"
-                                    class="btn btn-success"
-                                    data-action="receive-repayment"
-                                    data-loan-id="${loan.id}"
-                                >
-                                    Receive Repayment
-                                </button>
-                            `
-                            : ""
-                    }
-
-
-                    ${
-                        isAdmin() &&
-                        status === "Pending"
-                            ? `
-                                <button
-                                    type="button"
-                                    class="btn btn-danger"
-                                    data-action="delete-loan"
-                                    data-loan-id="${loan.id}"
-                                >
-                                    Delete Loan
-                                </button>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="loan-details-header"
-            >
-
-                <div>
-
-                    <h2>
-                        ${
-                            client?.name ||
-                            loan.clientName ||
-                            "Unnamed Client"
-                        }
-                    </h2>
-
-                    <p>
-                        ${
-                            loan.loanNumber ||
-                            "Loan"
-                        }
-                    </p>
-
-                </div>
-
-
-                <span
-                    class="loan-status-badge ${String(
-                        status
-                    ).toLowerCase()}"
-                >
-                    ${status}
-                </span>
-
-            </div>
-
-
-            <div
-                class="loan-summary-grid"
-            >
-
-                <div
-                    class="loan-summary-card"
-                >
-
-                    <span>
-                        Loan Amount
-                    </span>
-
-                    <strong>
-                        ${currency(amount)}
-                    </strong>
-
-                </div>
-
-
-                <div
-                    class="loan-summary-card"
-                >
-
-                    <span>
-                        Total Repayment
-                    </span>
-
-                    <strong>
-                        ${currency(totalRepayment)}
-                    </strong>
-
-                </div>
-
-
-                <div
-                    class="loan-summary-card"
-                >
-
-                    <span>
-                        Amount Paid
-                    </span>
-
-                    <strong>
-                        ${currency(amountPaid)}
-                    </strong>
-
-                </div>
-
-
-                <div
-                    class="loan-summary-card"
-                >
-
-                    <span>
-                        Outstanding Balance
-                    </span>
-
-                    <strong>
-                        ${currency(balance)}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="loan-details-grid"
-            >
-
-                <div
-                    class="loan-info-card"
-                >
-
-                    <h3>
-                        Loan Information
-                    </h3>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Client
-                        </span>
-
-                        <strong>
-                            ${
-                                client?.name ||
-                                loan.clientName ||
-                                "-"
-                            }
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Phone
-                        </span>
-
-                        <strong>
-                            ${
-                                clientPhone ||
-                                "-"
-                            }
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Loan Type
-                        </span>
-
-                        <strong>
-                            ${
-                                loan.loanType ||
-                                "New"
-                            }
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Duration
-                        </span>
-
-                        <strong>
-                            ${
-                                loan.duration ||
-                                "-"
-                            } weeks
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Weekly Payment
-                        </span>
-
-                        <strong>
-                            ${
-                                currency(
-                                    loan.weeklyPayment ||
-                                    0
-                                )
-                            }
-                        </strong>
-                    </div>
-
-                </div>
-
-
-                <div
-                    class="loan-info-card"
-                >
-
-                    <h3>
-                        Financial Information
-                    </h3>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Interest
-                        </span>
-
-                        <strong>
-                            ${currency(interest)}
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Processing Fee
-                        </span>
-
-                        <strong>
-                            ${currency(processingFee)}
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Next Repayment
-                        </span>
-
-                        <strong>
-                            ${nextDueDate}
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Remaining Installments
-                        </span>
-
-                        <strong>
-                            ${
-                                Number(
-                                    loan.remainingInstallments ??
-                                    schedule.filter(
-                                        item =>
-                                            !item.paid
-                                    ).length
-                                )
-                            }
-                        </strong>
-                    </div>
-
-
-                    <div
-                        class="loan-info-row"
-                    >
-                        <span>
-                            Approval Date
-                        </span>
-
-                        <strong>
-                            ${
-                                loan.approvalDate ||
-                                "-"
-                            }
-                        </strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="loan-schedule-section"
-            >
-
-                <div
-                    class="loan-section-header"
-                >
-
-                    <h3>
-                        Repayment Schedule
-                    </h3>
-
-                    <span>
-                        ${
-                            schedule.length
-                        } installments
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="repayment-schedule-list"
-                >
-                    ${scheduleHtml}
                 </div>
 
             </div>
 
         </div>
+
+
+        <div class="loan-details-summary">
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Loan Amount
+                </span>
+
+                <strong>
+                    ${currency(
+                        loan.amount || 0
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Total Repayment
+                </span>
+
+                <strong>
+                    ${currency(
+                        totalRepayment
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Amount Paid
+                </span>
+
+                <strong>
+                    ${currency(
+                        amountPaid
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Outstanding Balance
+                </span>
+
+                <strong>
+                    ${currency(
+                        balance
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Status
+                </span>
+
+                <strong>
+                    ${status}
+                </strong>
+
+            </div>
+
+
+            <div class="loan-detail-card">
+
+                <span>
+                    Next Repayment
+                </span>
+
+                <strong>
+                    ${nextDueDate}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="loan-details-actions">
+
+            ${
+                balance > 0
+                    ? `
+                        <button
+                            type="button"
+                            class="btn-primary"
+                            data-action="receive-repayment"
+                            data-loan-id="${loan.id}"
+                        >
+                            Receive Repayment
+                        </button>
+                      `
+                    : ""
+            }
+
+
+            ${
+                status === "Pending"
+                    ? `
+                        <button
+                            type="button"
+                            class="btn-success"
+                            data-action="approve-loan"
+                            data-loan-id="${loan.id}"
+                        >
+                            Approve Loan
+                        </button>
+                      `
+                    : ""
+            }
+
+
+            ${
+                status === "Pending" &&
+                typeof isAdmin ===
+                    "function" &&
+                isAdmin()
+                    ? `
+                        <button
+                            type="button"
+                            class="btn-danger"
+                            data-action="delete-loan"
+                            data-loan-id="${loan.id}"
+                        >
+                            Delete Loan
+                        </button>
+                      `
+                    : ""
+            }
+
+        </div>
+
+
+        <div class="loan-details-section">
+
+            <h3>
+                Repayment Schedule
+            </h3>
+
+            <div
+                class="loan-repayment-schedule"
+            >
+
+                ${
+                    schedule.length
+                        ? schedule
+                            .map(
+                                (
+                                    item,
+                                    index
+                                ) => {
+
+                                    const installmentAmount =
+                                        Number(
+                                            item.amount ||
+                                            0
+                                        );
+
+                                    const paidAmount =
+                                        Number(
+                                            item.paidAmount ||
+                                            0
+                                        );
+
+                                    const remaining =
+                                        Number(
+                                            item.remainingAmount ??
+                                            Math.max(
+                                                installmentAmount -
+                                                paidAmount,
+                                                0
+                                            )
+                                        );
+
+                                    const itemStatus =
+                                        item.paid
+                                            ? "Paid"
+                                            : remaining <
+                                              installmentAmount
+                                                ? "Partial"
+                                                : "Pending";
+
+                                    return `
+
+                                        <div
+                                            class="repayment-schedule-card"
+                                        >
+
+                                            <div>
+
+                                                <strong>
+                                                    Installment ${
+                                                        index +
+                                                        1
+                                                    }
+                                                </strong>
+
+                                                <span>
+                                                    Due:
+                                                    ${
+                                                        item.dueDate ||
+                                                        "-"
+                                                    }
+                                                </span>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <span>
+                                                    Amount:
+                                                    ${currency(
+                                                        installmentAmount
+                                                    )}
+                                                </span>
+
+                                                <span>
+                                                    Paid:
+                                                    ${currency(
+                                                        paidAmount
+                                                    )}
+                                                </span>
+
+                                                <span>
+                                                    Remaining:
+                                                    ${currency(
+                                                        remaining
+                                                    )}
+                                                </span>
+
+                                            </div>
+
+
+                                            <strong>
+                                                ${itemStatus}
+                                            </strong>
+
+                                        </div>
+
+                                    `;
+                                }
+                            )
+                            .join("")
+                        : `
+                            <div class="empty-state">
+                                No repayment schedule available.
+                            </div>
+                          `
+                }
+
+            </div>
+
+        </div>
+
     `;
 
 
-    // ==========================================
-    // SHOW DETAILS PAGE
-    // ==========================================
-
-    const loansSection =
-        document.getElementById(
-            "loans-section"
-        );
-
-
-    if (loansSection) {
-
-        loansSection.classList.add(
-            "hidden"
-        );
-    }
-
-
-    detailsPage.classList.remove(
+    container.classList.remove(
         "hidden"
     );
 
 
-    detailsPage.setAttribute(
-        "aria-hidden",
-        "false"
+    const backButton =
+        document.getElementById(
+            "loan-details-back"
+        );
+
+
+    backButton?.addEventListener(
+        "click",
+        () => {
+
+            closeLoanDetailsPage();
+
+        }
     );
 
 
-    detailsPage.scrollTop =
-        0;
+    /*
+     * IMPORTANT:
+     *
+     * Use delegated actions below so that
+     * dynamically rendered buttons continue
+     * working after every refresh.
+     */
 
-
-    // ==========================================
-    // DETAILS ACTION EVENTS
-    // ==========================================
-
-    detailsPage
+    container
         .querySelectorAll(
-            "[data-action]"
+            "[data-action=\"receive-repayment\"]"
         )
         .forEach(
             button => {
@@ -11090,65 +8575,57 @@ function renderLoanDetailsPage(
                     "click",
                     event => {
 
-                        const action =
-                            event.currentTarget
-                                .dataset
-                                .action;
+                        event.preventDefault();
+
+                        openRepaymentForLoan(
+                            button.dataset.loanId
+                        );
+
+                    }
+                );
+            }
+        );
 
 
-                        const loanId =
-                            event.currentTarget
-                                .dataset
-                                .loanId;
+    container
+        .querySelectorAll(
+            "[data-action=\"approve-loan\"]"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
+
+                        approveLoan(
+                            button.dataset.loanId
+                        );
+
+                    }
+                );
+            }
+        );
 
 
-                        if (
-                            action ===
-                            "close-loan-details"
-                        ) {
+    container
+        .querySelectorAll(
+            "[data-action=\"delete-loan\"]"
+        )
+        .forEach(
+            button => {
 
-                            closeLoanDetailsPage();
+                button.addEventListener(
+                    "click",
+                    event => {
 
-                            return;
-                        }
+                        event.preventDefault();
 
-
-                        if (
-                            action ===
-                            "approve-loan"
-                        ) {
-
-                            approveLoan(
-                                loanId
-                            );
-
-                            return;
-                        }
-
-
-                        if (
-                            action ===
-                            "receive-repayment"
-                        ) {
-
-                            openRepaymentForLoan(
-                                loanId
-                            );
-
-                            return;
-                        }
-
-
-                        if (
-                            action ===
-                            "delete-loan"
-                        ) {
-
-                            deleteLoan(
-                                loanId
-                            );
-
-                        }
+                        deleteLoan(
+                            button.dataset.loanId
+                        );
 
                     }
                 );
@@ -11157,9 +8634,46 @@ function renderLoanDetailsPage(
 }
 
 
-// ==========================================
-// LOAN ROW / CARD CLICK HANDLER
-// ==========================================
+// ==========================================================
+// CLOSE LOAN DETAILS PAGE
+// ==========================================================
+
+function closeLoanDetailsPage() {
+
+    const container =
+        document.getElementById(
+            "loan-details-page"
+        );
+
+    if (container) {
+
+        container.classList.add(
+            "hidden"
+        );
+    }
+
+
+    loanDetailsOpen =
+        false;
+
+
+    selectedLoanId =
+        null;
+
+
+    if (
+        typeof filterLoans ===
+        "function"
+    ) {
+
+        filterLoans();
+    }
+}
+
+
+// ==========================================================
+// LOAN TABLE → DETAILS
+// ==========================================================
 
 document.addEventListener(
     "click",
@@ -11168,9 +8682,9 @@ document.addEventListener(
         const trigger =
             event.target.closest(
                 "[data-loan-details], " +
-                "[data-action=\"open-loan-details\"]"
+                "[data-action=\"loan-details\"], " +
+                ".loan-details-btn"
             );
-
 
         if (!trigger) {
             return;
@@ -11178,8 +8692,8 @@ document.addEventListener(
 
 
         const id =
-            trigger.dataset.loanDetails ||
-            trigger.dataset.loanId;
+            trigger.dataset.loanId ||
+            trigger.dataset.loanDetails;
 
 
         if (!id) {
@@ -11188,19 +8702,31 @@ document.addEventListener(
 
 
         event.preventDefault();
+
         event.stopPropagation();
 
 
         openLoanDetailsPage(
             id
         );
-    }
+
+    },
+    true
 );
 
 
-// ==========================================
-// RECEIVE REPAYMENT GLOBAL HANDLER
-// ==========================================
+// ==========================================================
+// END OF PART 13/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 14/16
+// LOAN TABLE ACTIONS + SAFE REPAYMENT MODAL CONTROL
+// ==========================================================
+
+
+// ==========================================================
+// LOAN TABLE ACTION HANDLER
+// ==========================================================
 
 document.addEventListener(
     "click",
@@ -11208,68 +8734,100 @@ document.addEventListener(
 
         const button =
             event.target.closest(
-                "[data-action=\"receive-repayment\"]"
+                "[data-action]"
             );
-
 
         if (!button) {
             return;
         }
 
 
-        /*
-         * Loan-details buttons are already
-         * handled by renderLoanDetailsPage().
-         */
+        const action =
+            button.dataset.action;
+
+
+        const loanId =
+            button.dataset.loanId ||
+            button.dataset.id ||
+            "";
+
+
+        if (!loanId) {
+            return;
+        }
+
+
+        // ------------------------------------------
+        // RECEIVE REPAYMENT
+        // ------------------------------------------
 
         if (
-            button.closest(
-                "#loan-details-page"
-            )
+            action ===
+            "receive-repayment"
         ) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openRepaymentForLoan(
+                loanId
+            );
+
             return;
         }
 
 
-        const id =
-            button.dataset.loanId;
+        // ------------------------------------------
+        // APPROVE LOAN
+        // ------------------------------------------
 
+        if (
+            action ===
+            "approve-loan"
+        ) {
 
-        if (!id) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            approveLoan(
+                loanId
+            );
+
             return;
         }
 
 
-        event.preventDefault();
+        // ------------------------------------------
+        // DELETE LOAN
+        // ------------------------------------------
 
+        if (
+            action ===
+            "delete-loan"
+        ) {
 
-        openRepaymentForLoan(
-            id
-        );
-    }
+            event.preventDefault();
+            event.stopPropagation();
+
+            deleteLoan(
+                loanId
+            );
+
+            return;
+        }
+
+    },
+    true
 );
 
 
-// ==========================================
-// END OF PART 14/16
-// ==========================================// ==========================================
-// LOAN EDITING + FORM MANAGEMENT
-// PART 15/16
-// ==========================================
+// ==========================================================
+// SAFE REPAYMENT MODAL OPEN
+// ==========================================================
 
-
-// ==========================================
-// OPEN EDIT LOAN
-// ==========================================
-
-function openEditLoan(id) {
-
-    const loan =
-        loans.find(
-            item =>
-                item.id === id
-        );
-
+function openRepaymentModalSafely(
+    loan
+) {
 
     if (!loan) {
 
@@ -11277,19 +8835,32 @@ function openEditLoan(id) {
             "Loan not found."
         );
 
-        return;
+        return false;
+    }
+
+
+    if (
+        Number(
+            loan.balance || 0
+        ) <= 0
+    ) {
+
+        alert(
+            "This loan has no outstanding balance."
+        );
+
+        return false;
     }
 
 
     const modal =
         document.getElementById(
-            "loan-modal"
+            "repayment-modal"
         );
-
 
     const form =
         document.getElementById(
-            "loan-form"
+            "repayment-form"
         );
 
 
@@ -11299,171 +8870,105 @@ function openEditLoan(id) {
     ) {
 
         alert(
-            "Loan form is unavailable."
+            "Repayment form is unavailable."
         );
 
-        return;
+        return false;
     }
 
 
-    form.dataset.editingLoanId =
+    directLoanRepaymentMode =
+        true;
+
+
+    selectedLoanId =
         loan.id;
 
 
-    const title =
-        modal.querySelector(
-            ".modal-title, h2, h3"
-        );
+    createFabRepaymentSelectors(
+        form
+    );
 
 
-    if (title) {
+    hideFabRepaymentSelectors();
 
-        title.textContent =
-            "Edit Loan";
+
+    /*
+     * Reset only the fields belonging
+     * to the repayment transaction.
+     *
+     * Do not reset the entire application
+     * or loan table.
+     */
+
+    if (repaymentLoanId) {
+
+        repaymentLoanId.value =
+            loan.id;
     }
 
 
-    const clientField =
-        document.getElementById(
-            "loan-client"
-        );
-
-
-    const amountField =
-        document.getElementById(
-            "loan-amount"
-        );
-
-
-    const feeField =
-        document.getElementById(
-            "loan-processing-fee"
-        );
-
-
-    const interestField =
-        document.getElementById(
-            "loan-interest"
-        );
-
-
-    const durationField =
-        document.getElementById(
-            "loan-duration"
-        );
-
-
-    const typeField =
-        document.getElementById(
-            "loan-type"
-        );
-
-
-    const startDateField =
-        document.getElementById(
-            "loan-start-date"
-        );
-
-
-    const paidField =
-        document.getElementById(
-            "loan-paid"
-        );
-
-
-    const balanceField =
-        document.getElementById(
-            "loan-balance"
-        );
-
-
-    if (clientField) {
+    if (repaymentClient) {
 
         if (
-            clientField.tagName ===
+            repaymentClient.tagName ===
             "SELECT"
         ) {
 
-            clientField.value =
+            repaymentClient.value =
                 loan.clientId ||
                 "";
 
         } else {
 
-            clientField.value =
+            repaymentClient.value =
                 loan.clientName ||
                 "";
         }
     }
 
 
-    if (amountField) {
+    if (repaymentBalance) {
 
-        amountField.value =
-            loan.amount ??
+        repaymentBalance.value =
+            currency(
+                Number(
+                    loan.balance || 0
+                )
+            );
+    }
+
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+
+        repaymentAmount.setCustomValidity(
+            ""
+        );
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
             "";
     }
 
 
-    if (feeField) {
+    if (repaymentDate) {
 
-        feeField.value =
-            loan.processingFee ??
-            0;
-    }
-
-
-    if (interestField) {
-
-        interestField.value =
-            loan.interestRate ??
-            loan.interestPercentage ??
-            "";
-    }
-
-
-    if (durationField) {
-
-        durationField.value =
-            loan.duration ??
-            "";
-    }
-
-
-    if (typeField) {
-
-        typeField.value =
-            loan.loanType ||
-            "New";
-    }
-
-
-    if (startDateField) {
-
-        startDateField.value =
-            loan.startDate ||
-            loan.approvalDate ||
+        repaymentDate.value =
             today();
     }
 
 
-    if (paidField) {
+    modal.style.position =
+        "fixed";
 
-        paidField.value =
-            loan.amountPaid ??
-            0;
-    }
-
-
-    if (balanceField) {
-
-        balanceField.value =
-            loan.balance ??
-            0;
-
-        balanceField.readOnly =
-            true;
-    }
+    modal.style.zIndex =
+        "100001";
 
 
     modal.classList.remove(
@@ -11480,35 +8985,120 @@ function openEditLoan(id) {
     setTimeout(
         () => {
 
-            amountField?.focus();
+            repaymentAmount?.focus();
 
         },
         100
     );
+
+
+    return true;
 }
 
 
-// ==========================================
-// CLOSE LOAN MODAL
-// ==========================================
+// ==========================================================
+// OVERRIDE DIRECT REPAYMENT OPEN
+// ==========================================================
 
-function closeLoanModal() {
+function openRepaymentForLoanSafe(
+    id
+) {
 
-    const modal =
-        document.getElementById(
-            "loan-modal"
+    const loan =
+        getLoanDetailsById(
+            id
         );
 
 
-    const form =
+    if (!loan) {
+
+        alert(
+            "Loan not found."
+        );
+
+        return;
+    }
+
+
+    openRepaymentModalSafely(
+        loan
+    );
+}
+
+
+// ==========================================================
+// REPAYMENT MODAL STATE RESET
+// ==========================================================
+
+function resetRepaymentModalFields() {
+
+    if (repaymentLoanId) {
+
+        repaymentLoanId.value =
+            "";
+    }
+
+
+    if (repaymentBalance) {
+
+        repaymentBalance.value =
+            "";
+    }
+
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+
+        repaymentAmount.setCustomValidity(
+            ""
+        );
+    }
+
+
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    selectedLoanId =
+        null;
+}
+
+
+// ==========================================================
+// SAFE MODAL CLOSE
+// ==========================================================
+
+function closeRepaymentModalSafely() {
+
+    const modal =
         document.getElementById(
-            "loan-form"
+            "repayment-modal"
         );
 
 
     if (!modal) {
         return;
     }
+
+
+    const wasDirectMode =
+        directLoanRepaymentMode;
+
+
+    const returnLoanId =
+        selectedLoanId;
 
 
     modal.classList.add(
@@ -11522,80 +9112,166 @@ function closeLoanModal() {
     );
 
 
-    if (form) {
+    modal.style.zIndex =
+        "";
 
-        form.reset();
 
-        delete form.dataset.editingLoanId;
+    directLoanRepaymentMode =
+        false;
+
+
+    /*
+     * Clear repayment-only values.
+     */
+
+    if (repaymentAmount) {
+
+        repaymentAmount.value =
+            "";
+
+        repaymentAmount.setCustomValidity(
+            ""
+        );
     }
 
 
-    const title =
-        modal.querySelector(
-            ".modal-title, h2, h3"
-        );
+    if (repaymentNotes) {
+
+        repaymentNotes.value =
+            "";
+    }
 
 
-    if (title) {
+    if (repaymentLoanId) {
 
-        title.textContent =
-            "Add Loan";
+        repaymentLoanId.value =
+            "";
+    }
+
+
+    if (repaymentBalance) {
+
+        repaymentBalance.value =
+            "";
+    }
+
+
+    if (repaymentDate) {
+
+        repaymentDate.value =
+            today();
+    }
+
+
+    showFabRepaymentSelectors();
+
+
+    /*
+     * If repayment was opened from
+     * Loan Details, refresh that page.
+     *
+     * Do NOT close or reload the loans
+     * table unnecessarily.
+     */
+
+    if (
+        wasDirectMode &&
+        loanDetailsOpen &&
+        returnLoanId
+    ) {
+
+        const updatedLoan =
+            loans.find(
+                loan =>
+                    loan.id ===
+                    returnLoanId
+            );
+
+
+        if (updatedLoan) {
+
+            renderLoanDetailsPage(
+                updatedLoan
+            );
+        }
     }
 }
 
 
-// ==========================================
-// LOAN MODAL CLOSE EVENTS
-// ==========================================
+// ==========================================================
+// REPAYMENT MODAL CLOSE DELEGATION
+// ==========================================================
 
 document.addEventListener(
     "click",
     event => {
 
-        const button =
+        const closeButton =
             event.target.closest(
-                "#close-loan-modal, " +
-                ".close-loan-modal, " +
-                "[data-close=\"loan-modal\"], " +
-                "[data-modal-close=\"loan-modal\"]"
+                "#close-repayment-modal, " +
+                ".close-repayment-modal, " +
+                "[data-close=\"repayment-modal\"], " +
+                "[data-modal-close=\"repayment-modal\"]"
             );
 
 
-        if (!button) {
+        if (!closeButton) {
             return;
         }
 
 
         event.preventDefault();
 
+        event.stopPropagation();
 
-        closeLoanModal();
+
+        closeRepaymentModalSafely();
+
+    },
+    true
+);
+
+
+// ==========================================================
+// REPAYMENT BACKDROP
+// ==========================================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const modal =
+            document.getElementById(
+                "repayment-modal"
+            );
+
+
+        if (
+            !modal ||
+            event.target !== modal
+        ) {
+            return;
+        }
+
+
+        if (
+            modal.classList.contains(
+                "hidden"
+            )
+        ) {
+            return;
+        }
+
+
+        closeRepaymentModalSafely();
+
     }
 );
 
 
-document
-    .getElementById(
-        "loan-modal"
-    )
-    ?.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target.id ===
-                "loan-modal"
-            ) {
-
-                closeLoanModal();
-            }
-        }
-    );
-
-
-// ==========================================
-// ESCAPE KEY FOR LOAN FORM
-// ==========================================
+// ==========================================================
+// ESCAPE — REPAYMENT MODAL
+// ==========================================================
 
 document.addEventListener(
     "keydown",
@@ -11611,7 +9287,7 @@ document.addEventListener(
 
         const modal =
             document.getElementById(
-                "loan-modal"
+                "repayment-modal"
             );
 
 
@@ -11622,1256 +9298,846 @@ document.addEventListener(
             )
         ) {
 
-            closeLoanModal();
+            event.preventDefault();
+
+            closeRepaymentModalSafely();
+
         }
+
     }
 );
 
 
-// ==========================================
-// LOAN FORM SUBMISSION LOCK
-// ==========================================
-
-let loanSaving =
-    false;
-
-
-document
-    .getElementById(
-        "loan-form"
-    )
-    ?.addEventListener(
-        "submit",
-        async event => {
-
-            event.preventDefault();
-
-
-            if (loanSaving) {
-                return;
-            }
-
-
-            const form =
-                event.currentTarget;
-
-
-            const editingLoanId =
-                form.dataset.editingLoanId ||
-                "";
-
-
-            const clientField =
-                document.getElementById(
-                    "loan-client"
-                );
-
-
-            const amountField =
-                document.getElementById(
-                    "loan-amount"
-                );
-
-
-            const feeField =
-                document.getElementById(
-                    "loan-processing-fee"
-                );
-
-
-            const interestField =
-                document.getElementById(
-                    "loan-interest"
-                );
-
-
-            const durationField =
-                document.getElementById(
-                    "loan-duration"
-                );
-
-
-            const typeField =
-                document.getElementById(
-                    "loan-type"
-                );
-
-
-            const startDateField =
-                document.getElementById(
-                    "loan-start-date"
-                );
-
-
-            const clientId =
-                clientField?.value ||
-                "";
-
-
-            if (!clientId) {
-
-                alert(
-                    "Please select a client."
-                );
-
-                return;
-            }
-
-
-            const client =
-                clients.find(
-                    item =>
-                        item.id ===
-                        clientId
-                );
-
-
-            if (!client) {
-
-                alert(
-                    "Selected client could not be found."
-                );
-
-                return;
-            }
-
-
-            const amount =
-                Number(
-                    amountField?.value ||
-                    0
-                );
-
-
-            const processingFee =
-                Number(
-                    feeField?.value ||
-                    0
-                );
-
-
-            const interestRate =
-                Number(
-                    interestField?.value ||
-                    0
-                );
-
-
-            const duration =
-                Number(
-                    durationField?.value ||
-                    0
-                );
-
-
-            if (
-                !Number.isFinite(amount) ||
-                amount <= 0
-            ) {
-
-                alert(
-                    "Enter a valid loan amount."
-                );
-
-                return;
-            }
-
-
-            if (
-                !Number.isFinite(duration) ||
-                duration <= 0
-            ) {
-
-                alert(
-                    "Enter a valid loan duration."
-                );
-
-                return;
-            }
-
-
-            if (
-                !Number.isFinite(
-                    interestRate
-                ) ||
-                interestRate < 0
-            ) {
-
-                alert(
-                    "Enter a valid interest rate."
-                );
-
-                return;
-            }
-
-
-            if (
-                !Number.isFinite(
-                    processingFee
-                ) ||
-                processingFee < 0
-            ) {
-
-                alert(
-                    "Enter a valid processing fee."
-                );
-
-                return;
-            }
-
-
-            const saveButton =
-                form.querySelector(
-                    'button[type="submit"]'
-                );
-
-
-            const originalText =
-                saveButton?.innerHTML ||
-                "Save Loan";
-
-
-            loanSaving =
-                true;
-
-
-            if (saveButton) {
-
-                saveButton.disabled =
-                    true;
-
-                saveButton.innerHTML =
-                    "Saving...";
-            }
-
-
-            try {
-
-                // ==========================================
-                // EDIT EXISTING LOAN
-                // ==========================================
-
-                if (editingLoanId) {
-
-                    const existingLoan =
-                        loans.find(
-                            item =>
-                                item.id ===
-                                editingLoanId
-                        );
-
-
-                    if (!existingLoan) {
-
-                        throw new Error(
-                            "The loan being edited no longer exists."
-                        );
-                    }
-
-
-                    /*
-                     * Do not destroy repayment
-                     * history when editing an active
-                     * or historical loan.
-                     */
-
-                    const previousPaid =
-                        Number(
-                            existingLoan.amountPaid ||
-                            0
-                        );
-
-
-                    const interestAmount =
-                        amount *
-                        (
-                            interestRate /
-                            100
-                        );
-
-
-                    const totalRepayment =
-                        amount +
-                        interestAmount;
-
-
-                    const weeklyPayment =
-                        typeof roundToNearestFive ===
-                        "function"
-
-                            ? roundToNearestFive(
-                                totalRepayment /
-                                duration
-                            )
-
-                            : Math.round(
-                                (
-                                    totalRepayment /
-                                    duration
-                                ) / 5
-                            ) * 5;
-
-
-                    const balance =
-                        Math.max(
-                            totalRepayment -
-                            previousPaid,
-                            0
-                        );
-
-
-                    await updateDoc(
-                        doc(
-                            db,
-                            "loans",
-                            editingLoanId
-                        ),
-                        {
-
-                            clientId:
-                                client.id,
-
-                            clientName:
-                                client.name ||
-                                "",
-
-                            amount,
-
-                            processingFee,
-
-                            interest:
-                                interestAmount,
-
-                            interestRate,
-
-                            duration,
-
-                            weeklyPayment,
-
-                            totalRepayment,
-
-                            balance,
-
-                            amountPaid:
-                                previousPaid,
-
-                            loanType:
-                                typeField?.value ||
-                                existingLoan.loanType ||
-                                "New",
-
-                            updatedAt:
-                                serverTimestamp()
-                        }
-                    );
-
-
-                    await logHistory(
-                        "Loan Updated",
-                        "Loan",
-                        {
-
-                            loanId:
-                                existingLoan.loanNumber,
-
-                            client:
-                                client.name,
-
-                            amount,
-
-                            balance
-                        }
-                    );
-
-
-                    closeLoanModal();
-
-
-                    alert(
-                        "Loan updated successfully."
-                    );
-
-
-                    return;
-                }
-
-
-                // ==========================================
-                // CREATE NEW LOAN
-                // ==========================================
-
-                const calculation =
-                    calculateLoanValuesForSave(
-                        amount,
-                        interestRate,
-                        duration,
-                        processingFee
-                    );
-
-
-                const startDate =
-                    startDateField?.value ||
-                    today();
-
-
-                const loanType =
-                    typeField?.value ||
-                    "New";
-
-
-                const loanNumber =
-                    generateLoanNumber();
-
-
-                const initialPaid =
-                    Number(
-                        document.getElementById(
-                            "loan-paid"
-                        )?.value ||
-                        0
-                    );
-
-
-                const totalRepayment =
-                    calculation.totalRepayment;
-
-
-                const initialBalance =
-                    Math.max(
-                        totalRepayment -
-                        initialPaid,
-                        0
-                    );
-
-
-                let schedule =
-                    [];
-
-
-                /*
-                 * Pending loans do not normally
-                 * receive a repayment schedule
-                 * until approval.
-                 *
-                 * Historical loans may need an
-                 * immediately usable schedule.
-                 */
-
-                if (
-                    loanType ===
-                    "Historical"
-                ) {
-
-                    schedule =
-                        generateRepaymentSchedule(
-                            new Date(
-                                startDate
-                            ),
-                            duration,
-                            calculation.weeklyPayment,
-                            totalRepayment
-                        );
-
-
-                    let remaining =
-                        initialPaid;
-
-
-                    for (
-                        const item
-                        of schedule
-                    ) {
-
-                        const installmentAmount =
-                            Number(
-                                item.amount ||
-                                0
-                            );
-
-
-                        const applied =
-                            Math.min(
-                                remaining,
-                                installmentAmount
-                            );
-
-
-                        item.paidAmount =
-                            applied;
-
-
-                        item.remainingAmount =
-                            Math.max(
-                                installmentAmount -
-                                applied,
-                                0
-                            );
-
-
-                        item.paid =
-                            item.remainingAmount <=
-                            0;
-
-
-                        item.status =
-                            item.paid
-                                ? "Paid"
-                                : (
-                                    applied > 0
-                                        ? "Partial"
-                                        : "Pending"
-                                );
-
-
-                        if (
-                            applied > 0
-                        ) {
-
-                            item.paidDate =
-                                startDate;
-                        }
-
-
-                        remaining -=
-                            applied;
-
-
-                        if (
-                            remaining <=
-                            0
-                        ) {
-                            break;
-                        }
-                    }
-                }
-
-
-                const firstUnpaid =
-                    schedule.find(
-                        item =>
-                            !item.paid
-                    );
-
-
-                const status =
-                    loanType ===
-                    "Historical"
-
-                        ? (
-                            initialBalance <=
-                            0
-                                ? "Completed"
-                                : (
-                                    firstUnpaid &&
-                                    firstUnpaid.dueDate <
-                                    today()
-                                        ? "Arrears"
-                                        : "Active"
-                                )
-                        )
-
-                        : "Pending";
-
-
-                await addDoc(
-                    collection(
-                        db,
-                        "loans"
-                    ),
-                    {
-
-                        clientId:
-                            client.id,
-
-                        clientName:
-                            client.name ||
-                            "",
-
-                        loanNumber,
-
-                        loanType,
-
-                        amount,
-
-                        processingFee,
-
-                        interest:
-                            calculation.interestAmount,
-
-                        interestRate,
-
-                        duration,
-
-                        repayment:
-                            totalRepayment,
-
-                        weeklyPayment:
-                            calculation.weeklyPayment,
-
-                        totalRepayment,
-
-                        balance:
-                            initialBalance,
-
-                        openingBalance:
-                            totalRepayment,
-
-                        amountPaid:
-                            initialPaid,
-
-                        approvalDate:
-                            loanType ===
-                            "Historical"
-                                ? formatDate(
-                                    new Date(
-                                        startDate
-                                    )
-                                )
-                                : "",
-
-                        dueDate:
-                            firstUnpaid?.dueDate ||
-                            "",
-
-                        repaymentSchedule:
-                            schedule,
-
-                        nextRepaymentDate:
-                            firstUnpaid?.dueDate ||
-                            "-",
-
-                        remainingInstallments:
-                            schedule.filter(
-                                item =>
-                                    !item.paid
-                            ).length,
-
-                        status,
-
-                        completed:
-                            initialBalance <=
-                            0,
-
-                        totalIncome:
-                            0,
-
-                        createdBy:
-                            localStorage.getItem(
-                                "userName"
-                            ) ||
-                            localStorage.getItem(
-                                "userEmail"
-                            ) ||
-                            "Unknown Officer",
-
-                        createdAt:
-                            serverTimestamp(),
-
-                        updatedAt:
-                            serverTimestamp()
-                    }
-                );
-
-
-                await logHistory(
-                    "Loan Created",
-                    "Loan",
-                    {
-
-                        loanId:
-                            loanNumber,
-
-                        client:
-                            client.name,
-
-                        amount,
-
-                        loanType,
-
-                        status
-                    }
-                );
-
-
-                closeLoanModal();
-
-
-                alert(
-                    "Loan created successfully."
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Loan save error:",
-                    error
-                );
-
-
-                alert(
-                    "Failed to save loan.\n\n" +
-                    error.message
-                );
-
-
-            } finally {
-
-                loanSaving =
-                    false;
-
-
-                if (saveButton) {
-
-                    saveButton.disabled =
-                        false;
-
-                    saveButton.innerHTML =
-                        originalText;
-                }
-            }
+// ==========================================================
+// REPAYMENT CLIENT SELECTOR SAFETY
+// ==========================================================
+
+document.addEventListener(
+    "change",
+    event => {
+
+        if (
+            event.target.id !==
+            "fab-repayment-client-select"
+        ) {
+            return;
         }
+
+
+        const clientId =
+            event.target.value;
+
+
+        loadLoansForSelectedClient(
+            clientId
+        );
+
+    }
+);
+
+
+// ==========================================================
+// REPAYMENT LOAN SELECTOR SAFETY
+// ==========================================================
+
+document.addEventListener(
+    "change",
+    event => {
+
+        if (
+            event.target.id !==
+            "fab-repayment-loan-select"
+        ) {
+            return;
+        }
+
+
+        const loanId =
+            event.target.value;
+
+
+        if (!loanId) {
+
+            clearRepaymentFields();
+
+            return;
+        }
+
+
+        fillRepaymentFromSelectedLoan(
+            loanId
+        );
+
+    }
+);
+
+
+// ==========================================================
+// FAB REPAYMENT OPEN HANDLER
+// ==========================================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "#fab-add-repayment, " +
+                "#fab-repayment, " +
+                "[data-action=\"add-repayment\"]"
+            );
+
+
+        if (!button) {
+            return;
+        }
+
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        openFabRepaymentSelector();
+
+    },
+    true
+);
+
+
+// ==========================================================
+// END OF PART 14/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 15/16
+// FILTERS + OVERDUE STATUS + SAFE AUTO REFRESH
+// ==========================================================
+
+
+// ==========================================================
+// YEAR FILTER
+// ==========================================================
+
+function populateYearFilter() {
+
+    if (!loanYearFilter) {
+        return;
+    }
+
+
+    const years = [
+        ...new Set(
+            loans
+                .map(
+                    loan => {
+
+                        const date =
+                            loan.approvalDate
+                                ? new Date(
+                                    loan.approvalDate
+                                )
+                                : loan.createdAt?.toDate
+                                    ? loan.createdAt.toDate()
+                                    : null;
+
+                        return date &&
+                            !Number.isNaN(
+                                date.getTime()
+                            )
+                            ? date.getFullYear()
+                            : null;
+                    }
+                )
+                .filter(
+                    year =>
+                        year !== null
+                )
+        )
+    ].sort(
+        (a, b) =>
+            b - a
     );
 
 
-// ==========================================
-// SAFE LOAN CALCULATION FOR FORM SAVE
-// ==========================================
-
-function calculateLoanValuesForSave(
-    amount,
-    interestRate,
-    duration,
-    processingFee = 0
-) {
-
-    const safeAmount =
-        Number(
-            amount
-        ) || 0;
+    loanYearFilter.innerHTML =
+        `<option value="ALL">All</option>`;
 
 
-    const safeInterestRate =
-        Number(
-            interestRate
-        ) || 0;
+    years.forEach(
+        year => {
 
-
-    const safeDuration =
-        Number(
-            duration
-        ) || 1;
-
-
-    const safeFee =
-        Number(
-            processingFee
-        ) || 0;
-
-
-    const interestAmount =
-        safeAmount *
-        (
-            safeInterestRate /
-            100
-        );
-
-
-    const totalRepayment =
-        safeAmount +
-        interestAmount;
-
-
-    const rawWeekly =
-        totalRepayment /
-        safeDuration;
-
-
-    const weeklyPayment =
-        typeof roundToNearestFive ===
-        "function"
-
-            ? roundToNearestFive(
-                rawWeekly
-            )
-
-            : Math.round(
-                rawWeekly / 5
-            ) * 5;
-
-
-    return {
-
-        amount:
-            safeAmount,
-
-        processingFee:
-            safeFee,
-
-        interestAmount,
-
-        totalRepayment,
-
-        weeklyPayment
-    };
-}
-
-
-// ==========================================
-// LOAN FORM LIVE CALCULATION
-// ==========================================
-
-function updateLoanFormCalculation() {
-
-    const amountField =
-        document.getElementById(
-            "loan-amount"
-        );
-
-
-    const interestField =
-        document.getElementById(
-            "loan-interest"
-        );
-
-
-    const durationField =
-        document.getElementById(
-            "loan-duration"
-        );
-
-
-    const paidField =
-        document.getElementById(
-            "loan-paid"
-        );
-
-
-    const balanceField =
-        document.getElementById(
-            "loan-balance"
-        );
-
-
-    if (
-        !amountField ||
-        !interestField ||
-        !durationField
-    ) {
-        return;
-    }
-
-
-    const amount =
-        Number(
-            amountField.value ||
-            0
-        );
-
-
-    const interest =
-        Number(
-            interestField.value ||
-            0
-        );
-
-
-    const duration =
-        Number(
-            durationField.value ||
-            0
-        );
-
-
-    if (
-        amount <= 0 ||
-        interest < 0 ||
-        duration <= 0
-    ) {
-
-        if (balanceField) {
-
-            balanceField.value =
-                "";
+            loanYearFilter.innerHTML += `
+                <option value="${year}">
+                    ${year}
+                </option>
+            `;
         }
+    );
+}
+
+
+// ==========================================================
+// FILTER LOANS
+// ==========================================================
+
+function getFilteredLoans() {
+
+    let filtered =
+        [...loans];
+
+
+    /*
+     * Keep the existing rule that the main
+     * loan table only displays running loans.
+     *
+     * Historical/completed records remain
+     * available through the appropriate
+     * history/status views.
+     */
+
+    filtered =
+        filtered.filter(
+            loan =>
+                typeof isRunningLoan ===
+                    "function"
+                    ? isRunningLoan(loan)
+                    : true
+        );
+
+
+    const keyword =
+        loanSearch?.value
+            ?.trim()
+            .toLowerCase() ||
+        "";
+
+
+    const status =
+        loanFilter?.value ||
+        "ALL";
+
+
+    const month =
+        loanMonthFilter?.value ||
+        "ALL";
+
+
+    const year =
+        loanYearFilter?.value ||
+        "ALL";
+
+
+    // ------------------------------------------------------
+    // SEARCH
+    // ------------------------------------------------------
+
+    if (keyword) {
+
+        filtered =
+            filtered.filter(
+                loan => {
+
+                    const clientName =
+                        String(
+                            loan.clientName ||
+                            ""
+                        ).toLowerCase();
+
+
+                    const loanId =
+                        String(
+                            loan.id ||
+                            ""
+                        ).toLowerCase();
+
+
+                    const loanNumber =
+                        String(
+                            loan.loanNumber ||
+                            ""
+                        ).toLowerCase();
+
+
+                    return (
+                        clientName.includes(
+                            keyword
+                        ) ||
+
+                        loanId.includes(
+                            keyword
+                        ) ||
+
+                        loanNumber.includes(
+                            keyword
+                        )
+                    );
+                }
+            );
+    }
+
+
+    // ------------------------------------------------------
+    // STATUS
+    // ------------------------------------------------------
+
+    if (
+        status !==
+        "ALL"
+    ) {
+
+        filtered =
+            filtered.filter(
+                loan => {
+
+                    return (
+                        normalizeLoanStatus(
+                            loan.status
+                        ) ===
+                        normalizeLoanStatus(
+                            status
+                        )
+                    );
+                }
+            );
+    }
+
+
+    // ------------------------------------------------------
+    // MONTH / YEAR
+    // ------------------------------------------------------
+
+    if (
+        month !== "ALL" ||
+        year !== "ALL"
+    ) {
+
+        filtered =
+            filtered.filter(
+                loan => {
+
+                    const date =
+                        loan.approvalDate
+                            ? new Date(
+                                loan.approvalDate
+                            )
+                            : loan.createdAt?.toDate
+                                ? loan.createdAt.toDate()
+                                : null;
+
+
+                    if (
+                        !date ||
+                        Number.isNaN(
+                            date.getTime()
+                        )
+                    ) {
+
+                        return false;
+                    }
+
+
+                    const monthMatch =
+                        month === "ALL" ||
+                        date.getMonth() ===
+                            Number(
+                                month
+                            );
+
+
+                    const yearMatch =
+                        year === "ALL" ||
+                        date.getFullYear() ===
+                            Number(
+                                year
+                            );
+
+
+                    return (
+                        monthMatch &&
+                        yearMatch
+                    );
+                }
+            );
+    }
+
+
+    return filtered;
+}
+
+
+// ==========================================================
+// APPLY FILTERS
+// ==========================================================
+
+function filterLoans() {
+
+    /*
+     * Do not rerender the loan table while
+     * the full-screen details page is open.
+     *
+     * This prevents the table from replacing
+     * the details interface unexpectedly.
+     */
+
+    if (
+        typeof loanDetailsOpen !==
+        "undefined" &&
+        loanDetailsOpen
+    ) {
 
         return;
     }
 
 
-    const calculation =
-        calculateLoanValuesForSave(
-            amount,
-            interest,
-            duration
-        );
+    if (
+        typeof renderLoans !==
+        "function"
+    ) {
 
-
-    const paid =
-        Number(
-            paidField?.value ||
-            0
-        );
-
-
-    const balance =
-        Math.max(
-            calculation.totalRepayment -
-            paid,
-            0
-        );
-
-
-    if (balanceField) {
-
-        balanceField.value =
-            currency(
-                balance
-            );
+        return;
     }
 
 
-    const weeklyField =
-        document.getElementById(
-            "loan-weekly-payment"
-        );
-
-
-    if (weeklyField) {
-
-        weeklyField.value =
-            currency(
-                calculation.weeklyPayment
-            );
-    }
-
-
-    const totalField =
-        document.getElementById(
-            "loan-total-repayment"
-        );
-
-
-    if (totalField) {
-
-        totalField.value =
-            currency(
-                calculation.totalRepayment
-            );
-    }
+    renderLoans(
+        getFilteredLoans()
+    );
 }
 
 
-[
-    "loan-amount",
-    "loan-interest",
-    "loan-duration",
-    "loan-paid"
-]
-.forEach(
-    id => {
+// ==========================================================
+// FILTER EVENTS
+// ==========================================================
 
-        document
-            .getElementById(id)
-            ?.addEventListener(
-                "input",
-                updateLoanFormCalculation
-            );
-    }
+loanSearch?.addEventListener(
+    "input",
+    filterLoans
 );
 
 
-// ==========================================
-// ADD LOAN BUTTON
-// ==========================================
+loanFilter?.addEventListener(
+    "change",
+    filterLoans
+);
 
-document.addEventListener(
-    "click",
-    event => {
 
-        const button =
-            event.target.closest(
-                "#add-loan-btn, " +
-                "#fab-add-loan, " +
-                "[data-action=\"add-loan\"]"
+loanMonthFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+loanYearFilter?.addEventListener(
+    "change",
+    filterLoans
+);
+
+
+// ==========================================================
+// CHECK OVERDUE LOANS
+// ==========================================================
+
+async function checkOverdueLoans() {
+
+    const todayDate =
+        today();
+
+
+    if (
+        !Array.isArray(
+            loans
+        )
+    ) {
+
+        return;
+    }
+
+
+    for (
+        const loan of loans
+    ) {
+
+        const currentStatus =
+            normalizeLoanStatus(
+                loan.status
             );
-
-
-        if (!button) {
-            return;
-        }
 
 
         /*
-         * Do not treat the repayment FAB
-         * as an Add Loan button.
+         * These records should not be
+         * automatically changed.
          */
 
         if (
-            button.id ===
-                "fab-add-repayment" ||
-            button.dataset.action ===
-                "add-repayment"
+            currentStatus ===
+                "Pending" ||
+
+            currentStatus ===
+                "Completed" ||
+
+            currentStatus ===
+                "Rejected"
         ) {
-            return;
+
+            continue;
         }
 
 
-        event.preventDefault();
+        const schedule =
+            Array.isArray(
+                loan.repaymentSchedule
+            )
+                ? loan.repaymentSchedule
+                : [];
 
 
-        const form =
-            document.getElementById(
-                "loan-form"
-            );
+        let nextRepayment =
+            null;
+
+        let hasArrears =
+            false;
 
 
-        const modal =
-            document.getElementById(
-                "loan-modal"
-            );
+        /*
+         * Find the earliest unpaid
+         * installment.
+         */
+
+        for (
+            const item of schedule
+        ) {
+
+            if (
+                item.paid ===
+                true
+            ) {
+
+                continue;
+            }
+
+
+            const remaining =
+                Number(
+                    item.remainingAmount ??
+                    item.amount ??
+                    0
+                );
+
+
+            if (
+                remaining <=
+                0
+            ) {
+
+                continue;
+            }
+
+
+            nextRepayment =
+                item.dueDate ||
+                null;
+
+
+            if (
+                nextRepayment &&
+                nextRepayment <
+                    todayDate
+            ) {
+
+                hasArrears =
+                    true;
+            }
+
+
+            break;
+        }
+
+
+        let newStatus;
 
 
         if (
-            !form ||
-            !modal
+            !nextRepayment
         ) {
 
-            alert(
-                "Loan form is unavailable."
-            );
+            /*
+             * No unpaid installment means
+             * the loan is fully scheduled as
+             * paid.
+             */
 
-            return;
+            newStatus =
+                Number(
+                    loan.balance || 0
+                ) <= 0
+                    ? "Completed"
+                    : "Active";
+
+        } else if (
+            hasArrears
+        ) {
+
+            newStatus =
+                "Arrears";
+
+        } else {
+
+            newStatus =
+                "Active";
         }
 
 
-        form.reset();
+        const newCompleted =
+            newStatus ===
+            "Completed";
 
 
-        delete form.dataset.editingLoanId;
+        const newRemainingInstallments =
+            schedule.filter(
+                item => {
+
+                    if (
+                        item.paid ===
+                        true
+                    ) {
+                        return false;
+                    }
 
 
-        const title =
-            modal.querySelector(
-                ".modal-title, h2, h3"
-            );
+                    return (
+                        Number(
+                            item.remainingAmount ??
+                            item.amount ??
+                            0
+                        ) > 0
+                    );
+                }
+            ).length;
 
 
-        if (title) {
-
-            title.textContent =
-                "Add Loan";
-        }
+        const newNextRepaymentDate =
+            nextRepayment ||
+            "-";
 
 
-        const dateField =
-            document.getElementById(
-                "loan-start-date"
-            );
-
-
-        if (dateField) {
-
-            dateField.value =
-                today();
-        }
-
-
-        const feeField =
-            document.getElementById(
-                "loan-processing-fee"
-            );
-
+        /*
+         * Avoid unnecessary Firestore writes.
+         */
 
         if (
-            feeField &&
-            !feeField.value
+            normalizeLoanStatus(
+                loan.status
+            ) ===
+                normalizeLoanStatus(
+                    newStatus
+                ) &&
+
+            String(
+                loan.nextRepaymentDate ||
+                "-"
+            ) ===
+                String(
+                    newNextRepaymentDate
+                ) &&
+
+            Number(
+                loan.remainingInstallments ||
+                0
+            ) ===
+                newRemainingInstallments &&
+
+            Boolean(
+                loan.completed
+            ) ===
+                newCompleted
         ) {
 
-            feeField.value =
-                localStorage.getItem(
-                    "GREYMUS_DEFAULT_FEE"
-                ) ||
-                0;
+            continue;
         }
 
 
-        const interestField =
-            document.getElementById(
-                "loan-interest"
+        try {
+
+            await updateDoc(
+                doc(
+                    db,
+                    "loans",
+                    loan.id
+                ),
+                {
+
+                    status:
+                        newStatus,
+
+                    completed:
+                        newCompleted,
+
+                    nextRepaymentDate:
+                        newNextRepaymentDate,
+
+                    remainingInstallments:
+                        newRemainingInstallments,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
             );
 
+        } catch (error) {
 
-        if (
-            interestField &&
-            !interestField.value
-        ) {
+            /*
+             * One failed loan update must not
+             * stop the remaining loans from
+             * being checked.
+             */
 
-            interestField.value =
-                localStorage.getItem(
-                    "GREYMUS_DEFAULT_INTEREST"
-                ) ||
-                20;
-        }
-
-
-        const durationField =
-            document.getElementById(
-                "loan-duration"
+            console.error(
+                "Overdue loan update error:",
+                loan.id,
+                error
             );
-
-
-        if (
-            durationField &&
-            !durationField.value
-        ) {
-
-            durationField.value =
-                localStorage.getItem(
-                    "GREYMUS_DEFAULT_DURATION"
-                ) ||
-                12;
         }
-
-
-        modal.classList.remove(
-            "hidden"
-        );
-
-
-        modal.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-
-        updateLoanFormCalculation();
     }
-);
-
-
-// ==========================================
-// EDIT LOAN ACTION HANDLER
-// ==========================================
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const button =
-            event.target.closest(
-                "[data-action=\"edit-loan\"]"
-            );
-
-
-        if (!button) {
-            return;
-        }
-
-
-        const id =
-            button.dataset.loanId;
-
-
-        if (!id) {
-            return;
-        }
-
-
-        event.preventDefault();
-
-
-        openEditLoan(
-            id
-        );
-    }
-);
-
-
-// ==========================================
-// END OF PART 15/16
-// ==========================================// ==========================================================
-// GREYMUS LOAN FINANCIAL HUB
-// LOANS.JS — PART 16/16
-// FINALIZATION, SAFE REFRESH, PUBLIC API & INITIALIZATION
-// ==========================================================
+}
 
 
 // ==========================================================
-// SAFE LOAN DATA REFRESH
+// SAFE REFRESH
 // ==========================================================
 
-async function refreshLoansSafely() {
+function safeRefreshLoanTable() {
 
     try {
 
         if (
-            typeof loadLoans ===
+            typeof loanDetailsOpen !==
+                "undefined" &&
+            loanDetailsOpen
+        ) {
+
+            return;
+        }
+
+
+        filterLoans();
+
+    } catch (error) {
+
+        console.error(
+            "Loan table refresh error:",
+            error
+        );
+    }
+}
+
+
+// ==========================================================
+// AUTOMATIC OVERDUE CHECK
+// ==========================================================
+
+setInterval(
+    () => {
+
+        if (
+            typeof checkOverdueLoans !==
             "function"
         ) {
 
-            await loadLoans();
-
+            return;
         }
 
-    } catch (error) {
 
-        console.error(
-            "Loan refresh error:",
-            error
-        );
-    }
-}
+        checkOverdueLoans()
+            .catch(
+                error => {
+
+                    console.error(
+                        "Automatic overdue check failed:",
+                        error
+                    );
+                }
+            );
+
+    },
+    60000
+);
 
 
 // ==========================================================
-// REFRESH CURRENT LOAN DETAILS
+// AUTOMATIC TABLE REFRESH
 // ==========================================================
 
-function refreshCurrentLoanDetails() {
+setInterval(
+    () => {
 
-    if (
-        !loanDetailsOpen ||
-        !selectedLoanId
-    ) {
-        return;
-    }
+        safeRefreshLoanTable();
 
-
-    const currentLoan =
-        loans.find(
-            loan =>
-                loan.id ===
-                selectedLoanId
-        );
+    },
+    30000
+);
 
 
-    if (!currentLoan) {
+// ==========================================================
+// OPEN DETAILS REFRESH
+// ==========================================================
 
-        selectedLoanId =
-            null;
+setInterval(
+    () => {
 
-        loanDetailsOpen =
-            false;
+        if (
+            !loanDetailsOpen ||
+            !selectedLoanId
+        ) {
 
-        return;
-    }
+            return;
+        }
 
 
-    try {
+        const loan =
+            loans.find(
+                item =>
+                    item.id ===
+                    selectedLoanId
+            );
 
-        renderLoanDetailsPage(
-            currentLoan
-        );
 
-    } catch (error) {
+        if (!loan) {
 
-        console.error(
-            "Loan details refresh error:",
-            error
-        );
-    }
-}
+            closeLoanDetailsPage();
+
+            return;
+        }
+
+
+        try {
+
+            renderLoanDetailsPage(
+                loan
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Loan details refresh error:",
+                error
+            );
+        }
+
+    },
+    60000
+);
+
+
+// ==========================================================
+// END OF PART 15/16
+// ==========================================================// ==========================================================
+// GREYMUS LOAN FINANCIAL HUB
+// LOANS.JS — PART 16/16
+// INITIALIZATION + PUBLIC EXPORTS
+//
+// IMPORTANT:
+// This final part intentionally contains only
+// initialization, compatibility helpers and exports.
+// It does NOT replace the loan-table rendering logic.
+// ==========================================================
 
 
 // ==========================================================
@@ -12882,19 +10148,37 @@ function refreshLoanTable() {
 
     try {
 
-        if (loanDetailsOpen) {
+        if (
+            typeof loanDetailsOpen !==
+                "undefined" &&
+            loanDetailsOpen
+        ) {
+
             return;
         }
 
 
-        renderLoans(
-            getFilteredLoans()
-        );
+        if (
+            typeof filterLoans ===
+            "function"
+        ) {
+
+            filterLoans();
+
+        } else if (
+            typeof renderLoans ===
+            "function"
+        ) {
+
+            renderLoans(
+                loans
+            );
+        }
 
     } catch (error) {
 
         console.error(
-            "Loan table refresh error:",
+            "refreshLoanTable error:",
             error
         );
     }
@@ -12914,19 +10198,16 @@ function getLoanById(
     }
 
 
-    return (
-        loans.find(
-            loan =>
-                loan.id ===
-                id
-        ) ||
-        null
-    );
+    return loans.find(
+        loan =>
+            loan.id ===
+            id
+    ) || null;
 }
 
 
 // ==========================================================
-// GET NEXT UNPAID REPAYMENT
+// GET NEXT REPAYMENT
 // ==========================================================
 
 function getNextRepayment(
@@ -12951,115 +10232,24 @@ function getNextRepayment(
                     installment.paid ===
                     true
                 ) {
+
                     return false;
                 }
 
 
-                return (
+                const remaining =
                     Number(
                         installment.remainingAmount ??
                         installment.amount ??
                         0
-                    ) > 0
-                );
-            }
-        ) ||
-        null
-    );
-}
+                    );
 
 
-// ==========================================================
-// GET CURRENT LOAN BALANCE
-// ==========================================================
-
-function getLoanBalance(
-    loan
-) {
-
-    if (!loan) {
-        return 0;
-    }
-
-
-    return Math.max(
-        Number(
-            loan.balance ||
-            0
-        ),
-        0
-    );
-}
-
-
-// ==========================================================
-// GET OUTSTANDING LOANS FOR CLIENT
-// ==========================================================
-
-function getOutstandingLoansForClient(
-    clientId
-) {
-
-    if (!clientId) {
-        return [];
-    }
-
-
-    return loans.filter(
-        loan => {
-
-            if (
-                loan.clientId !==
-                clientId
-            ) {
-                return false;
-            }
-
-
-            const balance =
-                Number(
-                    loan.balance ||
+                return (
+                    remaining >
                     0
                 );
-
-
-            if (
-                balance <=
-                0
-            ) {
-                return false;
             }
-
-
-            return (
-                normalizeLoanStatus(
-                    loan.status
-                ) !==
-                "Completed"
-            );
-        }
-    );
-}
-
-
-// ==========================================================
-// GET CLIENT FOR LOAN
-// ==========================================================
-
-function getClientForLoan(
-    loan
-) {
-
-    if (!loan) {
-        return null;
-    }
-
-
-    return (
-        clients.find(
-            client =>
-                client.id ===
-                loan.clientId
         ) ||
         null
     );
@@ -13067,284 +10257,38 @@ function getClientForLoan(
 
 
 // ==========================================================
-// SAFE DATE VALUE
+// INITIALIZE REPAYMENT DATE
 // ==========================================================
 
-function getLoanDateValue(
-    loan
-) {
-
-    if (!loan) {
-        return null;
-    }
-
+function initializeRepaymentDate() {
 
     if (
-        loan.approvalDate
+        typeof repaymentDate ===
+        "undefined" ||
+        !repaymentDate
     ) {
 
-        const date =
-            new Date(
-                loan.approvalDate
-            );
-
-
-        if (
-            !Number.isNaN(
-                date.getTime()
-            )
-        ) {
-
-            return date;
-        }
-    }
-
-
-    if (
-        loan.createdAt &&
-        typeof loan.createdAt.toDate ===
-            "function"
-    ) {
-
-        try {
-
-            return loan.createdAt.toDate();
-
-        } catch (error) {
-
-            console.warn(
-                "Unable to convert loan createdAt:",
-                error
-            );
-        }
-    }
-
-
-    if (
-        loan.createdAt
-    ) {
-
-        const date =
-            new Date(
-                loan.createdAt
-            );
-
-
-        if (
-            !Number.isNaN(
-                date.getTime()
-            )
-        ) {
-
-            return date;
-        }
-    }
-
-
-    return null;
-}
-
-
-// ==========================================================
-// SAFE LOAN STATUS
-// ==========================================================
-
-function getDisplayLoanStatus(
-    loan
-) {
-
-    if (!loan) {
-        return "";
-    }
-
-
-    return normalizeLoanStatus(
-        loan.status
-    );
-}
-
-
-// ==========================================================
-// WINDOW PUBLIC HELPERS
-// ==========================================================
-//
-// These are intentionally exposed so that
-// messaging.js and other modules can communicate
-// with loans.js without directly modifying the
-// loan transaction logic.
-//
-
-if (
-    typeof window !==
-    "undefined"
-) {
-
-    window.GREYMUS_LOANS =
-        {
-
-            getLoanById,
-
-            getNextRepayment,
-
-            getLoanBalance,
-
-            getOutstandingLoansForClient,
-
-            getClientForLoan,
-
-            refreshLoanTable,
-
-            refreshLoansSafely,
-
-            refreshCurrentLoanDetails,
-
-            getDisplayLoanStatus
-        };
-}
-
-
-// ==========================================================
-// MESSAGING PUBLIC BRIDGE
-// ==========================================================
-//
-// Messaging functions are exposed without
-// replacing any existing messaging.js functions.
-//
-
-if (
-    typeof window !==
-    "undefined"
-) {
-
-    window.sendLoanApprovalMessage =
-        sendLoanApprovalMessage;
-
-    window.sendLoanRepaymentMessage =
-        sendLoanRepaymentMessage;
-
-    window.sendLoanMessageSafely =
-        sendLoanMessageSafely;
-
-    window.sendRepaymentMessageSafely =
-        sendRepaymentMessageSafely;
-}
-
-
-// ==========================================================
-// REALTIME / PERIODIC SAFETY REFRESH
-// ==========================================================
-
-let loanRefreshTimer =
-    null;
-
-
-function startLoanRefreshTimer() {
-
-    if (
-        loanRefreshTimer
-    ) {
         return;
     }
 
 
-    loanRefreshTimer =
-        setInterval(
-            async () => {
+    if (
+        !repaymentDate.value
+    ) {
 
-                try {
-
-                    if (
-                        typeof checkOverdueLoans ===
-                        "function"
-                    ) {
-
-                        await checkOverdueLoans();
-                    }
-
-
-                    if (
-                        !loanDetailsOpen
-                    ) {
-
-                        refreshLoanTable();
-
-                    } else {
-
-                        refreshCurrentLoanDetails();
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "Automatic loan refresh error:",
-                        error
-                    );
-                }
-
-            },
-            60000
-        );
+        repaymentDate.value =
+            today();
+    }
 }
 
 
 // ==========================================================
-// INITIALIZE LOANS MODULE
+// INITIALIZE YEAR FILTER
 // ==========================================================
 
-let loansInitialized =
-    false;
-
-
-async function initializeLoansModule() {
-
-    if (
-        loansInitialized
-    ) {
-        return;
-    }
-
-
-    loansInitialized =
-        true;
-
+function initializeLoanFilters() {
 
     try {
-
-        if (
-            typeof calculateLoan ===
-            "function"
-        ) {
-
-            calculateLoan();
-        }
-
-
-        if (
-            typeof loadClients ===
-            "function"
-        ) {
-
-            await loadClients();
-        }
-
-
-        if (
-            typeof loadLoans ===
-            "function"
-        ) {
-
-            await loadLoans();
-        }
-
-
-        if (
-            typeof checkOverdueLoans ===
-            "function"
-        ) {
-
-            await checkOverdueLoans();
-        }
-
 
         if (
             typeof populateYearFilter ===
@@ -13355,6 +10299,32 @@ async function initializeLoansModule() {
         }
 
 
+        /*
+         * Do not force renderLoans here.
+         *
+         * loadLoans() is responsible for
+         * loading Firestore data and rendering
+         * the table.
+         */
+
+    } catch (error) {
+
+        console.error(
+            "Loan filter initialization error:",
+            error
+        );
+    }
+}
+
+
+// ==========================================================
+// INITIALIZE FAB REPAYMENT
+// ==========================================================
+
+function initializeFabRepayment() {
+
+    try {
+
         if (
             typeof setupFabAddRepayment ===
             "function"
@@ -13363,8 +10333,147 @@ async function initializeLoansModule() {
             setupFabAddRepayment();
         }
 
+    } catch (error) {
 
-        startLoanRefreshTimer();
+        console.error(
+            "FAB repayment initialization error:",
+            error
+        );
+    }
+}
+
+
+// ==========================================================
+// INITIALIZE LOAN MODULE
+// ==========================================================
+
+let loansModuleInitialized =
+    false;
+
+
+async function initializeLoansModule() {
+
+    /*
+     * Prevent the module from initializing
+     * more than once.
+     *
+     * This is important because index.html,
+     * app.js or another module may trigger
+     * DOMContentLoaded-related initialization.
+     */
+
+    if (
+        loansModuleInitialized
+    ) {
+
+        return;
+    }
+
+
+    loansModuleInitialized =
+        true;
+
+
+    try {
+
+        initializeRepaymentDate();
+
+        initializeLoanFilters();
+
+        initializeFabRepayment();
+
+
+        /*
+         * Load clients first because the
+         * repayment selector depends on them.
+         */
+
+        if (
+            typeof loadClients ===
+            "function"
+        ) {
+
+            try {
+
+                await loadClients();
+
+            } catch (clientError) {
+
+                console.error(
+                    "Client loading error:",
+                    clientError
+                );
+            }
+        }
+
+
+        /*
+         * loadLoans() remains the primary
+         * Firestore loader and table renderer.
+         *
+         * Do not call renderLoans() separately
+         * before it completes.
+         */
+
+        if (
+            typeof loadLoans ===
+            "function"
+        ) {
+
+            try {
+
+                await loadLoans();
+
+            } catch (loanError) {
+
+                console.error(
+                    "Loan loading error:",
+                    loanError
+                );
+            }
+        }
+
+
+        /*
+         * Perform the overdue check only
+         * after loans have been loaded.
+         */
+
+        if (
+            typeof checkOverdueLoans ===
+            "function"
+        ) {
+
+            try {
+
+                await checkOverdueLoans();
+
+            } catch (overdueError) {
+
+                console.error(
+                    "Initial overdue check error:",
+                    overdueError
+                );
+            }
+        }
+
+
+        /*
+         * Refresh the year filter after
+         * Firestore data has been loaded.
+         */
+
+        try {
+
+            populateYearFilter();
+
+        } catch (filterError) {
+
+            console.error(
+                "Year filter refresh error:",
+                filterError
+            );
+        }
 
 
     } catch (error) {
@@ -13373,16 +10482,6 @@ async function initializeLoansModule() {
             "Loans module initialization error:",
             error
         );
-
-
-        /*
-         * Allow a later initialization attempt
-         * if Firebase or another dependency
-         * was temporarily unavailable.
-         */
-
-        loansInitialized =
-            false;
     }
 }
 
@@ -13407,50 +10506,70 @@ if (
 } else {
 
     initializeLoansModule();
+
 }
 
 
 // ==========================================================
-// FIREBASE / DATA CHANGE SAFETY
+// PUBLIC GLOBAL HELPERS
 // ==========================================================
-//
-// If loadLoans() installs a Firestore realtime
-// listener, this function does not create another
-// listener. It only keeps the UI synchronized
-// after the in-memory loans array changes.
-//
 
-function syncLoanUIAfterDataChange() {
+/*
+ * These are exposed globally so dynamically
+ * generated HTML buttons can safely call
+ * them using data-action handlers or inline
+ * application integrations.
+ */
 
-    try {
+if (
+    typeof window !==
+    "undefined"
+) {
 
-        populateYearFilter();
-
-
-        if (
-            loanDetailsOpen
-        ) {
-
-            refreshCurrentLoanDetails();
-
-        } else {
-
-            refreshLoanTable();
-        }
+    window.getLoanById =
+        getLoanById;
 
 
-    } catch (error) {
+    window.getNextRepayment =
+        getNextRepayment;
 
-        console.error(
-            "Loan UI synchronization error:",
-            error
-        );
-    }
+
+    window.refreshLoanTable =
+        refreshLoanTable;
+
+
+    window.openLoanDetailsPage =
+        openLoanDetailsPage;
+
+
+    window.openRepaymentForLoan =
+        openRepaymentForLoanSafe;
+
+
+    window.closeRepaymentModal =
+        closeRepaymentModalSafely;
+
+
+    window.approveLoan =
+        approveLoan;
+
+
+    window.deleteLoan =
+        deleteLoan;
+
+
+    window.sendLoanApprovalMessage =
+        sendLoanApprovalMessage;
+
+
+    window.sendLoanRepaymentMessage =
+        sendLoanRepaymentMessage;
+
 }
 
 
 // ==========================================================
-// FINAL PUBLIC API
+// MODULE EXPORTS
 // ==========================================================
 
 export {
@@ -13467,75 +10586,28 @@ export {
 
     refreshLoanTable,
 
-    refreshLoansSafely,
-
-    refreshCurrentLoanDetails,
-
     getLoanById,
 
     getNextRepayment,
 
-    getLoanBalance,
+    openLoanDetailsPage,
 
-    getOutstandingLoansForClient,
+    openRepaymentForLoanSafe,
 
-    getClientForLoan,
+    closeRepaymentModalSafely,
 
-    getDisplayLoanStatus,
+    approveLoan,
+
+    deleteLoan,
 
     sendLoanApprovalMessage,
 
-    sendLoanRepaymentMessage,
+    sendLoanRepaymentMessage
 
-    sendLoanMessageSafely,
-
-    sendRepaymentMessageSafely,
-
-    buildLoanMessagingPayload,
-
-    getLoanClientForMessaging,
-
-    getLoanClientPhone,
-
-    normalizeMessagingPhone
 };
 
 
 // ==========================================================
 // END OF LOANS.JS
-// ==========================================================
-//
-// PART 16/16 COMPLETE
-//
-// IMPORTANT:
-// Do not add another duplicate:
-//   - approveLoan()
-//   - closeRepaymentModal()
-//   - setupFabAddRepayment()
-//   - openRepaymentForLoan()
-//   - loadLoans()
-//   - refreshLoanTable()
-//   - DOMContentLoaded initializer
-//   - repayment submit handler
-//
-// Those functions should exist only once in
-// the rebuilt loans.js.
-//
-// Messaging remains isolated:
-//   Loan approval
-//       ↓
-//   Firestore approval saved
-//       ↓
-//   messaging.js
-//
-//   Repayment
-//       ↓
-//   Firestore repayment saved
-//       ↓
-//   history saved
-//       ↓
-//   messaging.js
-//
-// A messaging failure must NEVER roll back,
-// cancel, or invalidate the financial transaction.
+// END OF PART 16/16
 // ==========================================================
