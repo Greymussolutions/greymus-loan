@@ -1,7 +1,7 @@
 // ======================================================
 // GREYMUS LOAN FINANCIAL HUB
 // app.js
-// VERSION 3.0
+// VERSION 4.0
 //
 // APP CONTROLLER
 // • Firebase authentication
@@ -12,10 +12,23 @@
 // • Mobile navigation auto-hide on scroll
 // • Logout
 // • Global modal closing
-// • Android back-button support
+// • GLOBAL Android / phone BACK controller
+// • Centralized browser history
 //
-// NOTE:
-// Tab navigation and tab history are handled by ui.js.
+// IMPORTANT:
+// app.js is the ONLY file that listens for popstate.
+//
+// ui.js handles:
+// • Tab display
+// • Tab button clicks
+// • Creating tab history entries
+//
+// app.js handles:
+// • Android/browser BACK
+// • Scroll-to-top priority
+// • Overlay closing priority
+// • Tab history navigation
+//
 // ======================================================
 
 import { auth } from "./firebase.js";
@@ -137,42 +150,32 @@ function showAuthenticatedApp(
     user
 ) {
 
-    // Hide login
     setHidden(
         loginSection,
         true
     );
 
-
-    // Show application
     setHidden(
         dashboardSection,
         false
     );
 
-
-    // Show mobile navigation
     setHidden(
         mobileNav,
         false
     );
 
-
-    // Show FAB
     setHidden(
         fab,
         false
     );
 
-
-    // Show footer
     setHidden(
         footer,
         false
     );
 
 
-    // Display logged-in user
     if (loggedUser) {
 
         loggedUser.textContent =
@@ -181,7 +184,6 @@ function showAuthenticatedApp(
     }
 
 
-    // Close settings
     closeSettingsMenu();
 
 }
@@ -193,45 +195,230 @@ function showAuthenticatedApp(
 
 function showLogin() {
 
-    // Hide application
     setHidden(
         dashboardSection,
         true
     );
 
-
-    // Show login
     setHidden(
         loginSection,
         false
     );
 
-
-    // Hide mobile navigation
     setHidden(
         mobileNav,
         true
     );
 
-
-    // Hide FAB
     setHidden(
         fab,
         true
     );
 
-
-    // Hide footer
     setHidden(
         footer,
         true
     );
 
 
-    // Close settings
     closeSettingsMenu();
 
 }
+
+
+// ======================================================
+// HISTORY CONSTANTS
+// ======================================================
+
+const GREYMUS_HISTORY_CONTROLLER =
+    "GREYMUS_HISTORY";
+
+const GREYMUS_BACK_GUARD =
+    "GREYMUS_BACK_GUARD";
+
+let greymusBackBusy = false;
+
+
+// ======================================================
+// GET CURRENT TAB
+// ======================================================
+
+function getCurrentTab() {
+
+    const activeTab =
+        document.querySelector(
+            ".tab-content:not(.hidden)"
+        );
+
+
+    if (
+        activeTab &&
+        activeTab.id
+    ) {
+
+        return activeTab.id.replace(
+            "-tab",
+            ""
+        );
+
+    }
+
+
+    const hash =
+        window.location.hash
+            ? window.location.hash
+                .replace("#", "")
+            : "";
+
+
+    return hash || "dashboard";
+
+}
+
+
+// ======================================================
+// GET CURRENT GREYMUS HISTORY STATE
+// ======================================================
+
+function getGreymusHistoryState(
+    tab = getCurrentTab()
+) {
+
+    return {
+
+        controller:
+            GREYMUS_HISTORY_CONTROLLER,
+
+        tab:
+            tab || "dashboard"
+
+    };
+
+}
+
+
+// ======================================================
+// SET / REPLACE CURRENT HISTORY STATE
+// ======================================================
+
+function replaceGreymusHistory(
+    tab
+) {
+
+    const safeTab =
+        tab || "dashboard";
+
+
+    history.replaceState(
+        getGreymusHistoryState(
+            safeTab
+        ),
+        "",
+        "#" + safeTab
+    );
+
+}
+
+
+// ======================================================
+// CREATE NEW TAB HISTORY ENTRY
+// ======================================================
+//
+// Called by ui.js through the global helper.
+//
+// Example:
+//
+// navigateGreymusTab("clients")
+//
+// creates:
+//
+// Dashboard
+//      ↓
+// Clients
+//
+// Android BACK then returns to Dashboard.
+//
+// ======================================================
+
+function navigateGreymusTab(
+    tab
+) {
+
+    if (!tab) return;
+
+
+    const currentTab =
+        getCurrentTab();
+
+
+    if (
+        currentTab === tab
+    ) {
+
+        return;
+
+    }
+
+
+    history.pushState(
+        getGreymusHistoryState(
+            tab
+        ),
+        "",
+        "#" + tab
+    );
+
+
+    if (
+        window.GreymusUI &&
+        typeof window.GreymusUI.showTab ===
+        "function"
+    ) {
+
+        window.GreymusUI.showTab(
+            tab
+        );
+
+    }
+
+
+    /*
+     * Every new tab starts at the top.
+     */
+
+    window.scrollTo({
+        top: 0,
+        behavior: "auto"
+    });
+
+
+    if (mobileNav) {
+
+        mobileNav.classList.remove(
+            "nav-hidden"
+        );
+
+    }
+
+
+    lastScrollPosition = 0;
+
+}
+
+
+// ======================================================
+// EXPOSE NAVIGATION TO ui.js
+// ======================================================
+
+window.GreymusApp = {
+
+    navigateTab:
+        navigateGreymusTab,
+
+    getCurrentTab:
+        getCurrentTab
+
+};
 
 
 // ======================================================
@@ -242,7 +429,6 @@ onAuthStateChanged(
     auth,
     user => {
 
-        // Startup logo completed
         if (startupLogo) {
 
             startupLogo.style.display =
@@ -258,15 +444,36 @@ onAuthStateChanged(
             );
 
 
-            // Start authenticated user
-            // at Dashboard.
-            history.replaceState(
-                {
-                    tab: "dashboard"
-                },
-                "",
-                "#dashboard"
+            /*
+             * Start authenticated session
+             * at Dashboard.
+             *
+             * Replace instead of push so
+             * login does not create an
+             * unwanted history entry.
+             */
+
+            replaceGreymusHistory(
+                "dashboard"
             );
+
+
+            /*
+             * Make sure Dashboard is visible.
+             */
+
+            if (
+                window.GreymusUI &&
+                typeof window.GreymusUI.showTab ===
+                "function"
+            ) {
+
+                window.GreymusUI.showTab(
+                    "dashboard"
+                );
+
+            }
+
 
         } else {
 
@@ -292,7 +499,6 @@ function openSettingsMenu() {
     );
 
 
-    // Prevent background scrolling
     document.body.style.overflow =
         "hidden";
 
@@ -309,14 +515,16 @@ function closeSettingsMenu() {
     );
 
 
-    // Restore scrolling
     document.body.style.overflow =
         "";
 
 }
 
 
-// Desktop settings button
+// ======================================================
+// DESKTOP SETTINGS BUTTON
+// ======================================================
+
 if (settingsBtn) {
 
     settingsBtn.addEventListener(
@@ -333,7 +541,10 @@ if (settingsBtn) {
 }
 
 
-// Mobile settings button
+// ======================================================
+// MOBILE SETTINGS BUTTON
+// ======================================================
+
 if (settingsBtnMobile) {
 
     settingsBtnMobile.addEventListener(
@@ -350,7 +561,10 @@ if (settingsBtnMobile) {
 }
 
 
-// Close settings
+// ======================================================
+// CLOSE SETTINGS
+// ======================================================
+
 if (closeSettings) {
 
     closeSettings.addEventListener(
@@ -367,7 +581,10 @@ if (closeSettings) {
 }
 
 
-// Click outside settings
+// ======================================================
+// CLICK OUTSIDE SETTINGS
+// ======================================================
+
 if (settingsMenu) {
 
     settingsMenu.addEventListener(
@@ -420,7 +637,6 @@ async function logoutUser() {
 }
 
 
-// Mobile logout
 if (mobileLogoutBtn) {
 
     mobileLogoutBtn.addEventListener(
@@ -434,9 +650,6 @@ if (mobileLogoutBtn) {
 // ======================================================
 // GLOBAL MODAL CLOSING
 // ======================================================
-//
-// Event delegation allows this to work even when
-// modules create modals dynamically.
 
 document.addEventListener(
     "click",
@@ -511,131 +724,37 @@ document.addEventListener(
 
 
 // ======================================================
-// ESCAPE KEY
+// FIND WINDOW SCROLL POSITION
 // ======================================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key !==
-            "Escape"
-        ) {
-
-            return;
-
-        }
-
-
-        // Close settings
-        closeSettingsMenu();
-
-
-        // Close modal
-        const openModal =
-            document.querySelector(
-                ".modal:not(.hidden)"
-            );
-
-
-        if (openModal) {
-
-            openModal.classList.add(
-                "hidden"
-            );
-
-            document.body.style.overflow =
-                "";
-
-        }
-
-
-        // Close notifications
-        const notificationPanel =
-            document.getElementById(
-                "notification-panel"
-            );
-
-
-        notificationPanel?.classList.add(
-            "hidden"
-        );
-
-    }
-);
-
-
-// ======================================================
-// FULL GLOBAL ANDROID / PHONE BACK BUTTON
-// GREYMUS LOAN FINANCIAL HUB
-//
-// BACK PRIORITY:
-//
-// 1. If the current page/list is scrolled down:
-//      → Go to the TOP first.
-//
-// 2. If an overlay/modal/panel is open:
-//      → Close it.
-//
-// 3. If inside a secondary screen:
-//      → Return through browser/app history.
-//
-// 4. If already at the root/top:
-//      → Allow normal Android/browser BACK.
-//
-// IMPORTANT:
-// This is intentionally centralized in app.js.
-// Do NOT create another global popstate handler
-// in individual modules.
-// ======================================================
-
-
-const GREYMUS_BACK_STATE =
-    "GREYMUS_BACK_CONTROLLER";
-
-
-let greymusBackBusy = false;
-
-
-/* ======================================================
-   FIND THE CURRENT SCROLL POSITION
-   ====================================================== */
 
 function getWindowScrollTop() {
 
     return (
+
         window.scrollY ||
+
         window.pageYOffset ||
-        document.documentElement.scrollTop ||
+
+        document.documentElement
+            .scrollTop ||
+
         document.body.scrollTop ||
+
         0
+
     );
 
 }
 
 
-/* ======================================================
-   SCROLL WINDOW TO TOP
-   ====================================================== */
-
-function scrollWindowToTop() {
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-}
-
-
-/* ======================================================
-   FIND SCROLLABLE ELEMENTS
-   ====================================================== */
+// ======================================================
+// FIND SCROLLABLE ELEMENTS
+// ======================================================
 
 function getScrollableElements() {
 
     const elements = [];
+
 
     const selectors = [
 
@@ -672,38 +791,65 @@ function getScrollableElements() {
         selector => {
 
             document
-                .querySelectorAll(selector)
-                .forEach(element => {
+                .querySelectorAll(
+                    selector
+                )
+                .forEach(
+                    element => {
 
-                    if (!element) return;
+                        if (!element) {
+                            return;
+                        }
 
-                    const style =
-                        window.getComputedStyle(
-                            element
-                        );
 
-                    const canScroll =
-                        (
+                        const style =
+                            window.getComputedStyle(
+                                element
+                            );
+
+
+                        const canScroll =
+
                             element.scrollHeight >
-                            element.clientHeight
-                        ) &&
-                        (
-                            style.overflowY === "auto" ||
-                            style.overflowY === "scroll" ||
-                            style.overflow === "auto" ||
-                            style.overflow === "scroll"
-                        );
+                            element.clientHeight &&
+
+                            (
+
+                                style.overflowY ===
+                                "auto" ||
+
+                                style.overflowY ===
+                                "scroll" ||
+
+                                style.overflow ===
+                                "auto" ||
+
+                                style.overflow ===
+                                "scroll"
+
+                            );
 
 
-                    if (canScroll) {
+                        if (
+                            canScroll
+                        ) {
 
-                        elements.push(
-                            element
-                        );
+                            if (
+                                !elements.includes(
+                                    element
+                                )
+                            ) {
+
+                                elements.push(
+                                    element
+                                );
+
+                            }
+
+                        }
 
                     }
-
-                });
+                );
 
         }
     );
@@ -714,20 +860,29 @@ function getScrollableElements() {
 }
 
 
-/* ======================================================
-   CHECK / RESET INNER SCROLL
-   ====================================================== */
+// ======================================================
+// SCROLL CURRENT SCREEN TO TOP
+// ======================================================
+//
+// Returns:
+//
+// true  = something was scrolled
+// false = already at top
+//
+// IMPORTANT:
+// We use AUTO rather than SMOOTH here.
+//
+// Android BACK should feel immediate.
+// ======================================================
 
 function scrollCurrentScreenToTop() {
 
-    let foundScrolledElement = null;
-
-    const elements =
-        getScrollableElements();
+    let foundScrolledElement =
+        null;
 
 
     /*
-     * Check window first.
+     * Window first.
      */
 
     if (
@@ -742,11 +897,16 @@ function scrollCurrentScreenToTop() {
 
 
     /*
-     * Check every internal scroll
-     * container.
+     * Then internal containers.
      */
 
-    if (!foundScrolledElement) {
+    if (
+        !foundScrolledElement
+    ) {
+
+        const elements =
+            getScrollableElements();
+
 
         for (
             const element of elements
@@ -773,7 +933,9 @@ function scrollCurrentScreenToTop() {
      * Nothing is scrolled.
      */
 
-    if (!foundScrolledElement) {
+    if (
+        !foundScrolledElement
+    ) {
 
         return false;
 
@@ -781,7 +943,7 @@ function scrollCurrentScreenToTop() {
 
 
     /*
-     * Scroll window.
+     * Window.
      */
 
     if (
@@ -789,12 +951,16 @@ function scrollCurrentScreenToTop() {
         window
     ) {
 
-        scrollWindowToTop();
+        window.scrollTo({
+            top: 0,
+            behavior: "auto"
+        });
 
     }
 
+
     /*
-     * Scroll internal container.
+     * Internal scroll container.
      */
 
     else {
@@ -803,7 +969,7 @@ function scrollCurrentScreenToTop() {
 
             top: 0,
 
-            behavior: "smooth"
+            behavior: "auto"
 
         });
 
@@ -811,8 +977,7 @@ function scrollCurrentScreenToTop() {
 
 
     /*
-     * Make mobile navigation
-     * visible again.
+     * Show mobile navigation.
      */
 
     if (mobileNav) {
@@ -832,33 +997,40 @@ function scrollCurrentScreenToTop() {
 }
 
 
-/* ======================================================
-   FIND OPEN OVERLAY
-   ====================================================== */
+// ======================================================
+// FIND OPEN GREYMUS OVERLAY
+// ======================================================
 
 function getOpenGreymusOverlay() {
 
     /*
-     * Settings menu
+     * SETTINGS
      */
 
     if (
+
         settingsMenu &&
+
         !settingsMenu.classList.contains(
             "hidden"
         )
+
     ) {
 
         return {
+
             type: "settings",
-            element: settingsMenu
+
+            element:
+                settingsMenu
+
         };
 
     }
 
 
     /*
-     * Standard modal
+     * STANDARD MODAL
      */
 
     const modal =
@@ -870,15 +1042,19 @@ function getOpenGreymusOverlay() {
     if (modal) {
 
         return {
+
             type: "modal",
-            element: modal
+
+            element:
+                modal
+
         };
 
     }
 
 
     /*
-     * Notification panel
+     * NOTIFICATION PANEL
      */
 
     const notificationPanel =
@@ -888,23 +1064,30 @@ function getOpenGreymusOverlay() {
 
 
     if (
+
         notificationPanel &&
+
         !notificationPanel.classList.contains(
             "hidden"
         )
+
     ) {
 
         return {
-            type: "notification",
+
+            type:
+                "notification",
+
             element:
                 notificationPanel
+
         };
 
     }
 
 
     /*
-     * Global overlay
+     * GLOBAL OVERLAY
      */
 
     const globalOverlay =
@@ -914,23 +1097,30 @@ function getOpenGreymusOverlay() {
 
 
     if (
+
         globalOverlay &&
+
         !globalOverlay.classList.contains(
             "hidden"
         )
+
     ) {
 
         return {
-            type: "global-overlay",
+
+            type:
+                "global-overlay",
+
             element:
                 globalOverlay
+
         };
 
     }
 
 
     /*
-     * FAB actions
+     * FAB ACTIONS
      */
 
     const fabActions =
@@ -940,15 +1130,23 @@ function getOpenGreymusOverlay() {
 
 
     if (
+
         fabActions &&
+
         fabActions.classList.contains(
             "show"
         )
+
     ) {
 
         return {
-            type: "fab",
-            element: fabActions
+
+            type:
+                "fab",
+
+            element:
+                fabActions
+
         };
 
     }
@@ -959,9 +1157,9 @@ function getOpenGreymusOverlay() {
 }
 
 
-/* ======================================================
-   CLOSE ANY OPEN OVERLAY
-   ====================================================== */
+// ======================================================
+// CLOSE GREYMUS OVERLAY
+// ======================================================
 
 function closeGreymusOverlay() {
 
@@ -1014,7 +1212,7 @@ function closeGreymusOverlay() {
 
 
     /*
-     * NOTIFICATIONS
+     * NOTIFICATION
      */
 
     if (
@@ -1050,7 +1248,7 @@ function closeGreymusOverlay() {
 
 
     /*
-     * FAB MENU
+     * FAB
      */
 
     if (
@@ -1087,69 +1285,79 @@ function closeGreymusOverlay() {
 }
 
 
-/* ======================================================
-   DETERMINE WHETHER THE APP IS AT ROOT
-   ====================================================== */
+// ======================================================
+// RESTORE HISTORY AFTER INTERCEPTING BACK
+// ======================================================
+//
+// Android/browser Back has already moved one history
+// step backward by the time popstate fires.
+//
+// If Greymus consumes that Back press for:
+// • scroll-to-top
+// • close-overlay
+//
+// we immediately create the current state again.
+//
+// This means:
+//
+// FIRST BACK
+//     ↓
+// Greymus handles it
+//
+// SECOND BACK
+//     ↓
+// History navigation can continue.
+//
+// ======================================================
 
-function isGreymusRootScreen() {
+function restoreCurrentHistoryState() {
 
-    const visibleTab =
-        document.querySelector(
-            ".tab-content:not(.hidden)"
-        );
+    const currentTab =
+        getCurrentTab();
 
 
-    if (!visibleTab) {
+    history.pushState(
 
-        return true;
+        {
 
-    }
+            controller:
+                GREYMUS_BACK_GUARD,
 
+            tab:
+                currentTab,
 
-    return (
-        visibleTab.id ===
-        "dashboard-tab"
+            guard:
+                true
+
+        },
+
+        "",
+
+        "#" + currentTab
+
     );
 
 }
 
 
-/* ======================================================
-   CURRENT BACK STATE
-   ====================================================== */
-
-function getGreymusBackState() {
-
-    return {
-
-        controller:
-            GREYMUS_BACK_STATE,
-
-        tab:
-            window.location.hash
-                ? window.location.hash
-                    .replace("#", "")
-                : "dashboard"
-
-    };
-
-}
-
-
-/* ======================================================
-   ANDROID / PHONE BACK HANDLER
-   ====================================================== */
+// ======================================================
+// POPSTATE
+// ======================================================
+//
+// THIS IS THE ONLY GLOBAL popstate HANDLER
+// IN GREYMUS.
+//
+// ui.js does NOT register popstate.
+//
+// ======================================================
 
 window.addEventListener(
     "popstate",
     event => {
 
-        /*
-         * Prevent multiple Back events from
-         * firing at the same time.
-         */
-
-        if (greymusBackBusy) {
+        if (
+            greymusBackBusy
+        ) {
 
             return;
 
@@ -1166,8 +1374,15 @@ window.addEventListener(
              * ==========================================
              * PRIORITY 1
              *
-             * If user is somewhere down a page/list,
-             * BACK goes to the TOP first.
+             * SCROLLED SCREEN
+             *
+             * Android Back:
+             *
+             *      ↓
+             *
+             * Scroll to top
+             *
+             * Stay on current screen.
              * ==========================================
              */
 
@@ -1175,31 +1390,7 @@ window.addEventListener(
                 scrollCurrentScreenToTop()
             ) {
 
-                /*
-                 * Restore a history entry so the
-                 * next Back press can continue
-                 * navigating normally.
-                 */
-
-                if (
-                    !window.history.state ||
-                    window.history.state.controller !==
-                    GREYMUS_BACK_STATE
-                ) {
-
-                    window.history.pushState(
-                        getGreymusBackState(),
-                        "",
-                        window.location.href
-                            .split("#")[0] +
-                        (
-                            window.location.hash ||
-                            "#dashboard"
-                        )
-                    );
-
-                }
-
+                restoreCurrentHistoryState();
 
                 return;
 
@@ -1210,14 +1401,23 @@ window.addEventListener(
              * ==========================================
              * PRIORITY 2
              *
-             * Close modal / settings / notification /
-             * FAB / overlay.
+             * OPEN OVERLAY
+             *
+             * Android Back:
+             *
+             *      ↓
+             *
+             * Close overlay
+             *
+             * Stay on current screen.
              * ==========================================
              */
 
             if (
                 closeGreymusOverlay()
             ) {
+
+                restoreCurrentHistoryState();
 
                 return;
 
@@ -1228,18 +1428,59 @@ window.addEventListener(
              * ==========================================
              * PRIORITY 3
              *
-             * If another module already controls the
-             * tab history, let that navigation happen.
+             * TAB HISTORY
              *
-             * We intentionally do NOT force a tab change
-             * here because ui.js owns tab history.
+             * If the history state points to a
+             * Greymus tab, show that tab.
              * ==========================================
              */
 
+            const state =
+                event.state;
+
+
             if (
-                event.state &&
-                event.state.tab
+
+                state &&
+
+                state.controller ===
+                GREYMUS_HISTORY_CONTROLLER &&
+
+                state.tab
+
             ) {
+
+                if (
+                    window.GreymusUI &&
+                    typeof window.GreymusUI.showTab ===
+                    "function"
+                ) {
+
+                    window.GreymusUI.showTab(
+                        state.tab
+                    );
+
+                }
+
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "auto"
+                });
+
+
+                if (mobileNav) {
+
+                    mobileNav.classList.remove(
+                        "nav-hidden"
+                    );
+
+                }
+
+
+                lastScrollPosition =
+                    0;
+
 
                 return;
 
@@ -1250,21 +1491,17 @@ window.addEventListener(
              * ==========================================
              * PRIORITY 4
              *
-             * Root screen.
+             * UNKNOWN / EXTERNAL HISTORY
              *
-             * Nothing else is open and nothing is
-             * scrolled, so normal browser/Android
-             * Back behavior is allowed.
+             * Nothing in Greymus needs to consume
+             * this Back event.
+             *
+             * Browser/Android has already navigated.
              * ==========================================
              */
 
         }
         finally {
-
-            /*
-             * Release after the current Back
-             * operation has completed.
-             */
 
             setTimeout(
                 () => {
@@ -1282,29 +1519,79 @@ window.addEventListener(
 );
 
 
-/* ======================================================
-   INITIAL BACK STATE
-   ====================================================== */
+// ======================================================
+// INITIAL HISTORY STATE
+// ======================================================
+//
+// Do NOT push an extra history entry.
+//
+// Replace the current entry only.
+//
+// ======================================================
 
-if (
-    !window.history.state ||
-    window.history.state.controller !==
-    GREYMUS_BACK_STATE
-) {
+(function initializeGreymusHistory() {
 
-    window.history.replaceState(
-        getGreymusBackState(),
+    const existingState =
+        window.history.state;
+
+
+    /*
+     * Preserve a valid Greymus state.
+     */
+
+    if (
+
+        existingState &&
+
+        (
+
+            existingState.controller ===
+            GREYMUS_HISTORY_CONTROLLER ||
+
+            existingState.controller ===
+            GREYMUS_BACK_GUARD
+
+        )
+
+    ) {
+
+        return;
+
+    }
+
+
+    const initialTab =
+        window.location.hash
+            ? window.location.hash
+                .replace("#", "")
+            : "dashboard";
+
+
+    history.replaceState(
+
+        getGreymusHistoryState(
+            initialTab
+        ),
+
         "",
-        window.location.href
+
+        "#" + initialTab
+
     );
 
-}
+})();
 
 
-/* ======================================================
-   ALSO SUPPORT KEYBOARD BACK
-   ESCAPE = CLOSE OVERLAY ONLY
-   ====================================================== */
+// ======================================================
+// ESCAPE KEY
+// ======================================================
+//
+// ESC priority:
+//
+// 1. Close overlay
+// 2. Scroll to top
+//
+// ======================================================
 
 document.addEventListener(
     "keydown",
@@ -1320,10 +1607,6 @@ document.addEventListener(
         }
 
 
-        /*
-         * Close overlay first.
-         */
-
         if (
             closeGreymusOverlay()
         ) {
@@ -1334,10 +1617,6 @@ document.addEventListener(
 
         }
 
-
-        /*
-         * Otherwise scroll to top.
-         */
 
         if (
             scrollCurrentScreenToTop()
@@ -1367,7 +1646,11 @@ function handleMobileNavigationScroll() {
     if (!mobileNav) return;
 
 
-    // Only apply on mobile-sized screens
+    /*
+     * Desktop:
+     * always show navigation.
+     */
+
     if (
         window.innerWidth > 768
     ) {
@@ -1382,13 +1665,17 @@ function handleMobileNavigationScroll() {
 
 
     const currentScroll =
-        window.scrollY ||
-        window.pageYOffset ||
-        0;
+        getWindowScrollTop();
 
 
-    // Always show navigation near the top
-    if (currentScroll <= 20) {
+    /*
+     * Near top:
+     * always show navigation.
+     */
+
+    if (
+        currentScroll <= 20
+    ) {
 
         mobileNav.classList.remove(
             "nav-hidden"
@@ -1402,7 +1689,10 @@ function handleMobileNavigationScroll() {
     }
 
 
-    // Scrolling down
+    /*
+     * Scrolling down.
+     */
+
     if (
         currentScroll >
         lastScrollPosition
@@ -1414,7 +1704,11 @@ function handleMobileNavigationScroll() {
 
     }
 
-    // Scrolling up
+
+    /*
+     * Scrolling up.
+     */
+
     else if (
         currentScroll <
         lastScrollPosition
@@ -1437,7 +1731,9 @@ window.addEventListener(
     "scroll",
     () => {
 
-        if (!scrollTicking) {
+        if (
+            !scrollTicking
+        ) {
 
             window.requestAnimationFrame(
                 () => {
@@ -1449,6 +1745,7 @@ window.addEventListener(
 
                 }
             );
+
 
             scrollTicking =
                 true;
@@ -1512,7 +1809,9 @@ document.addEventListener(
 
 
         const settingsOpen =
+
             settingsMenu &&
+
             !settingsMenu.classList.contains(
                 "hidden"
             );
@@ -1530,6 +1829,7 @@ document.addEventListener(
 
     }
 );
+
 
 // ======================================================
 // END OF FILE
