@@ -1,10 +1,11 @@
 // ======================================================
 // GREYMUS LOAN FINANCIAL HUB
 // ui.js
-// VERSION 2.0
+// VERSION 3.0
 //
 // UI SYSTEM
 // ✔ Tab navigation
+// ✔ Tab history creation
 // ✔ Modal controls
 // ✔ Notification panel
 // ✔ Toast messages
@@ -12,307 +13,583 @@
 // ✔ Confirmation modal
 // ✔ Safe DOM handling
 //
-// NOTE:
-// Main tab/history navigation is coordinated with app.js.
+// IMPORTANT:
+// app.js is the ONLY file that handles popstate.
+//
+// ui.js:
+// • Shows tabs
+// • Handles tab clicks
+// • Creates tab history entries through app.js
+//
 // ======================================================
 
+
 // ======================================================
-// TAB NAVIGATION
+// TAB ELEMENTS
 // ======================================================
 
 const tabButtons =
-document.querySelectorAll(".tab-btn");
+    document.querySelectorAll(
+        ".tab-btn"
+    );
 
 const tabContents =
-document.querySelectorAll(".tab-content");
-
-function showTab(tabName) {
-
-// Hide all tabs
-tabContents.forEach(tab => {
-
-    tab.classList.add("hidden");
-
-});
+    document.querySelectorAll(
+        ".tab-content"
+    );
 
 
-// Show requested tab
-const activeTab =
-    document.getElementById(`${tabName}-tab`);
+// ======================================================
+// SHOW TAB
+// ======================================================
+//
+// This function ONLY changes the visible tab.
+//
+// It does NOT modify browser history.
+//
+// History is handled by:
+// • app.js
+//
+// ======================================================
+
+function showTab(
+    tabName
+) {
+
+    if (!tabName) {
+        return;
+    }
 
 
-if (activeTab) {
+    // ==================================================
+    // HIDE ALL TABS
+    // ==================================================
 
-    activeTab.classList.remove("hidden");
+    tabContents.forEach(
+        tab => {
 
-}
+            tab.classList.add(
+                "hidden"
+            );
+
+        }
+    );
 
 
-// Update active navigation button
-tabButtons.forEach(button => {
+    // ==================================================
+    // SHOW REQUESTED TAB
+    // ==================================================
 
-    if (button.dataset.tab === tabName) {
+    const activeTab =
+        document.getElementById(
+            `${tabName}-tab`
+        );
 
-        button.classList.add("active");
 
-    } else {
+    if (activeTab) {
 
-        button.classList.remove("active");
+        activeTab.classList.remove(
+            "hidden"
+        );
 
     }
 
-});
+
+    // ==================================================
+    // UPDATE ACTIVE NAVIGATION BUTTON
+    // ==================================================
+
+    tabButtons.forEach(
+        button => {
+
+            if (
+                button.dataset.tab ===
+                tabName
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+
+            } else {
+
+                button.classList.remove(
+                    "active"
+                );
+
+            }
+
+        }
+    );
 
 }
+
 
 // ======================================================
 // TAB CLICK EVENTS
 // ======================================================
+//
+// IMPORTANT:
+//
+// We do NOT call showTab() directly here.
+//
+// We ask app.js to create a history entry.
+//
+// This produces:
+//
+// Dashboard
+//    ↓
+// Clients
+//    ↓
+// Loans
+//
+// Android BACK:
+//
+// Loans
+//    ↓
+// Clients
+//    ↓
+// Dashboard
+//
+// ======================================================
 
-tabButtons.forEach(button => {
+tabButtons.forEach(
+    button => {
 
-button.addEventListener("click", () => {
+        button.addEventListener(
+            "click",
+            event => {
 
-    const tabName =
-        button.dataset.tab;
+                event.preventDefault();
 
-    if (tabName) {
 
-        showTab(tabName);
+                const tabName =
+                    button.dataset.tab;
+
+
+                if (!tabName) {
+                    return;
+                }
+
+
+                /*
+                 * If app.js is available,
+                 * let it handle history.
+                 */
+
+                if (
+
+                    window.GreymusApp &&
+
+                    typeof
+                    window.GreymusApp.navigateTab ===
+                    "function"
+
+                ) {
+
+                    window.GreymusApp.navigateTab(
+                        tabName
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Safe fallback.
+                 *
+                 * This should only happen if
+                 * app.js has not loaded yet.
+                 */
+
+                showTab(
+                    tabName
+                );
+
+            }
+        );
 
     }
+);
 
-});
-
-});
 
 // ======================================================
 // MODAL SYSTEM
 // ======================================================
 
 const modals =
-document.querySelectorAll(".modal");
+    document.querySelectorAll(
+        ".modal"
+    );
+
+
+// ======================================================
+// CLOSE ALL MODALS
+// ======================================================
 
 function closeAllModals() {
 
-modals.forEach(modal => {
+    modals.forEach(
+        modal => {
 
-    modal.classList.add("hidden");
+            modal.classList.add(
+                "hidden"
+            );
 
-});
+        }
+    );
+
+
+    document.body.style.overflow =
+        "";
 
 }
+
 
 // ======================================================
 // MODAL CLOSE BUTTONS
 // ======================================================
 
 document
-.querySelectorAll(".modal-close-btn")
-.forEach(button => {
+    .querySelectorAll(
+        ".modal-close-btn"
+    )
+    .forEach(
+        button => {
 
-    button.addEventListener("click", () => {
+            button.addEventListener(
+                "click",
+                event => {
 
-        closeAllModals();
+                    event.preventDefault();
 
-    });
+                    closeAllModals();
 
-});
-
-// Support buttons using .close-modal
-document
-.querySelectorAll(".close-modal")
-.forEach(button => {
-
-    button.addEventListener("click", () => {
-
-        const modal =
-            button.closest(".modal");
-
-        if (modal) {
-
-            modal.classList.add("hidden");
+                }
+            );
 
         }
+    );
 
-    });
 
-});
+// ======================================================
+// SUPPORT BUTTONS USING .close-modal
+// ======================================================
+
+document
+    .querySelectorAll(
+        ".close-modal"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+
+                    const modal =
+                        button.closest(
+                            ".modal"
+                        );
+
+
+                    if (modal) {
+
+                        modal.classList.add(
+                            "hidden"
+                        );
+
+                    }
+
+
+                    document.body.style.overflow =
+                        "";
+
+                }
+            );
+
+        }
+    );
+
 
 // ======================================================
 // SECONDARY BUTTONS
 // ======================================================
 
 document
-.querySelectorAll(".secondary-btn")
-.forEach(button => {
+    .querySelectorAll(
+        ".secondary-btn"
+    )
+    .forEach(
+        button => {
 
-    button.addEventListener("click", () => {
+            button.addEventListener(
+                "click",
+                event => {
 
-        const modal =
-            button.closest(".modal");
+                    event.preventDefault();
 
-        /*
-         * Only close the modal containing the
-         * secondary button.
-         *
-         * This prevents a Cancel button from
-         * unexpectedly affecting unrelated UI.
-         */
 
-        if (modal) {
+                    const modal =
+                        button.closest(
+                            ".modal"
+                        );
 
-            modal.classList.add("hidden");
+
+                    /*
+                     * Only close the modal
+                     * containing this button.
+                     */
+
+                    if (modal) {
+
+                        modal.classList.add(
+                            "hidden"
+                        );
+
+                    }
+
+
+                    document.body.style.overflow =
+                        "";
+
+                }
+            );
 
         }
+    );
 
-    });
-
-});
 
 // ======================================================
 // CLICK OUTSIDE MODAL TO CLOSE
 // ======================================================
 
-modals.forEach(modal => {
+modals.forEach(
+    modal => {
 
-modal.addEventListener("click", event => {
+        modal.addEventListener(
+            "click",
+            event => {
 
-    if (event.target === modal) {
+                if (
+                    event.target ===
+                    modal
+                ) {
 
-        modal.classList.add("hidden");
+                    modal.classList.add(
+                        "hidden"
+                    );
+
+                    document.body.style.overflow =
+                        "";
+
+                }
+
+            }
+        );
 
     }
+);
 
-});
-
-});
 
 // ======================================================
 // NOTIFICATION PANEL
 // ======================================================
 
 const notificationBtn =
-document.getElementById("notification-btn");
+    document.getElementById(
+        "notification-btn"
+    );
 
 const notificationPanel =
-document.getElementById("notification-panel");
+    document.getElementById(
+        "notification-panel"
+    );
 
 const closeNotifications =
-document.getElementById("close-notifications");
+    document.getElementById(
+        "close-notifications"
+    );
 
-if (notificationBtn && notificationPanel) {
 
-notificationBtn.addEventListener("click", () => {
+// ======================================================
+// OPEN / CLOSE NOTIFICATIONS
+// ======================================================
 
-    notificationPanel.classList.toggle("hidden");
+if (
+    notificationBtn &&
+    notificationPanel
+) {
 
-});
+    notificationBtn.addEventListener(
+        "click",
+        event => {
+
+            event.preventDefault();
+
+            notificationPanel.classList.toggle(
+                "hidden"
+            );
+
+        }
+    );
 
 }
 
-if (closeNotifications && notificationPanel) {
 
-closeNotifications.addEventListener("click", () => {
+if (
+    closeNotifications &&
+    notificationPanel
+) {
 
-    notificationPanel.classList.add("hidden");
+    closeNotifications.addEventListener(
+        "click",
+        event => {
 
-});
+            event.preventDefault();
+
+            notificationPanel.classList.add(
+                "hidden"
+            );
+
+        }
+    );
 
 }
+
 
 // ======================================================
 // CLOSE NOTIFICATION WHEN CLICKING OUTSIDE
 // ======================================================
 
-document.addEventListener("click", event => {
+document.addEventListener(
+    "click",
+    event => {
 
-if (
-    !notificationPanel ||
-    !notificationBtn
-) {
+        if (
+            !notificationPanel ||
+            !notificationBtn
+        ) {
 
-    return;
+            return;
 
-}
-
-
-if (
-    notificationPanel.classList.contains("hidden")
-) {
-
-    return;
-
-}
+        }
 
 
-if (
-    !notificationPanel.contains(event.target) &&
-    !notificationBtn.contains(event.target)
-) {
+        if (
+            notificationPanel.classList.contains(
+                "hidden"
+            )
+        ) {
 
-    notificationPanel.classList.add("hidden");
+            return;
 
-}
+        }
 
-});
+
+        if (
+
+            !notificationPanel.contains(
+                event.target
+            ) &&
+
+            !notificationBtn.contains(
+                event.target
+            )
+
+        ) {
+
+            notificationPanel.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
 
 // ======================================================
 // TOAST SYSTEM
 // ======================================================
 
-let toastTimer = null;
+let toastTimer =
+    null;
+
 
 function showToast(
-message,
-type = "success"
+    message,
+    type = "success"
 ) {
 
-const toast =
-    document.getElementById("toast");
+    const toast =
+        document.getElementById(
+            "toast"
+        );
 
 
-if (!toast) {
+    if (!toast) {
+        return;
+    }
 
-    return;
+
+    // Clear previous timer
+
+    if (toastTimer) {
+
+        clearTimeout(
+            toastTimer
+        );
+
+    }
+
+
+    // Set message
+
+    toast.textContent =
+        message;
+
+
+    // Reset classes
+
+    toast.className =
+        "toast";
+
+
+    // Add type
+
+    toast.classList.add(
+        type
+    );
+
+
+    // Show
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    // Hide after 3 seconds
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            3000
+        );
 
 }
 
-
-// Clear previous timer
-if (toastTimer) {
-
-    clearTimeout(toastTimer);
-
-}
-
-
-// Set message
-toast.textContent =
-    message;
-
-
-// Reset classes
-toast.className =
-    "toast";
-
-
-// Add type
-toast.classList.add(type);
-
-
-// Show
-toast.classList.add("show");
-
-
-// Hide after 3 seconds
-toastTimer = setTimeout(() => {
-
-    toast.classList.remove("show");
-
-}, 3000);
-
-}
 
 // ======================================================
 // LOADING OVERLAY
@@ -320,196 +597,326 @@ toastTimer = setTimeout(() => {
 
 function showLoading() {
 
-const loader =
-    document.getElementById("loading-overlay");
+    const loader =
+        document.getElementById(
+            "loading-overlay"
+        );
 
 
-if (!loader) {
+    if (!loader) {
+        return;
+    }
 
-    return;
+
+    loader.classList.remove(
+        "hidden"
+    );
 
 }
 
-
-loader.classList.remove("hidden");
-
-}
 
 function hideLoading() {
 
-const loader =
-    document.getElementById("loading-overlay");
+    const loader =
+        document.getElementById(
+            "loading-overlay"
+        );
 
 
-if (!loader) {
+    if (!loader) {
+        return;
+    }
 
-    return;
+
+    loader.classList.add(
+        "hidden"
+    );
 
 }
 
-
-loader.classList.add("hidden");
-
-}
 
 // ======================================================
 // CONFIRMATION MODAL
 // ======================================================
 
-let confirmCallback = null;
+let confirmCallback =
+    null;
+
 
 function confirmAction(
-message,
-callback
+    message,
+    callback
 ) {
 
-const modal =
-    document.getElementById("confirm-modal");
+    const modal =
+        document.getElementById(
+            "confirm-modal"
+        );
 
-const text =
-    document.getElementById("confirm-message");
+    const text =
+        document.getElementById(
+            "confirm-message"
+        );
 
 
-if (!modal) {
+    if (!modal) {
 
-    // If confirmation modal does not exist,
-    // execute callback directly.
-    if (typeof callback === "function") {
+        if (
+            typeof callback ===
+            "function"
+        ) {
 
-        callback();
+            callback();
+
+        }
+
+        return;
 
     }
 
-    return;
+
+    if (text) {
+
+        text.textContent =
+            message;
+
+    }
+
+
+    confirmCallback =
+
+        typeof callback ===
+        "function"
+
+            ? callback
+
+            : null;
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
 
 }
 
-
-if (text) {
-
-    text.textContent =
-        message;
-
-}
-
-
-confirmCallback =
-    typeof callback === "function"
-        ? callback
-        : null;
-
-
-modal.classList.remove("hidden");
-
-}
 
 // ======================================================
 // CONFIRM YES
 // ======================================================
 
 const confirmYes =
-document.getElementById("confirm-yes");
+    document.getElementById(
+        "confirm-yes"
+    );
+
 
 if (confirmYes) {
 
-confirmYes.addEventListener("click", () => {
+    confirmYes.addEventListener(
+        "click",
+        event => {
 
-    const callback =
-        confirmCallback;
-
-
-    // Clear first to prevent accidental
-    // double execution.
-    confirmCallback = null;
+            event.preventDefault();
 
 
-    if (typeof callback === "function") {
-
-        callback();
-
-    }
+            const callback =
+                confirmCallback;
 
 
-    const modal =
-        document.getElementById("confirm-modal");
+            /*
+             * Clear first to prevent
+             * accidental double execution.
+             */
+
+            confirmCallback =
+                null;
 
 
-    if (modal) {
+            if (
+                typeof callback ===
+                "function"
+            ) {
 
-        modal.classList.add("hidden");
+                callback();
 
-    }
+            }
 
-});
+
+            const modal =
+                document.getElementById(
+                    "confirm-modal"
+                );
+
+
+            if (modal) {
+
+                modal.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            document.body.style.overflow =
+                "";
+
+        }
+    );
 
 }
+
 
 // ======================================================
 // CONFIRM NO
 // ======================================================
 
 const confirmNo =
-document.getElementById("confirm-no");
+    document.getElementById(
+        "confirm-no"
+    );
+
 
 if (confirmNo) {
 
-confirmNo.addEventListener("click", () => {
+    confirmNo.addEventListener(
+        "click",
+        event => {
 
-    confirmCallback = null;
-
-
-    const modal =
-        document.getElementById("confirm-modal");
+            event.preventDefault();
 
 
-    if (modal) {
+            confirmCallback =
+                null;
 
-        modal.classList.add("hidden");
 
-    }
+            const modal =
+                document.getElementById(
+                    "confirm-modal"
+                );
 
-});
+
+            if (modal) {
+
+                modal.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            document.body.style.overflow =
+                "";
+
+        }
+    );
 
 }
+
 
 // ======================================================
 // ESCAPE KEY
 // ======================================================
+//
+// IMPORTANT:
+//
+// app.js owns the global Escape priority.
+//
+// This listener only exists as a fallback for
+// modal/notification cleanup.
+//
+// It does NOT touch browser history.
+//
+// ======================================================
 
-document.addEventListener("keydown", event => {
+document.addEventListener(
+    "keydown",
+    event => {
 
-if (event.key !== "Escape") {
+        if (
+            event.key !==
+            "Escape"
+        ) {
 
-    return;
+            return;
 
-}
-
-
-// Close all modals
-closeAllModals();
+        }
 
 
-// Close notification panel
-notificationPanel?.classList.add("hidden");
+        /*
+         * Close all modals.
+         */
 
-});
+        closeAllModals();
+
+
+        /*
+         * Close notifications.
+         */
+
+        notificationPanel?.classList.add(
+            "hidden"
+        );
+
+    }
+);
+
 
 // ======================================================
 // DEFAULT TAB
 // ======================================================
 //
-// Only set the dashboard if no tab is already
-// being handled by app.js.
+// If there is no hash and app.js has not yet
+// initialized history, show Dashboard.
 //
+// ======================================================
 
 if (
-document.getElementById("dashboard-tab") &&
-!location.hash
+
+    document.getElementById(
+        "dashboard-tab"
+    ) &&
+
+    !window.location.hash
+
 ) {
 
-showTab("dashboard");
+    showTab(
+        "dashboard"
+    );
 
 }
+
+
+// ======================================================
+// EXPOSE UI FUNCTIONS
+// ======================================================
+//
+// app.js uses this instead of importing showTab.
+//
+// This avoids circular module dependencies.
+//
+// ======================================================
+
+window.GreymusUI = {
+
+    showTab,
+
+    closeAllModals,
+
+    showToast,
+
+    showLoading,
+
+    hideLoading,
+
+    confirmAction
+
+};
+
 
 // ======================================================
 // EXPORTS
@@ -517,20 +924,21 @@ showTab("dashboard");
 
 export {
 
-showTab,
+    showTab,
 
-closeAllModals,
+    closeAllModals,
 
-showToast,
+    showToast,
 
-showLoading,
+    showLoading,
 
-hideLoading,
+    hideLoading,
 
-confirmAction
+    confirmAction
 
 };
 
+
 // ======================================================
-// END OF ui.js
+// END OF FILE
 // ======================================================
