@@ -1,7 +1,7 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.5
+// VERSION 4.6
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
@@ -36,6 +36,18 @@
 // ✔ OUTSTANDING PORTFOLIO RECONCILES WITH PRINCIPAL + INTEREST
 // ✔ MESSAGE BUTTONS
 // ✔ SAFE DATE COMPARISON
+//
+// INCOME CORRECTION:
+//
+// ✔ Processing fee remains income
+// ✔ Interest income is based on ACTUAL repayments
+// ✔ Principal repayment is NOT income
+// ✔ Interest is allocated to the ACTUAL payment month
+// ✔ Monthly income no longer depends on loan approval month
+// ✔ Total income remains the total interest actually collected
+//   + processing fees
+// ✔ Existing records are not modified
+// ✔ No Firestore writes are performed by this calculation
 //
 // STATUS: CORRECTED
 // ==========================================
@@ -628,6 +640,11 @@ function updateDashboard(){
     const currentYear =
         now.getFullYear();
 
+    const currentMonthKey =
+        `${currentYear}-${String(
+            currentMonth + 1
+        ).padStart(2, "0")}`;
+
     const repeatTracker = {};
 
 
@@ -724,6 +741,29 @@ function updateDashboard(){
 // ==========================================
 // INTEREST / INCOME
 // ==========================================
+//
+// IMPORTANT:
+//
+// Processing fee remains income in the
+// loan's approval/creation month, exactly
+// as before.
+//
+// Interest is different.
+//
+// Interest is recognized only when money
+// is actually received through repayment.
+//
+// Each payment is divided proportionally:
+//
+// Interest portion =
+// payment × (total interest / total repayment)
+//
+// Principal portion is NOT income.
+//
+// The actual payment date determines the
+// income month.
+//
+// ==========================================
 
             const interest =
                 Math.max(
@@ -733,150 +773,390 @@ function updateDashboard(){
                 );
 
 
-            const earnedInterest =
-                totalRepayment > 0
-
-                    ? (
-                        amountPaid /
-                        totalRepayment
-                    ) * interest
-
-                    : 0;
-
-
-            const income =
-                processingFee +
-                earnedInterest;
-
-
 // ==========================================
-// OUTSTANDING PORTFOLIO
+// PROCESSING FEE INCOME
 // ==========================================
-
-            const isOutstandingLoan =
-                status === "Approved" ||
-                status === "Active" ||
-                status === "Arrears";
-
+//
+// Preserve the existing processing-fee
+// treatment.
+//
+// ==========================================
 
             if(
-                isOutstandingLoan
+                processingFee > 0
             ){
 
-                outstandingPrincipal +=
-                    remainingPrincipal;
+                totalIncome +=
+                    processingFee;
 
-                outstandingInterest +=
-                    remainingInterest;
 
-                currentPortfolio +=
-                    outstanding;
+                if(
+
+                    approvalDate.getMonth() ===
+                        currentMonth &&
+
+                    approvalDate.getFullYear() ===
+                        currentYear
+
+                ){
+
+                    monthlyIncome +=
+                        processingFee;
+
+                }else{
+
+                    previousIncome +=
+                        processingFee;
+
+
+                    const monthName =
+                        approvalDate.toLocaleString(
+                            "en-US",
+                            {
+                                month: "long"
+                            }
+                        );
+
+
+                    const year =
+                        approvalDate.getFullYear();
+
+
+                    const key =
+                        `${monthName} ${year}`;
+
+
+                    previousMonthsIncome[key] =
+                        (
+                            previousMonthsIncome[key]
+                            || 0
+                        ) +
+                        processingFee;
+
+                }
 
             }
 
 
 // ==========================================
-// TOTAL PORTFOLIO
+// ACTUAL REPAYMENT INTEREST
+// ==========================================
+//
+// We intentionally use the payment history
+// stored inside each repayment schedule.
+//
+// This prevents the entire loan interest
+// from being recognized in the approval month.
+//
 // ==========================================
 
-            totalPortfolio +=
-                principal;
+            let interestCollectedForLoan = 0;
+
+            let hasPaymentHistory = false;
 
 
             if(
-
-                approvalDate.getMonth() ===
-                    currentMonth &&
-
-                approvalDate.getFullYear() ===
-                    currentYear
-
+                Array.isArray(
+                    loan.repaymentSchedule
+                )
             ){
 
-                monthlyPortfolio +=
-                    principal;
+                loan.repaymentSchedule.forEach(
+                    item => {
 
-            }else{
+                        if(
+                            !Array.isArray(
+                                item.paymentHistory
+                            )
+                        ){
 
-                previousPortfolio +=
-                    principal;
+                            return;
 
-
-                const monthName =
-                    approvalDate.toLocaleString(
-                        "en-US",
-                        {
-                            month: "long"
                         }
-                    );
 
 
-                const year =
-                    approvalDate.getFullYear();
+                        if(
+                            item.paymentHistory.length > 0
+                        ){
+
+                            hasPaymentHistory = true;
+
+                        }
 
 
-                const key =
-                    `${monthName} ${year}`;
+                        item.paymentHistory.forEach(
+                            payment => {
+
+                                const paymentAmount =
+                                    Number(
+                                        payment?.amount || 0
+                                    );
 
 
-                previousMonthsPortfolio[key] =
-                    (
-                        previousMonthsPortfolio[key]
-                        || 0
-                    ) + principal;
+                                if(
+                                    paymentAmount <= 0
+                                ){
+
+                                    return;
+
+                                }
+
+
+// ==========================================
+// PAYMENT DATE
+// ==========================================
+//
+// Prefer the actual payment date.
+//
+// Supported:
+//
+// payment.date
+// payment.paymentDate
+// payment.timestamp
+// payment.paymentTimestamp
+//
+// ==========================================
+
+                                const paymentDateValue =
+                                    payment?.date ||
+                                    payment?.paymentDate ||
+                                    payment?.paymentTimestamp ||
+                                    payment?.timestamp;
+
+
+                                const paymentDate =
+                                    normalizeDateString(
+                                        paymentDateValue
+                                    );
+
+
+                                if(!paymentDate){
+
+                                    return;
+
+                                }
+
+
+// ==========================================
+// PAYMENT INTEREST
+// ==========================================
+
+                                let paymentInterest =
+                                    0;
+
+
+                                if(
+                                    totalRepayment > 0 &&
+                                    interest > 0
+                                ){
+
+                                    paymentInterest =
+                                        (
+                                            paymentAmount /
+                                            totalRepayment
+                                        ) *
+                                        interest;
+
+                                }
+
+
+// ==========================================
+// PROTECT AGAINST
+// OVER-COLLECTING INTEREST
+// ==========================================
+
+                                const remainingLoanInterest =
+                                    Math.max(
+                                        0,
+                                        interest -
+                                        interestCollectedForLoan
+                                    );
+
+
+                                paymentInterest =
+                                    Math.min(
+                                        paymentInterest,
+                                        remainingLoanInterest
+                                    );
+
+
+                                if(
+                                    paymentInterest <= 0
+                                ){
+
+                                    return;
+
+                                }
+
+
+                                interestCollectedForLoan +=
+                                    paymentInterest;
+
+
+                                totalIncome +=
+                                    paymentInterest;
+
+
+// ==========================================
+// CURRENT MONTH
+// ==========================================
+
+                                const paymentMonthKey =
+                                    monthKey(
+                                        paymentDate
+                                    );
+
+
+                                if(
+                                    paymentMonthKey ===
+                                    currentMonthKey
+                                ){
+
+                                    monthlyIncome +=
+                                        paymentInterest;
+
+                                }else{
+
+// ==========================================
+// PREVIOUS MONTH
+// ==========================================
+
+                                    previousIncome +=
+                                        paymentInterest;
+
+
+                                    const parsedDate =
+                                        new Date(
+                                            `${paymentDate}T00:00:00`
+                                        );
+
+
+                                    const monthName =
+                                        parsedDate.toLocaleString(
+                                            "en-US",
+                                            {
+                                                month:
+                                                    "long"
+                                            }
+                                        );
+
+
+                                    const year =
+                                        parsedDate.getFullYear();
+
+
+                                    const key =
+                                        `${monthName} ${year}`;
+
+
+                                    previousMonthsIncome[key] =
+                                        (
+                                            previousMonthsIncome[key]
+                                            || 0
+                                        ) +
+                                        paymentInterest;
+
+                                }
+
+                            }
+                        );
+
+                    }
+                );
 
             }
 
 
 // ==========================================
-// INCOME
+// LEGACY PAYMENT FALLBACK
+// ==========================================
+//
+// IMPORTANT:
+//
+// Some older loans may contain amountPaid
+// but have no paymentHistory.
+//
+// We cannot invent a repayment date for
+// those payments.
+//
+// To prevent existing income from simply
+// disappearing from the dashboard, those
+// legacy payments are temporarily recognized
+// in the loan approval month.
+//
+// New repayments with paymentHistory are
+// always calculated by their actual payment
+// dates above.
+//
+// This fallback does NOT modify Firestore.
+//
 // ==========================================
 
-            totalIncome +=
-                income;
-
-
             if(
-
-                approvalDate.getMonth() ===
-                    currentMonth &&
-
-                approvalDate.getFullYear() ===
-                    currentYear
-
+                !hasPaymentHistory &&
+                amountPaid > 0 &&
+                interest > 0
             ){
 
-                monthlyIncome +=
-                    income;
-
-            }else{
-
-                previousIncome +=
-                    income;
-
-
-                const monthName =
-                    approvalDate.toLocaleString(
-                        "en-US",
-                        {
-                            month: "long"
-                        }
+                const legacyEarnedInterest =
+                    Math.min(
+                        (
+                            amountPaid /
+                            totalRepayment
+                        ) *
+                        interest,
+                        interest
                     );
 
 
-                const year =
-                    approvalDate.getFullYear();
+                totalIncome +=
+                    legacyEarnedInterest;
 
 
-                const key =
-                    `${monthName} ${year}`;
+                if(
+
+                    approvalDate.getMonth() ===
+                        currentMonth &&
+
+                    approvalDate.getFullYear() ===
+                        currentYear
+
+                ){
+
+                    monthlyIncome +=
+                        legacyEarnedInterest;
+
+                }else{
+
+                    previousIncome +=
+                        legacyEarnedInterest;
 
 
-                previousMonthsIncome[key] =
-                    (
-                        previousMonthsIncome[key]
-                        || 0
-                    ) + income;
+                    const monthName =
+                        approvalDate.toLocaleString(
+                            "en-US",
+                            {
+                                month: "long"
+                            }
+                        );
+
+
+                    const year =
+                        approvalDate.getFullYear();
+
+
+                    const key =
+                        `${monthName} ${year}`;
+
+
+                    previousMonthsIncome[key] =
+                        (
+                            previousMonthsIncome[key]
+                            || 0
+                        ) +
+                        legacyEarnedInterest;
+
+                }
 
             }
 
