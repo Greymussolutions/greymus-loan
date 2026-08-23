@@ -1,15 +1,21 @@
 // ==========================================
 // GREYMUS LOAN FINANCIAL HUB
 // dashboard.js
-// VERSION 4.5
+// VERSION 5.0
 //
 // ✔ Current Outstanding Portfolio
 // ✔ Total Portfolio Issued
 // ✔ Monthly Portfolio
 // ✔ Previous Portfolio
-// ✔ Monthly Income
-// ✔ Previous Income
+// ✔ MONTHLY INCOME BASED ON ACTUAL INCOME DATE
+// ✔ INTEREST RECOGNIZED FROM ACTUAL PAYMENT DATES
+// ✔ PROCESSING FEE RECOGNIZED IN APPROVAL MONTH
+// ✔ OLD LOANS WITHOUT PAYMENT HISTORY KEEP
+//   FULL INTEREST IN THEIR APPROVAL MONTH
+// ✔ PRINCIPAL NEVER COUNTED AS INCOME
+// ✔ FULL REPAYMENT NEVER COUNTED AS FULL INCOME
 // ✔ Total Income
+// ✔ Previous Income
 // ✔ Clients
 // ✔ Total Loans Issued
 // ✔ Active Loans
@@ -37,7 +43,26 @@
 // ✔ MESSAGE BUTTONS
 // ✔ SAFE DATE COMPARISON
 //
-// STATUS: CORRECTED
+// IMPORTANT
+//
+// This file does NOT modify loans or repayment records.
+//
+// Income is calculated from existing records:
+//
+// 1. Processing fee:
+//    Recognized in the loan approval month.
+//
+// 2. Loan with payment history:
+//    Interest is recognized according to the
+//    actual repayment date.
+//
+// 3. Older loan with NO payment history:
+//    Full calculated interest is recognized in
+//    the loan approval month.
+//
+// 4. Principal:
+//    NEVER counted as income.
+//
 // ==========================================
 
 
@@ -204,23 +229,11 @@ function currency(value){
 // ==========================================
 // DATE HELPERS
 // ==========================================
-//
-// IMPORTANT
-//
-// All dashboard "today" calculations use
-// the browser's LOCAL calendar date.
-//
-// The dashboard does NOT depend on a
-// hard-coded date.
-//
-// At midnight, todayString() automatically
-// changes to the new date.
-//
-// ==========================================
 
 function todayString(){
 
-    const today = new Date();
+    const today =
+        new Date();
 
     const year =
         today.getFullYear();
@@ -241,19 +254,55 @@ function todayString(){
 
 
 // ==========================================
-// NORMALIZE FIRESTORE / SCHEDULE DATE
+// FORMAT DATE OBJECT
+// ==========================================
+
+function formatDateObject(date){
+
+    if(
+        !(date instanceof Date) ||
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return "";
+
+    }
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+// ==========================================
+// NORMALIZE DATE
 // ==========================================
 //
-// Converts common date formats into:
+// Converts common Firestore / JS / string
+// date formats into:
 //
 // YYYY-MM-DD
 //
-// Supports:
+// IMPORTANT
 //
-// YYYY-MM-DD
-// YYYY-MM-DDTHH:mm:ss
-// JavaScript Date
-// Firestore Timestamp-like objects
+// YYYY-MM-DD strings are returned directly.
+// This prevents timezone conversion from
+// moving a payment into the previous day.
+//
 // ==========================================
 
 function normalizeDateString(value){
@@ -278,7 +327,7 @@ function normalizeDateString(value){
     }
 
 
-    // ISO date/time string
+    // ISO string
     if(
         typeof value === "string"
     ){
@@ -303,11 +352,8 @@ function normalizeDateString(value){
         typeof value?.toDate === "function"
     ){
 
-        const date =
-            value.toDate();
-
         return formatDateObject(
-            date
+            value.toDate()
         );
 
     }
@@ -321,19 +367,16 @@ function normalizeDateString(value){
         )
     ){
 
-        const date =
+        return formatDateObject(
             new Date(
                 Number(value.seconds) * 1000
-            );
-
-        return formatDateObject(
-            date
+            )
         );
 
     }
 
 
-    // JavaScript Date / numeric date
+    // JS Date / numeric timestamp
     const date =
         new Date(value);
 
@@ -357,43 +400,13 @@ function normalizeDateString(value){
 
 
 // ==========================================
-// FORMAT DATE OBJECT
-// ==========================================
-
-function formatDateObject(date){
-
-    if(
-        !(date instanceof Date) ||
-        Number.isNaN(
-            date.getTime()
-        )
-    ){
-
-        return "";
-
-    }
-
-
-    const year =
-        date.getFullYear();
-
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(2, "0");
-
-    const day =
-        String(
-            date.getDate()
-        ).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-
-}
-
-
-// ==========================================
 // MONTH KEY
+// ==========================================
+//
+// Returns:
+//
+// YYYY-MM
+//
 // ==========================================
 
 function monthKey(date){
@@ -413,6 +426,608 @@ function monthKey(date){
         0,
         7
     );
+
+}
+
+
+// ==========================================
+// DISPLAY MONTH NAME
+// ==========================================
+
+function monthDisplayName(key){
+
+    if(
+        !/^\d{4}-\d{2}$/.test(
+            key
+        )
+    ){
+
+        return key;
+
+    }
+
+
+    const parts =
+        key.split("-");
+
+    const year =
+        Number(parts[0]);
+
+    const month =
+        Number(parts[1]);
+
+
+    const date =
+        new Date(
+            year,
+            month - 1,
+            1
+        );
+
+
+    return date.toLocaleString(
+        "en-US",
+        {
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+// ==========================================
+// APPROVAL DATE HELPER
+// ==========================================
+
+function getLoanApprovalDate(loan){
+
+    if(!loan){
+
+        return "";
+
+    }
+
+
+    return normalizeDateString(
+        loan.approvalDate ||
+        loan.createdAt
+    );
+
+}
+
+
+// ==========================================
+// CALCULATE TOTAL LOAN INTEREST
+// ==========================================
+//
+// IMPORTANT
+//
+// This follows the existing loan calculation:
+//
+// Interest = Total Repayment - Principal
+//
+// It does NOT change the stored loan calculation.
+//
+// ==========================================
+
+function getLoanInterest(loan){
+
+    if(!loan){
+
+        return 0;
+
+    }
+
+
+    const principal =
+        Number(
+            loan.amount || 0
+        );
+
+
+    const totalRepayment =
+        Number(
+            loan.totalRepayment ||
+            principal
+        );
+
+
+    return Math.max(
+        0,
+        totalRepayment -
+        principal
+    );
+
+}
+
+
+// ==========================================
+// GET ALL PAYMENT HISTORY
+// ==========================================
+//
+// Current loans.js stores payment history
+// inside repaymentSchedule items.
+//
+// Each history item contains:
+//
+// amount
+// date
+// timestamp
+// paymentTimestamp
+//
+// We flatten the history only for dashboard
+// calculation.
+//
+// No Firestore data is changed.
+//
+// ==========================================
+
+function getLoanPaymentHistory(loan){
+
+    if(!loan){
+
+        return [];
+
+    }
+
+
+    const schedule =
+        Array.isArray(
+            loan.repaymentSchedule
+        )
+            ? loan.repaymentSchedule
+            : [];
+
+
+    const history = [];
+
+
+    schedule.forEach(
+        (item, itemIndex) => {
+
+            const paymentHistory =
+                Array.isArray(
+                    item?.paymentHistory
+                )
+                    ? item.paymentHistory
+                    : [];
+
+
+            paymentHistory.forEach(
+                (payment, paymentIndex) => {
+
+                    if(!payment){
+
+                        return;
+
+                    }
+
+
+                    const amount =
+                        Number(
+                            payment.amount || 0
+                        );
+
+
+                    if(
+                        !Number.isFinite(
+                            amount
+                        ) ||
+                        amount <= 0
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const date =
+                        normalizeDateString(
+                            payment.date ||
+                            payment.paymentDate ||
+                            payment.timestamp ||
+                            payment.paymentTimestamp
+                        );
+
+
+                    if(!date){
+
+                        return;
+
+                    }
+
+
+                    history.push({
+
+                        amount,
+
+                        date,
+
+                        itemIndex,
+
+                        paymentIndex,
+
+                        paymentId:
+                            payment.paymentId ||
+                            ""
+
+                    });
+
+                }
+            );
+
+        }
+    );
+
+
+    return history;
+
+}
+
+
+// ==========================================
+// CALCULATE INCOME BY MONTH
+// ==========================================
+//
+// THIS IS THE MAIN INCOME ENGINE.
+//
+// RULE 1
+// Processing fee is recognized in approval
+// month.
+//
+// RULE 2
+// If a loan has payment history, interest
+// follows the actual payment dates.
+//
+// RULE 3
+// If a loan has NO payment history at all,
+// the full interest is recognized in the
+// approval month.
+//
+// RULE 4
+// Principal is never income.
+//
+// RULE 5
+// Interest can never exceed the total
+// calculated interest of the loan.
+//
+// ==========================================
+
+function calculateIncomeByMonth(){
+
+    const incomeByMonth = {};
+
+
+    function addIncome(
+        month,
+        amount
+    ){
+
+        if(
+            !month ||
+            !Number.isFinite(
+                Number(amount)
+            ) ||
+            Number(amount) <= 0
+        ){
+
+            return;
+
+        }
+
+
+        incomeByMonth[month] =
+            (
+                incomeByMonth[month] ||
+                0
+            ) +
+            Number(amount);
+
+    }
+
+
+    loans.forEach(
+        loan => {
+
+            if(!loan){
+
+                return;
+
+            }
+
+
+            const approvalMonth =
+                monthKey(
+                    getLoanApprovalDate(
+                        loan
+                    )
+                );
+
+
+            // ==========================================
+            // PROCESSING FEE
+            // ==========================================
+
+            const processingFee =
+                Math.max(
+                    0,
+                    Number(
+                        loan.processingFee ||
+                        0
+                    )
+                );
+
+
+            if(
+                approvalMonth &&
+                processingFee > 0
+            ){
+
+                addIncome(
+                    approvalMonth,
+                    processingFee
+                );
+
+            }
+
+
+            // ==========================================
+            // TOTAL INTEREST
+            // ==========================================
+
+            const totalInterest =
+                getLoanInterest(
+                    loan
+                );
+
+
+            if(
+                totalInterest <= 0
+            ){
+
+                return;
+
+            }
+
+
+            // ==========================================
+            // PAYMENT HISTORY
+            // ==========================================
+
+            const paymentHistory =
+                getLoanPaymentHistory(
+                    loan
+                );
+
+
+            // ==========================================
+            // OLD LOAN WITHOUT PAYMENT HISTORY
+            // ==========================================
+            //
+            // This is intentionally different from
+            // current loans.
+            //
+            // If the loan has no payment history,
+            // there is no reliable historical payment
+            // date available.
+            //
+            // Therefore its complete interest remains
+            // in the approval month.
+            //
+            // This protects historical income.
+            //
+            // ==========================================
+
+            if(
+                paymentHistory.length === 0
+            ){
+
+                if(approvalMonth){
+
+                    addIncome(
+                        approvalMonth,
+                        totalInterest
+                    );
+
+                }
+
+                return;
+
+            }
+
+
+            // ==========================================
+            // INTEREST RATIO
+            // ==========================================
+            //
+            // Existing loan workflow treats the
+            // interest portion of every repayment as:
+            //
+            // payment ×
+            // (interest / total repayment)
+            //
+            // We use the same principle here.
+            //
+            // This DOES NOT alter loan calculations.
+            //
+            // ==========================================
+
+            const totalRepayment =
+                Number(
+                    loan.totalRepayment ||
+                    0
+                );
+
+
+            if(
+                totalRepayment <= 0
+            ){
+
+                return;
+
+            }
+
+
+            const interestRatio =
+                totalInterest /
+                totalRepayment;
+
+
+            if(
+                !Number.isFinite(
+                    interestRatio
+                ) ||
+                interestRatio <= 0
+            ){
+
+                return;
+
+            }
+
+
+            // ==========================================
+            // SORT PAYMENTS CHRONOLOGICALLY
+            // ==========================================
+
+            const sortedPayments =
+                [...paymentHistory]
+                    .sort(
+                        (a, b) => {
+
+                            const dateCompare =
+                                a.date.localeCompare(
+                                    b.date
+                                );
+
+
+                            if(
+                                dateCompare !== 0
+                            ){
+
+                                return dateCompare;
+
+                            }
+
+
+                            return (
+                                a.paymentIndex -
+                                b.paymentIndex
+                            );
+
+                        }
+                    );
+
+
+            // ==========================================
+            // DISTRIBUTE INTEREST
+            // ==========================================
+
+            let recognizedInterest =
+                0;
+
+
+            sortedPayments.forEach(
+                payment => {
+
+                    if(
+                        recognizedInterest >=
+                        totalInterest
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const paymentAmount =
+                        Math.max(
+                            0,
+                            Number(
+                                payment.amount ||
+                                0
+                            )
+                        );
+
+
+                    if(
+                        paymentAmount <= 0
+                    ){
+
+                        return;
+
+                    }
+
+
+                    let paymentInterest =
+                        paymentAmount *
+                        interestRatio;
+
+
+                    // ==========================================
+                    // SAFETY CAP
+                    // ==========================================
+                    //
+                    // Never allow the sum of payment-derived
+                    // interest to exceed the loan's actual
+                    // interest.
+                    //
+                    // ==========================================
+
+                    const remainingInterest =
+                        Math.max(
+                            0,
+                            totalInterest -
+                            recognizedInterest
+                        );
+
+
+                    paymentInterest =
+                        Math.min(
+                            paymentInterest,
+                            remainingInterest
+                        );
+
+
+                    if(
+                        paymentInterest <= 0
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const paymentMonth =
+                        monthKey(
+                            payment.date
+                        );
+
+
+                    if(!paymentMonth){
+
+                        return;
+
+                    }
+
+
+                    addIncome(
+                        paymentMonth,
+                        paymentInterest
+                    );
+
+
+                    recognizedInterest +=
+                        paymentInterest;
+
+                }
+            );
+
+        }
+    );
+
+
+    return incomeByMonth;
 
 }
 
@@ -517,7 +1132,15 @@ onSnapshot(
 // ==========================================
 // REPAYMENTS
 // ==========================================
-// Backward compatibility
+//
+// Kept for backward compatibility and for
+// existing dashboard functionality.
+//
+// The income engine intentionally uses the
+// paymentHistory stored on the loan because
+// that is the repayment allocation structure
+// used by loans.js.
+//
 // ==========================================
 
 onSnapshot(
@@ -582,14 +1205,6 @@ function updateDashboard(){
 
     let previousMonthsPortfolio = {};
 
-    let monthlyIncome = 0;
-
-    let totalIncome = 0;
-
-    let previousIncome = 0;
-
-    let previousMonthsIncome = {};
-
     let pending = 0;
 
     let approved = 0;
@@ -628,7 +1243,106 @@ function updateDashboard(){
     const currentYear =
         now.getFullYear();
 
+    const currentMonthKey =
+        `${currentYear}-${String(
+            currentMonth + 1
+        ).padStart(2, "0")}`;
+
     const repeatTracker = {};
+
+
+// ==========================================
+// INCOME CALCULATION
+// ==========================================
+//
+// Calculated ONCE from the complete loan
+// dataset.
+//
+// This prevents income from being tied to
+// loan approval dates when payment history
+// exists.
+//
+// ==========================================
+
+    const incomeByMonth =
+        calculateIncomeByMonth();
+
+
+// ==========================================
+// CURRENT MONTH INCOME
+// ==========================================
+
+    const monthlyIncome =
+        Number(
+            incomeByMonth[
+                currentMonthKey
+            ] || 0
+        );
+
+
+// ==========================================
+// TOTAL INCOME
+// ==========================================
+
+    const totalIncome =
+        Object.values(
+            incomeByMonth
+        ).reduce(
+            (
+                sum,
+                amount
+            ) =>
+                sum +
+                Number(
+                    amount || 0
+                ),
+            0
+        );
+
+
+// ==========================================
+// PREVIOUS MONTHS INCOME
+// ==========================================
+
+    const previousMonthsIncome = {};
+
+    Object.entries(
+        incomeByMonth
+    ).forEach(
+        ([key, amount]) => {
+
+            if(
+                key !== currentMonthKey &&
+                key < currentMonthKey
+            ){
+
+                previousMonthsIncome[
+                    key
+                ] =
+                    Number(
+                        amount || 0
+                    );
+
+            }
+
+        }
+    );
+
+
+    const previousIncome =
+        Object.values(
+            previousMonthsIncome
+        ).reduce(
+            (
+                sum,
+                amount
+            ) =>
+                sum +
+                Number(
+                    amount || 0
+                ),
+            0
+        );
 
 
 // ==========================================
@@ -652,12 +1366,6 @@ function updateDashboard(){
                 );
 
 
-            const processingFee =
-                Number(
-                    loan.processingFee || 0
-                );
-
-
             const totalRepayment =
                 Number(
                     loan.totalRepayment ||
@@ -665,16 +1373,20 @@ function updateDashboard(){
                 );
 
 
-            const amountPaid =
-                Number(
-                    loan.amountPaid || 0
-                );
-
-
             const outstanding =
                 Number(
                     loan.balance ??
                     principal
+                );
+
+
+// ==========================================
+// PROCESSING FEE
+// ==========================================
+
+            const processingFee =
+                Number(
+                    loan.processingFee || 0
                 );
 
 
@@ -713,40 +1425,18 @@ function updateDashboard(){
 // APPROVAL DATE
 // ==========================================
 
+            const approvalDateString =
+                getLoanApprovalDate(
+                    loan
+                );
+
+
             const approvalDate =
-                new Date(
-                    loan.approvalDate ||
-                    loan.createdAt ||
-                    Date.now()
-                );
-
-
-// ==========================================
-// INTEREST / INCOME
-// ==========================================
-
-            const interest =
-                Math.max(
-                    0,
-                    totalRepayment -
-                    principal
-                );
-
-
-            const earnedInterest =
-                totalRepayment > 0
-
-                    ? (
-                        amountPaid /
-                        totalRepayment
-                    ) * interest
-
-                    : 0;
-
-
-            const income =
-                processingFee +
-                earnedInterest;
+                approvalDateString
+                    ? new Date(
+                        `${approvalDateString}T00:00:00`
+                    )
+                    : new Date();
 
 
 // ==========================================
@@ -823,60 +1513,8 @@ function updateDashboard(){
                     (
                         previousMonthsPortfolio[key]
                         || 0
-                    ) + principal;
-
-            }
-
-
-// ==========================================
-// INCOME
-// ==========================================
-
-            totalIncome +=
-                income;
-
-
-            if(
-
-                approvalDate.getMonth() ===
-                    currentMonth &&
-
-                approvalDate.getFullYear() ===
-                    currentYear
-
-            ){
-
-                monthlyIncome +=
-                    income;
-
-            }else{
-
-                previousIncome +=
-                    income;
-
-
-                const monthName =
-                    approvalDate.toLocaleString(
-                        "en-US",
-                        {
-                            month: "long"
-                        }
-                    );
-
-
-                const year =
-                    approvalDate.getFullYear();
-
-
-                const key =
-                    `${monthName} ${year}`;
-
-
-                previousMonthsIncome[key] =
-                    (
-                        previousMonthsIncome[key]
-                        || 0
-                    ) + income;
+                    ) +
+                    principal;
 
             }
 
@@ -1096,9 +1734,6 @@ function updateDashboard(){
 //
 // Completed loans are excluded.
 //
-// The date is always recalculated using
-// todayString(), so after midnight the old
-// day's entries disappear automatically.
 // ==========================================
 
             const isCurrentLoanForCollection =
@@ -1331,7 +1966,22 @@ function updateDashboard(){
 
         Object.entries(
             previousMonthsPortfolio
-        ).forEach(
+        )
+        .sort(
+            (a, b) => {
+
+                return (
+                    new Date(
+                        b[0]
+                    ) -
+                    new Date(
+                        a[0]
+                    )
+                );
+
+            }
+        )
+        .forEach(
             ([month, amount]) => {
 
                 previousMonthsList.innerHTML += `
@@ -1421,6 +2071,10 @@ function updateDashboard(){
     }
 
 
+// ==========================================
+// INCOME CARDS
+// ==========================================
+
     if(revenueStat){
 
         revenueStat.textContent =
@@ -1473,8 +2127,9 @@ function updateDashboard(){
             (a, b) => {
 
                 return (
-                    new Date(b[0]) -
-                    new Date(a[0])
+                    b[0].localeCompare(
+                        a[0]
+                    )
                 );
 
             }
@@ -1487,7 +2142,8 @@ function updateDashboard(){
                     <div class="today-card">
 
                         <h4>
-                            ${month} Income
+                            ${monthDisplayName(month)}
+                            Income
                         </h4>
 
                         <p>
@@ -2423,13 +3079,6 @@ closePreviousIncome?.addEventListener(
 // ==========================================
 // AUTO REFRESH
 // ==========================================
-//
-// Normal refresh every minute.
-//
-// This is NOT the midnight reset itself.
-// The midnight scheduler below handles the
-// calendar-day transition precisely.
-// ==========================================
 
 const DASHBOARD_REFRESH_INTERVAL =
     60 * 1000;
@@ -2447,37 +3096,6 @@ setInterval(
 
 // ==========================================
 // AUTOMATIC MIDNIGHT RESET
-// ==========================================
-//
-// IMPORTANT
-//
-// The dashboard is NOT storing "today"
-// collection values permanently.
-//
-// Instead, Today's Collection is rebuilt
-// from today's actual calendar date.
-//
-// This scheduler makes sure that when the
-// browser reaches midnight:
-//
-// Yesterday's collection:
-//     disappears from Today's Collection
-//
-// Today's collection:
-//     appears automatically
-//
-// Historical data:
-//     remains untouched
-//
-// Portfolio:
-//     remains untouched
-//
-// Income:
-//     remains untouched
-//
-// Arrears:
-//     remains calculated
-//
 // ==========================================
 
 let dashboardDate =
@@ -2513,8 +3131,6 @@ function checkDashboardDate(){
             currentDate;
 
 
-        // Immediately rebuild dashboard
-        // using the new calendar date.
         updateDashboard();
 
     }
@@ -2567,15 +3183,10 @@ function scheduleMidnightRefresh(){
         setTimeout(
             () => {
 
-                // Check the date first.
                 checkDashboardDate();
 
-
-                // Force another complete refresh.
                 refreshDashboard();
 
-
-                // Schedule the following midnight.
                 scheduleMidnightRefresh();
 
             },
@@ -2587,14 +3198,6 @@ function scheduleMidnightRefresh(){
 
 // ==========================================
 // BACKUP DATE CHECK
-// ==========================================
-//
-// If the device/browser sleeps at midnight,
-// the timeout above may execute late.
-//
-// This backup check guarantees that the
-// dashboard catches the new date as soon as
-// JavaScript becomes active again.
 // ==========================================
 
 setInterval(
@@ -2635,12 +3238,6 @@ refreshDashboard();
 // ✔ Calculates arrears
 // ✔ Opens messaging.js composer
 //
-// IMPORTANT:
-//
-// All repayment dates are normalized before
-// comparison. This prevents a Timestamp,
-// ISO date/time or YYYY-MM-DD value from
-// causing today's message lookup to fail.
 // ==========================================
 
 document.addEventListener(
