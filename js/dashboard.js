@@ -693,342 +693,302 @@ function getLoanPaymentHistory(loan){
 // calculated interest of the loan.
 //
 // ==========================================
-
 function calculateIncomeByMonth(){
 
     const incomeByMonth = {};
 
-
-    function addIncome(
-        month,
-        amount
-    ){
+    function addIncome(month, amount){
 
         if(
             !month ||
-            !Number.isFinite(
-                Number(amount)
-            ) ||
+            !Number.isFinite(Number(amount)) ||
             Number(amount) <= 0
         ){
-
             return;
-
         }
 
-
         incomeByMonth[month] =
-            (
-                incomeByMonth[month] ||
-                0
-            ) +
+            (incomeByMonth[month] || 0) +
             Number(amount);
-
     }
 
 
-    loans.forEach(
-        loan => {
+    loans.forEach(loan => {
 
-            if(!loan){
-
-                return;
-
-            }
+        if(!loan){
+            return;
+        }
 
 
-            const approvalMonth =
-                monthKey(
-                    getLoanApprovalDate(
-                        loan
-                    )
+        // ==========================================
+        // 1. LOAN APPROVAL MONTH
+        // ==========================================
+
+        const approvalMonth =
+            monthKey(
+                getLoanApprovalDate(loan)
+            );
+
+
+        // ==========================================
+        // 2. PROCESSING FEE
+        // ==========================================
+        //
+        // Processing fee is income when the loan
+        // is approved.
+        //
+        // It is counted ONLY in the approval month.
+        //
+        // ==========================================
+
+        const processingFee =
+            Math.max(
+                0,
+                Number(
+                    loan.processingFee || 0
+                )
+            );
+
+        if(
+            approvalMonth &&
+            processingFee > 0
+        ){
+            addIncome(
+                approvalMonth,
+                processingFee
+            );
+        }
+
+
+        // ==========================================
+        // 3. TOTAL LOAN INTEREST
+        // ==========================================
+        //
+        // Interest =
+        // Total Repayment - Principal
+        //
+        // Principal is NEVER income.
+        //
+        // ==========================================
+
+        const totalInterest =
+            getLoanInterest(loan);
+
+        if(totalInterest <= 0){
+            return;
+        }
+
+
+        // ==========================================
+        // 4. GET ACTUAL PAYMENT HISTORY
+        // ==========================================
+        //
+        // Interest is recognized ONLY when an
+        // actual repayment exists.
+        //
+        // There is NO fallback that puts the whole
+        // interest into the approval month.
+        //
+        // ==========================================
+
+        const paymentHistory =
+            getLoanPaymentHistory(loan);
+
+        if(
+            paymentHistory.length === 0
+        ){
+            return;
+        }
+
+
+        // ==========================================
+        // 5. TOTAL REPAYMENT
+        // ==========================================
+
+        const totalRepayment =
+            Number(
+                loan.totalRepayment || 0
+            );
+
+        if(totalRepayment <= 0){
+            return;
+        }
+
+
+        // ==========================================
+        // 6. INTEREST PORTION OF EACH PAYMENT
+        // ==========================================
+        //
+        // Example:
+        //
+        // Principal       = 10,000
+        // Total repayment = 12,000
+        // Interest        = 2,000
+        //
+        // Interest ratio = 2,000 / 12,000
+        //
+        // Every actual payment is assigned its
+        // proportional interest amount.
+        //
+        // ==========================================
+
+        const interestRatio =
+            totalInterest /
+            totalRepayment;
+
+        if(
+            !Number.isFinite(
+                interestRatio
+            ) ||
+            interestRatio <= 0
+        ){
+            return;
+        }
+
+
+        // ==========================================
+        // 7. SORT PAYMENTS BY ACTUAL PAYMENT DATE
+        // ==========================================
+
+        const sortedPayments =
+            [...paymentHistory]
+                .sort(
+                    (a, b) => {
+
+                        const dateA =
+                            normalizeDateString(
+                                a.date
+                            ) || "";
+
+                        const dateB =
+                            normalizeDateString(
+                                b.date
+                            ) || "";
+
+                        const dateCompare =
+                            dateA.localeCompare(
+                                dateB
+                            );
+
+                        if(
+                            dateCompare !== 0
+                        ){
+                            return dateCompare;
+                        }
+
+                        return (
+                            Number(
+                                a.paymentIndex || 0
+                            ) -
+                            Number(
+                                b.paymentIndex || 0
+                            )
+                        );
+                    }
                 );
 
 
-            // ==========================================
-            // PROCESSING FEE
-            // ==========================================
+        // ==========================================
+        // 8. DISTRIBUTE INTEREST TO THE ACTUAL
+        //    PAYMENT MONTH
+        // ==========================================
 
-            const processingFee =
+        let recognizedInterest = 0;
+
+
+        sortedPayments.forEach(payment => {
+
+            if(
+                recognizedInterest >=
+                totalInterest
+            ){
+                return;
+            }
+
+
+            const paymentAmount =
                 Math.max(
                     0,
                     Number(
-                        loan.processingFee ||
-                        0
+                        payment.amount || 0
                     )
                 );
 
-
-            if(
-                approvalMonth &&
-                processingFee > 0
-            ){
-
-                addIncome(
-                    approvalMonth,
-                    processingFee
-                );
-
-            }
-
-
-            // ==========================================
-            // TOTAL INTEREST
-            // ==========================================
-
-            const totalInterest =
-                getLoanInterest(
-                    loan
-                );
-
-
-            if(
-                totalInterest <= 0
-            ){
-
+            if(paymentAmount <= 0){
                 return;
-
             }
 
 
+            // Interest contained in this payment
+            let paymentInterest =
+                paymentAmount *
+                interestRatio;
+
+
             // ==========================================
-            // PAYMENT HISTORY
+            // SAFETY CAP
+            // ==========================================
+            //
+            // Never recognize more interest than the
+            // loan actually contains.
+            //
             // ==========================================
 
-            const paymentHistory =
-                getLoanPaymentHistory(
-                    loan
+            const remainingInterest =
+                Math.max(
+                    0,
+                    totalInterest -
+                    recognizedInterest
+                );
+
+            paymentInterest =
+                Math.min(
+                    paymentInterest,
+                    remainingInterest
                 );
 
 
-            // ==========================================
-            // OLD LOAN WITHOUT PAYMENT HISTORY
-            // ==========================================
-            //
-            // This is intentionally different from
-            // current loans.
-            //
-            // If the loan has no payment history,
-            // there is no reliable historical payment
-            // date available.
-            //
-            // Therefore its complete interest remains
-            // in the approval month.
-            //
-            // This protects historical income.
-            //
-            // ==========================================
-
-            if(
-                paymentHistory.length === 0
-            ){
-
-                if(approvalMonth){
-
-                    addIncome(
-                        approvalMonth,
-                        totalInterest
-                    );
-
-                }
-
+            if(paymentInterest <= 0){
                 return;
-
             }
 
 
             // ==========================================
-            // INTEREST RATIO
+            // ACTUAL PAYMENT MONTH
             // ==========================================
             //
-            // Existing loan workflow treats the
-            // interest portion of every repayment as:
+            // THIS is the important part.
             //
-            // payment ×
-            // (interest / total repayment)
-            //
-            // We use the same principle here.
-            //
-            // This DOES NOT alter loan calculations.
+            // Interest goes to the month in which
+            // the repayment was actually recorded.
             //
             // ==========================================
 
-            const totalRepayment =
-                Number(
-                    loan.totalRepayment ||
-                    0
+            const paymentMonth =
+                monthKey(
+                    payment.date
                 );
 
-
-            if(
-                totalRepayment <= 0
-            ){
-
+            if(!paymentMonth){
                 return;
-
             }
 
 
-            const interestRatio =
-                totalInterest /
-                totalRepayment;
-
-
-            if(
-                !Number.isFinite(
-                    interestRatio
-                ) ||
-                interestRatio <= 0
-            ){
-
-                return;
-
-            }
-
-
-            // ==========================================
-            // SORT PAYMENTS CHRONOLOGICALLY
-            // ==========================================
-
-            const sortedPayments =
-                [...paymentHistory]
-                    .sort(
-                        (a, b) => {
-
-                            const dateCompare =
-                                a.date.localeCompare(
-                                    b.date
-                                );
-
-
-                            if(
-                                dateCompare !== 0
-                            ){
-
-                                return dateCompare;
-
-                            }
-
-
-                            return (
-                                a.paymentIndex -
-                                b.paymentIndex
-                            );
-
-                        }
-                    );
-
-
-            // ==========================================
-            // DISTRIBUTE INTEREST
-            // ==========================================
-
-            let recognizedInterest =
-                0;
-
-
-            sortedPayments.forEach(
-                payment => {
-
-                    if(
-                        recognizedInterest >=
-                        totalInterest
-                    ){
-
-                        return;
-
-                    }
-
-
-                    const paymentAmount =
-                        Math.max(
-                            0,
-                            Number(
-                                payment.amount ||
-                                0
-                            )
-                        );
-
-
-                    if(
-                        paymentAmount <= 0
-                    ){
-
-                        return;
-
-                    }
-
-
-                    let paymentInterest =
-                        paymentAmount *
-                        interestRatio;
-
-
-                    // ==========================================
-                    // SAFETY CAP
-                    // ==========================================
-                    //
-                    // Never allow the sum of payment-derived
-                    // interest to exceed the loan's actual
-                    // interest.
-                    //
-                    // ==========================================
-
-                    const remainingInterest =
-                        Math.max(
-                            0,
-                            totalInterest -
-                            recognizedInterest
-                        );
-
-
-                    paymentInterest =
-                        Math.min(
-                            paymentInterest,
-                            remainingInterest
-                        );
-
-
-                    if(
-                        paymentInterest <= 0
-                    ){
-
-                        return;
-
-                    }
-
-
-                    const paymentMonth =
-                        monthKey(
-                            payment.date
-                        );
-
-
-                    if(!paymentMonth){
-
-                        return;
-
-                    }
-
-
-                    addIncome(
-                        paymentMonth,
-                        paymentInterest
-                    );
-
-
-                    recognizedInterest +=
-                        paymentInterest;
-
-                }
+            addIncome(
+                paymentMonth,
+                paymentInterest
             );
 
-        }
-    );
+
+            recognizedInterest +=
+                paymentInterest;
+
+        });
+
+    });
 
 
     return incomeByMonth;
-
 }
 
 
